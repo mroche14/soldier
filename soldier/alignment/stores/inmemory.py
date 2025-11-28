@@ -103,9 +103,7 @@ class InMemoryConfigStore(ConfigStore):
         return results[:limit]
 
     # Scenario operations
-    async def get_scenario(
-        self, tenant_id: UUID, scenario_id: UUID
-    ) -> Scenario | None:
+    async def get_scenario(self, tenant_id: UUID, scenario_id: UUID) -> Scenario | None:
         """Get a scenario by ID."""
         scenario = self._scenarios.get(scenario_id)
         if scenario and scenario.tenant_id == tenant_id and not scenario.is_deleted:
@@ -141,19 +139,13 @@ class InMemoryConfigStore(ConfigStore):
     async def delete_scenario(self, tenant_id: UUID, scenario_id: UUID) -> bool:
         """Soft-delete a scenario."""
         scenario = self._scenarios.get(scenario_id)
-        if (
-            scenario
-            and scenario.tenant_id == tenant_id
-            and not scenario.is_deleted
-        ):
+        if scenario and scenario.tenant_id == tenant_id and not scenario.is_deleted:
             scenario.deleted_at = datetime.now(UTC)
             return True
         return False
 
     # Template operations
-    async def get_template(
-        self, tenant_id: UUID, template_id: UUID
-    ) -> Template | None:
+    async def get_template(self, tenant_id: UUID, template_id: UUID) -> Template | None:
         """Get a template by ID."""
         template = self._templates.get(template_id)
         if template and template.tenant_id == tenant_id and not template.is_deleted:
@@ -192,19 +184,13 @@ class InMemoryConfigStore(ConfigStore):
     async def delete_template(self, tenant_id: UUID, template_id: UUID) -> bool:
         """Soft-delete a template."""
         template = self._templates.get(template_id)
-        if (
-            template
-            and template.tenant_id == tenant_id
-            and not template.is_deleted
-        ):
+        if template and template.tenant_id == tenant_id and not template.is_deleted:
             template.deleted_at = datetime.now(UTC)
             return True
         return False
 
     # Variable operations
-    async def get_variable(
-        self, tenant_id: UUID, variable_id: UUID
-    ) -> Variable | None:
+    async def get_variable(self, tenant_id: UUID, variable_id: UUID) -> Variable | None:
         """Get a variable by ID."""
         variable = self._variables.get(variable_id)
         if variable and variable.tenant_id == tenant_id and not variable.is_deleted:
@@ -251,11 +237,7 @@ class InMemoryConfigStore(ConfigStore):
     async def delete_variable(self, tenant_id: UUID, variable_id: UUID) -> bool:
         """Soft-delete a variable."""
         variable = self._variables.get(variable_id)
-        if (
-            variable
-            and variable.tenant_id == tenant_id
-            and not variable.is_deleted
-        ):
+        if variable and variable.tenant_id == tenant_id and not variable.is_deleted:
             variable.deleted_at = datetime.now(UTC)
             return True
         return False

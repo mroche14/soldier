@@ -1,0 +1,42 @@
+You are analyzing a user message to extract structured information for a conversational AI system.
+
+Given the user's message and conversation history, extract the following:
+
+1. **intent**: A brief phrase describing what the user wants to accomplish (e.g., "return order", "check status", "get pricing")
+
+2. **entities**: Key data points mentioned (format as JSON array):
+   - order_id, product_name, date, amount, email, phone, etc.
+   - Include type, value, and confidence (0-1)
+
+3. **sentiment**: One of: positive, neutral, negative, frustrated
+
+4. **topic**: The general topic category (e.g., "returns", "billing", "technical support")
+
+5. **urgency**: One of: low, normal, high, critical
+
+6. **scenario_signal**: User's intent regarding conversational flow:
+   - "start" - User wants to begin a new process/task
+   - "continue" - Normal flow, continuing conversation
+   - "exit" - User wants to end/cancel current process
+   - "unknown" - Unclear intent
+
+## Conversation History
+{history}
+
+## Current User Message
+{message}
+
+## Response Format
+Respond with ONLY valid JSON in this exact format:
+```json
+{{
+  "intent": "brief intent description",
+  "entities": [
+    {{"type": "entity_type", "value": "extracted_value", "confidence": 0.95}}
+  ],
+  "sentiment": "neutral",
+  "topic": "topic category",
+  "urgency": "normal",
+  "scenario_signal": "continue"
+}}
+```

@@ -57,9 +57,7 @@ class ConfigStore(ABC):
 
     # Scenario operations
     @abstractmethod
-    async def get_scenario(
-        self, tenant_id: UUID, scenario_id: UUID
-    ) -> Scenario | None:
+    async def get_scenario(self, tenant_id: UUID, scenario_id: UUID) -> Scenario | None:
         """Get a scenario by ID."""
         pass
 
@@ -86,9 +84,7 @@ class ConfigStore(ABC):
 
     # Template operations
     @abstractmethod
-    async def get_template(
-        self, tenant_id: UUID, template_id: UUID
-    ) -> Template | None:
+    async def get_template(self, tenant_id: UUID, template_id: UUID) -> Template | None:
         """Get a template by ID."""
         pass
 
@@ -116,9 +112,7 @@ class ConfigStore(ABC):
 
     # Variable operations
     @abstractmethod
-    async def get_variable(
-        self, tenant_id: UUID, variable_id: UUID
-    ) -> Variable | None:
+    async def get_variable(self, tenant_id: UUID, variable_id: UUID) -> Variable | None:
         """Get a variable by ID."""
         pass
 

@@ -337,24 +337,24 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/selection-strategies.md`
 
 ### 6.1 Selection Interface & Models
-- [ ] `soldier/alignment/retrieval/__init__.py`
-- [ ] `soldier/alignment/retrieval/selection.py`
-  - [ ] SelectionStrategy interface (ABC)
-  - [ ] ScoredItem generic model
-  - [ ] SelectionResult model
-  - [ ] `create_selection_strategy()` factory
+- [x] `soldier/alignment/retrieval/__init__.py`
+- [x] `soldier/alignment/retrieval/selection.py`
+  - [x] SelectionStrategy interface (ABC)
+  - [x] ScoredItem generic model
+  - [x] SelectionResult model
+  - [x] `create_selection_strategy()` factory
 
 ### 6.2 Strategy Implementations
-- [ ] ElbowSelectionStrategy (relative score drop)
-- [ ] AdaptiveKSelectionStrategy (curvature analysis)
-- [ ] EntropySelectionStrategy (information method)
-- [ ] ClusterSelectionStrategy (topic clustering)
-- [ ] FixedKSelectionStrategy (baseline)
+- [x] ElbowSelectionStrategy (relative score drop)
+- [x] AdaptiveKSelectionStrategy (curvature analysis)
+- [x] EntropySelectionStrategy (information method)
+- [x] ClusterSelectionStrategy (topic clustering)
+- [x] FixedKSelectionStrategy (baseline)
 
 ### 6.3 Tests
-- [ ] `tests/unit/alignment/retrieval/test_selection.py`
-  - [ ] Test each strategy with various score distributions
-  - [ ] Test edge cases (empty, single item, identical scores)
+- [x] `tests/unit/alignment/retrieval/test_selection.py`
+  - [x] Test each strategy with various score distributions
+  - [x] Test edge cases (empty, single item, identical scores)
 
 ---
 
@@ -363,20 +363,20 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/alignment-engine.md`, `docs/design/turn-pipeline.md`
 
 ### 7.1 Context Extractor
-- [ ] `soldier/alignment/context/__init__.py`
-- [ ] `soldier/alignment/context/extractor.py`
-  - [ ] ContextExtractor interface
-  - [ ] LLMContextExtractor implementation
+- [x] `soldier/alignment/context/__init__.py`
+- [x] `soldier/alignment/context/extractor.py`
+  - [x] ContextExtractor interface
+  - [x] LLMContextExtractor implementation
   - [ ] RuleBasedContextExtractor (simple patterns)
-- [ ] `soldier/alignment/context/models.py`
-  - [ ] Context model
+- [x] `soldier/alignment/context/models.py`
+  - [x] Context model
   - [x] UserIntent model
   - [x] ExtractedEntities model
-- [ ] `soldier/alignment/context/prompts/`
-  - [ ] `extract_intent.txt` - Intent extraction prompt
+- [x] `soldier/alignment/context/prompts/`
+  - [x] `extract_intent.txt` - Intent extraction prompt
 
 ### 7.2 Tests
-- [ ] `tests/unit/alignment/context/test_extractor.py`
+- [x] `tests/unit/alignment/context/test_extractor.py`
 
 ---
 
@@ -385,34 +385,34 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/decisions/002-rule-matching-strategy.md`
 
 ### 8.1 Rule Retrieval
-- [ ] `soldier/alignment/retrieval/rule_retriever.py`
-  - [ ] RuleRetriever class
-  - [ ] Vector similarity search
+- [x] `soldier/alignment/retrieval/rule_retriever.py`
+  - [x] RuleRetriever class
+  - [x] Vector similarity search
   - [ ] BM25 hybrid search
-  - [ ] Scope filtering (GLOBAL → SCENARIO → STEP)
-  - [ ] Selection strategy application
+  - [x] Scope filtering (GLOBAL → SCENARIO → STEP)
+  - [x] Selection strategy application
 
 ### 8.2 Scenario Retrieval
-- [ ] `soldier/alignment/retrieval/scenario_retriever.py`
-  - [ ] ScenarioRetriever class
-  - [ ] Entry condition matching
-  - [ ] Active scenario continuation
+- [x] `soldier/alignment/retrieval/scenario_retriever.py`
+  - [x] ScenarioRetriever class
+  - [x] Entry condition matching
+  - [x] Active scenario continuation
 
 ### 8.3 Memory Retrieval
-- [ ] `soldier/memory/retrieval/__init__.py`
-- [ ] `soldier/memory/retrieval/retriever.py`
-  - [ ] MemoryRetriever class
+- [x] `soldier/memory/retrieval/__init__.py`
+- [x] `soldier/memory/retrieval/retriever.py`
+  - [x] MemoryRetriever class
   - [ ] Hybrid retrieval (vector + BM25 + graph)
 
 ### 8.4 Reranker
-- [ ] `soldier/alignment/retrieval/reranker.py`
-  - [ ] ResultReranker class
-  - [ ] Provider-agnostic reranking
+- [x] `soldier/alignment/retrieval/reranker.py`
+  - [x] ResultReranker class
+  - [x] Provider-agnostic reranking
 
 ### 8.5 Tests
-- [ ] `tests/unit/alignment/retrieval/test_rule_retriever.py`
-- [ ] `tests/unit/alignment/retrieval/test_scenario_retriever.py`
-- [ ] `tests/unit/memory/retrieval/test_retriever.py`
+- [x] `tests/unit/alignment/retrieval/test_rule_retriever.py`
+- [x] `tests/unit/alignment/retrieval/test_scenario_retriever.py`
+- [x] `tests/unit/memory/retrieval/test_retriever.py`
 
 ---
 
@@ -421,23 +421,23 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/alignment-engine.md`
 
 ### 9.1 Rule Filter
-- [ ] `soldier/alignment/filtering/__init__.py`
-- [ ] `soldier/alignment/filtering/rule_filter.py`
-  - [ ] RuleFilter class
-  - [ ] LLM-based condition evaluation
-  - [ ] Batch filtering for efficiency
-- [ ] `soldier/alignment/filtering/prompts/filter_rules.txt`
+- [x] `soldier/alignment/filtering/__init__.py`
+- [x] `soldier/alignment/filtering/rule_filter.py`
+  - [x] RuleFilter class
+  - [x] LLM-based condition evaluation
+  - [x] Batch filtering for efficiency
+- [x] `soldier/alignment/filtering/prompts/filter_rules.txt`
 
 ### 9.2 Scenario Filter
-- [ ] `soldier/alignment/filtering/scenario_filter.py`
-  - [ ] ScenarioFilter class
-  - [ ] Start/continue/exit decisions
-  - [ ] Step transition evaluation
-- [ ] `soldier/alignment/filtering/prompts/evaluate_scenario.txt`
+- [x] `soldier/alignment/filtering/scenario_filter.py`
+  - [x] ScenarioFilter class
+  - [x] Start/continue/exit decisions
+  - [x] Step transition evaluation
+- [x] `soldier/alignment/filtering/prompts/evaluate_scenario.txt`
 
 ### 9.3 Tests
-- [ ] `tests/unit/alignment/filtering/test_rule_filter.py`
-- [ ] `tests/unit/alignment/filtering/test_scenario_filter.py`
+- [x] `tests/unit/alignment/filtering/test_rule_filter.py`
+- [x] `tests/unit/alignment/filtering/test_scenario_filter.py`
 
 ---
 
@@ -446,41 +446,41 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/turn-pipeline.md`
 
 ### 10.1 Tool Execution
-- [ ] `soldier/alignment/execution/__init__.py`
-- [ ] `soldier/alignment/execution/tool_executor.py`
-  - [ ] ToolExecutor class
-  - [ ] Execute tools from matched rules
-  - [ ] Timeout handling
-  - [ ] Result aggregation
-- [ ] `soldier/alignment/execution/variable_resolver.py`
-  - [ ] VariableResolver class
-  - [ ] Resolve variables from profile/session
+- [x] `soldier/alignment/execution/__init__.py`
+- [x] `soldier/alignment/execution/tool_executor.py`
+  - [x] ToolExecutor class
+  - [x] Execute tools from matched rules
+  - [x] Timeout handling
+  - [x] Result aggregation
+- [x] `soldier/alignment/execution/variable_resolver.py`
+  - [x] VariableResolver class
+  - [x] Resolve variables from profile/session
 
 ### 10.2 Response Generation
-- [ ] `soldier/alignment/generation/__init__.py`
-- [ ] `soldier/alignment/generation/prompt_builder.py`
-  - [ ] PromptBuilder class
-  - [ ] Assemble system prompt with rules, memory, context
-- [ ] `soldier/alignment/generation/generator.py`
-  - [ ] ResponseGenerator class
-  - [ ] LLM-based response generation
-  - [ ] Template interpolation
-- [ ] `soldier/alignment/generation/prompts/system_prompt.txt`
+- [x] `soldier/alignment/generation/__init__.py`
+- [x] `soldier/alignment/generation/prompt_builder.py`
+  - [x] PromptBuilder class
+  - [x] Assemble system prompt with rules, memory, context
+- [x] `soldier/alignment/generation/generator.py`
+  - [x] ResponseGenerator class
+  - [x] LLM-based response generation
+  - [x] Template interpolation
+- [x] `soldier/alignment/generation/prompts/system_prompt.txt`
 
 ### 10.3 Enforcement
-- [ ] `soldier/alignment/enforcement/__init__.py`
-- [ ] `soldier/alignment/enforcement/validator.py`
-  - [ ] EnforcementValidator class
-  - [ ] Check response against hard constraints
+- [x] `soldier/alignment/enforcement/__init__.py`
+- [x] `soldier/alignment/enforcement/validator.py`
+  - [x] EnforcementValidator class
+  - [x] Check response against hard constraints
   - [ ] Self-critique (optional)
-- [ ] `soldier/alignment/enforcement/fallback.py`
-  - [ ] FallbackHandler class
-  - [ ] Template fallback logic
+- [x] `soldier/alignment/enforcement/fallback.py`
+  - [x] FallbackHandler class
+  - [x] Template fallback logic
 
 ### 10.4 Tests
-- [ ] `tests/unit/alignment/execution/test_tool_executor.py`
-- [ ] `tests/unit/alignment/generation/test_generator.py`
-- [ ] `tests/unit/alignment/enforcement/test_validator.py`
+- [x] `tests/unit/alignment/execution/test_tool_executor.py`
+- [x] `tests/unit/alignment/generation/test_generator.py`
+- [x] `tests/unit/alignment/enforcement/test_validator.py`
 
 ---
 
@@ -489,24 +489,24 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/alignment-engine.md`
 
 ### 11.1 Alignment Engine
-- [ ] `soldier/alignment/__init__.py`
-- [ ] `soldier/alignment/engine.py`
-  - [ ] AlignmentEngine class
-  - [ ] `process_turn()` - Full pipeline orchestration
-  - [ ] Step timing and logging
-  - [ ] Error handling and fallbacks
-- [ ] `soldier/alignment/result.py`
-  - [ ] AlignmentResult model
+- [x] `soldier/alignment/__init__.py`
+- [x] `soldier/alignment/engine.py`
+  - [x] AlignmentEngine class
+  - [x] `process_turn()` - Full pipeline orchestration
+  - [x] Step timing and logging
+  - [x] Error handling and fallbacks
+- [x] `soldier/alignment/result.py`
+  - [x] AlignmentResult model
   - [x] TurnMetadata model
 
 ### 11.2 Pipeline Configuration
-- [ ] Pipeline step enable/disable
-- [ ] Per-step provider selection
+- [x] Pipeline step enable/disable
+- [x] Per-step provider selection
 - [ ] Timeout configuration
 
 ### 11.3 Integration Tests
-- [ ] `tests/integration/test_alignment_engine.py`
-  - [ ] Full pipeline with mock providers
+- [x] `tests/integration/test_alignment_engine.py`
+  - [x] Full pipeline with mock providers
   - [x] Rule matching → filtering → generation
 
 ---

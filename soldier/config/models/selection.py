@@ -25,6 +25,11 @@ class SelectionConfig(BaseModel):
         gt=0,
         description="Maximum items to select",
     )
+    min_k: int = Field(
+        default=1,
+        ge=0,
+        description="Minimum items to return (even if below min_score)",
+    )
     params: dict[str, Any] = Field(
         default_factory=dict,
         description="Strategy-specific parameters",

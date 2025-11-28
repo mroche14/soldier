@@ -27,6 +27,9 @@ dependencies = [
     "prometheus-client>=0.20",
     "opentelemetry-sdk>=1.20",
     "opentelemetry-exporter-otlp>=1.20",
+    "numpy>=2.3.5",
+    "scipy>=1.16.3",
+    "scikit-learn>=1.7.2",
 ]
 
 [project.optional-dependencies]

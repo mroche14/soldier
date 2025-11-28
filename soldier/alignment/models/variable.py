@@ -27,6 +27,4 @@ class Variable(AgentScopedModel):
     update_policy: VariableUpdatePolicy = Field(
         default=VariableUpdatePolicy.ON_DEMAND, description="Refresh policy"
     )
-    cache_ttl_seconds: int = Field(
-        default=0, ge=0, description="0 = no cache"
-    )
+    cache_ttl_seconds: int = Field(default=0, ge=0, description="0 = no cache")

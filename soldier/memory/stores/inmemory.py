@@ -35,14 +35,9 @@ class InMemoryMemoryStore(MemoryStore):
             return episode
         return None
 
-    async def get_episodes(
-        self, group_id: str, *, limit: int = 100
-    ) -> list[Episode]:
+    async def get_episodes(self, group_id: str, *, limit: int = 100) -> list[Episode]:
         """Get episodes for a group."""
-        results = [
-            ep for ep in self._episodes.values()
-            if ep.group_id == group_id
-        ]
+        results = [ep for ep in self._episodes.values() if ep.group_id == group_id]
         # Sort by occurred_at descending
         results.sort(key=lambda x: x.occurred_at, reverse=True)
         return results[:limit]
@@ -81,7 +76,8 @@ class InMemoryMemoryStore(MemoryStore):
         """Search episodes by text content (substring match)."""
         query_lower = query.lower()
         results = [
-            ep for ep in self._episodes.values()
+            ep
+            for ep in self._episodes.values()
             if ep.group_id == group_id and query_lower in ep.content.lower()
         ]
         # Sort by occurred_at descending
@@ -169,9 +165,7 @@ class InMemoryMemoryStore(MemoryStore):
             results.append(rel)
         return results
 
-    async def delete_relationship(
-        self, group_id: str, relationship_id: UUID
-    ) -> bool:
+    async def delete_relationship(self, group_id: str, relationship_id: UUID) -> bool:
         """Delete a relationship."""
         rel = self._relationships.get(relationship_id)
         if rel and rel.group_id == group_id:
@@ -214,9 +208,7 @@ class InMemoryMemoryStore(MemoryStore):
                 continue
 
             # Find outgoing relationships
-            rels = await self.get_relationships(
-                group_id, from_entity_id=current_id
-            )
+            rels = await self.get_relationships(group_id, from_entity_id=current_id)
 
             for rel in rels:
                 if relation_types and rel.relation_type not in relation_types:
@@ -229,9 +221,7 @@ class InMemoryMemoryStore(MemoryStore):
                         queue.append((rel.to_entity_id, current_depth + 1))
 
             # Find incoming relationships
-            rels = await self.get_relationships(
-                group_id, to_entity_id=current_id
-            )
+            rels = await self.get_relationships(group_id, to_entity_id=current_id)
 
             for rel in rels:
                 if relation_types and rel.relation_type not in relation_types:
@@ -251,28 +241,19 @@ class InMemoryMemoryStore(MemoryStore):
         count = 0
 
         # Delete episodes
-        episode_ids = [
-            eid for eid, ep in self._episodes.items()
-            if ep.group_id == group_id
-        ]
+        episode_ids = [eid for eid, ep in self._episodes.items() if ep.group_id == group_id]
         for eid in episode_ids:
             del self._episodes[eid]
             count += 1
 
         # Delete entities
-        entity_ids = [
-            eid for eid, en in self._entities.items()
-            if en.group_id == group_id
-        ]
+        entity_ids = [eid for eid, en in self._entities.items() if en.group_id == group_id]
         for eid in entity_ids:
             del self._entities[eid]
             count += 1
 
         # Delete relationships
-        rel_ids = [
-            rid for rid, rel in self._relationships.items()
-            if rel.group_id == group_id
-        ]
+        rel_ids = [rid for rid, rel in self._relationships.items() if rel.group_id == group_id]
         for rid in rel_ids:
             del self._relationships[rid]
             count += 1

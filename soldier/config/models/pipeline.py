@@ -67,8 +67,8 @@ class RerankingConfig(BaseModel):
     )
 
 
-class LLMFilteringConfig(BaseModel):
-    """LLM filtering step configuration."""
+class RuleFilteringConfig(BaseModel):
+    """Rule filtering step configuration."""
 
     enabled: bool = Field(default=True, description="Enable this step")
     llm_provider: str = Field(
@@ -80,6 +80,49 @@ class LLMFilteringConfig(BaseModel):
         gt=0,
         description="Batch size for filtering",
     )
+
+
+class ScenarioFilteringConfig(BaseModel):
+    """Scenario filtering step configuration."""
+
+    enabled: bool = Field(default=True, description="Enable this step")
+    llm_provider: str = Field(
+        default="haiku",
+        description="LLM provider for scenario evaluation",
+    )
+    relocalize_on_inconsistent: bool = Field(
+        default=True,
+        description="Attempt relocalization on inconsistent state",
+    )
+    max_loop_count: int = Field(
+        default=3,
+        ge=1,
+        description="Max times to visit same step before loop detection",
+    )
+
+
+class ToolExecutionConfig(BaseModel):
+    """Tool execution step configuration."""
+
+    enabled: bool = Field(default=True, description="Enable this step")
+    timeout_ms: int = Field(
+        default=5000,
+        gt=0,
+        description="Timeout per tool execution",
+    )
+    max_parallel: int = Field(
+        default=5,
+        ge=1,
+        description="Max tools to execute in parallel",
+    )
+    fail_fast: bool = Field(
+        default=False,
+        description="Stop on first tool failure",
+    )
+
+
+# Keep LLMFilteringConfig as alias for backwards compatibility
+LLMFilteringConfig = RuleFilteringConfig
 
 
 class GenerationConfig(BaseModel):
@@ -133,9 +176,17 @@ class PipelineConfig(BaseModel):
         default_factory=RerankingConfig,
         description="Reranking step",
     )
-    llm_filtering: LLMFilteringConfig = Field(
-        default_factory=LLMFilteringConfig,
-        description="LLM filtering step",
+    rule_filtering: RuleFilteringConfig = Field(
+        default_factory=RuleFilteringConfig,
+        description="Rule filtering step",
+    )
+    scenario_filtering: ScenarioFilteringConfig = Field(
+        default_factory=ScenarioFilteringConfig,
+        description="Scenario filtering step",
+    )
+    tool_execution: ToolExecutionConfig = Field(
+        default_factory=ToolExecutionConfig,
+        description="Tool execution step",
     )
     generation: GenerationConfig = Field(
         default_factory=GenerationConfig,
@@ -145,3 +196,9 @@ class PipelineConfig(BaseModel):
         default_factory=EnforcementConfig,
         description="Enforcement step",
     )
+
+    # Backwards compatibility alias
+    @property
+    def llm_filtering(self) -> RuleFilteringConfig:
+        """Alias for rule_filtering for backwards compatibility."""
+        return self.rule_filtering
