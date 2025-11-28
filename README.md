@@ -2,9 +2,9 @@
 
 ![Soldier](docs/pic.png)
 
-**Production-grade cognitive engine for conversational AI**
+**Production-grade cognitive engine for business-aligned AI support agents**
 
-Soldier is an API-first, multi-tenant, fully persistent architecture designed for horizontal scaling. It replaces code-centric frameworks with a hot-reloadable configuration system where agent behavior is defined via API, not code.
+Soldier is purpose-built for creating AI support agents that follow business rules, not just prompts. It's an API-first, multi-tenant, fully persistent architecture where agent behavior is defined through explicit business policies—scenarios, rules, and enforcement—ensuring your AI agents consistently align with company guidelines, compliance requirements, and support workflows. No more hoping the LLM follows instructions; Soldier enforces business alignment at runtime.
 
 ---
 
