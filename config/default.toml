@@ -1,0 +1,164 @@
+# Soldier Default Configuration
+# This file contains sensible defaults for all configuration options.
+# Environment-specific files override these values.
+
+app_name = "soldier"
+debug = false
+log_level = "INFO"
+
+# =============================================================================
+# API Configuration
+# =============================================================================
+[api]
+host = "0.0.0.0"
+port = 8000
+workers = 4
+cors_origins = ["*"]
+cors_allow_credentials = true
+
+[api.rate_limit]
+enabled = true
+requests_per_minute = 60
+burst_size = 10
+
+# =============================================================================
+# Storage Configuration
+# =============================================================================
+[storage.config]
+backend = "postgres"
+pool_size = 10
+pool_timeout = 30
+
+[storage.memory]
+backend = "postgres"
+pool_size = 10
+pool_timeout = 30
+
+[storage.session]
+backend = "redis"
+pool_size = 10
+pool_timeout = 30
+
+[storage.audit]
+backend = "postgres"
+pool_size = 10
+pool_timeout = 30
+
+# =============================================================================
+# AI Provider Configuration
+# =============================================================================
+[providers]
+default_llm = "haiku"
+default_embedding = "default"
+default_rerank = "default"
+
+[providers.llm.haiku]
+provider = "anthropic"
+model = "claude-3-haiku-20240307"
+max_tokens = 4096
+temperature = 0.7
+timeout = 60
+
+[providers.llm.sonnet]
+provider = "anthropic"
+model = "claude-sonnet-4-5-20250514"
+max_tokens = 4096
+temperature = 0.7
+timeout = 120
+
+[providers.embedding.default]
+provider = "openai"
+model = "text-embedding-3-small"
+dimensions = 1536
+batch_size = 100
+
+[providers.rerank.default]
+provider = "cohere"
+model = "rerank-english-v3.0"
+top_k = 10
+
+# =============================================================================
+# Pipeline Configuration
+# =============================================================================
+[pipeline.context_extraction]
+enabled = true
+mode = "llm"
+llm_provider = "haiku"
+history_turns = 5
+
+[pipeline.retrieval]
+enabled = true
+embedding_provider = "default"
+max_k = 30
+
+[pipeline.retrieval.rule_selection]
+strategy = "adaptive_k"
+min_score = 0.5
+max_k = 10
+
+[pipeline.retrieval.scenario_selection]
+strategy = "entropy"
+min_score = 0.5
+max_k = 5
+
+[pipeline.retrieval.memory_selection]
+strategy = "clustering"
+min_score = 0.4
+max_k = 15
+
+[pipeline.reranking]
+enabled = true
+rerank_provider = "default"
+top_k = 10
+
+[pipeline.llm_filtering]
+enabled = true
+llm_provider = "haiku"
+batch_size = 5
+
+[pipeline.generation]
+enabled = true
+llm_provider = "sonnet"
+temperature = 0.7
+max_tokens = 1024
+
+[pipeline.enforcement]
+enabled = true
+self_critique_enabled = false
+max_retries = 2
+
+# =============================================================================
+# Selection Strategies
+# =============================================================================
+[selection.rule]
+strategy = "adaptive_k"
+min_score = 0.5
+max_k = 10
+
+[selection.scenario]
+strategy = "entropy"
+min_score = 0.5
+max_k = 5
+
+[selection.memory]
+strategy = "clustering"
+min_score = 0.4
+max_k = 15
+
+# =============================================================================
+# Observability Configuration
+# =============================================================================
+[observability.logging]
+level = "INFO"
+format = "json"
+include_trace_id = true
+
+[observability.tracing]
+enabled = true
+service_name = "soldier"
+sample_rate = 1.0
+
+[observability.metrics]
+enabled = true
+port = 9090
+path = "/metrics"

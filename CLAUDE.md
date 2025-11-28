@@ -693,3 +693,10 @@ This project uses speckit for feature implementation. When implementing features
 
 - **Last Updated**: 2025-01-15
 - **Based on Documentation Version**: Initial architecture
+
+## Active Technologies
+- Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog (001-project-foundation)
+- N/A (configuration phase - no database yet) (001-project-foundation)
+
+## Recent Changes
+- 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog

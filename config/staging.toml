@@ -1,0 +1,11 @@
+# Soldier Staging Configuration
+# Overrides for staging environment
+
+debug = false
+log_level = "INFO"
+
+[api]
+workers = 2
+
+[observability.tracing]
+sample_rate = 0.5

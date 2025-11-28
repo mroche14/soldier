@@ -1,0 +1,52 @@
+# Soldier Local Development Stack
+# Usage: docker-compose up -d
+
+services:
+  # PostgreSQL for ConfigStore, MemoryStore, AuditStore
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: soldier
+      POSTGRES_PASSWORD: soldier
+      POSTGRES_DB: soldier
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soldier"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for SessionStore
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,1 @@
+"""Soldier test suite."""

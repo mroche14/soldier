@@ -1,0 +1,18 @@
+# Soldier Development Configuration
+# Overrides for local development environment
+
+debug = true
+log_level = "DEBUG"
+
+[api]
+workers = 1
+
+[api.rate_limit]
+enabled = false
+
+[observability.logging]
+level = "DEBUG"
+format = "console"
+
+[observability.tracing]
+sample_rate = 1.0

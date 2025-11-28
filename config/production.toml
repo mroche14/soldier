@@ -1,0 +1,19 @@
+# Soldier Production Configuration
+# Overrides for production environment
+
+debug = false
+log_level = "INFO"
+
+[api]
+workers = 8
+
+[api.rate_limit]
+requests_per_minute = 100
+burst_size = 20
+
+[observability.tracing]
+sample_rate = 0.1
+
+[observability.logging]
+level = "INFO"
+format = "json"
