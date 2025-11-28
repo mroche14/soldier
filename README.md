@@ -1,5 +1,7 @@
 # Soldier
 
+![Soldier](docs/pic.png)
+
 **Production-grade cognitive engine for conversational AI**
 
 Soldier is an API-first, multi-tenant, fully persistent architecture designed for horizontal scaling. It replaces code-centric frameworks with a hot-reloadable configuration system where agent behavior is defined via API, not code.
