@@ -143,6 +143,15 @@ class InMemoryMemoryStore(MemoryStore):
         self._relationships[relationship.id] = relationship
         return relationship.id
 
+    async def get_relationship(
+        self, group_id: str, relationship_id: UUID
+    ) -> Relationship | None:
+        """Get a single relationship by ID."""
+        rel = self._relationships.get(relationship_id)
+        if rel and rel.group_id == group_id:
+            return rel
+        return None
+
     async def get_relationships(
         self,
         group_id: str,
@@ -164,6 +173,13 @@ class InMemoryMemoryStore(MemoryStore):
                 continue
             results.append(rel)
         return results
+
+    async def update_relationship(self, relationship: Relationship) -> bool:
+        """Update an existing relationship."""
+        if relationship.id in self._relationships:
+            self._relationships[relationship.id] = relationship
+            return True
+        return False
 
     async def delete_relationship(self, group_id: str, relationship_id: UUID) -> bool:
         """Delete a relationship."""

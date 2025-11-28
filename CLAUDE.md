@@ -738,6 +738,7 @@ This project uses speckit for feature implementation. When implementing features
 - In-memory only (dict-based implementations for testing/development) (003-core-abstractions)
 - Python 3.11+ + pydantic, pydantic-settings, structlog, prometheus-client, opentelemetry-sdk (existing); numpy, scipy, scikit-learn (new for selection strategies) (004-alignment-pipeline)
 - In-memory stores (existing); ConfigStore, MemoryStore, SessionStore, AuditStore interfaces already defined (004-alignment-pipeline)
+- MemoryStore interface (InMemory for dev, PostgreSQL/Neo4j/MongoDB for production) (005-memory-ingestion)
 
 ## Recent Changes
 - 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog

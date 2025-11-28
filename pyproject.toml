@@ -30,6 +30,7 @@ dependencies = [
     "numpy>=2.3.5",
     "scipy>=1.16.3",
     "scikit-learn>=1.7.2",
+    "python-Levenshtein>=0.27.0",  # Required for entity deduplication
 ]
 
 [project.optional-dependencies]
@@ -39,6 +40,14 @@ dev = [
     "pytest-cov>=4.0",
     "ruff>=0.4",
     "mypy>=1.10",
+]
+# Optional providers - only install if you need them
+embeddings = [
+    "sentence-transformers>=5.1.2",  # For local embedding generation
+]
+queue = [
+    "rq>=2.6.1",  # For Redis-based task queue
+    "redis>=6.0.0",
 ]
 
 [dependency-groups]
