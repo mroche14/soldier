@@ -161,6 +161,126 @@ class EnforcementConfig(BaseModel):
     )
 
 
+class EntityExtractionConfig(BaseModel):
+    """Entity extraction configuration."""
+
+    enabled: bool = Field(default=True, description="Enable entity extraction")
+    llm_provider: str = Field(default="anthropic", description="LLM provider name")
+    model: str = Field(default="haiku", description="Model to use")
+    max_tokens: int = Field(default=1024, gt=0, description="Max tokens")
+    temperature: float = Field(
+        default=0.3, ge=0.0, le=2.0, description="LLM temperature"
+    )
+    batch_size: int = Field(default=10, gt=0, description="Batch size")
+    timeout_ms: int = Field(default=2000, gt=0, description="Timeout in ms")
+    min_confidence: Literal["high", "medium", "low"] = Field(
+        default="medium", description="Minimum confidence"
+    )
+
+
+class EntityDeduplicationConfig(BaseModel):
+    """Entity deduplication configuration."""
+
+    exact_match_enabled: bool = Field(
+        default=True, description="Enable exact match stage"
+    )
+    fuzzy_match_enabled: bool = Field(
+        default=True, description="Enable fuzzy match stage"
+    )
+    fuzzy_threshold: float = Field(
+        default=0.85, ge=0.0, le=1.0, description="Fuzzy match threshold"
+    )
+    embedding_match_enabled: bool = Field(
+        default=True, description="Enable embedding match stage"
+    )
+    embedding_threshold: float = Field(
+        default=0.80, ge=0.0, le=1.0, description="Embedding match threshold"
+    )
+    rule_based_enabled: bool = Field(
+        default=True, description="Enable rule-based matching"
+    )
+
+
+class WindowSummarizationConfig(BaseModel):
+    """Window summarization configuration."""
+
+    turns_per_summary: int = Field(
+        default=20, gt=0, description="Turns per summary window"
+    )
+    llm_provider: str = Field(default="anthropic", description="LLM provider")
+    model: str = Field(default="haiku", description="Model to use")
+    max_tokens: int = Field(default=256, gt=0, description="Max tokens")
+    temperature: float = Field(default=0.5, ge=0.0, le=2.0, description="Temperature")
+
+
+class MetaSummarizationConfig(BaseModel):
+    """Meta-summarization configuration."""
+
+    summaries_per_meta: int = Field(
+        default=5, gt=0, description="Summaries per meta-summary"
+    )
+    enabled_at_turn_count: int = Field(
+        default=100, gt=0, description="Enable meta-summaries at turn count"
+    )
+    llm_provider: str = Field(default="anthropic", description="LLM provider")
+    model: str = Field(default="haiku", description="Model to use")
+    max_tokens: int = Field(default=512, gt=0, description="Max tokens")
+    temperature: float = Field(default=0.5, ge=0.0, le=2.0, description="Temperature")
+
+
+class SummarizationConfig(BaseModel):
+    """Summarization configuration."""
+
+    enabled: bool = Field(default=True, description="Enable summarization")
+    window: WindowSummarizationConfig = Field(
+        default_factory=WindowSummarizationConfig,
+        description="Window summarization",
+    )
+    meta: MetaSummarizationConfig = Field(
+        default_factory=MetaSummarizationConfig,
+        description="Meta-summarization",
+    )
+
+
+class MemoryIngestionConfig(BaseModel):
+    """Memory ingestion system configuration."""
+
+    enabled: bool = Field(default=True, description="Enable memory ingestion")
+    embedding_enabled: bool = Field(
+        default=True, description="Generate embeddings during ingestion"
+    )
+    entity_extraction_enabled: bool = Field(
+        default=True, description="Enable entity extraction"
+    )
+    summarization_enabled: bool = Field(
+        default=True, description="Enable summarization"
+    )
+    async_extraction: bool = Field(
+        default=True, description="Run extraction asynchronously"
+    )
+    async_summarization: bool = Field(
+        default=True, description="Run summarization asynchronously"
+    )
+    queue_backend: Literal["redis", "inmemory"] = Field(
+        default="inmemory", description="Task queue backend"
+    )
+    max_ingestion_latency_ms: int = Field(
+        default=500, gt=0, description="Max ingestion latency target"
+    )
+    entity_extraction: EntityExtractionConfig = Field(
+        default_factory=EntityExtractionConfig,
+        description="Entity extraction config",
+    )
+    deduplication: EntityDeduplicationConfig = Field(
+        default_factory=EntityDeduplicationConfig,
+        description="Deduplication config",
+    )
+    summarization: SummarizationConfig = Field(
+        default_factory=SummarizationConfig,
+        description="Summarization config",
+    )
+
+
 class PipelineConfig(BaseModel):
     """Configuration for the turn pipeline."""
 
@@ -195,6 +315,10 @@ class PipelineConfig(BaseModel):
     enforcement: EnforcementConfig = Field(
         default_factory=EnforcementConfig,
         description="Enforcement step",
+    )
+    memory_ingestion: MemoryIngestionConfig = Field(
+        default_factory=MemoryIngestionConfig,
+        description="Memory ingestion configuration",
     )
 
     # Backwards compatibility alias

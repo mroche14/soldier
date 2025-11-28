@@ -96,6 +96,13 @@ class MemoryStore(ABC):
         pass
 
     @abstractmethod
+    async def get_relationship(
+        self, group_id: str, relationship_id: UUID
+    ) -> Relationship | None:
+        """Get a single relationship by ID."""
+        pass
+
+    @abstractmethod
     async def get_relationships(
         self,
         group_id: str,
@@ -105,6 +112,11 @@ class MemoryStore(ABC):
         relation_type: str | None = None,
     ) -> list[Relationship]:
         """Get relationships with optional filters."""
+        pass
+
+    @abstractmethod
+    async def update_relationship(self, relationship: Relationship) -> bool:
+        """Update an existing relationship."""
         pass
 
     @abstractmethod

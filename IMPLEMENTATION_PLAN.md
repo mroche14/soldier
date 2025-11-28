@@ -516,21 +516,42 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/memory-layer.md`
 
 ### 12.1 Memory Ingestion
-- [ ] `soldier/memory/ingestion/__init__.py`
-- [ ] `soldier/memory/ingestion/ingestor.py`
-  - [ ] MemoryIngestor class
+- [x] `soldier/memory/ingestion/__init__.py`
+- [x] `soldier/memory/ingestion/ingestor.py`
+  - [x] MemoryIngestor class
   - [x] Episode creation from turns
-  - [ ] Embedding generation
-- [ ] `soldier/memory/ingestion/entity_extractor.py`
+  - [x] Embedding generation with fallback
+  - [x] Async task queuing
+- [x] `soldier/memory/ingestion/entity_extractor.py`
   - [x] EntityExtractor class
-  - [ ] LLM-based entity extraction
-- [ ] `soldier/memory/ingestion/summarizer.py`
-  - [ ] ConversationSummarizer class
-  - [ ] Hierarchical summarization
+  - [x] LLM-based entity extraction
+  - [x] EntityDeduplicator class (4-stage pipeline)
+  - [x] Temporal relationship updates
+- [x] `soldier/memory/ingestion/summarizer.py`
+  - [x] ConversationSummarizer class
+  - [x] Hierarchical summarization (window + meta)
+- [x] `soldier/memory/ingestion/models.py`
+  - [x] Structured output models (ExtractedEntity, ExtractedRelationship)
+- [x] `soldier/memory/ingestion/errors.py`
+  - [x] Error classes (IngestionError, ExtractionError, SummarizationError)
+- [x] `soldier/memory/ingestion/queue.py`
+  - [x] TaskQueue interface
+  - [x] InMemoryTaskQueue implementation
+  - [x] RedisTaskQueue implementation
+- [x] `soldier/memory/ingestion/tasks.py`
+  - [x] Background task handlers
+- [x] `soldier/config/models/pipeline.py`
+  - [x] MemoryIngestionConfig and related config models
+- [x] `soldier/providers/embedding/sentence_transformers.py`
+  - [x] SentenceTransformersProvider implementation
+- [x] `config/default.toml`
+  - [x] Memory ingestion configuration section
 
 ### 12.2 Tests
-- [ ] `tests/unit/memory/ingestion/test_ingestor.py`
-- [ ] `tests/unit/memory/ingestion/test_entity_extractor.py`
+- [x] `tests/unit/memory/ingestion/test_ingestor.py`
+- [x] `tests/unit/memory/ingestion/test_entity_extractor.py`
+- [x] `tests/unit/memory/ingestion/test_summarizer.py`
+- [x] `tests/integration/memory/test_ingestion_flow.py`
 
 ---
 

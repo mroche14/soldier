@@ -128,6 +128,52 @@ self_critique_enabled = false
 max_retries = 2
 
 # =============================================================================
+# Memory Ingestion Configuration
+# =============================================================================
+[pipeline.memory_ingestion]
+enabled = true
+embedding_enabled = true
+entity_extraction_enabled = true
+summarization_enabled = true
+async_extraction = true
+async_summarization = true
+queue_backend = "inmemory"
+max_ingestion_latency_ms = 500
+
+[pipeline.memory_ingestion.entity_extraction]
+enabled = true
+llm_provider = "anthropic"
+model = "haiku"
+max_tokens = 1024
+temperature = 0.3
+batch_size = 10
+timeout_ms = 2000
+min_confidence = "medium"
+
+[pipeline.memory_ingestion.deduplication]
+exact_match_enabled = true
+fuzzy_match_enabled = true
+fuzzy_threshold = 0.85
+embedding_match_enabled = true
+embedding_threshold = 0.80
+rule_based_enabled = true
+
+[pipeline.memory_ingestion.summarization.window]
+turns_per_summary = 20
+llm_provider = "anthropic"
+model = "haiku"
+max_tokens = 256
+temperature = 0.5
+
+[pipeline.memory_ingestion.summarization.meta]
+summaries_per_meta = 5
+enabled_at_turn_count = 100
+llm_provider = "anthropic"
+model = "haiku"
+max_tokens = 512
+temperature = 0.5
+
+# =============================================================================
 # Selection Strategies
 # =============================================================================
 [selection.rule]
