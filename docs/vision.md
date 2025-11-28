@@ -7,8 +7,8 @@ Building production-grade conversational AI agents is hard. Current frameworks f
 ### The Prompt Trap
 Stuff everything into a system prompt and hope the LLM follows instructions. Fails at scale—more rules means more ignored instructions and unpredictable behavior.
 
-### The Code Trap (Parlant and similar)
-Frameworks like Parlant require **code to define agent behavior**:
+### The Code Trap
+Many frameworks require **code to define agent behavior**:
 - Journeys defined via SDK calls (`agent.create_journey()`)
 - No hot-reload—restart the process to update behavior
 - Agents live in memory—no persistence, no horizontal scaling
@@ -34,20 +34,20 @@ Soldier is a **production-grade cognitive engine** for conversational AI. It rep
 
 ### What Soldier Provides
 
-1. **Scenarios** (replaces Parlant Journeys)
+1. **Scenarios**
    - Multi-step conversational flows
    - CRUD via API—no code required
    - State transitions with conditions
    - Live updates without restart
 
-2. **Rules** (replaces Parlant Guidelines, but better)
+2. **Rules**
    - "When X, then Y" policies
    - Scoped: GLOBAL → SCENARIO → STEP
    - Priority ordering, cooldowns, fire limits
    - Semantic + keyword matching
    - Post-generation enforcement
 
-3. **Templates** (replaces Parlant Canned Responses, but better)
+3. **Templates**
    - Pre-written responses for critical points
    - Modes: SUGGEST, EXCLUSIVE (bypass LLM), FALLBACK
    - Variable interpolation
@@ -57,75 +57,16 @@ Soldier is a **production-grade cognitive engine** for conversational AI. It rep
    - Execution policies (sync/async, timeout, retries)
    - Integration with external tool orchestration (Restate, Celery)
 
-5. **Memory** (Parlant has none)
+5. **Memory**
    - Temporal knowledge graph (episodes, entities, relationships)
    - Hybrid retrieval: vector + BM25 + graph traversal
    - Per-tenant isolation
    - Automatic summarization for long conversations
 
-6. **Enforcement** (Parlant has none)
+6. **Enforcement**
    - Post-generation validation against Rules
    - Automatic regeneration or fallback
    - Hard constraints that cannot be violated
-
-## Integration with SmartBeez (kernel_agent)
-
-Soldier is the **cognitive layer** in the SmartBeez architecture, replacing parlant-adapter and parlant-server:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      CONTROL PLANE                               │
-│                                                                  │
-│  Admin UI → Control API → Supabase → Publisher → Redis Bundles  │
-│                                                                  │
-│  Now includes: Soldier Scenarios, Rules, Templates               │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      CHANNEL LAYER                               │
-│                                                                  │
-│  External Channels → Channel-Gateway → Message-Router            │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      COGNITIVE LAYER                             │
-│                                                                  │
-│                         SOLDIER                                  │
-│                                                                  │
-│  Replaces: parlant-adapter + parlant-server                     │
-│                                                                  │
-│  Provides:                                                      │
-│  - Scenario management (like Journeys, but API-driven)          │
-│  - Rule matching (like Guidelines, but with priority/scopes)    │
-│  - Memory layer (NEW - Parlant has none)                        │
-│  - Response composition + LLM calls                             │
-│  - Post-generation enforcement (NEW)                            │
-│  - Tool orchestration                                           │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      TOOL LAYER                                  │
-│                                                                  │
-│  ToolHub → Restate (Path A) / Celery (Path B) / MQ (Path C)     │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## What Soldier Replaces
-
-| Parlant Component | Soldier Replacement | Improvement |
-|-------------------|---------------------|-------------|
-| `parlant-server` | Soldier Core | Persistent, multi-tenant, API-first |
-| `parlant-adapter` | Soldier API | No translation layer needed |
-| `p.Server()` | FastAPI + PostgreSQL | No in-memory state |
-| `agent.create_journey()` | `POST /scenarios` | No code, hot-reload |
-| `agent.create_guideline()` | `POST /rules` | Scopes, priorities, enforcement |
-| ParlantCompiler | Config Watcher | Simpler—just load from Redis |
-| N/A | Memory Layer | Temporal graph, hybrid retrieval |
-| N/A | Enforcer | Post-generation validation |
 
 ## Goals
 
@@ -141,7 +82,6 @@ Soldier is the **cognitive layer** in the SmartBeez architecture, replacing parl
 - Building a general-purpose LLM framework
 - Multi-agent orchestration (single agent with tools preferred)
 - Managed cloud service (self-hostable priority)
-- Backward compatibility with Parlant SDK
 
 ## Key Concepts
 

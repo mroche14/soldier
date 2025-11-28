@@ -82,7 +82,7 @@ This document provides a high-level overview of the Soldier system's architectur
 
 Key architectural points include:
 *   **Design Principles:** The system is built to be API-first, stateless (no in-memory state), and multi-tenant. Every component, from AI models to storage backends, is designed to be pluggable.
-*   **Deployment Modes:** It supports two modes: **Standalone**, where Soldier is the source of truth for configuration, and **SmartBeez Integration**, where it consumes configuration from an external control plane.
+*   **Deployment Modes:** It supports two modes: **Standalone**, where Soldier is the source of truth for configuration, and **External Platform Integration**, where it consumes configuration from an external control plane.
 *   **Core Components:**
     *   **API Layer:** Handles external communication, authentication, and validation.
     *   **Alignment Engine:** The central processing pipeline that ensures agent behavior follows defined rules and scenarios.
@@ -148,7 +148,7 @@ This document defines the Pydantic models that represent Soldier's configuration
 
 The key configuration models defined are:
 
-*   **`DeploymentConfig`:** Specifies the deployment mode (`standalone` or `smartbeez`) and its associated settings.
+*   **`DeploymentConfig`:** Specifies the deployment mode (`standalone` or `external`) and its associated settings.
 *   **`APIConfig`:** Configures the API server, including host, port, workers, CORS, and rate limiting.
 *   **Provider Configurations:** A comprehensive set of models for all AI providers, categorized by modality (LLM, Vision, Embedding, STT, TTS, etc.). A key feature is the use of **fallback chains**, where each pipeline step can specify a list of models to try in order. This provides resilience against provider outages or performance issues. The configuration leverages **LiteLLM** for a unified interface.
 *   **`PipelineConfig`:** This is the master model for the turn pipeline. It composes configurations for each step (`InputProcessing`, `ContextExtraction`, `Retrieval`, `Generation`, etc.), allowing for fine-grained control over which models and settings are used at each stage of processing.
@@ -264,7 +264,7 @@ Key aspects of the API layer include:
 
 ### `docs/architecture/kernel-agent-integration.md`
 
-This document explains how Soldier integrates into the broader SmartBeez architecture, positioning itself as the core **Cognitive Layer**. It is designed to replace the previous `parlant-adapter` and `parlant-server` components.
+This document explains how Soldier integrates into the broader External Platform architecture, positioning itself as the core **Cognitive Layer**. It is designed to replace the previous `legacy-adapter` and `legacy-server` components.
 
 Key points of the integration are:
 
@@ -274,7 +274,7 @@ Key points of the integration are:
 *   **Data Flow:** The document details the flow of inbound messages from the `Channel-Gateway` to Soldier and the flow of configuration updates from the `Control Plane` to Soldier via the Publisher and Redis.
 *   **Tenant Isolation:** Tenant isolation is maintained at every layer, from Redis key prefixes to `tenant_id` columns in the databases.
 *   **Migration Path:** A phased migration path is outlined, starting with deploying Soldier in a shadow mode alongside the old system, followed by a gradual cutover, and finally the complete removal of the legacy components.
-*   **Key Differences:** The document concludes by highlighting the major architectural improvements over the previous system (Parlant), such as being stateless, supporting hot-reloading, native multi-tenancy, and having a more advanced rule and memory system.
+*   **Key Differences:** The document concludes by highlighting the major architectural improvements over the previous system (legacy framework), such as being stateless, supporting hot-reloading, native multi-tenancy, and having a more advanced rule and memory system.
 
 ---
 
@@ -318,13 +318,13 @@ This document lays out the vision for Soldier, positioning it as a **production-
 
 The core problems it aims to solve are:
 1.  **The "Prompt Trap":** Relying solely on large system prompts, which becomes unmanageable and unpredictable at scale.
-2.  **The "Code Trap":** Requiring developers to define agent behavior in code (like the previous Parlant system), which prevents hot-reloading, horizontal scaling, and non-developer access.
+2.  **The "Code Trap":** Requiring developers to define agent behavior in code (like the previous legacy framework system), which prevents hot-reloading, horizontal scaling, and non-developer access.
 
 Soldier's solution is an **API-first, multi-tenant, and fully persistent architecture**. Its key principles include having zero in-memory state, hot-reloading for all configurations, and native multi-tenancy.
 
 The document highlights the key components Soldier provides, such as API-driven **Scenarios** and **Rules**, an advanced **Memory** system (a feature the previous system lacked), and a post-generation **Enforcement** step to validate responses against hard constraints.
 
-It also clarifies Soldier's role within the broader SmartBeez ecosystem as the **cognitive layer**, replacing the legacy Parlant components. The vision is not to build another general-purpose LLM framework but a specialized, scalable, and observable engine for building reliable conversational agents.
+It also clarifies Soldier's role within the broader External Platform ecosystem as the **cognitive layer**, replacing the legacy legacy framework components. The vision is not to build another general-purpose LLM framework but a specialized, scalable, and observable engine for building reliable conversational agents.
 
 ---
 
@@ -347,7 +347,7 @@ This approach provides a balance of semantic relevance and keyword precision, wh
 
 ### `docs/architecture/observability.md`
 
-This document defines Soldier's logging, tracing, and metrics strategy, designed to integrate seamlessly into the SmartBeez (kernel_agent) observability stack.
+This document defines Soldier's logging, tracing, and metrics strategy, designed to integrate seamlessly into the External Platform (kernel_agent) observability stack.
 
 Key aspects include:
 

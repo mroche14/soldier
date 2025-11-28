@@ -11,8 +11,8 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-class SmartBeezConfig(BaseModel):
-    """Configuration for SmartBeez integration mode."""
+class External PlatformConfig(BaseModel):
+    """Configuration for External Platform integration mode."""
 
     redis_bundle_prefix: str = Field(
         default="{tenant}:{agent}",
@@ -43,30 +43,30 @@ class DeploymentConfig(BaseModel):
 
     Controls whether Soldier is the source of truth for configuration
     (standalone) or consumes configuration from an external control plane
-    (smartbeez).
+    (external).
     """
 
-    mode: Literal["standalone", "smartbeez"] = Field(
+    mode: Literal["standalone", "external"] = Field(
         default="standalone",
-        description="Deployment mode: 'standalone' (Soldier owns config) or 'smartbeez' (external control plane)"
+        description="Deployment mode: 'standalone' (Soldier owns config) or 'external' (external control plane)"
     )
 
-    # SmartBeez integration settings (only used when mode = "smartbeez")
-    smartbeez: SmartBeezConfig = Field(default_factory=SmartBeezConfig)
+    # External Platform integration settings (only used when mode = "external")
+    external: External PlatformConfig = Field(default_factory=External PlatformConfig)
 
     # Standalone mode settings
     enable_crud_api: bool = Field(
         default=True,
-        description="Enable CRUD endpoints (auto-disabled in smartbeez mode)"
+        description="Enable CRUD endpoints (auto-disabled in external mode)"
     )
 
     def is_standalone(self) -> bool:
         """Check if running in standalone mode."""
         return self.mode == "standalone"
 
-    def is_smartbeez(self) -> bool:
-        """Check if running in SmartBeez integration mode."""
-        return self.mode == "smartbeez"
+    def is_external(self) -> bool:
+        """Check if running in External Platform integration mode."""
+        return self.mode == "external"
 ```
 
 The Settings class includes deployment configuration:

@@ -39,17 +39,17 @@ Soldier is the **source of truth** for all configuration. Use this mode when:
 - Version history and rollback support
 - Direct API access for automation
 
-### SmartBeez Integration Mode
+### External Control Plane Mode
 
-Soldier is a **consumer** of configuration from the SmartBeez Control Plane. Use this mode when:
-- Integrating into the SmartBeez ecosystem
-- Control Plane (Supabase) is the source of truth
-- Configuration is managed via SmartBeez Admin UI
+Soldier is a **consumer** of configuration from an external Control Plane. Use this mode when:
+- Integrating into a larger platform architecture
+- An external Control Plane is the source of truth
+- Configuration is managed via an external Admin UI
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ SmartBeez   │────▶│  Supabase   │────▶│  Publisher  │────▶│   Redis     │
-│  Admin UI   │     │   (SoT)     │     │  (Restate)  │     │  Bundles    │
+│  Admin UI   │────▶│  Database   │────▶│  Publisher  │────▶│   Redis     │
+│  (external) │     │   (SoT)     │     │  (Restate)  │     │  Bundles    │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
                                                                    │
                                                     cfg-updated    │
@@ -64,18 +64,16 @@ Soldier is a **consumer** of configuration from the SmartBeez Control Plane. Use
 - Configuration loaded from Redis bundles (compiled by Publisher)
 - Hot-reload via pub/sub notifications (`cfg-updated`)
 - CRUD endpoints disabled or read-only
-- See [kernel-agent-integration.md](./kernel-agent-integration.md) for details
-
 ### Configuration
 
 ```toml
 # config/default.toml
 
 [deployment]
-mode = "standalone"  # or "smartbeez"
+mode = "standalone"  # or "external"
 
-# SmartBeez integration settings (only used when mode = "smartbeez")
-[deployment.smartbeez]
+# External control plane settings (only used when mode = "external")
+[deployment.external]
 redis_bundle_prefix = "{tenant}:{agent}"
 config_pointer_key = "cfg"
 pubsub_channel = "cfg-updated"

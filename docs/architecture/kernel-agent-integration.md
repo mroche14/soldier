@@ -1,10 +1,10 @@
-# Soldier Integration with SmartBeez (kernel_agent)
+# Soldier Integration with External Platforms
 
-This document describes how Soldier integrates into the SmartBeez multi-plane architecture as a replacement for Parlant.
+This document describes how Soldier integrates into a multi-plane architecture as the cognitive layer.
 
 ## Architecture Position
 
-Soldier is the **Cognitive Layer** in SmartBeez, replacing both `parlant-adapter` and `parlant-server`:
+Soldier is the **Cognitive Layer** in a multi-plane architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -115,15 +115,15 @@ Soldier is the **Cognitive Layer** in SmartBeez, replacing both `parlant-adapter
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## What Soldier Replaces
+## What Soldier Provides
 
-| SmartBeez Component | Soldier Replacement |
-|---------------------|---------------------|
-| `apps/parlant-adapter/` | Soldier API + Session Router |
-| `apps/parlant-server/` | Soldier Core (Scenario, Rule, Memory, LLM) |
-| ParlantCompiler | Config Watcher (simpler—just load from Redis) |
-| Parlant SDK (`p.Server()`) | FastAPI + PostgreSQL + Redis |
-| MongoDB (Parlant sessions) | Redis (sessions) + Neo4j (memory) |
+| Capability | Implementation |
+|------------|----------------|
+| API Layer | Soldier API + Session Router |
+| Core Engine | Soldier Core (Scenario, Rule, Memory, LLM) |
+| Config Loading | Config Watcher (loads from Redis) |
+| Framework | FastAPI + PostgreSQL + Redis |
+| Session Storage | Redis (sessions) + Neo4j (memory) |
 
 ## Data Flow
 
@@ -293,9 +293,9 @@ GET /internal/ready
 GET /internal/metrics
 ```
 
-## Compatibility with SmartBeez Control Plane
+## Compatibility with External Control Plane
 
-Soldier reads configuration from the **same Redis bundles** that the SmartBeez publisher produces. The bundle format is:
+Soldier reads configuration from **Redis bundles** produced by an external publisher. The bundle format is:
 
 ```
 Redis Keys:
@@ -350,7 +350,7 @@ Redis Keys:
 
 ## Migration Path
 
-### Phase 1: Deploy Soldier alongside Parlant
+### Phase 1: Deploy Soldier in shadow mode
 - Route subset of traffic to Soldier
 - Compare responses (shadow mode)
 - Validate parity
@@ -358,28 +358,21 @@ Redis Keys:
 ### Phase 2: Gradual cutover
 - Route 10% → 50% → 100% to Soldier
 - Monitor latency, error rates
-- Keep Parlant as fallback
+- Keep legacy system as fallback
 
-### Phase 3: Remove Parlant
-- Delete `apps/parlant-adapter/`
-- Delete `apps/parlant-server/`
-- Remove Parlant SDK dependencies
-- Remove MongoDB (Parlant sessions)
+### Phase 3: Full migration
+- Remove legacy adapters and services
+- Remove legacy SDK dependencies
+- Migrate session storage
 
-## Docker Compose Changes
+## Docker Compose Example
 
 ```yaml
-# REMOVE these services:
-# parlant-adapter:
-# parlant-server:
-# mongo:
-
-# ADD this service:
 soldier:
   build:
     context: ../..
     dockerfile: apps/soldier/Dockerfile
-  container_name: smartbeez-soldier
+  container_name: soldier
   environment:
     # Database
     POSTGRES_URL: postgresql://postgres:password@postgres:5432/soldier
@@ -413,18 +406,18 @@ soldier:
     redis:
       condition: service_healthy
   ports:
-    - "8800:8800"  # Same port as parlant-adapter for compatibility
+    - "8800:8800"
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:8800/internal/health"]
     interval: 10s
     timeout: 5s
     retries: 10
   networks:
-    - smartbeez
+    - soldier
 
 neo4j:
   image: neo4j:5.15
-  container_name: smartbeez-neo4j
+  container_name: soldier-neo4j
   environment:
     NEO4J_AUTH: neo4j/password
     NEO4J_PLUGINS: '["apoc"]'
@@ -439,23 +432,23 @@ neo4j:
     timeout: 5s
     retries: 10
   networks:
-    - smartbeez
+    - soldier
 
 volumes:
   neo4j_data:
 ```
 
-## Key Differences from Parlant Architecture
+## Key Architecture Principles
 
-| Aspect | Parlant | Soldier |
-|--------|---------|---------|
-| **State** | In-memory | Redis + PostgreSQL |
-| **Config updates** | Restart required | Hot-reload via pub/sub |
-| **Tenancy** | Adapter translates IDs | Native tenant_id everywhere |
-| **Sessions** | MongoDB | Redis (cache) + PostgreSQL/MongoDB |
-| **Rules** | Basic semantic match | Hybrid + scopes + priorities |
-| **Journeys** | SDK-defined state machine | API-defined Scenarios |
-| **Memory** | None | Temporal knowledge graph |
-| **Enforcement** | None | Post-generation validation |
-| **Observability** | Basic logging | Structured logs + OTEL traces + Prometheus metrics |
-| **Horizontal scale** | Tricky (in-memory agents) | Trivial (stateless pods) |
+| Aspect | Soldier Approach |
+|--------|------------------|
+| **State** | Redis + PostgreSQL (no in-memory state) |
+| **Config updates** | Hot-reload via pub/sub |
+| **Tenancy** | Native tenant_id everywhere |
+| **Sessions** | Redis (cache) + PostgreSQL/MongoDB |
+| **Rules** | Hybrid matching + scopes + priorities |
+| **Scenarios** | API-defined state machines |
+| **Memory** | Temporal knowledge graph |
+| **Enforcement** | Post-generation validation |
+| **Observability** | Structured logs + OTEL traces + Prometheus metrics |
+| **Horizontal scale** | Trivial (stateless pods) |

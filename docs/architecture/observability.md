@@ -1,6 +1,6 @@
 # Observability Architecture
 
-This document defines Soldier's logging, tracing, and metrics strategy. Soldier is designed to integrate seamlessly into the SmartBeez (kernel_agent) observability stack while providing rich, structured telemetry for debugging, auditing, and performance analysis.
+This document defines Soldier's logging, tracing, and metrics strategy. Soldier is designed to integrate seamlessly into the External Platform (kernel_agent) observability stack while providing rich, structured telemetry for debugging, auditing, and performance analysis.
 
 ---
 
@@ -552,7 +552,7 @@ soldier:
 
     # ... other env vars
   networks:
-    - smartbeez
+    - external
 ```
 
 ### Correlation Flow

@@ -579,7 +579,7 @@ class ChatResponse(BaseModel):
     latency_ms: int
 ```
 
-### Envelope (SmartBeez Integration)
+### Envelope (External Platform Integration)
 
 ```python
 class InboundEnvelope(BaseModel):

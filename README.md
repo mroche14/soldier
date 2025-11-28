@@ -33,7 +33,7 @@ Building production-grade conversational AI agents is hard. Current frameworks f
 
 **The Prompt Trap**: Stuff everything into a system prompt and hope the LLM follows instructions. This fails at scale—more rules means more ignored instructions and unpredictable behavior.
 
-**The Code Trap**: Frameworks like Parlant require code to define agent behavior:
+**The Code Trap**: Many frameworks require code to define agent behavior:
 - Journeys defined via SDK calls (`agent.create_journey()`)
 - No hot-reload—restart the process to update behavior
 - Agents live in memory—no persistence, no horizontal scaling
@@ -659,17 +659,6 @@ def llm_provider():
 mode = "standalone"
 ```
 
-**SmartBeez Integration Mode**: Configuration loaded from Redis bundles.
-
-```toml
-[deployment]
-mode = "smartbeez"
-
-[deployment.smartbeez]
-redis_bundle_prefix = "{tenant}:{agent}"
-pubsub_channel = "cfg-updated"
-```
-
 ### Environment Variables
 
 ```bash
@@ -872,8 +861,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 ## Acknowledgments
-
-Soldier is designed to replace and improve upon the Parlant framework, providing a production-grade cognitive engine for the SmartBeez ecosystem.
 
 Built with:
 - [FastAPI](https://fastapi.tiangolo.com/) - API framework
