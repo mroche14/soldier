@@ -25,9 +25,7 @@ class MemoryStore(ABC):
         pass
 
     @abstractmethod
-    async def get_episodes(
-        self, group_id: str, *, limit: int = 100
-    ) -> list[Episode]:
+    async def get_episodes(self, group_id: str, *, limit: int = 100) -> list[Episode]:
         """Get episodes for a group."""
         pass
 
@@ -110,9 +108,7 @@ class MemoryStore(ABC):
         pass
 
     @abstractmethod
-    async def delete_relationship(
-        self, group_id: str, relationship_id: UUID
-    ) -> bool:
+    async def delete_relationship(self, group_id: str, relationship_id: UUID) -> bool:
         """Delete a relationship."""
         pass
 

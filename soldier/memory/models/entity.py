@@ -24,19 +24,9 @@ class Entity(BaseModel):
     id: UUID = Field(default_factory=uuid4, description="Unique identifier")
     group_id: str = Field(..., description="Isolation key")
     name: str = Field(..., description="Entity name")
-    entity_type: str = Field(
-        ..., description="Type: person, order, product, etc."
-    )
-    attributes: dict[str, Any] = Field(
-        default_factory=dict, description="Entity properties"
-    )
+    entity_type: str = Field(..., description="Type: person, order, product, etc.")
+    attributes: dict[str, Any] = Field(default_factory=dict, description="Entity properties")
     valid_from: datetime = Field(..., description="When became valid")
-    valid_to: datetime | None = Field(
-        default=None, description="When stopped being valid"
-    )
-    recorded_at: datetime = Field(
-        default_factory=utc_now, description="When recorded"
-    )
-    embedding: list[float] | None = Field(
-        default=None, description="Semantic vector"
-    )
+    valid_to: datetime | None = Field(default=None, description="When stopped being valid")
+    recorded_at: datetime = Field(default_factory=utc_now, description="When recorded")
+    embedding: list[float] | None = Field(default=None, description="Semantic vector")

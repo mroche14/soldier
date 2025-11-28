@@ -1,6 +1,5 @@
 """Context models for alignment domain."""
 
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -10,12 +9,8 @@ class UserIntent(BaseModel):
     model_config = ConfigDict(frozen=False, validate_assignment=True)
 
     primary: str = Field(..., description="Primary intent label")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score"
-    )
-    secondary: list[str] = Field(
-        default_factory=list, description="Secondary intents"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
+    secondary: list[str] = Field(default_factory=list, description="Secondary intents")
 
 
 class ExtractedEntities(BaseModel):

@@ -1,0 +1,33 @@
+You are evaluating whether rules apply to the current user message.
+
+For each rule, determine if its condition is satisfied by the user's message and context.
+
+## User Message
+{message}
+
+## User Intent
+{intent}
+
+## Candidate Rules
+{rules}
+
+## Instructions
+For each rule, evaluate:
+1. Does the rule's condition match the user's intent or message?
+2. Rate relevance from 0.0 (not relevant) to 1.0 (highly relevant)
+3. Briefly explain your reasoning
+
+## Response Format
+Respond with ONLY valid JSON in this exact format:
+```json
+{{
+  "evaluations": [
+    {{
+      "rule_id": "uuid-here",
+      "applies": true,
+      "relevance": 0.85,
+      "reasoning": "Brief explanation of why this rule applies or not"
+    }}
+  ]
+}}
+```

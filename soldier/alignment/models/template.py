@@ -20,9 +20,5 @@ class Template(AgentScopedModel):
     text: str = Field(..., min_length=1, description="Template with {placeholders}")
     mode: TemplateMode = Field(default=TemplateMode.SUGGEST, description="Usage mode")
     scope: Scope = Field(default=Scope.GLOBAL, description="Scoping level")
-    scope_id: UUID | None = Field(
-        default=None, description="scenario_id or step_id"
-    )
-    conditions: str | None = Field(
-        default=None, description="Expression for when to use"
-    )
+    scope_id: UUID | None = Field(default=None, description="scenario_id or step_id")
+    conditions: str | None = Field(default=None, description="Expression for when to use")

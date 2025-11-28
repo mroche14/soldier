@@ -25,16 +25,8 @@ class Relationship(BaseModel):
     group_id: str = Field(..., description="Isolation key")
     from_entity_id: UUID = Field(..., description="Source entity")
     to_entity_id: UUID = Field(..., description="Target entity")
-    relation_type: str = Field(
-        ..., description="Type: ordered, owns, works_for, etc."
-    )
-    attributes: dict[str, Any] = Field(
-        default_factory=dict, description="Relationship properties"
-    )
+    relation_type: str = Field(..., description="Type: ordered, owns, works_for, etc.")
+    attributes: dict[str, Any] = Field(default_factory=dict, description="Relationship properties")
     valid_from: datetime = Field(..., description="When became valid")
-    valid_to: datetime | None = Field(
-        default=None, description="When stopped being valid"
-    )
-    recorded_at: datetime = Field(
-        default_factory=utc_now, description="When recorded"
-    )
+    valid_to: datetime | None = Field(default=None, description="When stopped being valid")
+    recorded_at: datetime = Field(default_factory=utc_now, description="When recorded")

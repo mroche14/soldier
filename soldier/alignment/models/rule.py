@@ -22,13 +22,9 @@ class Rule(AgentScopedModel):
     condition_text: str = Field(
         ..., min_length=1, description="When this is true (natural language)"
     )
-    action_text: str = Field(
-        ..., min_length=1, description="Do this action (natural language)"
-    )
+    action_text: str = Field(..., min_length=1, description="Do this action (natural language)")
     scope: Scope = Field(default=Scope.GLOBAL, description="Scoping level")
-    scope_id: UUID | None = Field(
-        default=None, description="scenario_id or step_id when scoped"
-    )
+    scope_id: UUID | None = Field(default=None, description="scenario_id or step_id when scoped")
     priority: int = Field(
         default=0,
         ge=-100,
@@ -36,27 +32,15 @@ class Rule(AgentScopedModel):
         description="Higher wins in conflicts (-100 to 100)",
     )
     enabled: bool = Field(default=True, description="Is rule active")
-    max_fires_per_session: int = Field(
-        default=0, ge=0, description="0 = unlimited"
-    )
-    cooldown_turns: int = Field(
-        default=0, ge=0, description="Min turns between re-fire"
-    )
-    is_hard_constraint: bool = Field(
-        default=False, description="Must be satisfied or fallback"
-    )
-    attached_tool_ids: list[str] = Field(
-        default_factory=list, description="Tool IDs from ToolHub"
-    )
+    max_fires_per_session: int = Field(default=0, ge=0, description="0 = unlimited")
+    cooldown_turns: int = Field(default=0, ge=0, description="Min turns between re-fire")
+    is_hard_constraint: bool = Field(default=False, description="Must be satisfied or fallback")
+    attached_tool_ids: list[str] = Field(default_factory=list, description="Tool IDs from ToolHub")
     attached_template_ids: list[UUID] = Field(
         default_factory=list, description="Template references"
     )
-    embedding: list[float] | None = Field(
-        default=None, description="Precomputed vector"
-    )
-    embedding_model: str | None = Field(
-        default=None, description="Model that generated embedding"
-    )
+    embedding: list[float] | None = Field(default=None, description="Precomputed vector")
+    embedding_model: str | None = Field(default=None, description="Model that generated embedding")
 
     @field_validator("scope_id")
     @classmethod
@@ -72,17 +56,11 @@ class MatchedRule(AgentScopedModel):
     """Rule that matched with scoring details."""
 
     rule: Rule = Field(..., description="The matched rule")
-    similarity_score: float = Field(
-        default=0.0, ge=0.0, le=1.0, description="Vector similarity"
-    )
+    similarity_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Vector similarity")
     bm25_score: float = Field(default=0.0, ge=0.0, description="Keyword match score")
     final_score: float = Field(default=0.0, ge=0.0, description="Combined weighted score")
     newly_fired: bool = Field(..., description="First time this session")
-    tools_to_execute: list[str] = Field(
-        default_factory=list, description="Resolved tool IDs"
-    )
+    tools_to_execute: list[str] = Field(default_factory=list, description="Resolved tool IDs")
     # Note: Using Any for templates to avoid circular import issues
     # In practice, this would be list[Template] after model_rebuild()
-    templates_to_consider: list[Any] = Field(
-        default_factory=list, description="Resolved templates"
-    )
+    templates_to_consider: list[Any] = Field(default_factory=list, description="Resolved templates")
