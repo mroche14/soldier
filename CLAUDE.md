@@ -24,10 +24,18 @@ When asked to implement something:
 1. Find the relevant phase in `IMPLEMENTATION_PLAN.md`
 2. Check prerequisites are complete (earlier phases)
 3. Follow the task list for that phase
-4. Mark checkboxes as complete when done
+4. **Mark checkboxes as complete when done** (change `- [ ]` to `- [x]`)
 5. Reference the linked documentation for details
 
 **Do NOT skip phases or implement out of order** - the plan is designed so each phase builds on the previous ones.
+
+### Checkbox Tracking Reminder
+
+**CRITICAL**: After completing ANY implementation task from `IMPLEMENTATION_PLAN.md`:
+1. Immediately update the corresponding checkbox(es) from `- [ ]` to `- [x]`
+2. This includes all sub-items under a task
+3. Do NOT batch checkbox updates - mark each item complete as soon as it's done
+4. This keeps the implementation plan accurate and helps track overall progress
 
 ### 1. Documentation is the Source of Truth
 
@@ -235,6 +243,35 @@ class ProviderConfig(BaseModel):
 - `get_scenario_rules(agent_id, scenario_id)` → Right balance
 
 **When in doubt**: Optimize for reading, not writing. Code is read 10x more than it's written.
+
+### Minimal Implementation Principle
+
+**Write the least amount of code necessary** to fulfill the request. Do not anticipate future needs.
+
+**Do NOT**:
+- Add features, refactor code, or make "improvements" beyond what was explicitly requested
+- Create abstractions, helpers, or utilities for single use cases
+- Add error handling for scenarios that cannot happen
+- Write "nice to have" code alongside the main task
+- Add docstrings, comments, or type annotations to code you didn't change
+- Design for hypothetical future requirements
+
+**Do**:
+- Solve the current problem only
+- Prefer simple, readable code over clever solutions
+- Accept three similar lines of code over a premature abstraction
+- Trust internal code and framework guarantees
+- Only validate at system boundaries (user input, external APIs)
+
+**Examples**:
+
+| Request | Wrong | Right |
+|---------|-------|-------|
+| "Add a `get_user` method" | Add `get_user`, `get_users`, `find_user`, `search_users` | Add only `get_user` |
+| "Fix the null check bug" | Fix bug + refactor surrounding code + add logging | Fix only the null check |
+| "Create Rule model" | Create Rule + RuleBuilder + RuleValidator + RuleFactory | Create only Rule |
+
+**The right amount of complexity is the minimum needed for the current task.**
 
 ### Object-Oriented Patterns
 
@@ -697,6 +734,8 @@ This project uses speckit for feature implementation. When implementing features
 ## Active Technologies
 - Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog (001-project-foundation)
 - N/A (configuration phase - no database yet) (001-project-foundation)
+- Python 3.11+ (required for built-in `tomllib`) + pydantic, pydantic-settings, structlog, prometheus_client, opentelemetry-sdk, opentelemetry-exporter-otlp (003-core-abstractions)
+- In-memory only (dict-based implementations for testing/development) (003-core-abstractions)
 
 ## Recent Changes
 - 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog
