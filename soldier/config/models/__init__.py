@@ -7,6 +7,15 @@ This module exports all configuration models for easy access:
 
 from soldier.config.models.agent import AgentConfig
 from soldier.config.models.api import APIConfig, RateLimitConfig
+from soldier.config.models.migration import (
+    CheckpointConfig,
+    DeploymentConfig,
+    GapFillConfig,
+    MigrationLoggingConfig,
+    ReRoutingConfig,
+    RetentionConfig,
+    ScenarioMigrationConfig,
+)
 from soldier.config.models.observability import (
     LoggingConfig,
     MetricsConfig,
@@ -43,6 +52,14 @@ __all__ = [
     # API
     "APIConfig",
     "RateLimitConfig",
+    # Migration
+    "CheckpointConfig",
+    "DeploymentConfig",
+    "GapFillConfig",
+    "MigrationLoggingConfig",
+    "ReRoutingConfig",
+    "RetentionConfig",
+    "ScenarioMigrationConfig",
     # Observability
     "LoggingConfig",
     "MetricsConfig",

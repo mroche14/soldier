@@ -743,6 +743,8 @@ This project uses speckit for feature implementation. When implementing features
 - In-memory stores (existing), Redis for idempotency cache and rate limiting (006-api-layer-core)
 - Python 3.11+ (existing) + FastAPI, uvicorn, pydantic, python-jose (JWT) - all existing from Phase 13 (001-api-crud)
 - ConfigStore interface with InMemoryConfigStore (Phase 4), existing embedding providers (Phase 5) (001-api-crud)
+- Python 3.11+ + FastAPI, pydantic, pydantic-settings, structlog (existing); hashlib (stdlib for content hashing) (008-scenario-migration)
+- ConfigStore (migration plans, archived versions), SessionStore (pending_migration flag, step_history), ProfileStore (gap fill) (008-scenario-migration)
 
 ## Recent Changes
 - 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog

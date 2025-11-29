@@ -208,3 +208,38 @@ sample_rate = 1.0
 enabled = true
 port = 9090
 path = "/metrics"
+
+# =============================================================================
+# Scenario Migration Configuration
+# =============================================================================
+[scenario_migration]
+enabled = true
+
+[scenario_migration.deployment]
+auto_mark_sessions = true
+require_approval = true
+
+[scenario_migration.gap_fill]
+extraction_enabled = true
+extraction_confidence_threshold = 0.85
+confirmation_threshold = 0.95
+max_conversation_turns = 20
+
+[scenario_migration.re_routing]
+enabled = true
+notify_user = true
+notification_template = "I have new instructions. Let me redirect our conversation."
+
+[scenario_migration.checkpoints]
+block_teleport_past_checkpoint = true
+log_checkpoint_blocks = true
+
+[scenario_migration.retention]
+version_retention_days = 7
+plan_retention_days = 30
+
+[scenario_migration.logging]
+log_clean_grafts = false
+log_gap_fills = true
+log_re_routes = true
+log_checkpoint_blocks = true

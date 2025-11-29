@@ -25,686 +25,844 @@ New scenario:   A ──► N1 ──► B ──► N2 ──► C
 3. What if N1 had a fork that would have sent the customer to D instead of B?
 4. What if the customer already completed an irreversible action at B?
 
----
+Naively changing the Scenario structure under active sessions can:
+- **Corrupt session state** (internal "path" no longer matches graph)
+- **Confuse the agent** (graph now says "you shouldn't be here")
+- Break critical business logic (e.g., new age rule not enforced)
 
-## Solution: Pre-Computed Migration Plans
-
-Rather than computing reconciliation logic per-session at runtime, we **pre-compute a Migration Plan** when the scenario is updated. This plan specifies exactly what should happen for customers at each step.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         MIGRATION PLAN CONCEPT                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  Scenario V1 → V2 update generates:                                         │
-│                                                                              │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │  MIGRATION PLAN (computed once, applied to many sessions)              │ │
-│  │                                                                         │ │
-│  │  For customers at step A:                                              │ │
-│  │    → action: continue                                                  │ │
-│  │    → collect: []                                                       │ │
-│  │                                                                         │ │
-│  │  For customers at step B:                                              │ │
-│  │    → action: collect_then_continue                                     │ │
-│  │    → collect: ["email"]                                                │ │
-│  │    → reason: "New step N1 collects email, needed for fork at N2"       │ │
-│  │                                                                         │ │
-│  │  For customers at step C:                                              │ │
-│  │    → action: evaluate_teleport                                         │ │
-│  │    → condition: "age < 18"                                             │ │
-│  │    → if true: teleport to D                                            │ │
-│  │    → if false: continue                                                │ │
-│  │    → blocked_by: [checkpoint_order_placed]                             │ │
-│  │                                                                         │ │
-│  │  For customers at step X (deleted):                                    │ │
-│  │    → action: relocate                                                  │ │
-│  │    → target: B (nearest anchor)                                        │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-│                                                                              │
-│  At runtime: lookup plan[session.active_step_id], apply                     │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Benefits
-
-| Aspect | Benefit |
-|--------|---------|
-| **Performance** | Computed once per update, not per-session |
-| **Reviewable** | Operator sees exactly what will happen before deploying |
-| **Auditable** | "Migration plan X was applied to session Y" |
-| **Testable** | Plan can be validated before deployment |
-| **Debuggable** | Clear artifact explains why customer was moved/asked |
+**Goal**: Update the Scenario **without losing context** (collected info, previous actions) and while **avoiding session corruption**.
 
 ---
 
-## Scenario Update Workflow
+## Solution: Anchor-Based Migration
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        SCENARIO UPDATE WORKFLOW                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  1. EDIT              Operator modifies scenario in Control Plane UI         │
-│         │                                                                    │
-│         ▼                                                                    │
-│  2. GENERATE          System computes MigrationPlan automatically            │
-│     PLAN              → Analyze graph diff                                   │
-│                       → Determine action for each step in old version       │
-│                       → Identify data requirements and checkpoint conflicts │
-│         │                                                                    │
-│         ▼                                                                    │
-│  3. REVIEW            Operator reviews migration summary                     │
-│     (required)        → Affected steps, required data collection            │
-│                       → Teleportation targets, checkpoint warnings          │
-│                       → Can modify actions before confirming                │
-│         │                                                                    │
-│         ▼                                                                    │
-│  4. APPROVE           Operator confirms deployment                           │
-│         │                                                                    │
-│         ▼                                                                    │
-│  5. DEPLOY            Save new scenario version + migration plan             │
-│                       → Archive old version (7-day retention)               │
-│                       → Publish config update via PubSub                    │
-│         │                                                                    │
-│         ▼                                                                    │
-│  6. APPLY             On each session's next turn:                           │
-│     (per session)     → Check version mismatch                              │
-│                       → Lookup plan[current_step_id]                        │
-│                       → Apply action (collect/teleport/continue)            │
-│                       → Update session.active_scenario_version              │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+Rather than tracking by step IDs (which may change), we use **content-based anchor identification** and **two-phase deployment** with **per-anchor policies**.
+
+### Core Pillars
+
+1. **Global Topology Mapping ("Graph Diff")** - Compare V1 and V2 structurally using content hashes
+2. **Anchor Nodes & Policies** - Define what to do for sessions at each anchor
+3. **Two-Phase Migration** - Mark at deployment, apply at JIT (next user message)
+4. **Migration Scenarios** - Clean Graft, Gap Fill, Re-Routing strategies
+
+All of this is defined at the **Scenario graph level**, not per-session ad-hoc.
 
 ---
 
-## Data Models
+## Vocabulary
 
-### Migration Plan
+| Term | Definition |
+|------|------------|
+| **Scenario** | The graph of a conversation workflow (nodes + transitions) |
+| **Node** | A state in the Scenario (chat_state, tool_state, etc.) |
+| **Rule** | Conditional behavior or branching logic at a node |
+| **Anchor Node** | A node that exists in both V1 and V2 with same semantics (identified via content hash) |
+| **Checkpoint** | Special node representing an irreversible or "committed" business action (e.g., "order dispatched", "payment processed") |
+| **Content Hash** | Hash of stable node attributes (intent, rules, key parameters) for semantic matching |
+| **Scenario Checksum** | Hash of entire graph structure, stored with session to validate path consistency |
+| **Pending Migration Flag** | Marker on session saying "needs migration logic at next user message" |
+
+---
+
+## Step 1: Global Topology Mapping ("Graph Diff")
+
+When we define Scenario V2, we **compare Scenario V1 and V2** structurally.
+
+### 1.1 Compute Content Hashes
+
+For each node in V1 and V2, build a **content hash** from stable attributes:
 
 ```python
-@dataclass
-class MigrationPlan:
-    """Pre-computed migration plan for a scenario version transition.
-
-    Generated when a scenario is updated. Contains instructions for
-    what to do with customers at each step of the old version.
+def compute_node_content_hash(node: ScenarioStep) -> str:
     """
-    id: UUID = field(default_factory=uuid4)
-    scenario_id: UUID
-    from_version: int
-    to_version: int
-
-    # Action for each step in the OLD version
-    # Key: step_id from old version
-    step_actions: Dict[UUID, StepMigrationAction] = field(default_factory=dict)
-
-    # Summary for operator review
-    summary: MigrationSummary
-
-    # Metadata
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    created_by: Optional[str] = None  # Operator who triggered update
-    approved_at: Optional[datetime] = None
-    approved_by: Optional[str] = None
-
-    # Status
-    status: str = "pending"  # "pending" | "approved" | "deployed" | "superseded"
+    Build content hash from stable semantic attributes.
+    Nodes with same hash are treated as Anchors.
+    """
+    hash_input = {
+        "intent": node.intent or node.name,
+        "description": node.description,
+        "rules": sorted([r.id for r in node.rules]),
+        "collects_fields": sorted(node.collects_profile_fields),
+        "is_checkpoint": node.is_checkpoint,
+        "checkpoint_type": node.checkpoint_type,
+    }
+    return hashlib.sha256(json.dumps(hash_input, sort_keys=True).encode()).hexdigest()[:16]
 ```
 
-### Step Migration Action
+Nodes with the **same content hash** across V1 and V2 are treated as **Anchor Nodes**.
+
+### 1.2 Build Transformation Map
+
+For each Anchor Node, classify changes between V1 and V2:
 
 ```python
 @dataclass
-class StepMigrationAction:
-    """What to do for customers at a specific step in the old version."""
+class AnchorTransformation:
+    """What changed around an anchor node between V1 and V2."""
+    anchor_node_id_v1: UUID
+    anchor_node_id_v2: UUID
+    anchor_content_hash: str
+    anchor_name: str
 
-    # Identity
-    from_step_id: UUID
-    from_step_name: str  # For readability in review UI
+    # What changed BEFORE the anchor (user has passed through this)
+    upstream_changes: UpstreamChanges
 
-    # Action type
-    action: str  # "continue" | "collect" | "teleport" | "relocate" | "exit"
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # For action="collect": Fields that must be collected before continuing
-    # ─────────────────────────────────────────────────────────────────────────
-    collect_fields: List[str] = field(default_factory=list)
-    collect_reason: Optional[str] = None  # "Required for fork at step N2"
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # For action="teleport": Conditional move to different step
-    # ─────────────────────────────────────────────────────────────────────────
-    teleport_target_id: Optional[UUID] = None
-    teleport_target_name: Optional[str] = None  # For readability
-    teleport_condition: Optional[str] = None  # "age < 18" (evaluated at runtime)
-    teleport_condition_fields: List[str] = field(default_factory=list)  # ["age"]
-    teleport_fallback_action: str = "continue"  # What if condition is false
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # For action="relocate": Step was deleted, move to anchor
-    # ─────────────────────────────────────────────────────────────────────────
-    relocate_target_id: Optional[UUID] = None
-    relocate_target_name: Optional[str] = None
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # Checkpoint protection: Teleportation blocked if these were passed
-    # ─────────────────────────────────────────────────────────────────────────
-    blocked_by_checkpoints: List[CheckpointRef] = field(default_factory=list)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # For action="execute": Required actions that were skipped
-    # ─────────────────────────────────────────────────────────────────────────
-    execute_actions: List[UUID] = field(default_factory=list)
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # Human-readable explanation (shown in review UI and logs)
-    # ─────────────────────────────────────────────────────────────────────────
-    reason: str = ""
+    # What changed AFTER the anchor (user will encounter this)
+    downstream_changes: DownstreamChanges
 
 
 @dataclass
-class CheckpointRef:
-    """Reference to a checkpoint that might block teleportation."""
-    step_id: UUID
-    step_name: str
-    checkpoint_description: str  # "Order placed", "Payment processed"
+class UpstreamChanges:
+    """Changes upstream of an anchor."""
+    inserted_nodes: List[InsertedNode]  # New nodes added before anchor
+    removed_nodes: List[UUID]  # Old nodes deleted before anchor
+    new_forks: List[NewFork]  # New branching logic before anchor
+    modified_transitions: List[TransitionChange]
+
+
+@dataclass
+class DownstreamChanges:
+    """Changes downstream of an anchor."""
+    inserted_nodes: List[InsertedNode]  # New nodes added after anchor
+    removed_nodes: List[UUID]  # Old nodes deleted after anchor
+    new_forks: List[NewFork]  # New branching logic after anchor
+    modified_transitions: List[TransitionChange]
+
+
+@dataclass
+class InsertedNode:
+    """A node inserted between V1 and V2."""
+    node_id: UUID
+    node_name: str
+    collects_fields: List[str]  # Profile fields this node collects
+    has_rules: bool  # Does this node have conditional rules?
+    is_required_action: bool  # Must this action be executed?
+
+
+@dataclass
+class NewFork:
+    """A new fork (branching point) in V2."""
+    fork_node_id: UUID
+    fork_node_name: str
+    branches: List[ForkBranch]
+
+
+@dataclass
+class ForkBranch:
+    """One branch of a fork."""
+    target_step_id: UUID
+    target_step_name: str
+    condition_text: str  # e.g., "age < 18"
+    condition_fields: List[str]  # Fields needed to evaluate condition
 ```
 
-### Migration Summary
+**Example:**
+
+```
+V1: A → B → C
+V2: A → N1 → B → N2 → C
+
+For Anchor B:
+  upstream_changes:
+    inserted_nodes: [N1]
+  downstream_changes:
+    inserted_nodes: [N2]
+```
+
+### 1.3 Scenario Checksum
+
+Store a **checksum** of the entire scenario graph with session tracking data:
 
 ```python
-@dataclass
-class MigrationSummary:
-    """Human-readable summary for operator review before deployment."""
-
-    # Counts
-    total_steps_in_old_version: int
-    steps_unchanged: int          # action="continue" with no collection
-    steps_needing_collection: int # action="collect"
-    steps_with_teleport: int      # action="teleport"
-    steps_deleted: int            # action="relocate"
-    steps_with_actions: int       # action="execute"
-
-    # Affected customers (estimated)
-    estimated_sessions_affected: int = 0  # Count from SessionStore
-    sessions_by_step: Dict[str, int] = field(default_factory=dict)  # step_name -> count
-
-    # Warnings that need operator attention
-    warnings: List[MigrationWarning] = field(default_factory=list)
-
-    # Field collection requirements
-    fields_to_collect: List[FieldCollectionInfo] = field(default_factory=list)
-
-
-@dataclass
-class MigrationWarning:
-    """Warning for operator review."""
-    severity: str  # "info" | "warning" | "critical"
-    step_name: str
-    message: str
-    # e.g., "Customers at 'Order Confirmation' who are under 18 should be rejected,
-    #        but checkpoint 'Payment Processed' prevents teleportation.
-    #        These sessions will continue with a logged warning."
-
-
-@dataclass
-class FieldCollectionInfo:
-    """Information about a field that needs collection."""
-    field_name: str
-    display_name: str
-    affected_steps: List[str]  # Step names where this applies
-    reason: str  # "Required for premium eligibility check"
-    can_extract_from_conversation: bool  # Hint for runtime
+def compute_scenario_checksum(scenario: Scenario) -> str:
+    """Hash of entire graph structure for version validation."""
+    structure = {
+        "version": scenario.version,
+        "steps": sorted([
+            {
+                "id": str(s.id),
+                "hash": compute_node_content_hash(s),
+                "transitions": sorted([str(t.to_step_id) for t in s.transitions])
+            }
+            for s in scenario.steps
+        ], key=lambda x: x["id"])
+    }
+    return hashlib.sha256(json.dumps(structure, sort_keys=True).encode()).hexdigest()[:16]
 ```
+
+A session's stored "path" is only trusted if the checksum matches the Scenario version it was built from.
 
 ---
 
-## Migration Plan Generation
+## Step 2: Per-Anchor Policies
 
-When an operator saves a scenario update, the system generates a migration plan:
+For each Anchor Node, operators can define a **migration policy**:
 
 ```python
-async def generate_migration_plan(
-    old_scenario: Scenario,
+@dataclass
+class AnchorMigrationPolicy:
+    """Migration policy for a specific anchor node."""
+    anchor_content_hash: str
+    anchor_name: str  # For display
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Scope Filter: Which sessions are eligible for migration at this anchor?
+    # ─────────────────────────────────────────────────────────────────────────
+    scope_filter: ScopeFilter
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Update Policy: What to do with downstream changes
+    # ─────────────────────────────────────────────────────────────────────────
+    update_downstream: bool = True  # If True, graft new downstream from V2
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Override: Force a specific migration scenario
+    # ─────────────────────────────────────────────────────────────────────────
+    force_scenario: Optional[str] = None  # "clean_graft" | "gap_fill" | "re_route"
+
+
+@dataclass
+class ScopeFilter:
+    """Filter for which sessions are eligible for migration."""
+    include_current_nodes: List[str] = field(default_factory=list)  # Node names
+    exclude_current_nodes: List[str] = field(default_factory=list)
+    include_channels: List[str] = field(default_factory=list)  # "whatsapp", "web"
+    exclude_channels: List[str] = field(default_factory=list)
+    max_session_age_days: Optional[int] = None
+    min_session_age_days: Optional[int] = None
+    custom_conditions: List[str] = field(default_factory=list)  # Custom filter expressions
+```
+
+**Example Policy:**
+
+```python
+AnchorMigrationPolicy(
+    anchor_content_hash="abc123",
+    anchor_name="Order Confirmation",
+    scope_filter=ScopeFilter(
+        include_channels=["whatsapp", "sms"],  # Only long-lived channels
+        max_session_age_days=30,  # Skip very old sessions
+    ),
+    update_downstream=True,  # Apply new downstream flow
+)
+```
+
+This makes migration **configurable per anchor**, not all-or-nothing.
+
+---
+
+## Step 3: Two-Phase Deployment
+
+### Phase 1: Deployment (Mark Sessions)
+
+When Scenario V2 is deployed:
+
+```python
+async def deploy_scenario_v2(
+    scenario_id: UUID,
     new_scenario: Scenario,
-    operator_id: Optional[str] = None,
-) -> MigrationPlan:
+    anchor_policies: List[AnchorMigrationPolicy],
+    operator_id: str,
+) -> DeploymentResult:
     """
-    Generate a migration plan for transitioning from old to new scenario version.
-
-    Analyzes the graph diff and determines what action is needed for
-    customers at each step of the old version.
+    Deploy new scenario version.
+    Phase 1: Mark sessions for migration, don't apply yet.
     """
 
-    plan = MigrationPlan(
-        scenario_id=old_scenario.id,
+    old_scenario = await config_store.get_scenario(scenario_id)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Step 1: Compute Graph Diff
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    transformation_map = compute_transformation_map(old_scenario, new_scenario)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Step 2: Build Migration Plan
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    migration_plan = build_migration_plan(
+        transformation_map=transformation_map,
+        anchor_policies=anchor_policies,
+        old_scenario=old_scenario,
+        new_scenario=new_scenario,
+    )
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Step 3: Scan and Mark Sessions (DO NOT migrate yet)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    marked_sessions = []
+
+    for anchor in transformation_map.anchors:
+        policy = get_policy_for_anchor(anchor, anchor_policies)
+
+        # Find sessions at or near this anchor that match scope filter
+        eligible_sessions = await session_store.find_sessions(
+            scenario_id=scenario_id,
+            scenario_version=old_scenario.version,
+            scope_filter=policy.scope_filter,
+            current_anchor_hash=anchor.anchor_content_hash,
+        )
+
+        for session in eligible_sessions:
+            # Mark session for migration - DO NOT change scenario yet
+            session.pending_migration = PendingMigration(
+                target_version=new_scenario.version,
+                anchor_content_hash=anchor.anchor_content_hash,
+                migration_plan_id=migration_plan.id,
+                marked_at=datetime.utcnow(),
+            )
+            await session_store.save(session)
+            marked_sessions.append(session.id)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Step 4: Save New Scenario Version + Plan
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    await config_store.archive_scenario_version(old_scenario)
+    await config_store.save_scenario(new_scenario)
+    await config_store.save_migration_plan(migration_plan)
+
+    return DeploymentResult(
+        migration_plan_id=migration_plan.id,
+        sessions_marked=len(marked_sessions),
         from_version=old_scenario.version,
         to_version=new_scenario.version,
-        created_by=operator_id,
-        step_actions={},
-        summary=MigrationSummary(
-            total_steps_in_old_version=len(old_scenario.steps),
-            steps_unchanged=0,
-            steps_needing_collection=0,
-            steps_with_teleport=0,
-            steps_deleted=0,
-            steps_with_actions=0,
-        )
     )
 
-    # Build lookup structures
-    old_step_ids = {s.id for s in old_scenario.steps}
-    new_step_ids = {s.id for s in new_scenario.steps}
-    new_steps_by_id = {s.id: s for s in new_scenario.steps}
 
-    # Process each step in the old version
-    for old_step in old_scenario.steps:
-        action = await compute_step_action(
-            old_step=old_step,
-            old_scenario=old_scenario,
-            new_scenario=new_scenario,
-            old_step_ids=old_step_ids,
-            new_step_ids=new_step_ids,
-        )
-
-        plan.step_actions[old_step.id] = action
-
-        # Update summary counts
-        if action.action == "continue" and not action.collect_fields:
-            plan.summary.steps_unchanged += 1
-        elif action.action == "collect" or action.collect_fields:
-            plan.summary.steps_needing_collection += 1
-        elif action.action == "teleport":
-            plan.summary.steps_with_teleport += 1
-        elif action.action == "relocate":
-            plan.summary.steps_deleted += 1
-        elif action.action == "execute":
-            plan.summary.steps_with_actions += 1
-
-    # Generate warnings
-    plan.summary.warnings = generate_warnings(plan)
-
-    # Estimate affected sessions
-    plan.summary.estimated_sessions_affected = await count_affected_sessions(
-        old_scenario.id,
-        old_scenario.version
-    )
-
-    return plan
-
-
-async def compute_step_action(
-    old_step: ScenarioStep,
-    old_scenario: Scenario,
-    new_scenario: Scenario,
-    old_step_ids: Set[UUID],
-    new_step_ids: Set[UUID],
-) -> StepMigrationAction:
-    """Compute the migration action for a single step."""
-
-    action = StepMigrationAction(
-        from_step_id=old_step.id,
-        from_step_name=old_step.name,
-        action="continue",
-        reason="No changes affecting this step"
-    )
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Case 1: Step was deleted
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    if old_step.id not in new_step_ids:
-        anchor = find_nearest_anchor_in_new(old_step, old_scenario, new_scenario)
-
-        action.action = "relocate"
-        action.relocate_target_id = anchor.id if anchor else None
-        action.relocate_target_name = anchor.name if anchor else None
-        action.reason = f"Step deleted. Relocating to '{anchor.name if anchor else 'exit'}'."
-
-        return action
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Case 2: Check for new upstream forks
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    new_upstream_forks = find_new_upstream_forks(
-        old_step.id, old_scenario, new_scenario
-    )
-
-    for fork in new_upstream_forks:
-        # Check if fork could redirect customer elsewhere
-        branches = get_fork_branches(fork, new_scenario)
-
-        if len(branches) > 1:
-            # Find which branch leads to current position
-            branch_to_current = find_branch_leading_to(
-                branches, old_step.id, new_scenario
-            )
-
-            # Other branches are potential teleport targets
-            other_branches = [b for b in branches if b != branch_to_current]
-
-            if other_branches:
-                target_branch = other_branches[0]  # Primary alternate branch
-
-                action.action = "teleport"
-                action.teleport_target_id = target_branch.target_step_id
-                action.teleport_target_name = target_branch.target_step_name
-                action.teleport_condition = target_branch.condition_text
-                action.teleport_condition_fields = target_branch.condition_fields
-                action.teleport_fallback_action = "continue"
-                action.reason = f"New fork at '{fork.name}'. If {target_branch.condition_text}, customer should be at '{target_branch.target_step_name}'."
-
-                # Find checkpoints between alternate branch and current position
-                checkpoints = find_checkpoints_between(
-                    target_branch.target_step_id,
-                    old_step.id,
-                    new_scenario
-                )
-                action.blocked_by_checkpoints = [
-                    CheckpointRef(
-                        step_id=cp.id,
-                        step_name=cp.name,
-                        checkpoint_description=cp.checkpoint_description or "Irreversible action"
-                    )
-                    for cp in checkpoints
-                ]
-
-                return action
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Case 3: Check for data collection requirements
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    new_upstream_steps = find_new_upstream_steps(
-        old_step.id, old_scenario, new_scenario
-    )
-
-    fields_needed = []
-    for upstream_step in new_upstream_steps:
-        for field_name in upstream_step.collects_profile_fields:
-            # Check if any downstream step/fork needs this field
-            if is_field_needed_downstream(field_name, old_step.id, new_scenario):
-                fields_needed.append(field_name)
-
-    if fields_needed:
-        action.action = "collect"
-        action.collect_fields = list(set(fields_needed))
-        action.collect_reason = f"New upstream step(s) collect data needed downstream."
-        action.reason = f"Must collect: {', '.join(fields_needed)}"
-        return action
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Case 4: Check for required actions
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    required_actions = []
-    for upstream_step in new_upstream_steps:
-        if upstream_step.is_required_action:
-            required_actions.append(upstream_step.id)
-
-    if required_actions:
-        action.action = "execute"
-        action.execute_actions = required_actions
-        action.reason = f"Must execute {len(required_actions)} required action(s)."
-        return action
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Case 5: No changes affecting this step
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    return action
+@dataclass
+class PendingMigration:
+    """Marker on session indicating migration is needed."""
+    target_version: int
+    anchor_content_hash: str
+    migration_plan_id: UUID
+    marked_at: datetime
 ```
 
-### Warning Generation
+**Key Point:** No live migration during deployment. Sessions are only **marked**. Actual migration is deferred to **runtime**.
 
-```python
-def generate_warnings(plan: MigrationPlan) -> List[MigrationWarning]:
-    """Generate warnings for operator review."""
+### Phase 2: JIT Remediation (At Next User Message)
 
-    warnings = []
-
-    for step_id, action in plan.step_actions.items():
-        # Warn about checkpoint-blocked teleports
-        if action.action == "teleport" and action.blocked_by_checkpoints:
-            for checkpoint in action.blocked_by_checkpoints:
-                warnings.append(MigrationWarning(
-                    severity="warning",
-                    step_name=action.from_step_name,
-                    message=f"Customers at '{action.from_step_name}' who match "
-                            f"'{action.teleport_condition}' should be at "
-                            f"'{action.teleport_target_name}', but checkpoint "
-                            f"'{checkpoint.checkpoint_description}' at "
-                            f"'{checkpoint.step_name}' may prevent this. "
-                            f"Sessions past this checkpoint will continue with a warning."
-                ))
-
-        # Warn about deleted steps with no anchor
-        if action.action == "relocate" and action.relocate_target_id is None:
-            warnings.append(MigrationWarning(
-                severity="critical",
-                step_name=action.from_step_name,
-                message=f"Step '{action.from_step_name}' was deleted and no anchor "
-                        f"could be found. Customers will exit the scenario."
-            ))
-
-        # Warn about required data collection
-        if action.collect_fields:
-            for field in action.collect_fields:
-                warnings.append(MigrationWarning(
-                    severity="info",
-                    step_name=action.from_step_name,
-                    message=f"Customers at '{action.from_step_name}' may be asked for "
-                            f"'{field}' if not already in their profile."
-                ))
-
-    return warnings
-```
-
----
-
-## Runtime Application
-
-At runtime, applying migration is a simple lookup and apply. For multi-version gaps, we use **Composite Migration** (see Edge Cases section) to prevent thrashing.
+When a user with `pending_migration` sends a new message:
 
 ```python
 async def pre_turn_reconciliation(session: Session) -> ReconciliationResult:
-    """Check for scenario updates before processing turn."""
+    """
+    Check for pending migration before processing turn.
+    This is the JIT remediation phase.
+    """
 
-    if session.active_scenario_id is None:
-        return ReconciliationResult(action="continue")
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Check for pending migration flag
+    # ═══════════════════════════════════════════════════════════════════════════
 
-    scenario = await config_store.get_scenario(session.active_scenario_id)
+    if session.pending_migration is None:
+        # No migration pending - check for version mismatch anyway
+        current_scenario = await config_store.get_scenario(session.active_scenario_id)
 
-    # No change?
-    if scenario.version == session.active_scenario_version:
-        return ReconciliationResult(action="continue")
+        if current_scenario.version == session.active_scenario_version:
+            return ReconciliationResult(action="continue")
 
-    # Get profile for gap fill
+        # Version mismatch but no flag - this is a late arrival
+        # Fall back to anchor-based relocation
+        return await fallback_reconciliation(session, current_scenario)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Load migration context
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    migration_plan = await config_store.get_migration_plan(
+        session.pending_migration.migration_plan_id
+    )
+
+    if migration_plan is None:
+        # Plan expired - fall back
+        return await fallback_reconciliation(session, None)
+
+    transformation = migration_plan.get_transformation_for_anchor(
+        session.pending_migration.anchor_content_hash
+    )
+
     profile = await profile_store.get(session.customer_profile_id)
 
-    # Check version gap
-    version_gap = scenario.version - session.active_scenario_version
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Determine and execute migration scenario
+    # ═══════════════════════════════════════════════════════════════════════════
 
-    if version_gap > 1:
-        # Multi-version gap: use composite migration to prevent thrashing
-        # See "Version Chaining: Composite Migration" in Edge Cases section
-        result = await execute_composite_migration(
-            session=session,
-            start_version=session.active_scenario_version,
-            end_version=scenario.version,
-            profile=profile
-        )
+    scenario_type = determine_migration_scenario(transformation, session)
+
+    if scenario_type == "clean_graft":
+        result = await execute_clean_graft(session, transformation, migration_plan)
+    elif scenario_type == "gap_fill":
+        result = await execute_gap_fill(session, transformation, migration_plan, profile)
+    elif scenario_type == "re_route":
+        result = await execute_re_route(session, transformation, migration_plan, profile)
     else:
-        # Single version jump: simple plan application
-        plan = await get_migration_plan(
-            scenario_id=session.active_scenario_id,
-            from_version=session.active_scenario_version,
-            to_version=scenario.version
-        )
+        result = ReconciliationResult(action="continue")
 
-        if plan is None:
-            result = await fallback_reconciliation(session, scenario)
-        else:
-            result = await apply_migration_plan(session, plan, profile)
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Clear pending flag and update version (unless collecting data)
+    # ═══════════════════════════════════════════════════════════════════════════
 
-    # Update session version (unless collecting data)
     if result.action != "collect":
-        session.active_scenario_version = scenario.version
+        session.pending_migration = None
+        session.active_scenario_version = migration_plan.to_version
+        session.scenario_checksum = compute_scenario_checksum(
+            await config_store.get_scenario(session.active_scenario_id)
+        )
         await session_store.save(session)
 
     # Log for audit
-    await log_migration_applied(session, version_gap, result)
+    await log_migration_applied(session, migration_plan, result)
 
     return result
+```
 
+---
 
-async def apply_migration_plan(
+## Step 4: Migration Scenarios
+
+Based on the transformation analysis, choose one of three migration scenarios:
+
+```python
+def determine_migration_scenario(
+    transformation: AnchorTransformation,
     session: Session,
+) -> str:
+    """
+    Determine which migration scenario applies.
+
+    Returns: "clean_graft" | "gap_fill" | "re_route"
+    """
+
+    upstream = transformation.upstream_changes
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Case 1: Clean Graft - Upstream is unchanged
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if (not upstream.inserted_nodes and
+        not upstream.new_forks and
+        not upstream.modified_transitions):
+        return "clean_graft"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Case 2: Re-Route - New fork upstream that could redirect user
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if upstream.new_forks:
+        # Check if any fork has rules that could redirect this user
+        for fork in upstream.new_forks:
+            if len(fork.branches) > 1:
+                return "re_route"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Case 3: Gap Fill - Inserted upstream nodes (data collection or messages)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if upstream.inserted_nodes:
+        return "gap_fill"
+
+    # Default to clean graft
+    return "clean_graft"
+```
+
+### Scenario 1: Clean Graft (Happy Path)
+
+**When:** Upstream from V1 to V2 is identical. User's path to current position is valid.
+
+**Action:** Teleport session to same anchor in V2, attach new downstream.
+
+```
+Graph:
+  V1: A → B → C
+  V2: A → B → N2 → C
+
+User at B in V1:
+  → Teleport to B in V2
+  → Future flow: B → N2 → C
+```
+
+```python
+async def execute_clean_graft(
+    session: Session,
+    transformation: AnchorTransformation,
+    plan: MigrationPlan,
+) -> ReconciliationResult:
+    """
+    Clean Graft: Upstream unchanged, just attach new downstream.
+    This is the safest and simplest migration.
+    """
+
+    # Map session to the anchor node in V2
+    new_step_id = transformation.anchor_node_id_v2
+
+    # Check if policy allows downstream update
+    policy = plan.get_policy_for_anchor(transformation.anchor_content_hash)
+
+    if not policy.update_downstream:
+        # Stay on V1 behavior - just update version tracking
+        return ReconciliationResult(
+            action="continue",
+            reason="Policy: update_downstream=False"
+        )
+
+    return ReconciliationResult(
+        action="teleport",
+        target_step_id=new_step_id,
+        teleport_reason="Clean graft: upstream unchanged",
+        user_message=None,  # Silent - user doesn't notice
+    )
+```
+
+### Scenario 2: Gap Fill (Inserted Upstream Nodes)
+
+**When:** New nodes were inserted upstream. User "skipped" them.
+
+**Key Question:** Can we pretend the new node(s) already happened, or must we run them now?
+
+```
+Graph:
+  V1: A → B
+  V2: A → N1 → B
+
+User at B in V1:
+  → N1 was inserted upstream
+  → Check what N1 requires
+```
+
+```python
+async def execute_gap_fill(
+    session: Session,
+    transformation: AnchorTransformation,
     plan: MigrationPlan,
     profile: CustomerProfile,
 ) -> ReconciliationResult:
-    """Apply a pre-computed migration plan to a session."""
+    """
+    Gap Fill: Handle inserted upstream nodes.
 
-    # Lookup action for current step
-    action = plan.step_actions.get(session.active_step_id)
+    For each inserted node:
+    - If only a text message: ignore (user doesn't need to see it)
+    - If requires data: try to backfill from profile/session/conversation
+    - If data not found: pause and ask user
+    """
 
-    if action is None:
-        # Step not in plan (shouldn't happen, but handle gracefully)
-        logger.warning("step_not_in_migration_plan",
-            session_id=session.id,
-            step_id=session.active_step_id
-        )
-        return ReconciliationResult(action="continue")
+    missing_fields = []
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Action: continue
-    # ═══════════════════════════════════════════════════════════════════════════
+    for inserted_node in transformation.upstream_changes.inserted_nodes:
+        # ═══════════════════════════════════════════════════════════════════════
+        # Check if this node is just a message (can be ignored)
+        # ═══════════════════════════════════════════════════════════════════════
 
-    if action.action == "continue":
-        return ReconciliationResult(action="continue")
+        if not inserted_node.collects_fields and not inserted_node.has_rules:
+            # Just a text message - user doesn't need to see it retroactively
+            continue
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Action: relocate (step was deleted)
-    # ═══════════════════════════════════════════════════════════════════════════
+        # ═══════════════════════════════════════════════════════════════════════
+        # Check if required action must be executed
+        # ═══════════════════════════════════════════════════════════════════════
 
-    if action.action == "relocate":
-        if action.relocate_target_id is None:
+        if inserted_node.is_required_action:
+            # Cannot skip - must execute
             return ReconciliationResult(
-                action="exit_scenario",
-                user_message="I need to start fresh. Let me help you from the beginning."
+                action="execute_action",
+                execute_actions=[inserted_node.node_id],
+                user_message=None,
             )
 
-        return ReconciliationResult(
-            action="teleport",
-            target_step_id=action.relocate_target_id,
-            teleport_reason="Step no longer exists",
-            user_message=None  # Silent relocation
-        )
+        # ═══════════════════════════════════════════════════════════════════════
+        # Node collects data - try gap fill
+        # ═══════════════════════════════════════════════════════════════════════
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Action: collect (gather missing data)
-    # ═══════════════════════════════════════════════════════════════════════════
+        for field_name in inserted_node.collects_fields:
+            # Check if field is actually needed downstream
+            if not is_field_needed_downstream(
+                field_name,
+                transformation.anchor_node_id_v2,
+                plan.new_scenario
+            ):
+                continue  # Can skip - field not used
 
-    if action.action == "collect":
-        missing_fields = []
-
-        for field_name in action.collect_fields:
-            # Try gap fill
+            # Try to fill from profile/session/conversation
             result = await fill_gap(field_name, profile, session)
+
             if not result.filled:
                 missing_fields.append(field_name)
 
-        if missing_fields:
-            return ReconciliationResult(
-                action="collect",
-                collect_fields=missing_fields,
-                user_message=build_collection_prompt(missing_fields)
-            )
-
-        # All fields filled - continue
-        return ReconciliationResult(action="continue")
-
     # ═══════════════════════════════════════════════════════════════════════════
-    # Action: teleport (fork would have routed elsewhere)
+    # Result
     # ═══════════════════════════════════════════════════════════════════════════
 
-    if action.action == "teleport":
-        # Check if blocked by checkpoint
-        for checkpoint in action.blocked_by_checkpoints:
-            if has_passed_checkpoint(session, checkpoint.step_id):
-                logger.warning("teleport_blocked_by_checkpoint",
-                    session_id=session.id,
-                    checkpoint=checkpoint.checkpoint_description,
-                    would_teleport_to=action.teleport_target_name
-                )
-                return ReconciliationResult(
-                    action="continue",
-                    blocked_by_checkpoint=True,
-                    checkpoint_warning=f"Would redirect to '{action.teleport_target_name}' "
-                                       f"but '{checkpoint.checkpoint_description}' prevents this."
-                )
+    if missing_fields:
+        return ReconciliationResult(
+            action="collect",
+            collect_fields=missing_fields,
+            user_message=build_collection_prompt(missing_fields),
+        )
 
-        # Gather data for condition evaluation
-        if action.teleport_condition and action.teleport_condition_fields:
-            condition_data = {}
-            missing_fields = []
+    # All gaps filled - proceed with clean graft
+    return ReconciliationResult(
+        action="teleport",
+        target_step_id=transformation.anchor_node_id_v2,
+        teleport_reason="Gap fill complete",
+        user_message=None,
+    )
+```
 
-            for field_name in action.teleport_condition_fields:
+### Scenario 3: Re-Routing (New Fork)
+
+**When:** New fork upstream with rules that could redirect user.
+
+**This is the most complex and risky scenario.**
+
+```
+Graph:
+  V1: A → B → C
+  V2: A → N1 → B → N2 → C
+            │
+       [age < 18]
+            │
+            └──► D → N2 → C
+
+User at B in V1:
+  → New fork at N1 with age rule
+  → Evaluate: should user be on B path or D path?
+```
+
+```python
+async def execute_re_route(
+    session: Session,
+    transformation: AnchorTransformation,
+    plan: MigrationPlan,
+    profile: CustomerProfile,
+) -> ReconciliationResult:
+    """
+    Re-Route: Handle new forks that could redirect user.
+
+    1. Evaluate fork conditions using user's current data
+    2. Determine correct path in V2
+    3. Check checkpoint blocking
+    4. Teleport to correct position (or stay if blocked)
+    """
+
+    for fork in transformation.upstream_changes.new_forks:
+        if len(fork.branches) <= 1:
+            continue  # Not really a fork
+
+        # ═══════════════════════════════════════════════════════════════════════
+        # Step 1: Find which branch leads to current anchor
+        # ═══════════════════════════════════════════════════════════════════════
+
+        branch_to_current = find_branch_leading_to(
+            fork.branches,
+            transformation.anchor_node_id_v2,
+            plan.new_scenario,
+        )
+
+        other_branches = [b for b in fork.branches if b != branch_to_current]
+
+        if not other_branches:
+            continue  # All branches lead to same place
+
+        # ═══════════════════════════════════════════════════════════════════════
+        # Step 2: Gather data needed for fork condition
+        # ═══════════════════════════════════════════════════════════════════════
+
+        condition_data = {}
+        missing_fields = []
+
+        for branch in other_branches:
+            for field_name in branch.condition_fields:
+                if field_name in condition_data:
+                    continue
+
                 result = await fill_gap(field_name, profile, session)
                 if result.filled:
                     condition_data[field_name] = result.value
                 else:
                     missing_fields.append(field_name)
 
-            # Need to collect data before we can evaluate condition
-            if missing_fields:
+        if missing_fields:
+            return ReconciliationResult(
+                action="collect",
+                collect_fields=missing_fields,
+                user_message=build_collection_prompt(missing_fields),
+            )
+
+        # ═══════════════════════════════════════════════════════════════════════
+        # Step 3: Evaluate fork conditions
+        # ═══════════════════════════════════════════════════════════════════════
+
+        for branch in other_branches:
+            should_take_branch = evaluate_condition(
+                branch.condition_text,
+                condition_data,
+            )
+
+            if should_take_branch:
+                # User should be on a different path!
+
+                # ═══════════════════════════════════════════════════════════════
+                # Step 4: Check checkpoint blocking
+                # ═══════════════════════════════════════════════════════════════
+
+                last_checkpoint = find_last_checkpoint_in_path(session)
+
+                if last_checkpoint:
+                    # Check if teleporting would cross (go before) the checkpoint
+                    if is_step_before_checkpoint(
+                        branch.target_step_id,
+                        last_checkpoint.step_id,
+                        plan.new_scenario,
+                    ):
+                        # BLOCKED - cannot undo irreversible action
+                        logger.warning(
+                            "re_route_blocked_by_checkpoint",
+                            session_id=session.id,
+                            checkpoint=last_checkpoint.checkpoint_description,
+                            would_teleport_to=branch.target_step_name,
+                        )
+
+                        return ReconciliationResult(
+                            action="continue",
+                            blocked_by_checkpoint=True,
+                            checkpoint_warning=f"Would redirect to '{branch.target_step_name}' "
+                                             f"but checkpoint '{last_checkpoint.checkpoint_description}' "
+                                             f"prevents this.",
+                        )
+
+                # ═══════════════════════════════════════════════════════════════
+                # Step 5: Execute teleportation
+                # ═══════════════════════════════════════════════════════════════
+
                 return ReconciliationResult(
-                    action="collect",
-                    collect_fields=missing_fields,
-                    user_message=build_collection_prompt(missing_fields)
+                    action="teleport",
+                    target_step_id=branch.target_step_id,
+                    teleport_reason=f"Re-route: {branch.condition_text} evaluated true",
+                    user_message="I have new instructions regarding your request. "
+                                "Let me redirect our conversation.",
                 )
 
-            # Evaluate condition
-            should_teleport = evaluate_condition(action.teleport_condition, condition_data)
+    # No re-routing needed - fall through to gap fill or clean graft
+    if transformation.upstream_changes.inserted_nodes:
+        return await execute_gap_fill(session, transformation, plan, profile)
 
-            if not should_teleport:
-                # Condition not met - use fallback
-                if action.teleport_fallback_action == "continue":
-                    return ReconciliationResult(action="continue")
-                # Could support other fallback actions here
+    return await execute_clean_graft(session, transformation, plan)
+```
 
-        # Teleport
-        return ReconciliationResult(
-            action="teleport",
-            target_step_id=action.teleport_target_id,
-            teleport_reason=action.reason,
-            user_message="I have updated instructions. Let me redirect our conversation."
-        )
+---
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Action: execute (run required actions)
-    # ═══════════════════════════════════════════════════════════════════════════
+## Checkpoint Handling
 
-    if action.action == "execute":
-        return ReconciliationResult(
-            action="execute_action",
-            execute_actions=action.execute_actions
-        )
+Checkpoints represent **irreversible actions** that cannot be undone. When migrating, we must respect these.
 
-    # Unknown action
-    logger.error("unknown_migration_action", action=action.action)
-    return ReconciliationResult(action="continue")
+### Finding Last Checkpoint
+
+Walk **backwards** through the session's path to find the most recent checkpoint:
+
+```python
+def find_last_checkpoint_in_path(session: Session) -> Optional[CheckpointInfo]:
+    """
+    Walk backwards through session history to find last checkpoint.
+
+    Checkpoints are irreversible actions like:
+    - "Order placed"
+    - "Payment processed"
+    - "Contract signed"
+    """
+
+    # Session stores visited steps in order
+    for visit in reversed(session.step_history):
+        if visit.is_checkpoint:
+            return CheckpointInfo(
+                step_id=visit.step_id,
+                step_name=visit.step_name,
+                checkpoint_description=visit.checkpoint_description,
+                passed_at=visit.visited_at,
+            )
+
+    return None  # No checkpoint in history
 
 
-def has_passed_checkpoint(session: Session, checkpoint_step_id: UUID) -> bool:
-    """Check if session has passed through a checkpoint step."""
-    return any(
-        visit.step_id == checkpoint_step_id
-        for visit in session.step_history
+def is_step_before_checkpoint(
+    target_step_id: UUID,
+    checkpoint_step_id: UUID,
+    scenario: Scenario,
+) -> bool:
+    """
+    Check if target_step comes before checkpoint in the graph.
+
+    If true, teleporting to target would "undo" the checkpoint,
+    which is not allowed.
+    """
+
+    # BFS from target to see if we can reach checkpoint
+    visited = set()
+    queue = [target_step_id]
+
+    while queue:
+        current = queue.pop(0)
+
+        if current == checkpoint_step_id:
+            return True  # Target is upstream of checkpoint
+
+        if current in visited:
+            continue
+        visited.add(current)
+
+        step = scenario.get_step(current)
+        if step:
+            for transition in step.transitions:
+                queue.append(transition.to_step_id)
+
+    return False  # Target is not upstream of checkpoint
+
+
+@dataclass
+class CheckpointInfo:
+    """Information about a checkpoint in the session's path."""
+    step_id: UUID
+    step_name: str
+    checkpoint_description: str
+    passed_at: datetime
+```
+
+### Checkpoint Blocking Logic
+
+When a migration would teleport a user past a checkpoint they've already completed:
+
+1. **Do NOT teleport** - the action is irreversible
+2. **Log a warning** - operators should know this happened
+3. **Continue on current path** - respect the completed action
+4. **Optionally notify via LLM** - explain to user if appropriate
+
+```python
+# In execute_re_route, when checkpoint blocks teleportation:
+
+if is_step_before_checkpoint(branch.target_step_id, last_checkpoint.step_id, ...):
+    # The new rules say user should be rejected/redirected,
+    # BUT they already completed an irreversible action.
+    #
+    # We CANNOT undo: "Order dispatched", "Payment processed", etc.
+    #
+    # So we continue but log the anomaly for operators.
+
+    logger.warning(
+        "teleport_blocked_by_checkpoint",
+        session_id=session.id,
+        checkpoint=last_checkpoint.checkpoint_description,
+        would_teleport_to=branch.target_step_name,
+        new_rule=branch.condition_text,
+    )
+
+    return ReconciliationResult(
+        action="continue",
+        blocked_by_checkpoint=True,
+        checkpoint_warning=f"New rule '{branch.condition_text}' would redirect "
+                          f"to '{branch.target_step_name}', but checkpoint "
+                          f"'{last_checkpoint.checkpoint_description}' prevents this."
     )
 ```
 
@@ -740,7 +898,7 @@ async def fill_gap(
                 filled=True,
                 value=field.value,
                 source="profile",
-                confidence=field.confidence
+                confidence=field.confidence,
             )
 
     # Check session variables (current conversation)
@@ -749,11 +907,11 @@ async def fill_gap(
             filled=True,
             value=session.variables[field_name],
             source="session",
-            confidence=1.0
+            confidence=1.0,
         )
 
     # ═══════════════════════════════════════════════════════════════════════
-    # TIER 2: Conversation Extraction
+    # TIER 2: Conversation Extraction (LLM)
     # ═══════════════════════════════════════════════════════════════════════
 
     field_def = await get_field_definition(field_name)
@@ -774,7 +932,7 @@ async def fill_gap(
             value=extraction.value,
             source="conversation_extraction",
             confidence=extraction.confidence,
-            needs_confirmation=(extraction.confidence < 0.95)
+            needs_confirmation=(extraction.confidence < 0.95),
         )
 
         return GapFillResult(
@@ -782,7 +940,7 @@ async def fill_gap(
             value=extraction.value,
             source="extraction",
             confidence=extraction.confidence,
-            needs_confirmation=(extraction.confidence < 0.95)
+            needs_confirmation=(extraction.confidence < 0.95),
         )
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -850,12 +1008,166 @@ Respond in JSON:
 
 ---
 
-## Reconciliation Result
+## Data Models
+
+### Migration Plan
+
+```python
+@dataclass
+class MigrationPlan:
+    """Pre-computed migration plan for a scenario version transition."""
+
+    id: UUID = field(default_factory=uuid4)
+    scenario_id: UUID
+    from_version: int
+    to_version: int
+
+    # Graph analysis
+    transformation_map: TransformationMap
+    scenario_checksum_v1: str
+    scenario_checksum_v2: str
+
+    # Per-anchor policies
+    anchor_policies: Dict[str, AnchorMigrationPolicy]  # Key: content_hash
+
+    # Summary for operator review
+    summary: MigrationSummary
+
+    # Metadata
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    approved_by: Optional[str] = None
+
+    # Status
+    status: str = "pending"  # "pending" | "approved" | "deployed" | "superseded"
+
+
+@dataclass
+class TransformationMap:
+    """Complete transformation analysis between two scenario versions."""
+
+    anchors: List[AnchorTransformation]  # Nodes that exist in both versions
+    deleted_nodes: List[DeletedNode]  # Nodes in V1 but not V2
+    new_nodes: List[UUID]  # Nodes in V2 but not V1
+
+    def get_transformation_for_anchor(self, content_hash: str) -> Optional[AnchorTransformation]:
+        for anchor in self.anchors:
+            if anchor.anchor_content_hash == content_hash:
+                return anchor
+        return None
+
+
+@dataclass
+class DeletedNode:
+    """A node that was deleted between V1 and V2."""
+    node_id_v1: UUID
+    node_name: str
+    nearest_anchor_hash: Optional[str]  # Anchor to relocate to
+    nearest_anchor_id_v2: Optional[UUID]
+```
+
+### Session Fields
+
+```python
+@dataclass
+class Session:
+    """Session model with migration support."""
+
+    id: UUID
+    tenant_id: UUID
+    agent_id: UUID
+    customer_profile_id: UUID
+
+    # Scenario tracking
+    active_scenario_id: Optional[UUID] = None
+    active_scenario_version: Optional[int] = None
+    scenario_checksum: Optional[str] = None  # For validation
+    active_step_id: Optional[UUID] = None
+
+    # Migration support
+    pending_migration: Optional[PendingMigration] = None
+
+    # History for checkpoint detection
+    step_history: List[StepVisit] = field(default_factory=list)
+
+    # Session data
+    variables: Dict[str, Any] = field(default_factory=dict)
+
+    # Timestamps
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class StepVisit:
+    """Record of a step visit in session history."""
+    step_id: UUID
+    step_name: str
+    visited_at: datetime
+    is_checkpoint: bool = False
+    checkpoint_description: Optional[str] = None
+
+
+@dataclass
+class PendingMigration:
+    """Marker indicating session needs migration at next turn."""
+    target_version: int
+    anchor_content_hash: str
+    migration_plan_id: UUID
+    marked_at: datetime
+```
+
+### Migration Summary
+
+```python
+@dataclass
+class MigrationSummary:
+    """Human-readable summary for operator review before deployment."""
+
+    # Counts
+    total_anchors: int
+    anchors_with_clean_graft: int
+    anchors_with_gap_fill: int
+    anchors_with_re_route: int
+    nodes_deleted: int
+
+    # Affected customers (estimated)
+    estimated_sessions_affected: int = 0
+    sessions_by_anchor: Dict[str, int] = field(default_factory=dict)
+
+    # Warnings that need operator attention
+    warnings: List[MigrationWarning] = field(default_factory=list)
+
+    # Field collection requirements
+    fields_to_collect: List[FieldCollectionInfo] = field(default_factory=list)
+
+
+@dataclass
+class MigrationWarning:
+    """Warning for operator review."""
+    severity: str  # "info" | "warning" | "critical"
+    anchor_name: str
+    message: str
+
+
+@dataclass
+class FieldCollectionInfo:
+    """Information about a field that needs collection."""
+    field_name: str
+    display_name: str
+    affected_anchors: List[str]
+    reason: str
+    can_extract_from_conversation: bool
+```
+
+### Reconciliation Result
 
 ```python
 @dataclass
 class ReconciliationResult:
-    """Result of applying migration plan to a session."""
+    """Result of applying migration to a session."""
+
     action: str  # "continue" | "teleport" | "collect" | "execute_action" | "exit_scenario"
 
     # For teleport
@@ -871,82 +1183,142 @@ class ReconciliationResult:
     # User-facing message (if any)
     user_message: Optional[str] = None
 
-    # Warnings
+    # Checkpoint blocking
     blocked_by_checkpoint: bool = False
     checkpoint_warning: Optional[str] = None
+
+    # Debug/audit
+    reason: Optional[str] = None
 ```
 
 ---
 
-## Storage and Retention
+## Multi-Version Handling
 
-### Migration Plan Storage
+When a session spans multiple version updates (V1 → V2 → V3):
 
-```python
-# Migration plans are stored per scenario version transition
-# Key pattern: migration_plan:{scenario_id}:{from_version}:{to_version}
-
-async def save_migration_plan(plan: MigrationPlan) -> None:
-    """Save a migration plan."""
-    key = f"migration_plan:{plan.scenario_id}:{plan.from_version}:{plan.to_version}"
-    await config_store.save(key, plan, ttl_days=30)
-
-
-async def get_migration_plan(
-    scenario_id: UUID,
-    from_version: int,
-    to_version: int,
-) -> Optional[MigrationPlan]:
-    """Get a migration plan for a specific version transition."""
-
-    # Direct transition?
-    key = f"migration_plan:{scenario_id}:{from_version}:{to_version}"
-    plan = await config_store.get(key)
-
-    if plan:
-        return plan
-
-    # Version gap - try to chain plans
-    # e.g., from V1 to V3, might need V1→V2 then V2→V3
-    # For now, return None and let runtime fall back to anchor-based relocation
-    return None
-```
-
-### Scenario Version Retention
+### Composite Migration
 
 ```python
-async def save_scenario(scenario: Scenario, plan: MigrationPlan) -> None:
-    """Save scenario with its migration plan."""
+async def execute_composite_migration(
+    session: Session,
+    start_version: int,
+    end_version: int,
+    profile: CustomerProfile,
+) -> ReconciliationResult:
+    """
+    Handle multi-version gaps by computing net effect.
 
-    current = await config_store.get_scenario(scenario.id)
+    Prevents "thrashing" - asking for data that intermediate
+    versions needed but final version doesn't.
+    """
 
-    if current:
-        # Archive current version
-        await config_store.archive_scenario_version(current)
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Phase 1: Fetch Plan Chain
+    # ═══════════════════════════════════════════════════════════════════════════
 
-    # Increment version and save
-    scenario.version += 1
-    await config_store.save_scenario(scenario)
+    plans = await get_plan_chain(
+        scenario_id=session.active_scenario_id,
+        start_version=start_version,
+        end_version=end_version,
+    )
 
-    # Save migration plan
-    await save_migration_plan(plan)
+    if not plans:
+        # Chain broken - fall back to anchor-based relocation
+        return await fallback_reconciliation(session, end_version)
 
-    # Mark previous plan as superseded
-    if current:
-        old_plan = await get_migration_plan(
-            scenario.id,
-            current.version - 1,
-            current.version
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Phase 2: Simulate Through All Versions (In Memory)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    virtual_step_hash = compute_node_content_hash(
+        await get_step(session.active_step_id)
+    )
+    accumulated_requirements = set()
+    checkpoints_encountered = []
+
+    for plan in plans:
+        transformation = plan.transformation_map.get_transformation_for_anchor(
+            virtual_step_hash
         )
-        if old_plan:
-            old_plan.status = "superseded"
-            await save_migration_plan(old_plan)
+
+        if transformation is None:
+            continue  # Step unchanged in this version
+
+        # Track field requirements from this version
+        for node in transformation.upstream_changes.inserted_nodes:
+            accumulated_requirements.update(node.collects_fields)
+
+        # Track checkpoints
+        for fork in transformation.upstream_changes.new_forks:
+            for branch in fork.branches:
+                checkpoints = find_checkpoints_in_path(
+                    branch.target_step_id,
+                    plan.new_scenario,
+                )
+                checkpoints_encountered.extend(checkpoints)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Phase 3: Prune Requirements (Anti-Thrash)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    final_scenario = await config_store.get_scenario(
+        session.active_scenario_id,
+        version=end_version,
+    )
+
+    final_requirements = set()
+    for field_name in accumulated_requirements:
+        if is_field_needed_in_scenario(field_name, final_scenario):
+            final_requirements.add(field_name)
+        # else: field needed by intermediate version but not final - PRUNE
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Phase 4: Gap Fill Only Final Requirements
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    missing_fields = []
+    for field_name in final_requirements:
+        result = await fill_gap(field_name, profile, session)
+        if not result.filled:
+            missing_fields.append(field_name)
+
+    if missing_fields:
+        return ReconciliationResult(
+            action="collect",
+            collect_fields=missing_fields,
+            user_message=build_collection_prompt(missing_fields),
+        )
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Phase 5: Apply Final Position
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # Find anchor in final version
+    final_anchor = find_anchor_by_hash(virtual_step_hash, final_scenario)
+
+    if final_anchor is None:
+        return ReconciliationResult(
+            action="exit_scenario",
+            user_message="I need to start fresh. Let me help you from the beginning.",
+        )
+
+    return ReconciliationResult(
+        action="teleport",
+        target_step_id=final_anchor.id,
+        teleport_reason=f"Composite migration V{start_version}→V{end_version}",
+        user_message=None,
+    )
 ```
 
-**Retention policy:**
-- Scenario versions: Previous version only, 7 days
-- Migration plans: 30 days (longer than versions to support late migrations)
-- If version or plan not found: Fall back to anchor-based relocation
+### Benefits of Composite Migration
+
+| Aspect | Without Composite | With Composite |
+|--------|-------------------|----------------|
+| **User Experience** | Confusing - asked for data that's immediately obsolete | Clean - only questions for final state |
+| **Data Integrity** | Polluted - session contains fragments from deleted flows | Pure - reflects only active version |
+| **Performance** | Slow - multiple DB writes per intermediate version | Fast - single atomic update |
+| **Auditability** | Noisy - many migration events | Clean - one composite event |
 
 ---
 
@@ -955,10 +1327,10 @@ async def save_scenario(scenario: Scenario, plan: MigrationPlan) -> None:
 ### Silent Operations
 
 These happen without user notification:
-- Downstream steps added (encountered naturally)
-- Gap fill from CustomerProfile (instant)
+- Clean graft (just attaching new downstream)
+- Gap fill from profile (instant)
 - Gap fill from session variables (instant)
-- Relocation to anchor when step deleted (silent teleport)
+- Relocation to anchor when step deleted
 
 ### User-Facing Prompts
 
@@ -967,9 +1339,9 @@ These happen without user notification:
 "Before we continue, I need to confirm a few things. What is your email address?"
 ```
 
-**Teleportation** (when fork redirects):
+**Re-routing** (when fork redirects):
 ```
-"I have updated instructions I need to follow. Let me redirect our conversation."
+"I have new instructions regarding your request. Let me redirect our conversation."
 ```
 
 **Confirmation** (when extraction confidence is medium):
@@ -982,472 +1354,140 @@ These happen without user notification:
 ## Configuration
 
 ```toml
-[scenario_reconciliation]
+[scenario_migration]
 enabled = true
 
-# Migration plan generation
-[scenario_reconciliation.plan_generation]
-auto_generate = true  # Generate plan on scenario save
+# Two-phase deployment
+[scenario_migration.deployment]
+auto_mark_sessions = true  # Mark sessions at deployment time
 require_approval = true  # Operator must approve before deployment
 
 # Gap fill settings
-[scenario_reconciliation.gap_fill]
+[scenario_migration.gap_fill]
 extraction_enabled = true
 extraction_confidence_threshold = 0.85
 confirmation_threshold = 0.95
 max_conversation_turns = 20
 
-# Teleportation settings
-[scenario_reconciliation.teleportation]
+# Re-routing settings
+[scenario_migration.re_routing]
 enabled = true
 notify_user = true
-notification_template = "I have updated instructions. Let me redirect our conversation."
+notification_template = "I have new instructions. Let me redirect our conversation."
+
+# Checkpoint handling
+[scenario_migration.checkpoints]
+block_teleport_past_checkpoint = true
+log_checkpoint_blocks = true
 
 # Retention
-[scenario_reconciliation.retention]
+[scenario_migration.retention]
 version_retention_days = 7
 plan_retention_days = 30
 
 # Logging
-[scenario_reconciliation.logging]
-log_checkpoint_blocks = true
-log_teleportations = true
+[scenario_migration.logging]
+log_clean_grafts = false  # Usually too noisy
 log_gap_fills = true
+log_re_routes = true
+log_checkpoint_blocks = true
 ```
 
 ---
 
 ## Observability
 
-See [observability.md](../architecture/observability.md) for the overall logging, tracing, and metrics architecture. This section covers scenario reconciliation-specific observability.
-
 ### Events
 
 ```python
 class MigrationAppliedEvent(BaseModel):
-    """Logged when a migration plan is applied to a session."""
+    """Logged when a migration is applied to a session."""
+
     session_id: UUID
     scenario_id: UUID
     plan_id: UUID
     from_version: int
     to_version: int
 
+    # Migration scenario used
+    migration_scenario: str  # "clean_graft" | "gap_fill" | "re_route"
+
     # What happened
+    anchor_hash: str
     step_before: UUID
     action_taken: str
     step_after: Optional[UUID] = None
 
-    # Details
-    fields_collected: List[str] = []
+    # Gap fill details
     fields_gap_filled: Dict[str, str] = {}  # field_name -> source
-    actions_executed: List[UUID] = []
+    fields_collected: List[str] = []  # Asked user
 
-    # Warnings
+    # Checkpoint details
     blocked_by_checkpoint: bool = False
     checkpoint_id: Optional[UUID] = None
+    checkpoint_description: Optional[str] = None
 
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 ```
 
 ### Metrics
 
-- `migration_plans_generated_total` (counter)
-- `migration_plans_approved_total` (counter)
-- `migration_applied_total` (counter) - by action type
-- `migration_teleportations_total` (counter) - by reason
-- `migration_gap_fills_total` (counter) - by source (profile/session/extraction/ask)
-- `migration_checkpoint_blocks_total` (counter)
-- `migration_plan_generation_duration_ms` (histogram)
-- `migration_application_duration_ms` (histogram)
+```
+migration_plans_generated_total (counter)
+migration_plans_approved_total (counter)
+migration_sessions_marked_total (counter) - at deployment
+migration_applied_total (counter) - by scenario type
+migration_gap_fills_total (counter) - by source
+migration_checkpoint_blocks_total (counter)
+migration_plan_generation_duration_ms (histogram)
+migration_application_duration_ms (histogram)
+```
 
 ---
 
-## Edge Cases
+## Trade-offs and Alternatives
 
-### Version Gap (Session Very Old)
+### Cheap & Simple Alternative
 
-If a session is on V1 and current is V5, we might not have a direct V1→V5 plan:
-
-```python
-async def fallback_reconciliation(
-    session: Session,
-    scenario: Scenario
-) -> ReconciliationResult:
-    """Fallback when no migration plan is available."""
-
-    # Try to find current step in new scenario
-    if scenario.has_step(session.active_step_id):
-        # Step still exists - just update version
-        return ReconciliationResult(action="continue")
-
-    # Step deleted - find anchor
-    anchor = find_nearest_anchor(session.step_history, scenario)
-
-    if anchor:
-        return ReconciliationResult(
-            action="teleport",
-            target_step_id=anchor.id,
-            teleport_reason="Fallback relocation (migration plan unavailable)"
-        )
-
-    return ReconciliationResult(
-        action="exit_scenario",
-        user_message="I need to start fresh. Let me help you from the beginning."
-    )
-```
-
-### Version Chaining: Composite Migration (Plan Squashing)
-
-When a user is dormant while the scenario is updated multiple times (e.g., V1 → V2 → V3), naive sequential execution of migration plans leads to **thrashing** - executing useless intermediate actions that erode user trust.
-
-#### The Thrashing Problem
+Accept the "delta" created by updating a Scenario under active sessions:
 
 ```
-User is dormant at Step A (V1)
+Pros:
+- No complexity
+- No migration infrastructure
 
-Update 1 (V2): Add Step B between A and C
-               Step B requires "email"
-
-Update 2 (V3): Delete Step B, replace with Step D
-               Step D requires "phone"
-
-User returns...
+Cons:
+- Some users may be "out of sync"
+- New rules may not apply to existing sessions
+- Inconsistent behavior during rollouts
 ```
 
-**Bad (Sequential Execution):**
-1. V1→V2: Move to Step B, ask for email
-2. User provides email
-3. V2→V3: Move to Step D, discard email, ask for phone
-4. **Result**: User was forced to provide data that was immediately obsolete
+**Use this when:**
+- Scenario updates are rare
+- Sessions are short-lived
+- Business rules are not critical
 
-**Good (Composite Migration):**
-1. Squash V1→V2→V3 into single net effect
-2. Calculate: Step A → Step D (skip B entirely)
-3. Prune requirements: email is not needed in V3, only phone
-4. **Result**: User is asked only for phone
+### Full Migration (This Document)
 
-#### Solution: Treat Intermediate Versions as Transient Calculations
+Use anchor-based migration with two-phase deployment:
 
-We "squash" the chain of migration plans into a single **Net Result** before touching the session. This relies on two phases:
+```
+Pros:
+- Consistent behavior
+- New rules applied properly
+- Checkpoint respect
+- Operator visibility
 
-1. **Transitive Resolution**: Calculate the net movement across all plans
-2. **Requirement Pruning**: Keep only data requirements that matter in the final version
-
-```python
-async def execute_composite_migration(
-    session: Session,
-    start_version: int,
-    end_version: int,
-    profile: CustomerProfile,
-) -> ReconciliationResult:
-    """
-    Calculate the net effect of multiple version updates and apply
-    them atomically to the session.
-
-    This prevents "thrashing" - asking users for data that intermediate
-    versions needed but the final version doesn't.
-    """
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Phase 1: Fetch the Plan Chain
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    plans = await config_store.get_plan_chain(
-        scenario_id=session.active_scenario_id,
-        start_version=start_version,
-        end_version=end_version
-    )
-
-    if not plans:
-        # No plans available - fall back to anchor-based relocation
-        return await fallback_reconciliation(session, end_version)
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Phase 2: In-Memory Simulation (Transitive Resolution)
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    virtual_step_id = session.active_step_id
-    accumulated_requirements = set()
-    accumulated_condition_fields = set()
-    checkpoints_encountered = []
-
-    for plan in plans:
-        action = plan.step_actions.get(virtual_step_id)
-
-        if action is None:
-            # Step exists unchanged in this version transition
-            continue
-
-        # Track movement (but don't persist yet)
-        if action.action in ("teleport", "relocate"):
-            virtual_step_id = action.teleport_target_id or action.relocate_target_id
-
-        # Accumulate potential data requirements (dirty list)
-        if action.collect_fields:
-            accumulated_requirements.update(action.collect_fields)
-
-        if action.teleport_condition_fields:
-            accumulated_condition_fields.update(action.teleport_condition_fields)
-
-        # Track checkpoints for blocking logic
-        if action.blocked_by_checkpoints:
-            checkpoints_encountered.extend(action.blocked_by_checkpoints)
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Phase 3: Requirement Pruning (The "Anti-Thrash" Logic)
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    # Load the FINAL scenario version
-    final_scenario = await config_store.get_scenario(
-        session.active_scenario_id,
-        version=end_version
-    )
-    final_step = final_scenario.get_step(virtual_step_id)
-
-    if final_step is None:
-        # Virtual step doesn't exist in final version - find anchor
-        anchor = find_nearest_anchor_in_scenario(
-            virtual_step_id, final_scenario
-        )
-        if anchor:
-            virtual_step_id = anchor.id
-            final_step = anchor
-        else:
-            return ReconciliationResult(
-                action="exit_scenario",
-                user_message="I need to start fresh. Let me help you from the beginning."
-            )
-
-    # Prune requirements: only keep fields needed in final version
-    final_requirements = set()
-
-    for field_name in accumulated_requirements | accumulated_condition_fields:
-        if is_field_needed_in_future(field_name, final_step, final_scenario):
-            final_requirements.add(field_name)
-        # else: field was needed by intermediate version but not final - prune it
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Phase 4: Gap Fill (Only for Pruned Requirements)
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    missing_fields = []
-
-    for field_name in final_requirements:
-        result = await fill_gap(field_name, profile, session)
-        if not result.filled:
-            missing_fields.append(field_name)
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Phase 5: Atomic Application
-    # ═══════════════════════════════════════════════════════════════════════════
-
-    # Check checkpoint blocking (using accumulated checkpoints)
-    for checkpoint in checkpoints_encountered:
-        if has_passed_checkpoint(session, checkpoint.step_id):
-            # Can't complete migration - blocked by irreversible action
-            logger.warning("composite_migration_blocked",
-                session_id=session.id,
-                checkpoint=checkpoint.checkpoint_description
-            )
-            # Continue at current position in final version
-            return ReconciliationResult(
-                action="continue",
-                blocked_by_checkpoint=True,
-                checkpoint_warning=f"Migration blocked by '{checkpoint.checkpoint_description}'"
-            )
-
-    # Build result
-    if missing_fields:
-        return ReconciliationResult(
-            action="collect",
-            collect_fields=missing_fields,
-            user_message=build_collection_prompt(missing_fields)
-        )
-
-    # Determine if we need to teleport
-    if virtual_step_id != session.active_step_id:
-        return ReconciliationResult(
-            action="teleport",
-            target_step_id=virtual_step_id,
-            teleport_reason=f"Composite migration V{start_version}→V{end_version}",
-            user_message=None  # Silent unless significant change
-        )
-
-    return ReconciliationResult(action="continue")
-
-
-def is_field_needed_in_future(
-    field_name: str,
-    step: ScenarioStep,
-    scenario: Scenario,
-) -> bool:
-    """
-    Determine if a field is actually needed in the final scenario graph.
-
-    A field is needed if:
-    1. The current step requires it
-    2. An outgoing transition condition uses it
-    3. An immediate downstream step requires it
-    """
-
-    # Check current step requirements
-    if field_name in step.collects_profile_fields:
-        return True
-
-    # Check outgoing transition conditions
-    for transition in step.transitions:
-        if field_name in transition.condition_fields:
-            return True
-
-    # Check immediate downstream steps
-    for transition in step.transitions:
-        downstream_step = scenario.get_step(transition.to_step_id)
-        if downstream_step and field_name in downstream_step.collects_profile_fields:
-            return True
-
-    return False
-
-
-async def get_plan_chain(
-    scenario_id: UUID,
-    start_version: int,
-    end_version: int,
-) -> List[MigrationPlan]:
-    """
-    Retrieve all migration plans needed to go from start_version to end_version.
-
-    Returns plans in order: [V1→V2, V2→V3, V3→V4, ...]
-    Returns empty list if any plan in the chain is missing.
-    """
-
-    plans = []
-
-    current_version = start_version
-    while current_version < end_version:
-        next_version = current_version + 1
-
-        plan = await config_store.get_migration_plan(
-            scenario_id=scenario_id,
-            from_version=current_version,
-            to_version=next_version
-        )
-
-        if plan is None:
-            # Gap in chain - can't composite
-            logger.warning("migration_plan_chain_broken",
-                scenario_id=scenario_id,
-                missing_from=current_version,
-                missing_to=next_version
-            )
-            return []
-
-        plans.append(plan)
-        current_version = next_version
-
-    return plans
+Cons:
+- More complex
+- Requires migration infrastructure
+- Some edge cases require manual handling
 ```
 
-#### Updated Runtime Entry Point
-
-The `pre_turn_reconciliation` function now uses composite migration:
-
-```python
-async def pre_turn_reconciliation(session: Session) -> ReconciliationResult:
-    """Check for scenario updates before processing turn."""
-
-    if session.active_scenario_id is None:
-        return ReconciliationResult(action="continue")
-
-    scenario = await config_store.get_scenario(session.active_scenario_id)
-
-    # No change?
-    if scenario.version == session.active_scenario_version:
-        return ReconciliationResult(action="continue")
-
-    # Get profile for gap fill
-    profile = await profile_store.get(session.customer_profile_id)
-
-    # Version gap > 1? Use composite migration to prevent thrashing
-    version_gap = scenario.version - session.active_scenario_version
-
-    if version_gap > 1:
-        result = await execute_composite_migration(
-            session=session,
-            start_version=session.active_scenario_version,
-            end_version=scenario.version,
-            profile=profile
-        )
-    else:
-        # Single version jump - use simple plan application
-        plan = await get_migration_plan(
-            scenario_id=session.active_scenario_id,
-            from_version=session.active_scenario_version,
-            to_version=scenario.version
-        )
-
-        if plan is None:
-            result = await fallback_reconciliation(session, scenario)
-        else:
-            result = await apply_migration_plan(session, plan, profile)
-
-    # Update session version (unless collecting data)
-    if result.action != "collect":
-        session.active_scenario_version = scenario.version
-        await session_store.save(session)
-
-    # Log for audit
-    await log_migration_applied(session, version_gap, result)
-
-    return result
-```
-
-#### Benefits of Composite Migration
-
-| Aspect | Without Composite | With Composite |
-|--------|-------------------|----------------|
-| **User Experience** | Confusing - asked for data that's immediately obsolete | Clean - only relevant questions for final state |
-| **Data Integrity** | Polluted - session contains fragments from deleted flows | Pure - reflects only active scenario version |
-| **Performance** | Slow - multiple DB writes per intermediate version | Fast - single atomic update V1→V3 |
-| **Auditability** | Noisy - many migration events | Clean - one composite migration event |
-
-### Circular References in Scenario
-
-Graph traversal uses visited set to prevent infinite loops:
-
-```python
-def find_new_upstream_forks(
-    target_step_id: UUID,
-    old_scenario: Scenario,
-    new_scenario: Scenario,
-) -> List[ScenarioStep]:
-    """Find forks in new scenario that are upstream of target step."""
-
-    visited = set()
-    forks = []
-
-    def walk(step_id: UUID):
-        if step_id in visited:
-            return
-        visited.add(step_id)
-
-        step = new_scenario.get_step(step_id)
-        if step is None:
-            return
-
-        # Check if this is a fork (multiple transitions)
-        if len(step.transitions) > 1:
-            # Is this fork new or modified?
-            old_step = old_scenario.get_step(step_id)
-            if old_step is None or transitions_changed(old_step, step):
-                forks.append(step)
-
-        # Walk predecessors
-        for pred_id in get_predecessors(step_id, new_scenario):
-            walk(pred_id)
-
-    walk(target_step_id)
-    return forks
-```
+**Use this when:**
+- Channels are long-lived (WhatsApp, SMS)
+- New rules are business-critical
+- Consistent behavior required across all sessions
 
 ---
 
@@ -1462,11 +1502,11 @@ The Control Plane should display migration plans for review:
 │                                                                              │
 │  Summary                                                                     │
 │  ────────────────────────────────────────────────────────────────────────── │
-│  Total steps in v3:       8                                                 │
-│  Unchanged:               5                                                 │
-│  Need data collection:    2                                                 │
-│  Will teleport:           1                                                 │
-│  Deleted (relocate):      0                                                 │
+│  Total anchors:         8                                                   │
+│  Clean graft:           5                                                   │
+│  Gap fill:              2                                                   │
+│  Re-route:              1                                                   │
+│  Nodes deleted:         0                                                   │
 │                                                                              │
 │  Estimated sessions affected: 142                                           │
 │                                                                              │
@@ -1478,15 +1518,19 @@ The Control Plane should display migration plans for review:
 │                                                                              │
 │  ℹ️  Customers at 'Welcome' may be asked for 'email' if not in profile.    │
 │                                                                              │
-│  Step Details                                                               │
+│  Anchor Details                                                             │
 │  ────────────────────────────────────────────────────────────────────────── │
-│  Welcome           → collect ['email']     (12 sessions)                   │
-│  Product Selection → continue              (45 sessions)                   │
-│  Cart Review       → continue              (28 sessions)                   │
-│  Checkout          → teleport to Rejected  (3 sessions)                    │
-│                      if age < 18                                            │
+│  Welcome           → gap_fill (email)    (12 sessions)                     │
+│                      scope: WhatsApp only                                   │
+│                      update_downstream: true                                │
+│                                                                              │
+│  Product Selection → clean_graft          (45 sessions)                    │
+│                                                                              │
+│  Checkout          → re_route             (3 sessions)                     │
+│                      if age < 18 → Rejected                                 │
 │                      blocked by: Payment Processed                          │
-│  Order Confirmation→ continue              (54 sessions)                   │
+│                                                                              │
+│  Order Confirmation→ clean_graft          (54 sessions)                    │
 │                                                                              │
 │  ┌─────────────────┐  ┌─────────────────┐                                  │
 │  │    Approve      │  │     Cancel      │                                  │

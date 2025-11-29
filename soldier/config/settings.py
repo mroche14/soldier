@@ -10,6 +10,7 @@ from pydantic_settings import (
 )
 
 from soldier.config.models.api import APIConfig
+from soldier.config.models.migration import ScenarioMigrationConfig
 from soldier.config.models.observability import ObservabilityConfig
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.config.models.providers import ProvidersConfig
@@ -86,6 +87,10 @@ class Settings(BaseSettings):
     observability: ObservabilityConfig = Field(
         default_factory=ObservabilityConfig,
         description="Observability configuration",
+    )
+    scenario_migration: ScenarioMigrationConfig = Field(
+        default_factory=ScenarioMigrationConfig,
+        description="Scenario migration configuration",
     )
 
     @classmethod

@@ -198,6 +198,29 @@ class MockConfigStore(ConfigStore):
     async def delete_tool_activation(self, tenant_id, agent_id, tool_id):
         return True
 
+    # Migration plan operations (stubs for abstract methods)
+    async def get_migration_plan(self, tenant_id, plan_id):
+        return None
+
+    async def get_migration_plan_for_versions(self, tenant_id, scenario_id, from_version, to_version):
+        return None
+
+    async def save_migration_plan(self, plan):
+        return plan.id
+
+    async def list_migration_plans(self, tenant_id, *, scenario_id=None, status=None, limit=50):
+        return []
+
+    async def delete_migration_plan(self, tenant_id, plan_id):
+        return True
+
+    # Scenario archiving operations (stubs for abstract methods)
+    async def archive_scenario_version(self, scenario, checksum):
+        return scenario.id
+
+    async def get_archived_scenario(self, tenant_id, scenario_id, version):
+        return None
+
 
 def create_rule(
     name: str = "Test Rule",
