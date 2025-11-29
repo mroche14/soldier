@@ -1,0 +1,781 @@
+openapi: 3.1.0
+info:
+  title: Soldier CRUD API
+  description: Configuration management endpoints for Soldier cognitive engine
+  version: 1.0.0
+
+servers:
+  - url: /v1
+    description: API v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT with tenant_id, sub (user_id), and roles claims
+
+  schemas:
+    # Pagination
+    PaginatedResponse:
+      type: object
+      required: [items, total, limit, offset]
+      properties:
+        items:
+          type: array
+          items: {}
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+    # Agents
+    AgentSettings:
+      type: object
+      properties:
+        llm_provider:
+          type: string
+          example: anthropic
+        llm_model:
+          type: string
+          example: claude-3-5-sonnet
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+        max_tokens:
+          type: integer
+          minimum: 1
+          default: 1024
+
+    Agent:
+      type: object
+      required: [id, name, enabled, current_version, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+        enabled:
+          type: boolean
+        current_version:
+          type: integer
+        settings:
+          $ref: '#/components/schemas/AgentSettings'
+        stats:
+          type: object
+          properties:
+            total_sessions:
+              type: integer
+            total_turns:
+              type: integer
+            avg_turns_per_session:
+              type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AgentCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+        settings:
+          $ref: '#/components/schemas/AgentSettings'
+
+    AgentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+        enabled:
+          type: boolean
+        settings:
+          $ref: '#/components/schemas/AgentSettings'
+
+    # Rules
+    Rule:
+      type: object
+      required: [id, name, condition_text, action_text, scope, priority, enabled]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        condition_text:
+          type: string
+        action_text:
+          type: string
+        scope:
+          type: string
+          enum: [global, scenario, step]
+        scope_id:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+          minimum: -100
+          maximum: 100
+        enabled:
+          type: boolean
+        max_fires_per_session:
+          type: integer
+        cooldown_turns:
+          type: integer
+        is_hard_constraint:
+          type: boolean
+        attached_tool_ids:
+          type: array
+          items:
+            type: string
+        attached_template_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RuleCreate:
+      type: object
+      required: [name, condition_text, action_text]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        condition_text:
+          type: string
+          minLength: 1
+        action_text:
+          type: string
+          minLength: 1
+        scope:
+          type: string
+          enum: [global, scenario, step]
+          default: global
+        scope_id:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+          minimum: -100
+          maximum: 100
+          default: 0
+        enabled:
+          type: boolean
+          default: true
+        max_fires_per_session:
+          type: integer
+          default: 0
+        cooldown_turns:
+          type: integer
+          default: 0
+        attached_tool_ids:
+          type: array
+          items:
+            type: string
+
+    # Bulk Operations
+    BulkOperation:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [create, update, delete]
+        id:
+          type: string
+          format: uuid
+        data:
+          type: object
+
+    BulkRequest:
+      type: object
+      required: [operations]
+      properties:
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkOperation'
+          maxItems: 50
+
+    BulkResult:
+      type: object
+      required: [action, success]
+      properties:
+        action:
+          type: string
+        success:
+          type: boolean
+        id:
+          type: string
+          format: uuid
+        error:
+          type: string
+
+    BulkResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkResult'
+
+    # Templates
+    Template:
+      type: object
+      required: [id, name, text, mode, scope]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        text:
+          type: string
+        mode:
+          type: string
+          enum: [suggest, exclusive, fallback]
+        scope:
+          type: string
+          enum: [global, scenario, step]
+        scope_id:
+          type: string
+          format: uuid
+        conditions:
+          type: string
+        variables_used:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TemplatePreviewRequest:
+      type: object
+      required: [variables]
+      properties:
+        variables:
+          type: object
+          additionalProperties:
+            type: string
+
+    TemplatePreviewResponse:
+      type: object
+      required: [rendered]
+      properties:
+        rendered:
+          type: string
+
+    # Publishing
+    PublishStatus:
+      type: object
+      required: [current_version, draft_version, has_unpublished_changes]
+      properties:
+        current_version:
+          type: integer
+        draft_version:
+          type: integer
+        has_unpublished_changes:
+          type: boolean
+        last_published_at:
+          type: string
+          format: date-time
+        last_published_by:
+          type: string
+        changes_since_publish:
+          type: object
+          properties:
+            scenarios_added:
+              type: integer
+            scenarios_modified:
+              type: integer
+            rules_added:
+              type: integer
+            rules_modified:
+              type: integer
+            templates_added:
+              type: integer
+
+    PublishRequest:
+      type: object
+      properties:
+        description:
+          type: string
+
+    PublishJob:
+      type: object
+      required: [publish_id, version, status, started_at]
+      properties:
+        publish_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        stages:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+                enum: [pending, running, completed, failed]
+              duration_ms:
+                type: integer
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    # Error
+    ErrorDetail:
+      type: object
+      required: [message]
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+
+    ErrorBody:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+
+paths:
+  # Agents
+  /agents:
+    get:
+      summary: List agents
+      tags: [Agents]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of agents
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Agent'
+    post:
+      summary: Create agent
+      tags: [Agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreate'
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /agents/{agent_id}:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get agent
+      tags: [Agents]
+      responses:
+        '200':
+          description: Agent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update agent
+      tags: [Agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentUpdate'
+      responses:
+        '200':
+          description: Agent updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+    delete:
+      summary: Delete agent
+      tags: [Agents]
+      responses:
+        '204':
+          description: Agent deleted
+
+  # Rules
+  /agents/{agent_id}/rules:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: List rules
+      tags: [Rules]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: scope
+          in: query
+          schema:
+            type: string
+            enum: [global, scenario, step]
+        - name: scope_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+        - name: priority_gte
+          in: query
+          schema:
+            type: integer
+        - name: priority_lte
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated list of rules
+    post:
+      summary: Create rule
+      tags: [Rules]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleCreate'
+      responses:
+        '201':
+          description: Rule created
+
+  /agents/{agent_id}/rules/bulk:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Bulk rule operations
+      tags: [Rules]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkRequest'
+      responses:
+        '200':
+          description: Bulk operation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResponse'
+
+  /agents/{agent_id}/rules/{rule_id}:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get rule
+      tags: [Rules]
+      responses:
+        '200':
+          description: Rule details
+    put:
+      summary: Update rule
+      tags: [Rules]
+      responses:
+        '200':
+          description: Rule updated
+    delete:
+      summary: Delete rule
+      tags: [Rules]
+      responses:
+        '204':
+          description: Rule deleted
+
+  # Templates
+  /agents/{agent_id}/templates:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: List templates
+      tags: [Templates]
+      responses:
+        '200':
+          description: Paginated list of templates
+    post:
+      summary: Create template
+      tags: [Templates]
+      responses:
+        '201':
+          description: Template created
+
+  /agents/{agent_id}/templates/{template_id}/preview:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Preview template with variables
+      tags: [Templates]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplatePreviewRequest'
+      responses:
+        '200':
+          description: Rendered template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplatePreviewResponse'
+
+  # Publishing
+  /agents/{agent_id}/publish:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get publish status
+      tags: [Publishing]
+      responses:
+        '200':
+          description: Publish status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishStatus'
+    post:
+      summary: Publish changes
+      tags: [Publishing]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+      responses:
+        '202':
+          description: Publish job started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishJob'
+
+  /agents/{agent_id}/publish/{publish_id}:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: publish_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get publish job status
+      tags: [Publishing]
+      responses:
+        '200':
+          description: Publish job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishJob'
+
+  /agents/{agent_id}/rollback:
+    parameters:
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Rollback to previous version
+      tags: [Publishing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target_version]
+              properties:
+                target_version:
+                  type: integer
+                reason:
+                  type: string
+      responses:
+        '202':
+          description: Rollback initiated
+
+tags:
+  - name: Agents
+    description: Agent lifecycle management
+  - name: Rules
+    description: Behavioral rule management
+  - name: Templates
+    description: Response template management
+  - name: Publishing
+    description: Configuration versioning and deployment

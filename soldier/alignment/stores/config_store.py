@@ -3,7 +3,15 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from soldier.alignment.models import Rule, Scenario, Scope, Template, Variable
+from soldier.alignment.models import (
+    Agent,
+    Rule,
+    Scenario,
+    Scope,
+    Template,
+    ToolActivation,
+    Variable,
+)
 
 
 class ConfigStore(ABC):
@@ -140,4 +148,65 @@ class ConfigStore(ABC):
     @abstractmethod
     async def delete_variable(self, tenant_id: UUID, variable_id: UUID) -> bool:
         """Soft-delete a variable."""
+        pass
+
+    # Agent operations
+    @abstractmethod
+    async def get_agent(self, tenant_id: UUID, agent_id: UUID) -> Agent | None:
+        """Get an agent by ID."""
+        pass
+
+    @abstractmethod
+    async def get_agents(
+        self,
+        tenant_id: UUID,
+        *,
+        enabled_only: bool = False,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[Agent], int]:
+        """Get agents for a tenant with pagination.
+
+        Returns:
+            Tuple of (agents list, total count)
+        """
+        pass
+
+    @abstractmethod
+    async def save_agent(self, agent: Agent) -> UUID:
+        """Save an agent, returning its ID."""
+        pass
+
+    @abstractmethod
+    async def delete_agent(self, tenant_id: UUID, agent_id: UUID) -> bool:
+        """Soft-delete an agent."""
+        pass
+
+    # Tool activation operations
+    @abstractmethod
+    async def get_tool_activation(
+        self, tenant_id: UUID, agent_id: UUID, tool_id: str
+    ) -> ToolActivation | None:
+        """Get a tool activation by agent and tool ID."""
+        pass
+
+    @abstractmethod
+    async def get_tool_activations(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> list[ToolActivation]:
+        """Get all tool activations for an agent."""
+        pass
+
+    @abstractmethod
+    async def save_tool_activation(self, activation: ToolActivation) -> UUID:
+        """Save a tool activation, returning its ID."""
+        pass
+
+    @abstractmethod
+    async def delete_tool_activation(
+        self, tenant_id: UUID, agent_id: UUID, tool_id: str
+    ) -> bool:
+        """Delete a tool activation."""
         pass

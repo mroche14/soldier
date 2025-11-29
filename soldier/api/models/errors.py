@@ -39,6 +39,37 @@ class ErrorCode(str, Enum):
     INTERNAL_ERROR = "INTERNAL_ERROR"
     """An unexpected internal error occurred."""
 
+    # CRUD-specific error codes
+    RULE_NOT_FOUND = "RULE_NOT_FOUND"
+    """The specified rule_id does not exist."""
+
+    SCENARIO_NOT_FOUND = "SCENARIO_NOT_FOUND"
+    """The specified scenario_id does not exist."""
+
+    TEMPLATE_NOT_FOUND = "TEMPLATE_NOT_FOUND"
+    """The specified template_id does not exist."""
+
+    VARIABLE_NOT_FOUND = "VARIABLE_NOT_FOUND"
+    """The specified variable_id does not exist."""
+
+    TOOL_ACTIVATION_NOT_FOUND = "TOOL_ACTIVATION_NOT_FOUND"
+    """The specified tool activation does not exist."""
+
+    ENTRY_STEP_DELETION = "ENTRY_STEP_DELETION"
+    """Cannot delete entry step without reassignment."""
+
+    PUBLISH_IN_PROGRESS = "PUBLISH_IN_PROGRESS"
+    """A publish operation is already in progress for this agent."""
+
+    PUBLISH_FAILED = "PUBLISH_FAILED"
+    """The publish operation failed."""
+
+    INVALID_TRANSITION = "INVALID_TRANSITION"
+    """The scenario transition references an invalid step."""
+
+    PUBLISH_JOB_NOT_FOUND = "PUBLISH_JOB_NOT_FOUND"
+    """The specified publish job does not exist."""
+
 
 class ErrorDetail(BaseModel):
     """Detailed error information for validation errors.

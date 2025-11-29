@@ -3,7 +3,15 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from soldier.alignment.models import Rule, Scenario, Scope, Template, Variable
+from soldier.alignment.models import (
+    Agent,
+    Rule,
+    Scenario,
+    Scope,
+    Template,
+    ToolActivation,
+    Variable,
+)
 from soldier.alignment.stores.config_store import ConfigStore
 from soldier.utils.vector import cosine_similarity
 
@@ -21,6 +29,8 @@ class InMemoryConfigStore(ConfigStore):
         self._scenarios: dict[UUID, Scenario] = {}
         self._templates: dict[UUID, Template] = {}
         self._variables: dict[UUID, Variable] = {}
+        self._agents: dict[UUID, Agent] = {}
+        self._tool_activations: dict[tuple[UUID, UUID, str], ToolActivation] = {}
 
     # Rule operations
     async def get_rule(self, tenant_id: UUID, rule_id: UUID) -> Rule | None:
@@ -239,5 +249,88 @@ class InMemoryConfigStore(ConfigStore):
         variable = self._variables.get(variable_id)
         if variable and variable.tenant_id == tenant_id and not variable.is_deleted:
             variable.deleted_at = datetime.now(UTC)
+            return True
+        return False
+
+    # Agent operations
+    async def get_agent(self, tenant_id: UUID, agent_id: UUID) -> Agent | None:
+        """Get an agent by ID."""
+        agent = self._agents.get(agent_id)
+        if agent and agent.tenant_id == tenant_id and not agent.is_deleted:
+            return agent
+        return None
+
+    async def get_agents(
+        self,
+        tenant_id: UUID,
+        *,
+        enabled_only: bool = False,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[Agent], int]:
+        """Get agents for a tenant with pagination."""
+        results = []
+        for agent in self._agents.values():
+            if agent.tenant_id != tenant_id:
+                continue
+            if agent.is_deleted:
+                continue
+            if enabled_only and not agent.enabled:
+                continue
+            results.append(agent)
+
+        # Sort by created_at descending (newest first)
+        results.sort(key=lambda a: a.created_at, reverse=True)
+
+        total = len(results)
+        paginated = results[offset : offset + limit]
+        return paginated, total
+
+    async def save_agent(self, agent: Agent) -> UUID:
+        """Save an agent, returning its ID."""
+        self._agents[agent.id] = agent
+        return agent.id
+
+    async def delete_agent(self, tenant_id: UUID, agent_id: UUID) -> bool:
+        """Soft-delete an agent."""
+        agent = self._agents.get(agent_id)
+        if agent and agent.tenant_id == tenant_id and not agent.is_deleted:
+            agent.deleted_at = datetime.now(UTC)
+            return True
+        return False
+
+    # Tool activation operations
+    async def get_tool_activation(
+        self, tenant_id: UUID, agent_id: UUID, tool_id: str
+    ) -> ToolActivation | None:
+        """Get a tool activation by agent and tool ID."""
+        key = (tenant_id, agent_id, tool_id)
+        return self._tool_activations.get(key)
+
+    async def get_tool_activations(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> list[ToolActivation]:
+        """Get all tool activations for an agent."""
+        results = []
+        for key, activation in self._tool_activations.items():
+            if key[0] == tenant_id and key[1] == agent_id:
+                results.append(activation)
+        return results
+
+    async def save_tool_activation(self, activation: ToolActivation) -> UUID:
+        """Save a tool activation, returning its ID."""
+        key = (activation.tenant_id, activation.agent_id, activation.tool_id)
+        self._tool_activations[key] = activation
+        return activation.id
+
+    async def delete_tool_activation(
+        self, tenant_id: UUID, agent_id: UUID, tool_id: str
+    ) -> bool:
+        """Delete a tool activation."""
+        key = (tenant_id, agent_id, tool_id)
+        if key in self._tool_activations:
+            del self._tool_activations[key]
             return True
         return False
