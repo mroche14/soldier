@@ -7,8 +7,8 @@ import pytest
 from soldier.alignment.context.models import Context
 from soldier.alignment.models import Scope
 from soldier.alignment.retrieval.models import RuleSource
-from soldier.alignment.retrieval.rule_retriever import RuleRetriever
 from soldier.alignment.retrieval.reranker import RuleReranker
+from soldier.alignment.retrieval.rule_retriever import RuleRetriever
 from soldier.alignment.stores import InMemoryConfigStore
 from soldier.config.models.selection import SelectionConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse

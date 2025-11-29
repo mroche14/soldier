@@ -8,7 +8,6 @@ import pytest
 
 from soldier.alignment.context.models import Context, Turn
 from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.filtering.models import MatchedRule
 from soldier.alignment.models import Rule
 from soldier.alignment.result import AlignmentResult, PipelineStepTiming
 from soldier.alignment.stores import ConfigStore

@@ -9,7 +9,6 @@ from soldier.alignment.retrieval.selection import (
     EntropySelectionStrategy,
     FixedKSelectionStrategy,
     ScoredItem,
-    SelectionResult,
     create_selection_strategy,
 )
 

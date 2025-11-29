@@ -1,7 +1,6 @@
 """Unit tests for ToolExecutor."""
 
 import asyncio
-from uuid import uuid4
 
 import pytest
 

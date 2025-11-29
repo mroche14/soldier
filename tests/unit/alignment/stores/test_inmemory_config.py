@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.models import Rule, Scenario, ScenarioStep, Scope, Template, Variable
+from soldier.alignment.models import Rule, Scenario, Scope, Template, Variable
 from soldier.alignment.stores import InMemoryConfigStore
 
 

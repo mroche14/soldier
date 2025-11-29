@@ -1,0 +1,525 @@
+openapi: 3.1.0
+info:
+  title: Soldier API
+  description: |
+    Soldier is a production-grade cognitive engine for conversational AI.
+    This API provides message processing, session management, and health monitoring.
+  version: 1.0.0
+  contact:
+    name: Soldier Team
+
+servers:
+  - url: https://soldier.example.com
+    description: Production server
+  - url: http://localhost:8000
+    description: Local development
+
+tags:
+  - name: Chat
+    description: Message processing endpoints
+  - name: Sessions
+    description: Session management endpoints
+  - name: Health
+    description: Health and metrics endpoints
+
+paths:
+  /v1/chat:
+    post:
+      summary: Process a message
+      description: Send a user message for processing and receive an agent response
+      operationId: processMessage
+      tags: [Chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Unique key for idempotent requests (5-minute cache)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Rate limit ceiling
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in window
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when limit resets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: LLM provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/chat/stream:
+    post:
+      summary: Process a message with streaming response
+      description: Send a user message and receive a streaming response via Server-Sent Events
+      operationId: processMessageStream
+      tags: [Chat]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: SSE stream of tokens
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  Server-Sent Events stream with events:
+                  - type: token - Incremental response content
+                  - type: done - Final metadata when complete
+                  - type: error - Error occurred during processing
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/sessions/{session_id}:
+    get:
+      summary: Get session state
+      description: Retrieve the current state of a session
+      operationId: getSession
+      tags: [Sessions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: End a session
+      description: Terminate a session and clean up resources
+      operationId: deleteSession
+      tags: [Sessions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Session ended successfully
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/sessions/{session_id}/turns:
+    get:
+      summary: Get session history
+      description: Retrieve paginated conversation history for a session
+      operationId: getSessionTurns
+      tags: [Sessions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Paginated turn history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TurnListResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: Health check
+      description: Check the health status of the service and its dependencies
+      operationId: healthCheck
+      tags: [Health]
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Expose Prometheus-formatted metrics for monitoring
+      operationId: getMetrics
+      tags: [Health]
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token with claims:
+        - tenant_id: UUID of the tenant
+        - sub: User ID (optional)
+        - roles: List of roles (optional)
+
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - tenant_id
+        - agent_id
+        - channel
+        - user_channel_id
+        - message
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          description: Tenant identifier
+        agent_id:
+          type: string
+          format: uuid
+          description: Agent to process the message
+        channel:
+          type: string
+          description: Channel source (whatsapp, slack, webchat, etc.)
+        user_channel_id:
+          type: string
+          description: User identifier on the channel
+        message:
+          type: string
+          maxLength: 10000
+          description: The user's message text
+        session_id:
+          type: string
+          description: Optional existing session ID
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Optional additional context
+
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - session_id
+        - turn_id
+      properties:
+        response:
+          type: string
+          description: The agent's response text
+        session_id:
+          type: string
+          description: Session identifier
+        turn_id:
+          type: string
+          description: Unique turn identifier
+        scenario:
+          $ref: '#/components/schemas/ScenarioState'
+        matched_rules:
+          type: array
+          items:
+            type: string
+          description: IDs of matched rules
+        tools_called:
+          type: array
+          items:
+            type: string
+          description: IDs of executed tools
+        tokens_used:
+          type: integer
+          description: Total tokens consumed
+        latency_ms:
+          type: integer
+          description: Processing time in milliseconds
+
+    ScenarioState:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Scenario ID
+        step:
+          type: string
+          description: Current step ID
+
+    SessionResponse:
+      type: object
+      required:
+        - session_id
+        - tenant_id
+        - agent_id
+        - channel
+        - user_channel_id
+        - turn_count
+        - created_at
+        - last_activity_at
+      properties:
+        session_id:
+          type: string
+        tenant_id:
+          type: string
+        agent_id:
+          type: string
+        channel:
+          type: string
+        user_channel_id:
+          type: string
+        active_scenario_id:
+          type: string
+        active_step_id:
+          type: string
+        turn_count:
+          type: integer
+        variables:
+          type: object
+          additionalProperties: true
+        rule_fires:
+          type: object
+          additionalProperties:
+            type: integer
+        config_version:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        last_activity_at:
+          type: string
+          format: date-time
+
+    TurnResponse:
+      type: object
+      required:
+        - turn_id
+        - turn_number
+        - user_message
+        - agent_response
+        - timestamp
+      properties:
+        turn_id:
+          type: string
+        turn_number:
+          type: integer
+        user_message:
+          type: string
+        agent_response:
+          type: string
+        matched_rules:
+          type: array
+          items:
+            type: string
+        tools_called:
+          type: array
+          items:
+            type: string
+        scenario_before:
+          $ref: '#/components/schemas/ScenarioState'
+        scenario_after:
+          $ref: '#/components/schemas/ScenarioState'
+        latency_ms:
+          type: integer
+        tokens_used:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    TurnListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - limit
+        - offset
+        - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TurnResponse'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponentHealth'
+        timestamp:
+          type: string
+          format: date-time
+
+    ComponentHealth:
+      type: object
+      required:
+        - name
+        - status
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        latency_ms:
+          type: number
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+
+    ErrorBody:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_REQUEST
+            - TENANT_NOT_FOUND
+            - AGENT_NOT_FOUND
+            - SESSION_NOT_FOUND
+            - RULE_VIOLATION
+            - TOOL_FAILED
+            - LLM_ERROR
+            - RATE_LIMIT_EXCEEDED
+            - INTERNAL_ERROR
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+        turn_id:
+          type: string
+        rule_id:
+          type: string
+
+    ErrorDetail:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string

@@ -739,6 +739,8 @@ This project uses speckit for feature implementation. When implementing features
 - Python 3.11+ + pydantic, pydantic-settings, structlog, prometheus-client, opentelemetry-sdk (existing); numpy, scipy, scikit-learn (new for selection strategies) (004-alignment-pipeline)
 - In-memory stores (existing); ConfigStore, MemoryStore, SessionStore, AuditStore interfaces already defined (004-alignment-pipeline)
 - MemoryStore interface (InMemory for dev, PostgreSQL/Neo4j/MongoDB for production) (005-memory-ingestion)
+- Python 3.11+ + FastAPI, uvicorn, python-jose (JWT), sse-starlette (SSE streaming) (006-api-layer-core)
+- In-memory stores (existing), Redis for idempotency cache and rate limiting (006-api-layer-core)
 
 ## Recent Changes
 - 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog

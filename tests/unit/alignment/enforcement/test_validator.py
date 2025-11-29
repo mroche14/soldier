@@ -1,12 +1,14 @@
 """Unit tests for EnforcementValidator."""
 
+from uuid import uuid4
+
 import pytest
 
 from soldier.alignment.context.models import Context
 from soldier.alignment.enforcement.validator import EnforcementValidator
 from soldier.alignment.filtering.models import MatchedRule
-from soldier.alignment.models import Rule
 from soldier.alignment.generation.generator import ResponseGenerator
+from soldier.alignment.models import Rule
 
 
 class DummyGenerator(ResponseGenerator):
@@ -89,4 +91,3 @@ async def test_validator_returns_original_on_regen_failure() -> None:
 
     assert result.passed is False
     assert result.final_response == "This contains secret"
-from uuid import uuid4

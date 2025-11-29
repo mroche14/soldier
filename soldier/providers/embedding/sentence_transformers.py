@@ -43,15 +43,15 @@ class SentenceTransformersProvider(EmbeddingProvider):
         self,
         texts: list[str],
         *,
-        model: str | None = None,
-        **kwargs: Any,
+        model: str | None = None,  # noqa: ARG002
+        **kwargs: Any,  # noqa: ARG002
     ) -> EmbeddingResponse:
         """Generate embeddings using sentence-transformers.
 
         Args:
             texts: List of texts to embed
             model: Ignored (model set at initialization)
-            **kwargs: Additional options
+            **kwargs: Additional options (ignored)
 
         Returns:
             EmbeddingResponse with embedding vectors

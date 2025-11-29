@@ -5,9 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.enforcement import EnforcementValidator, FallbackHandler
-from soldier.alignment.filtering.models import MatchedRule
+from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.generation.generator import ResponseGenerator
 from soldier.alignment.models import Rule, Scope
 from soldier.alignment.stores import InMemoryConfigStore

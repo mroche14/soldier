@@ -1,6 +1,6 @@
 """Tests for InMemoryMemoryStore."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -27,7 +27,7 @@ def sample_episode(group_id) -> Episode:
         group_id=group_id,
         content="User asked about refund policy",
         source="user",
-        occurred_at=datetime.now(timezone.utc),
+        occurred_at=datetime.now(UTC),
     )
 
 
@@ -38,7 +38,7 @@ def sample_entity(group_id) -> Entity:
         group_id=group_id,
         name="John Doe",
         entity_type="person",
-        valid_from=datetime.now(timezone.utc),
+        valid_from=datetime.now(UTC),
     )
 
 
@@ -77,7 +77,7 @@ class TestEpisodeOperations:
                 group_id=group_id,
                 content=f"Message {i}",
                 source="user",
-                occurred_at=datetime.now(timezone.utc),
+                occurred_at=datetime.now(UTC),
             )
             for i in range(3)
         ]
@@ -109,14 +109,14 @@ class TestVectorSearch:
             group_id=group_id,
             content="Similar content",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             embedding=[1.0, 0.0, 0.0],
         )
         ep2 = Episode(
             group_id=group_id,
             content="Different content",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             embedding=[0.0, 1.0, 0.0],
         )
         await store.add_episode(ep1)
@@ -136,14 +136,14 @@ class TestVectorSearch:
             group_id=group_id,
             content="High match",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             embedding=[1.0, 0.0, 0.0],
         )
         ep2 = Episode(
             group_id=group_id,
             content="Low match",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             embedding=[0.0, 1.0, 0.0],
         )
         await store.add_episode(ep1)
@@ -165,13 +165,13 @@ class TestTextSearch:
             group_id=group_id,
             content="Refund policy question",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
         )
         ep2 = Episode(
             group_id=group_id,
             content="Order status inquiry",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
         )
         await store.add_episode(ep1)
         await store.add_episode(ep2)
@@ -196,8 +196,8 @@ class TestEntityOperations:
     @pytest.mark.asyncio
     async def test_get_entities_by_type(self, store, group_id):
         """Should filter entities by type."""
-        person = Entity(group_id=group_id, name="John", entity_type="person", valid_from=datetime.now(timezone.utc))
-        product = Entity(group_id=group_id, name="Widget", entity_type="product", valid_from=datetime.now(timezone.utc))
+        person = Entity(group_id=group_id, name="John", entity_type="person", valid_from=datetime.now(UTC))
+        product = Entity(group_id=group_id, name="Widget", entity_type="product", valid_from=datetime.now(UTC))
         await store.add_entity(person)
         await store.add_entity(product)
 
@@ -235,8 +235,8 @@ class TestRelationshipOperations:
     @pytest.mark.asyncio
     async def test_add_and_get_relationship(self, store, group_id):
         """Should add and retrieve relationships."""
-        entity1 = Entity(group_id=group_id, name="Person", entity_type="person", valid_from=datetime.now(timezone.utc))
-        entity2 = Entity(group_id=group_id, name="Company", entity_type="organization", valid_from=datetime.now(timezone.utc))
+        entity1 = Entity(group_id=group_id, name="Person", entity_type="person", valid_from=datetime.now(UTC))
+        entity2 = Entity(group_id=group_id, name="Company", entity_type="organization", valid_from=datetime.now(UTC))
         await store.add_entity(entity1)
         await store.add_entity(entity2)
 
@@ -245,7 +245,7 @@ class TestRelationshipOperations:
             from_entity_id=entity1.id,
             to_entity_id=entity2.id,
             relation_type="works_at",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         await store.add_relationship(rel)
 
@@ -256,8 +256,8 @@ class TestRelationshipOperations:
     @pytest.mark.asyncio
     async def test_filter_relationships_by_type(self, store, group_id):
         """Should filter relationships by type."""
-        entity1 = Entity(group_id=group_id, name="Person", entity_type="person", valid_from=datetime.now(timezone.utc))
-        entity2 = Entity(group_id=group_id, name="Company", entity_type="organization", valid_from=datetime.now(timezone.utc))
+        entity1 = Entity(group_id=group_id, name="Person", entity_type="person", valid_from=datetime.now(UTC))
+        entity2 = Entity(group_id=group_id, name="Company", entity_type="organization", valid_from=datetime.now(UTC))
         await store.add_entity(entity1)
         await store.add_entity(entity2)
 
@@ -266,14 +266,14 @@ class TestRelationshipOperations:
             from_entity_id=entity1.id,
             to_entity_id=entity2.id,
             relation_type="works_at",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         rel2 = Relationship(
             group_id=group_id,
             from_entity_id=entity1.id,
             to_entity_id=entity2.id,
             relation_type="owns",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         await store.add_relationship(rel1)
         await store.add_relationship(rel2)
@@ -288,9 +288,9 @@ class TestGraphTraversal:
     @pytest.mark.asyncio
     async def test_traverse_from_entities(self, store, group_id):
         """Should traverse graph using BFS."""
-        entity1 = Entity(group_id=group_id, name="A", entity_type="node", valid_from=datetime.now(timezone.utc))
-        entity2 = Entity(group_id=group_id, name="B", entity_type="node", valid_from=datetime.now(timezone.utc))
-        entity3 = Entity(group_id=group_id, name="C", entity_type="node", valid_from=datetime.now(timezone.utc))
+        entity1 = Entity(group_id=group_id, name="A", entity_type="node", valid_from=datetime.now(UTC))
+        entity2 = Entity(group_id=group_id, name="B", entity_type="node", valid_from=datetime.now(UTC))
+        entity3 = Entity(group_id=group_id, name="C", entity_type="node", valid_from=datetime.now(UTC))
         await store.add_entity(entity1)
         await store.add_entity(entity2)
         await store.add_entity(entity3)
@@ -301,14 +301,14 @@ class TestGraphTraversal:
             from_entity_id=entity1.id,
             to_entity_id=entity2.id,
             relation_type="connected",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         rel2 = Relationship(
             group_id=group_id,
             from_entity_id=entity2.id,
             to_entity_id=entity3.id,
             relation_type="connected",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         await store.add_relationship(rel1)
         await store.add_relationship(rel2)
@@ -320,9 +320,9 @@ class TestGraphTraversal:
     @pytest.mark.asyncio
     async def test_traverse_respects_depth(self, store, group_id):
         """Should respect depth limit."""
-        entity1 = Entity(group_id=group_id, name="A", entity_type="node", valid_from=datetime.now(timezone.utc))
-        entity2 = Entity(group_id=group_id, name="B", entity_type="node", valid_from=datetime.now(timezone.utc))
-        entity3 = Entity(group_id=group_id, name="C", entity_type="node", valid_from=datetime.now(timezone.utc))
+        entity1 = Entity(group_id=group_id, name="A", entity_type="node", valid_from=datetime.now(UTC))
+        entity2 = Entity(group_id=group_id, name="B", entity_type="node", valid_from=datetime.now(UTC))
+        entity3 = Entity(group_id=group_id, name="C", entity_type="node", valid_from=datetime.now(UTC))
         await store.add_entity(entity1)
         await store.add_entity(entity2)
         await store.add_entity(entity3)
@@ -332,14 +332,14 @@ class TestGraphTraversal:
             from_entity_id=entity1.id,
             to_entity_id=entity2.id,
             relation_type="connected",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         rel2 = Relationship(
             group_id=group_id,
             from_entity_id=entity2.id,
             to_entity_id=entity3.id,
             relation_type="connected",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         await store.add_relationship(rel1)
         await store.add_relationship(rel2)
@@ -362,9 +362,9 @@ class TestBulkOperations:
             group_id=group_id,
             content="Test",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
         )
-        entity = Entity(group_id=group_id, name="Test", entity_type="test", valid_from=datetime.now(timezone.utc))
+        entity = Entity(group_id=group_id, name="Test", entity_type="test", valid_from=datetime.now(UTC))
         await store.add_episode(ep)
         await store.add_entity(entity)
 

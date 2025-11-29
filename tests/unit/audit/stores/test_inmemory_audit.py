@@ -1,6 +1,6 @@
 """Tests for InMemoryAuditStore."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -43,7 +43,7 @@ def sample_turn(tenant_id, session_id, agent_id) -> TurnRecord:
         agent_response="Hi there!",
         latency_ms=150,
         tokens_used=50,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
 
@@ -82,7 +82,7 @@ class TestTurnRecordOperations:
         self, store, tenant_id, session_id, agent_id
     ):
         """Should list turns for a session in chronological order."""
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
         turns = [
             TurnRecord(
                 turn_id=uuid4(),
@@ -112,7 +112,7 @@ class TestTurnRecordOperations:
         self, store, tenant_id, session_id, agent_id
     ):
         """Should support pagination."""
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
         turns = [
             TurnRecord(
                 turn_id=uuid4(),
@@ -140,7 +140,7 @@ class TestTurnRecordOperations:
         """Should list turns for a tenant."""
         session1 = uuid4()
         session2 = uuid4()
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
 
         turn1 = TurnRecord(
             turn_id=uuid4(),
@@ -177,7 +177,7 @@ class TestTurnRecordOperations:
         self, store, tenant_id, agent_id, session_id
     ):
         """Should filter turns by time range."""
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
         old_turn = TurnRecord(
             turn_id=uuid4(),
             tenant_id=tenant_id,
