@@ -657,33 +657,46 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 
 ## Phase 15: Scenario Migration System
 **Goal**: Implement scenario update handling for active sessions
-> Reference: `docs/design/scenario-update-methods.md`
+> Reference: `docs/design/scenario-update-methods.md`, `specs/008-scenario-migration/`
 
-### 15.1 Migration Plan Generation
-- [ ] `soldier/alignment/migration/__init__.py`
-- [ ] `soldier/alignment/migration/models.py`
-  - [ ] MigrationPlan
-  - [ ] StepMigrationAction
-  - [ ] MigrationSummary
-  - [ ] MigrationWarning
-- [ ] `soldier/alignment/migration/generator.py`
-  - [ ] `generate_migration_plan()` - Compute plan on scenario update
-  - [ ] `compute_step_action()` - Per-step action determination
+### 15.1 Migration Plan Generation (User Story 1) ✅
+- [x] `soldier/alignment/migration/__init__.py`
+- [x] `soldier/alignment/migration/models.py`
+  - [x] MigrationPlan, MigrationPlanStatus, MigrationScenario
+  - [x] TransformationMap, AnchorTransformation
+  - [x] UpstreamChanges, DownstreamChanges, InsertedNode, DeletedNode
+  - [x] MigrationSummary, MigrationWarning, FieldCollectionInfo
+  - [x] AnchorMigrationPolicy, ScopeFilter
+- [x] `soldier/alignment/migration/diff.py`
+  - [x] `compute_node_content_hash()` - SHA-256 anchor identification
+  - [x] `find_anchor_nodes()` - Content hash matching between versions
+  - [x] `compute_upstream_changes()` - Reverse BFS analysis
+  - [x] `compute_downstream_changes()` - Forward BFS analysis
+  - [x] `determine_migration_scenario()` - clean_graft/gap_fill/re_route
+  - [x] `compute_transformation_map()` - Complete diff between versions
+- [x] `soldier/alignment/migration/planner.py`
+  - [x] MigrationPlanner - generate_plan(), approve_plan(), reject_plan()
+  - [x] MigrationDeployer - deploy(), get_deployment_status()
+- [x] `soldier/api/routes/migrations.py` - Full migration API
+- [x] `soldier/config/models/migration.py` - Migration configuration
+- [x] Store extensions (ConfigStore, SessionStore) for migration
 
-### 15.2 Migration Application
-- [ ] `soldier/alignment/migration/applicator.py`
+### 15.2 Migration Application (User Story 2)
+- [ ] `soldier/alignment/migration/executor.py`
   - [ ] `pre_turn_reconciliation()` - Check for updates before turn
-  - [ ] `apply_migration_plan()` - Apply plan to session
-  - [ ] `execute_composite_migration()` - Handle version gaps
+  - [ ] `execute_clean_graft()` - Silent teleport to V2 anchor
+  - [ ] `execute_gap_fill()` - Backfill then teleport
+  - [ ] `execute_re_route()` - Evaluate fork, check checkpoint, teleport
 
-### 15.3 Gap Fill
+### 15.3 Gap Fill (User Story 6)
 - [ ] `soldier/alignment/migration/gap_fill.py`
   - [ ] `fill_gap()` - Profile → session → extraction → ask
   - [ ] Conversation extraction via LLM
 
 ### 15.4 Tests
-- [ ] `tests/unit/alignment/migration/test_generator.py`
-- [ ] `tests/unit/alignment/migration/test_applicator.py`
+- [x] `tests/unit/alignment/migration/test_diff.py` - 12 tests
+- [x] `tests/unit/alignment/migration/test_planner.py` - 19 tests
+- [ ] `tests/unit/alignment/migration/test_executor.py`
 - [ ] `tests/integration/test_scenario_migration.py`
 
 ---
