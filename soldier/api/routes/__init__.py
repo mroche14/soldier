@@ -26,7 +26,37 @@ def create_v1_router() -> APIRouter:
     router.include_router(chat_router, tags=["Chat"])
     router.include_router(sessions_router, tags=["Sessions"])
 
-    logger.debug("v1_router_created", routes=["chat", "sessions"])
+    # CRUD routes for agent configuration management
+    from soldier.api.routes.agents import router as agents_router
+    from soldier.api.routes.publish import router as publish_router
+    from soldier.api.routes.rules import router as rules_router
+    from soldier.api.routes.scenarios import router as scenarios_router
+    from soldier.api.routes.templates import router as templates_router
+    from soldier.api.routes.tools import router as tools_router
+    from soldier.api.routes.variables import router as variables_router
+
+    router.include_router(agents_router, tags=["Agents"])
+    router.include_router(rules_router, tags=["Rules"])
+    router.include_router(scenarios_router, tags=["Scenarios"])
+    router.include_router(templates_router, tags=["Templates"])
+    router.include_router(variables_router, tags=["Variables"])
+    router.include_router(tools_router, tags=["Tools"])
+    router.include_router(publish_router, tags=["Publishing"])
+
+    logger.debug(
+        "v1_router_created",
+        routes=[
+            "chat",
+            "sessions",
+            "agents",
+            "rules",
+            "scenarios",
+            "templates",
+            "variables",
+            "tools",
+            "publish",
+        ],
+    )
 
     return router
 

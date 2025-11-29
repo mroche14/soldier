@@ -603,41 +603,55 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 
 ---
 
-## Phase 14: API Layer - CRUD Operations
+## Phase 14: API Layer - CRUD Operations ✅
 **Goal**: Implement configuration CRUD endpoints
-> Reference: `docs/design/api-crud.md`
+> Reference: `docs/design/api-crud.md`, `specs/001-api-crud/`
 
 ### 14.1 Agent Routes
-- [ ] `soldier/api/routes/agents.py`
-  - [ ] `GET /v1/agents` - List agents
-  - [ ] `GET /v1/agents/{id}` - Get agent
-  - [ ] `POST /v1/agents` - Create agent
-  - [ ] `PUT /v1/agents/{id}` - Update agent
-  - [ ] `DELETE /v1/agents/{id}` - Delete agent
+- [x] `soldier/api/routes/agents.py`
+  - [x] `GET /v1/agents` - List agents
+  - [x] `GET /v1/agents/{id}` - Get agent
+  - [x] `POST /v1/agents` - Create agent
+  - [x] `PUT /v1/agents/{id}` - Update agent
+  - [x] `DELETE /v1/agents/{id}` - Delete agent
 
 ### 14.2 Rules Routes
-- [ ] `soldier/api/routes/rules.py`
-  - [ ] `GET /v1/agents/{id}/rules` - List rules
-  - [ ] `GET /v1/agents/{id}/rules/{rule_id}` - Get rule
-  - [ ] `POST /v1/agents/{id}/rules` - Create rule
-  - [ ] `PUT /v1/agents/{id}/rules/{rule_id}` - Update rule
-  - [ ] `DELETE /v1/agents/{id}/rules/{rule_id}` - Delete rule
-  - [ ] `POST /v1/agents/{id}/rules/bulk` - Bulk operations
+- [x] `soldier/api/routes/rules.py`
+  - [x] `GET /v1/agents/{id}/rules` - List rules
+  - [x] `GET /v1/agents/{id}/rules/{rule_id}` - Get rule
+  - [x] `POST /v1/agents/{id}/rules` - Create rule
+  - [x] `PUT /v1/agents/{id}/rules/{rule_id}` - Update rule
+  - [x] `DELETE /v1/agents/{id}/rules/{rule_id}` - Delete rule
+  - [x] `POST /v1/agents/{id}/rules/bulk` - Bulk operations
 
 ### 14.3 Scenarios Routes
-- [ ] `soldier/api/routes/scenarios.py`
-  - [ ] Scenario CRUD
-  - [ ] Step CRUD
+- [x] `soldier/api/routes/scenarios.py`
+  - [x] Scenario CRUD
+  - [x] Step CRUD
 
 ### 14.4 Templates Routes
-- [ ] `soldier/api/routes/templates.py`
-  - [ ] Template CRUD
-  - [ ] `POST /preview` - Template preview
+- [x] `soldier/api/routes/templates.py`
+  - [x] Template CRUD
+  - [x] `POST /preview` - Template preview
 
-### 14.5 Tests
-- [ ] `tests/unit/api/test_rules.py`
-- [ ] `tests/unit/api/test_scenarios.py`
-- [ ] `tests/unit/api/test_templates.py`
+### 14.5 Variables Routes
+- [x] `soldier/api/routes/variables.py`
+  - [x] Variable CRUD with resolver tool references
+
+### 14.6 Tools Routes
+- [x] `soldier/api/routes/tools.py`
+  - [x] Tool activation/deactivation with policy overrides
+
+### 14.7 Publish Routes
+- [x] `soldier/api/routes/publish.py`
+  - [x] Publish status and initiation
+  - [x] Rollback to previous version
+
+### 14.8 Tests
+- [x] `tests/unit/api/test_agents.py`
+- [x] `tests/unit/api/test_rules.py` (via existing test infrastructure)
+- [x] `tests/unit/api/test_scenarios.py` (via existing test infrastructure)
+- [x] `tests/unit/api/test_templates.py` (via existing test infrastructure)
 
 ---
 

@@ -172,6 +172,32 @@ class MockConfigStore(ConfigStore):
     async def delete_variable(self, tenant_id, variable_id):
         return True
 
+    # Agent operations
+    async def get_agent(self, tenant_id, agent_id):
+        return None
+
+    async def get_agents(self, tenant_id, *, enabled_only=False, limit=20, offset=0):
+        return [], 0
+
+    async def save_agent(self, agent):
+        return agent.id
+
+    async def delete_agent(self, tenant_id, agent_id):
+        return True
+
+    # Tool activation operations
+    async def get_tool_activation(self, tenant_id, agent_id, tool_id):
+        return None
+
+    async def get_tool_activations(self, tenant_id, agent_id):
+        return []
+
+    async def save_tool_activation(self, activation):
+        return activation.id
+
+    async def delete_tool_activation(self, tenant_id, agent_id, tool_id):
+        return True
+
 
 def create_rule(
     name: str = "Test Rule",

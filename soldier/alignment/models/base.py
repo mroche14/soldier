@@ -37,6 +37,15 @@ class TenantScopedModel(BaseModel):
         """Check if entity is soft-deleted."""
         return self.deleted_at is not None
 
+    def touch(self) -> None:
+        """Update the updated_at timestamp to current time."""
+        self.updated_at = utc_now()
+
+    def soft_delete(self) -> None:
+        """Mark entity as soft-deleted."""
+        self.deleted_at = utc_now()
+        self.touch()
+
 
 class AgentScopedModel(TenantScopedModel):
     """Base for entities scoped to a specific agent.

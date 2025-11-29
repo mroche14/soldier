@@ -81,3 +81,73 @@ class LLMProviderError(SoldierAPIError):
 
     status_code = 502
     error_code = ErrorCode.LLM_ERROR
+
+
+class RuleNotFoundError(SoldierAPIError):
+    """Raised when rule_id doesn't exist for the agent."""
+
+    status_code = 404
+    error_code = ErrorCode.RULE_NOT_FOUND
+
+
+class ScenarioNotFoundError(SoldierAPIError):
+    """Raised when scenario_id doesn't exist for the agent."""
+
+    status_code = 404
+    error_code = ErrorCode.SCENARIO_NOT_FOUND
+
+
+class TemplateNotFoundError(SoldierAPIError):
+    """Raised when template_id doesn't exist for the agent."""
+
+    status_code = 404
+    error_code = ErrorCode.TEMPLATE_NOT_FOUND
+
+
+class VariableNotFoundError(SoldierAPIError):
+    """Raised when variable_id doesn't exist for the agent."""
+
+    status_code = 404
+    error_code = ErrorCode.VARIABLE_NOT_FOUND
+
+
+class ToolActivationNotFoundError(SoldierAPIError):
+    """Raised when tool activation doesn't exist for the agent."""
+
+    status_code = 404
+    error_code = ErrorCode.TOOL_ACTIVATION_NOT_FOUND
+
+
+class EntryStepDeletionError(SoldierAPIError):
+    """Raised when attempting to delete a scenario's entry step."""
+
+    status_code = 400
+    error_code = ErrorCode.ENTRY_STEP_DELETION
+
+
+class PublishInProgressError(SoldierAPIError):
+    """Raised when a publish operation is already in progress."""
+
+    status_code = 409
+    error_code = ErrorCode.PUBLISH_IN_PROGRESS
+
+
+class PublishFailedError(SoldierAPIError):
+    """Raised when a publish operation fails."""
+
+    status_code = 500
+    error_code = ErrorCode.PUBLISH_FAILED
+
+
+class InvalidTransitionError(SoldierAPIError):
+    """Raised when a scenario transition is invalid."""
+
+    status_code = 400
+    error_code = ErrorCode.INVALID_TRANSITION
+
+
+class PublishJobNotFoundError(SoldierAPIError):
+    """Raised when a publish job doesn't exist."""
+
+    status_code = 404
+    error_code = ErrorCode.PUBLISH_JOB_NOT_FOUND

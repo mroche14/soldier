@@ -741,6 +741,8 @@ This project uses speckit for feature implementation. When implementing features
 - MemoryStore interface (InMemory for dev, PostgreSQL/Neo4j/MongoDB for production) (005-memory-ingestion)
 - Python 3.11+ + FastAPI, uvicorn, python-jose (JWT), sse-starlette (SSE streaming) (006-api-layer-core)
 - In-memory stores (existing), Redis for idempotency cache and rate limiting (006-api-layer-core)
+- Python 3.11+ (existing) + FastAPI, uvicorn, pydantic, python-jose (JWT) - all existing from Phase 13 (001-api-crud)
+- ConfigStore interface with InMemoryConfigStore (Phase 4), existing embedding providers (Phase 5) (001-api-crud)
 
 ## Recent Changes
 - 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog

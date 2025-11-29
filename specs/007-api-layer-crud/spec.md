@@ -1,165 +1,239 @@
-# Feature Specification: API Layer - CRUD Operations
+# Feature Specification: API CRUD Operations
 
-**Feature Branch**: `007-api-layer-crud`
-**Created**: 2025-11-28
+**Feature Branch**: `001-api-crud`
+**Created**: 2025-11-29
 **Status**: Draft
-**Input**: User description: "Implement configuration CRUD API endpoints for managing agents, rules, scenarios, templates, and variables. Includes RESTful endpoints with pagination, filtering, bulk operations, template preview, and publishing workflow"
+**Input**: User description: "Implement CRUD API endpoints for agent configuration management based on phase 14"
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Manage Rules (Priority: P1)
+### User Story 1 - Agent Management (Priority: P1)
 
-A configuration administrator needs to create, read, update, and delete behavioral rules for an agent. This includes listing rules with filtering, creating new rules, updating existing rules, and performing bulk operations.
+Platform administrators need to create, configure, and manage AI agents through a RESTful API. This allows non-developers to set up new conversational AI agents without code changes, enabling self-service agent creation and modification.
 
-**Why this priority**: Rules are the primary mechanism for defining agent behavior. Without rule management, agents cannot be configured.
+**Why this priority**: Agents are the top-level container for all other configuration entities (rules, scenarios, templates). Without agent management, no other CRUD operations are meaningful.
 
-**Independent Test**: Can be fully tested by creating a rule via POST, retrieving it via GET, updating via PUT, listing with filters, and deleting via DELETE. Delivers the ability to configure agent behavior.
+**Independent Test**: Can be fully tested by creating an agent via API, retrieving it, updating its settings, and deleting it. Delivers immediate value by enabling programmatic agent lifecycle management.
 
 **Acceptance Scenarios**:
 
-1. **Given** an agent exists, **When** POST /v1/agents/{id}/rules is called with valid rule data, **Then** create the rule, compute embedding automatically, and return 201 Created with the new rule
-2. **Given** rules exist for an agent, **When** GET /v1/agents/{id}/rules is called with filters (scope, enabled, priority_gte), **Then** return paginated list matching the filters
-3. **Given** a rule exists, **When** PUT /v1/agents/{id}/rules/{rule_id} is called with updated data, **Then** update the rule and recompute embedding if condition/action changed
-4. **Given** a rule exists, **When** DELETE /v1/agents/{id}/rules/{rule_id} is called, **Then** soft-delete the rule and return 204 No Content
-5. **Given** multiple rule operations, **When** POST /v1/agents/{id}/rules/bulk is called with create/update/delete operations, **Then** process all operations atomically and return results for each
+1. **Given** an authenticated administrator, **When** they POST a new agent configuration, **Then** the system creates the agent and returns its unique identifier with 201 status
+2. **Given** an existing agent, **When** an administrator requests its details, **Then** the system returns complete agent configuration including settings and stats
+3. **Given** an existing agent, **When** an administrator updates its settings, **Then** the changes are persisted and the updated configuration is returned
+4. **Given** an existing agent, **When** an administrator deletes it, **Then** the agent is soft-deleted and no longer accessible
+5. **Given** multiple agents exist, **When** an administrator lists agents with pagination, **Then** the system returns a paginated list with total count
 
 ---
 
-### User Story 2 - Manage Agents (Priority: P1)
+### User Story 2 - Rule Management (Priority: P1)
 
-A tenant administrator needs to create and manage agents, which are the top-level containers for all configuration (rules, scenarios, templates).
+Content authors need to define behavioral rules that guide agent responses. Rules specify conditions (when to apply) and actions (how to behave), enabling dynamic agent behavior modification without redeployment.
 
-**Why this priority**: Agents are required containers before any other configuration can be created. They are the root of the configuration hierarchy.
+**Why this priority**: Rules are the core mechanism for controlling agent behavior. They determine what the agent says and does in specific situations, making them essential for any functional agent.
 
-**Independent Test**: Can be tested by creating an agent via POST, retrieving via GET, listing agents, updating settings via PUT, and deleting via DELETE.
+**Independent Test**: Can be fully tested by creating rules for an agent, searching/filtering rules, updating rule priorities, and deleting obsolete rules. Delivers value by enabling behavior customization.
 
 **Acceptance Scenarios**:
 
-1. **Given** a tenant, **When** POST /v1/agents is called with name, description, and settings, **Then** create the agent and return 201 Created with the new agent
-2. **Given** agents exist, **When** GET /v1/agents is called with optional filters (enabled, search), **Then** return paginated list of agents with basic stats
-3. **Given** an agent exists, **When** GET /v1/agents/{id} is called, **Then** return full agent details including settings and usage statistics
-4. **Given** an agent exists, **When** PUT /v1/agents/{id} is called with updated data, **Then** update the agent and return 200 OK
-5. **Given** an agent exists, **When** DELETE /v1/agents/{id} is called, **Then** soft-delete the agent and all associated configuration
+1. **Given** an authenticated user with an agent, **When** they create a new rule with condition and action text, **Then** the system stores the rule and automatically generates embeddings for semantic matching
+2. **Given** an agent with multiple rules, **When** a user lists rules with scope filter, **Then** only rules matching the scope (global/scenario/step) are returned
+3. **Given** an existing rule, **When** a user updates the condition text, **Then** the system recomputes the embedding to maintain search accuracy
+4. **Given** multiple rules to modify, **When** a user submits a bulk operation request, **Then** all operations are processed and individual results are returned
+5. **Given** an agent with rules, **When** a user searches by priority range, **Then** only rules within that priority range are returned
 
 ---
 
-### User Story 3 - Manage Scenarios (Priority: P2)
+### User Story 3 - Scenario Management (Priority: P2)
 
-A configuration administrator needs to create and manage multi-step conversational flows (scenarios) with steps and transitions between them.
+Conversation designers need to create and manage multi-step conversational flows. Scenarios define structured journeys that guide users through specific processes (e.g., returns, onboarding, troubleshooting).
 
-**Why this priority**: Scenarios enable structured conversations but agents can function with just rules for simpler use cases.
+**Why this priority**: Scenarios provide structured conversation flows, which are important for complex interactions but not required for basic agent functionality (global rules can work without scenarios).
 
-**Independent Test**: Can be tested by creating a scenario with steps, updating steps and transitions, adding new steps, and deleting scenarios.
+**Independent Test**: Can be fully tested by creating a scenario with multiple steps, defining transitions between steps, and verifying the complete flow structure. Delivers value by enabling structured conversation design.
 
 **Acceptance Scenarios**:
 
-1. **Given** an agent exists, **When** POST /v1/agents/{id}/scenarios is called with name, entry_condition, and steps, **Then** create the scenario with auto-generated step IDs and return 201 Created
-2. **Given** a scenario exists, **When** GET /v1/agents/{id}/scenarios/{scenario_id} is called, **Then** return the full scenario with all steps, transitions, and linked templates/rules/tools
-3. **Given** a scenario exists, **When** POST /v1/agents/{id}/scenarios/{scenario_id}/steps is called, **Then** add a new step to the scenario
-4. **Given** a step exists, **When** PUT /v1/agents/{id}/scenarios/{scenario_id}/steps/{step_id} is called, **Then** update the step including transitions and linked resources
-5. **Given** a step exists, **When** DELETE /v1/agents/{id}/scenarios/{scenario_id}/steps/{step_id} is called and it's not the entry step, **Then** remove the step and return 204 No Content
+1. **Given** an authenticated user, **When** they create a scenario with steps and transitions, **Then** the system stores the complete flow structure and auto-generates step IDs
+2. **Given** an existing scenario, **When** a user adds a new step, **Then** the step is added and can be referenced in transitions
+3. **Given** a scenario step, **When** a user updates its transitions, **Then** the navigation flow is updated accordingly
+4. **Given** a scenario with multiple steps, **When** a user deletes a non-entry step, **Then** the step is removed and transitions pointing to it are flagged
+5. **Given** an entry step, **When** a user attempts to delete it, **Then** the system prevents deletion and returns an error
 
 ---
 
-### User Story 4 - Manage Templates (Priority: P2)
+### User Story 4 - Template Management (Priority: P2)
 
-A configuration administrator needs to create and manage pre-written response templates that can be linked to rules or scenario steps.
+Content authors need to create pre-written response templates that ensure consistent messaging. Templates can be suggested to the agent, used exclusively, or as fallbacks when generation fails.
 
-**Why this priority**: Templates provide consistent, reusable responses but agents can generate responses without them.
+**Why this priority**: Templates improve response consistency and quality but agents can function with purely generated responses. Templates become more valuable as agents mature.
 
-**Independent Test**: Can be tested by creating a template, retrieving it, previewing with sample variables, updating, and deleting.
+**Independent Test**: Can be fully tested by creating templates with variables, previewing with sample data, and verifying variable substitution. Delivers value by enabling controlled response content.
 
 **Acceptance Scenarios**:
 
-1. **Given** an agent exists, **When** POST /v1/agents/{id}/templates is called with text containing variables and mode, **Then** create the template and extract variable names
-2. **Given** a template exists, **When** GET /v1/agents/{id}/templates/{template_id} is called, **Then** return the template with detected variables_used
-3. **Given** a template exists, **When** POST /v1/agents/{id}/templates/{template_id}/preview is called with variable values, **Then** return the rendered template text
-4. **Given** a template with invalid variable syntax, **When** preview is attempted, **Then** return validation error indicating the issue
+1. **Given** an authenticated user, **When** they create a template with variable placeholders, **Then** the system stores it and identifies the variables used
+2. **Given** an existing template, **When** a user requests a preview with sample variables, **Then** the system renders the template and returns the substituted text
+3. **Given** templates with different modes, **When** a user filters by mode (suggest/exclusive/fallback), **Then** only matching templates are returned
+4. **Given** a template scoped to a step, **When** a user changes its scope, **Then** the template is re-scoped accordingly
 
 ---
 
-### User Story 5 - Publish Configuration (Priority: P2)
+### User Story 5 - Variable Management (Priority: P3)
 
-A configuration administrator needs to publish configuration changes to make them live, view publish status, and rollback to previous versions if needed.
+System integrators need to define dynamic context variables that are resolved at runtime. Variables connect agent behavior to external data sources like customer profiles or order systems.
 
-**Why this priority**: Publishing controls when changes take effect, enabling safe configuration updates without immediate impact.
+**Why this priority**: Variables enable dynamic data injection but require tool integrations to be fully useful. Basic agent functionality works with static configurations.
 
-**Independent Test**: Can be tested by making configuration changes, checking publish status, publishing, and rolling back.
+**Independent Test**: Can be fully tested by defining a variable with update policy and cache settings. Delivers value by enabling dynamic context resolution.
 
 **Acceptance Scenarios**:
 
-1. **Given** unpublished changes exist, **When** GET /v1/agents/{id}/publish is called, **Then** return publish status showing current vs draft version and change summary
-2. **Given** unpublished changes exist, **When** POST /v1/agents/{id}/publish is called, **Then** return 202 Accepted and begin async publish process
-3. **Given** a publish is in progress, **When** GET /v1/agents/{id}/publish/{publish_id} is called, **Then** return stage-by-stage progress status
-4. **Given** a published version, **When** POST /v1/agents/{id}/rollback is called with target_version, **Then** revert to the specified version
+1. **Given** an authenticated user, **When** they create a variable with a resolver tool reference, **Then** the variable definition is stored with its update policy
+2. **Given** an existing variable, **When** a user updates the cache TTL, **Then** subsequent resolutions respect the new TTL
+3. **Given** multiple variables, **When** a user lists them, **Then** all variable definitions are returned with their resolver information
 
 ---
 
-### User Story 6 - Manage Variables (Priority: P3)
+### User Story 6 - Tool Activation Management (Priority: P3)
 
-A configuration administrator needs to define dynamic context variables that are resolved at runtime from tools or other sources.
+Integration administrators need to enable or disable tools for specific agents. Tools are defined externally but their activation and policy overrides are agent-specific.
 
-**Why this priority**: Variables enable dynamic behavior but are an advanced feature not required for basic agent functionality.
+**Why this priority**: Tool activation is a configuration concern that builds on existing tool definitions. Agents can work with default tool configurations initially.
 
-**Independent Test**: Can be tested by creating a variable, listing variables, updating resolver configuration, and deleting.
+**Independent Test**: Can be fully tested by enabling/disabling tools for an agent and overriding policy settings. Delivers value by enabling per-agent tool customization.
 
 **Acceptance Scenarios**:
 
-1. **Given** an agent exists, **When** POST /v1/agents/{id}/variables is called with name, resolver_tool_id, and update_policy, **Then** create the variable definition
-2. **Given** variables exist, **When** GET /v1/agents/{id}/variables is called, **Then** return list of variable definitions with their update policies
-3. **Given** a variable exists, **When** PUT /v1/agents/{id}/variables/{id} is called, **Then** update the variable configuration
+1. **Given** available tools in the system, **When** an administrator enables a tool for an agent, **Then** the tool becomes available for that agent's conversations
+2. **Given** an enabled tool, **When** an administrator disables it, **Then** the tool is no longer used in new conversations
+3. **Given** an enabled tool, **When** an administrator provides policy overrides, **Then** the overrides apply to that agent's tool usage
+
+---
+
+### User Story 7 - Publishing and Versioning (Priority: P2)
+
+Platform operators need to publish configuration changes to make them live and roll back to previous versions if issues arise. This ensures controlled deployment of agent changes.
+
+**Why this priority**: Publishing provides change control and safety, which is important for production environments but not strictly required for development/testing.
+
+**Independent Test**: Can be fully tested by making changes, publishing them, verifying the version increment, and rolling back. Delivers value by enabling safe configuration deployment.
+
+**Acceptance Scenarios**:
+
+1. **Given** unpublished changes to an agent, **When** an operator checks publish status, **Then** the system shows pending changes summary
+2. **Given** unpublished changes, **When** an operator publishes, **Then** changes become live and version increments
+3. **Given** a published version with issues, **When** an operator rolls back to a previous version, **Then** the previous configuration is restored
+4. **Given** a publish in progress, **When** an operator checks job status, **Then** the system shows progress through validation, compilation, and deployment stages
 
 ---
 
 ### Edge Cases
 
-- What happens when deleting an agent with active sessions? Soft-delete the agent but allow active sessions to continue until they naturally end
-- How does the system handle concurrent updates to the same resource? Use optimistic locking with version numbers and return 409 Conflict on stale updates
-- What happens when deleting a scenario step that other steps transition to? Return validation error listing affected transitions
-- What happens when a bulk operation partially fails? Return results for all operations indicating success/failure for each
-- What happens when publishing with validation errors? Block publish and return list of validation errors
+- Agent deletion is immediate regardless of active sessions; deleted agents stop responding instantly
+- Bulk operations return partial success: each operation reports individual success/failure with error details; the batch continues processing even if some operations fail
+- When a scenario step is deleted while active sessions are on it, sessions continue on cached step configuration until next transition; the step deletion does not interrupt ongoing conversations
+- When embedding provider is temporarily unavailable during rule create/update, the rule is saved without embedding and queued for background retry with exponential backoff (max 3 retries over 15 minutes)
+- When publishing fails mid-stage, the system automatically rolls back to the previous stable version and reports the failed stage with error details in the publish job status
+- Circular transitions in scenarios are allowed (intentional loops); unreachable steps (not reachable from entry) are flagged as validation warnings on save but do not block creation
+- When a template references a variable that doesn't exist, preview renders the literal placeholder (e.g., "{unknown_var}") and logs a warning; runtime substitution behaves the same way
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provide full CRUD endpoints for agents at /v1/agents
-- **FR-002**: System MUST provide full CRUD endpoints for rules at /v1/agents/{id}/rules including bulk operations
-- **FR-003**: System MUST provide full CRUD endpoints for scenarios at /v1/agents/{id}/scenarios
-- **FR-004**: System MUST provide CRUD endpoints for scenario steps at /v1/agents/{id}/scenarios/{id}/steps
-- **FR-005**: System MUST provide full CRUD endpoints for templates at /v1/agents/{id}/templates
-- **FR-006**: System MUST provide template preview endpoint that renders templates with sample variables
-- **FR-007**: System MUST provide CRUD endpoints for variables at /v1/agents/{id}/variables
-- **FR-008**: System MUST support pagination (limit, offset) on all list endpoints
-- **FR-009**: System MUST support filtering on list endpoints (scope, enabled, priority range, search)
-- **FR-010**: System MUST support sorting on list endpoints with configurable sort fields and direction
-- **FR-011**: System MUST return standard paginated response format with items, total, limit, offset, has_more
-- **FR-012**: System MUST provide publish workflow endpoints (status, publish, rollback)
-- **FR-013**: System MUST auto-compute embeddings when rules are created or when condition/action text changes
-- **FR-014**: System MUST validate all input data and return structured validation errors
-- **FR-015**: System MUST log all mutations with actor (from JWT) and timestamp for audit trail
-- **FR-016**: System MUST use soft deletes for all resources (set deleted_at rather than removing records)
-- **FR-017**: System MUST prevent deletion of entry steps without reassigning entry first
+#### Agent Management
+- **FR-001**: System MUST allow creation of agents with name, description, and optional settings
+- **FR-002**: System MUST generate unique identifiers for new agents
+- **FR-003**: System MUST track agent versions and increment on publish
+- **FR-004**: System MUST support soft-delete for agents (set deleted_at timestamp)
+- **FR-005**: System MUST validate agent names are non-empty and within length limits
+- **FR-006**: System MUST track agent statistics (total sessions, turns, averages)
+
+#### Rule Management
+- **FR-007**: System MUST allow creation of rules with condition_text, action_text, scope, and priority
+- **FR-008**: System MUST automatically compute embeddings when condition_text or action_text changes
+- **FR-009**: System MUST support three scope levels: global, scenario, and step
+- **FR-010**: System MUST support rule filtering by scope, scope_id, enabled status, and priority range
+- **FR-011**: System MUST support bulk operations (create, update, delete) for rules
+- **FR-012**: System MUST track max_fires_per_session and cooldown_turns for rules
+
+#### Scenario Management
+- **FR-013**: System MUST allow creation of scenarios with steps and transitions
+- **FR-014**: System MUST auto-generate step IDs when not provided
+- **FR-015**: System MUST validate that entry_step_id points to a valid step
+- **FR-016**: System MUST prevent deletion of entry steps without reassignment
+- **FR-017**: System MUST validate transition references point to existing steps
+- **FR-018**: System MUST support tagging scenarios for organization
+
+#### Template Management
+- **FR-019**: System MUST allow creation of templates with text containing variable placeholders
+- **FR-020**: System MUST identify and store list of variables used in template text
+- **FR-021**: System MUST support three template modes: suggest, exclusive, fallback
+- **FR-022**: System MUST provide template preview with variable substitution
+- **FR-023**: System MUST support template scoping (global, scenario, step)
+
+#### Variable Management
+- **FR-024**: System MUST allow creation of variables with resolver_tool_id and update_policy
+- **FR-025**: System MUST support configurable cache TTL for variable values
+- **FR-026**: System MUST support update policies: on_session_start, on_demand, periodic
+
+#### Tool Activation
+- **FR-027**: System MUST allow enabling/disabling tools for specific agents
+- **FR-028**: System MUST support policy overrides (e.g., timeout) when enabling tools
+- **FR-029**: System MUST track enable/disable timestamps
+
+#### Publishing
+- **FR-030**: System MUST track unpublished changes since last publish
+- **FR-031**: System MUST provide publish status with change summary
+- **FR-032**: System MUST support version rollback to previous configurations
+- **FR-033**: System MUST report publish job progress through stages
+
+#### Common API Patterns
+- **FR-034**: System MUST support pagination with limit, offset, and total count
+- **FR-035**: System MUST support sorting by specified fields and directions
+- **FR-036**: System MUST return consistent error responses with code, message, and details
+- **FR-037**: System MUST validate JWT authentication for all endpoints
+- **FR-038**: System MUST extract tenant_id from JWT claims
+- **FR-039**: System MUST scope all queries by tenant_id to prevent data leakage
 
 ### Key Entities
 
-- **Agent**: Top-level container with name, description, settings, version, and statistics about usage
-- **Rule**: Behavioral policy with condition_text, action_text, scope, priority, attached tools and templates
-- **Scenario**: Multi-step flow with entry_condition, steps with transitions, and linked resources per step
-- **ScenarioStep**: Individual step with name, description, transitions, and linked template/rule/tool IDs
-- **Template**: Pre-written response with text containing variable placeholders and rendering mode
-- **Variable**: Dynamic context definition with resolver tool, update policy, and cache settings
-- **PublishStatus**: Versioning state with current/draft versions, change summary, and publish history
+- **Agent**: Top-level container for conversational AI configuration; has name, description, enabled status, settings, and version tracking
+- **Rule**: Behavioral policy with condition (when) and action (how); has scope, priority, and optional tool/template attachments
+- **Scenario**: Multi-step conversational flow; contains ordered steps with transitions defining navigation
+- **ScenarioStep**: Individual state in a scenario; has name, transitions, and attached templates/rules/tools
+- **Template**: Pre-written response text with variable placeholders; has mode (suggest/exclusive/fallback) and scope
+- **Variable**: Dynamic context definition; references resolver tool and defines caching/update policy
+- **ToolActivation**: Per-agent tool enablement status with optional policy overrides
+- **PublishJob**: Tracks publish operation progress through validation, compilation, and deployment stages
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Administrators can create a complete agent configuration (agent, rules, scenarios, templates) in a single session
-- **SC-002**: List endpoints return results within acceptable latency for typical page sizes
-- **SC-003**: Bulk operations process large batches efficiently
-- **SC-004**: Configuration changes do not affect live traffic until explicitly published
-- **SC-005**: Rollback restores previous configuration state completely and correctly
-- **SC-006**: All mutations are auditable with actor, timestamp, and change details
-- **SC-007**: Validation errors provide clear, actionable feedback for resolution
-- **SC-008**: Concurrent edits are handled gracefully with appropriate conflict detection
+- **SC-001**: All CRUD operations complete within 500ms under normal load (excludes embedding computation)
+- **SC-002**: System handles 100 concurrent configuration API requests without error rate increase
+- **SC-003**: Bulk operations process 50 rules in a single request within 5 seconds
+- **SC-004**: Template preview renders within 100ms regardless of template complexity
+- **SC-005**: Publish operations complete all stages within 30 seconds for agents with up to 100 rules
+- **SC-006**: Rollback operations restore previous configuration within 10 seconds
+- **SC-007**: 100% of API endpoints return appropriate error codes with actionable error messages
+- **SC-008**: Zero cross-tenant data exposure in all API responses (tenant isolation verified)
+- **SC-009**: All list endpoints support pagination and return accurate total counts
+- **SC-010**: Embedding recomputation for updated rules completes asynchronously without blocking the API response
+
+## Clarifications
+
+### Session 2025-11-29
+
+- Q: What happens when deleting an agent that has active sessions? → A: Agent deletion is immediate; the agent stops responding to all sessions.
+
+## Assumptions
+
+- JWT authentication infrastructure is already in place (implemented in Phase 13)
+- ConfigStore interface and in-memory implementation exist (implemented in Phase 4)
+- Embedding provider interface and factory exist (implemented in Phase 5)
+- Domain models for Rule, Scenario, Template, Variable exist (implemented in Phase 3)
+- Rate limiting middleware is already implemented (implemented in Phase 13)
+- Audit logging infrastructure captures all mutations automatically
+- Agent statistics (FR-006) are computed on-demand from AuditStore turn records; no separate stats storage required
