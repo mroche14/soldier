@@ -28,6 +28,7 @@ def create_v1_router() -> APIRouter:
 
     # CRUD routes for agent configuration management
     from soldier.api.routes.agents import router as agents_router
+    from soldier.api.routes.migrations import router as migrations_router
     from soldier.api.routes.publish import router as publish_router
     from soldier.api.routes.rules import router as rules_router
     from soldier.api.routes.scenarios import router as scenarios_router
@@ -42,6 +43,7 @@ def create_v1_router() -> APIRouter:
     router.include_router(variables_router, tags=["Variables"])
     router.include_router(tools_router, tags=["Tools"])
     router.include_router(publish_router, tags=["Publishing"])
+    router.include_router(migrations_router, tags=["Migrations"])
 
     logger.debug(
         "v1_router_created",
@@ -55,6 +57,7 @@ def create_v1_router() -> APIRouter:
             "variables",
             "tools",
             "publish",
+            "migrations",
         ],
     )
 

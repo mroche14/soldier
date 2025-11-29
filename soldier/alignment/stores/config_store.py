@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
+from soldier.alignment.migration.models import MigrationPlan, MigrationPlanStatus
 from soldier.alignment.models import (
     Agent,
     Rule,
@@ -209,4 +210,61 @@ class ConfigStore(ABC):
         self, tenant_id: UUID, agent_id: UUID, tool_id: str
     ) -> bool:
         """Delete a tool activation."""
+        pass
+
+    # Migration plan operations
+    @abstractmethod
+    async def get_migration_plan(
+        self, tenant_id: UUID, plan_id: UUID
+    ) -> MigrationPlan | None:
+        """Get migration plan by ID."""
+        pass
+
+    @abstractmethod
+    async def get_migration_plan_for_versions(
+        self,
+        tenant_id: UUID,
+        scenario_id: UUID,
+        from_version: int,
+        to_version: int,
+    ) -> MigrationPlan | None:
+        """Get migration plan for specific version transition."""
+        pass
+
+    @abstractmethod
+    async def save_migration_plan(self, plan: MigrationPlan) -> UUID:
+        """Save or update migration plan."""
+        pass
+
+    @abstractmethod
+    async def list_migration_plans(
+        self,
+        tenant_id: UUID,
+        scenario_id: UUID | None = None,
+        status: MigrationPlanStatus | None = None,
+        limit: int = 50,
+    ) -> list[MigrationPlan]:
+        """List migration plans for scenario."""
+        pass
+
+    @abstractmethod
+    async def delete_migration_plan(
+        self, tenant_id: UUID, plan_id: UUID
+    ) -> bool:
+        """Delete a migration plan."""
+        pass
+
+    # Scenario version archiving
+    @abstractmethod
+    async def archive_scenario_version(
+        self, tenant_id: UUID, scenario: Scenario
+    ) -> None:
+        """Archive scenario version before update."""
+        pass
+
+    @abstractmethod
+    async def get_archived_scenario(
+        self, tenant_id: UUID, scenario_id: UUID, version: int
+    ) -> Scenario | None:
+        """Get archived scenario by version."""
         pass

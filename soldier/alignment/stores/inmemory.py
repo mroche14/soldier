@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
+from soldier.alignment.migration.models import MigrationPlan, MigrationPlanStatus
 from soldier.alignment.models import (
     Agent,
     Rule,
@@ -31,6 +32,8 @@ class InMemoryConfigStore(ConfigStore):
         self._variables: dict[UUID, Variable] = {}
         self._agents: dict[UUID, Agent] = {}
         self._tool_activations: dict[tuple[UUID, UUID, str], ToolActivation] = {}
+        self._migration_plans: dict[UUID, MigrationPlan] = {}
+        self._archived_scenarios: dict[tuple[UUID, UUID, int], Scenario] = {}
 
     # Rule operations
     async def get_rule(self, tenant_id: UUID, rule_id: UUID) -> Rule | None:
@@ -334,3 +337,85 @@ class InMemoryConfigStore(ConfigStore):
             del self._tool_activations[key]
             return True
         return False
+
+    # Migration plan operations
+    async def get_migration_plan(
+        self, tenant_id: UUID, plan_id: UUID
+    ) -> MigrationPlan | None:
+        """Get migration plan by ID."""
+        plan = self._migration_plans.get(plan_id)
+        if plan and plan.tenant_id == tenant_id:
+            return plan
+        return None
+
+    async def get_migration_plan_for_versions(
+        self,
+        tenant_id: UUID,
+        scenario_id: UUID,
+        from_version: int,
+        to_version: int,
+    ) -> MigrationPlan | None:
+        """Get migration plan for specific version transition."""
+        for plan in self._migration_plans.values():
+            if plan.tenant_id != tenant_id:
+                continue
+            if plan.scenario_id != scenario_id:
+                continue
+            if plan.from_version != from_version:
+                continue
+            if plan.to_version != to_version:
+                continue
+            return plan
+        return None
+
+    async def save_migration_plan(self, plan: MigrationPlan) -> UUID:
+        """Save or update migration plan."""
+        self._migration_plans[plan.id] = plan
+        return plan.id
+
+    async def list_migration_plans(
+        self,
+        tenant_id: UUID,
+        scenario_id: UUID | None = None,
+        status: MigrationPlanStatus | None = None,
+        limit: int = 50,
+    ) -> list[MigrationPlan]:
+        """List migration plans for scenario."""
+        results = []
+        for plan in self._migration_plans.values():
+            if plan.tenant_id != tenant_id:
+                continue
+            if scenario_id is not None and plan.scenario_id != scenario_id:
+                continue
+            if status is not None and plan.status != status:
+                continue
+            results.append(plan)
+
+        # Sort by created_at descending
+        results.sort(key=lambda p: p.created_at, reverse=True)
+        return results[:limit]
+
+    async def delete_migration_plan(
+        self, tenant_id: UUID, plan_id: UUID
+    ) -> bool:
+        """Delete a migration plan."""
+        plan = self._migration_plans.get(plan_id)
+        if plan and plan.tenant_id == tenant_id:
+            del self._migration_plans[plan_id]
+            return True
+        return False
+
+    # Scenario version archiving
+    async def archive_scenario_version(
+        self, tenant_id: UUID, scenario: Scenario
+    ) -> None:
+        """Archive scenario version before update."""
+        key = (tenant_id, scenario.id, scenario.version)
+        self._archived_scenarios[key] = scenario.model_copy(deep=True)
+
+    async def get_archived_scenario(
+        self, tenant_id: UUID, scenario_id: UUID, version: int
+    ) -> Scenario | None:
+        """Get archived scenario by version."""
+        key = (tenant_id, scenario_id, version)
+        return self._archived_scenarios.get(key)

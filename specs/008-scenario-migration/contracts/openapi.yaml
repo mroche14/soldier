@@ -1,0 +1,772 @@
+openapi: 3.1.0
+info:
+  title: Scenario Migration API
+  description: API for managing scenario migrations in Soldier
+  version: 1.0.0
+  contact:
+    name: Soldier Team
+
+servers:
+  - url: /api/v1
+    description: Base API path
+
+tags:
+  - name: Migration Plans
+    description: Create, review, and approve migration plans
+  - name: Deployments
+    description: Deploy approved migration plans
+
+paths:
+  /scenarios/{scenario_id}/migration-plan:
+    post:
+      summary: Generate migration plan
+      description: |
+        Generate a migration plan for a pending scenario update.
+        Computes the graph diff, identifies anchors, and determines
+        migration scenarios (Clean Graft, Gap Fill, Re-Route) for each anchor.
+      operationId: generateMigrationPlan
+      tags:
+        - Migration Plans
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ScenarioId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateMigrationPlanRequest'
+      responses:
+        '201':
+          description: Migration plan generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationPlan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Plan already exists for this version transition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /migration-plans:
+    get:
+      summary: List migration plans
+      description: List migration plans for a tenant, optionally filtered by scenario or status
+      operationId: listMigrationPlans
+      tags:
+        - Migration Plans
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: scenario_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by scenario
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/MigrationPlanStatus'
+          description: Filter by status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: List of migration plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plans:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MigrationPlanSummaryItem'
+                  total:
+                    type: integer
+
+  /migration-plans/{plan_id}:
+    get:
+      summary: Get migration plan
+      description: Get full details of a migration plan including transformation map
+      operationId: getMigrationPlan
+      tags:
+        - Migration Plans
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Migration plan details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /migration-plans/{plan_id}/summary:
+    get:
+      summary: Get migration summary
+      description: Get operator-friendly summary with counts, warnings, and affected session estimates
+      operationId: getMigrationSummary
+      tags:
+        - Migration Plans
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Migration summary for operator review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSummary'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /migration-plans/{plan_id}/policies:
+    put:
+      summary: Update anchor policies
+      description: Update per-anchor migration policies (scope filters, update_downstream)
+      operationId: updateAnchorPolicies
+      tags:
+        - Migration Plans
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePoliciesRequest'
+      responses:
+        '200':
+          description: Policies updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationPlan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Plan is not in PENDING status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /migration-plans/{plan_id}/approve:
+    post:
+      summary: Approve migration plan
+      description: Mark migration plan as approved for deployment
+      operationId: approveMigrationPlan
+      tags:
+        - Migration Plans
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approved_by:
+                  type: string
+                  description: Operator ID approving the plan
+      responses:
+        '200':
+          description: Plan approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Plan is not in PENDING status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /migration-plans/{plan_id}/reject:
+    post:
+      summary: Reject migration plan
+      description: Reject migration plan (operator decided not to proceed)
+      operationId: rejectMigrationPlan
+      tags:
+        - Migration Plans
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rejected_by:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Plan rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationPlan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Plan is not in PENDING status
+
+  /migration-plans/{plan_id}/deploy:
+    post:
+      summary: Deploy migration plan
+      description: |
+        Deploy approved migration plan. This marks eligible sessions
+        with pending_migration flag but does NOT apply migrations immediately.
+        Migrations are applied JIT at next customer message.
+      operationId: deployMigrationPlan
+      tags:
+        - Deployments
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Deployment initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Plan is not in APPROVED status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /migration-plans/{plan_id}/deployment-status:
+    get:
+      summary: Get deployment status
+      description: Get current deployment status including sessions marked and migrations applied
+      operationId: getDeploymentStatus
+      tags:
+        - Deployments
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Deployment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Tenant identifier
+
+    ScenarioId:
+      name: scenario_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Scenario identifier
+
+    PlanId:
+      name: plan_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Migration plan identifier
+
+  schemas:
+    GenerateMigrationPlanRequest:
+      type: object
+      required:
+        - new_scenario
+      properties:
+        new_scenario:
+          $ref: '#/components/schemas/ScenarioInput'
+        created_by:
+          type: string
+          description: Operator creating the plan
+
+    ScenarioInput:
+      type: object
+      description: New scenario version (same structure as existing Scenario model)
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        version:
+          type: integer
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioStepInput'
+        entry_step_id:
+          type: string
+          format: uuid
+
+    ScenarioStepInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        transitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransitionInput'
+        rule_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        collects_profile_fields:
+          type: array
+          items:
+            type: string
+        is_checkpoint:
+          type: boolean
+        checkpoint_description:
+          type: string
+
+    TransitionInput:
+      type: object
+      properties:
+        to_step_id:
+          type: string
+          format: uuid
+        condition_text:
+          type: string
+        condition_fields:
+          type: array
+          items:
+            type: string
+
+    MigrationPlanStatus:
+      type: string
+      enum:
+        - pending
+        - approved
+        - deployed
+        - superseded
+        - rejected
+
+    MigrationPlan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        scenario_id:
+          type: string
+          format: uuid
+        from_version:
+          type: integer
+        to_version:
+          type: integer
+        scenario_checksum_v1:
+          type: string
+        scenario_checksum_v2:
+          type: string
+        transformation_map:
+          $ref: '#/components/schemas/TransformationMap'
+        anchor_policies:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AnchorMigrationPolicy'
+        summary:
+          $ref: '#/components/schemas/MigrationSummary'
+        status:
+          $ref: '#/components/schemas/MigrationPlanStatus'
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+        approved_at:
+          type: string
+          format: date-time
+        approved_by:
+          type: string
+        deployed_at:
+          type: string
+          format: date-time
+
+    MigrationPlanSummaryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        scenario_id:
+          type: string
+          format: uuid
+        scenario_name:
+          type: string
+        from_version:
+          type: integer
+        to_version:
+          type: integer
+        status:
+          $ref: '#/components/schemas/MigrationPlanStatus'
+        total_anchors:
+          type: integer
+        estimated_sessions_affected:
+          type: integer
+        warning_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    TransformationMap:
+      type: object
+      properties:
+        anchors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnchorTransformation'
+        deleted_nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletedNode'
+        new_node_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    AnchorTransformation:
+      type: object
+      properties:
+        anchor_content_hash:
+          type: string
+        anchor_name:
+          type: string
+        anchor_node_id_v1:
+          type: string
+          format: uuid
+        anchor_node_id_v2:
+          type: string
+          format: uuid
+        upstream_changes:
+          $ref: '#/components/schemas/UpstreamDownstreamChanges'
+        downstream_changes:
+          $ref: '#/components/schemas/UpstreamDownstreamChanges'
+        migration_scenario:
+          type: string
+          enum:
+            - clean_graft
+            - gap_fill
+            - re_route
+
+    UpstreamDownstreamChanges:
+      type: object
+      properties:
+        inserted_nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsertedNode'
+        removed_node_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        new_forks:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewFork'
+
+    InsertedNode:
+      type: object
+      properties:
+        node_id:
+          type: string
+          format: uuid
+        node_name:
+          type: string
+        collects_fields:
+          type: array
+          items:
+            type: string
+        has_rules:
+          type: boolean
+        is_required_action:
+          type: boolean
+        is_checkpoint:
+          type: boolean
+
+    NewFork:
+      type: object
+      properties:
+        fork_node_id:
+          type: string
+          format: uuid
+        fork_node_name:
+          type: string
+        branches:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForkBranch'
+
+    ForkBranch:
+      type: object
+      properties:
+        target_step_id:
+          type: string
+          format: uuid
+        target_step_name:
+          type: string
+        condition_text:
+          type: string
+        condition_fields:
+          type: array
+          items:
+            type: string
+
+    DeletedNode:
+      type: object
+      properties:
+        node_id_v1:
+          type: string
+          format: uuid
+        node_name:
+          type: string
+        nearest_anchor_hash:
+          type: string
+        nearest_anchor_id_v2:
+          type: string
+          format: uuid
+
+    AnchorMigrationPolicy:
+      type: object
+      properties:
+        anchor_content_hash:
+          type: string
+        anchor_name:
+          type: string
+        scope_filter:
+          $ref: '#/components/schemas/ScopeFilter'
+        update_downstream:
+          type: boolean
+          default: true
+        force_scenario:
+          type: string
+          enum:
+            - clean_graft
+            - gap_fill
+            - re_route
+
+    ScopeFilter:
+      type: object
+      properties:
+        include_channels:
+          type: array
+          items:
+            type: string
+        exclude_channels:
+          type: array
+          items:
+            type: string
+        include_current_nodes:
+          type: array
+          items:
+            type: string
+        exclude_current_nodes:
+          type: array
+          items:
+            type: string
+        max_session_age_days:
+          type: integer
+        min_session_age_days:
+          type: integer
+
+    MigrationSummary:
+      type: object
+      properties:
+        total_anchors:
+          type: integer
+        anchors_with_clean_graft:
+          type: integer
+        anchors_with_gap_fill:
+          type: integer
+        anchors_with_re_route:
+          type: integer
+        nodes_deleted:
+          type: integer
+        estimated_sessions_affected:
+          type: integer
+        sessions_by_anchor:
+          type: object
+          additionalProperties:
+            type: integer
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/MigrationWarning'
+        fields_to_collect:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldCollectionInfo'
+
+    MigrationWarning:
+      type: object
+      properties:
+        severity:
+          type: string
+          enum:
+            - info
+            - warning
+            - critical
+        anchor_name:
+          type: string
+        message:
+          type: string
+        affected_sessions_estimate:
+          type: integer
+
+    FieldCollectionInfo:
+      type: object
+      properties:
+        field_name:
+          type: string
+        display_name:
+          type: string
+        affected_anchors:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+        can_extract_from_conversation:
+          type: boolean
+
+    UpdatePoliciesRequest:
+      type: object
+      properties:
+        policies:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AnchorMigrationPolicy'
+          description: Map of anchor_content_hash to policy
+
+    DeploymentResult:
+      type: object
+      properties:
+        plan_id:
+          type: string
+          format: uuid
+        sessions_marked:
+          type: integer
+        sessions_by_anchor:
+          type: object
+          additionalProperties:
+            type: integer
+        deployed_at:
+          type: string
+          format: date-time
+
+    DeploymentStatus:
+      type: object
+      properties:
+        plan_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/MigrationPlanStatus'
+        sessions_marked:
+          type: integer
+        migrations_applied:
+          type: integer
+        migrations_pending:
+          type: integer
+        migrations_by_scenario:
+          type: object
+          properties:
+            clean_graft:
+              type: integer
+            gap_fill:
+              type: integer
+            re_route:
+              type: integer
+        checkpoint_blocks:
+          type: integer
+        deployed_at:
+          type: string
+          format: date-time
+        last_migration_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

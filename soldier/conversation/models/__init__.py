@@ -8,7 +8,7 @@ Contains all Pydantic models for conversation state:
 """
 
 from soldier.conversation.models.enums import Channel, SessionStatus
-from soldier.conversation.models.session import Session, StepVisit
+from soldier.conversation.models.session import PendingMigration, Session, StepVisit
 from soldier.conversation.models.turn import ToolCall, Turn
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "Channel",
     "SessionStatus",
     # Session models
+    "PendingMigration",
     "Session",
     "StepVisit",
     # Turn models
