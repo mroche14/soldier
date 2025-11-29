@@ -43,6 +43,7 @@ def _lazy_import_diff() -> dict[str, Any]:
         determine_migration_scenario,
         find_anchor_nodes,
     )
+
     return {
         "compute_downstream_changes": compute_downstream_changes,
         "compute_node_content_hash": compute_node_content_hash,
@@ -57,10 +58,21 @@ def _lazy_import_diff() -> dict[str, Any]:
 def _lazy_import_planner() -> dict[str, Any]:
     """Lazy import to avoid circular dependency."""
     from soldier.alignment.migration.planner import MigrationDeployer, MigrationPlanner
+
     return {
         "MigrationDeployer": MigrationDeployer,
         "MigrationPlanner": MigrationPlanner,
     }
+
+
+def _lazy_import_executor() -> dict[str, Any]:
+    """Lazy import to avoid circular dependency."""
+    from soldier.alignment.migration.executor import MigrationExecutor
+
+    return {
+        "MigrationExecutor": MigrationExecutor,
+    }
+
 
 __all__ = [
     # Enums
@@ -93,7 +105,7 @@ __all__ = [
 
 
 def __getattr__(name: str) -> Any:
-    """Lazy loading for diff functions and planner to avoid circular imports."""
+    """Lazy loading for diff functions, planner, and executor to avoid circular imports."""
     diff_funcs = {
         "compute_node_content_hash",
         "compute_scenario_checksum",
@@ -104,11 +116,15 @@ def __getattr__(name: str) -> Any:
         "compute_transformation_map",
     }
     planner_classes = {"MigrationPlanner", "MigrationDeployer"}
+    executor_classes = {"MigrationExecutor"}
 
     if name in diff_funcs:
         imports = _lazy_import_diff()
         return imports[name]
     elif name in planner_classes:
         imports = _lazy_import_planner()
+        return imports[name]
+    elif name in executor_classes:
+        imports = _lazy_import_executor()
         return imports[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -731,6 +731,60 @@ This project uses speckit for feature implementation. When implementing features
 - **Last Updated**: 2025-01-15
 - **Based on Documentation Version**: Initial architecture
 
+---
+
+## Scenario Migration Module
+
+The migration module (`soldier/alignment/migration/`) handles version transitions when scenarios are updated while customers are mid-conversation.
+
+### Key Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| **MigrationPlanner** | `planner.py` | Generates migration plans, computes transformations |
+| **MigrationDeployer** | `planner.py` | Marks sessions for migration during deployment |
+| **MigrationExecutor** | `executor.py` | Executes JIT migrations when customers return |
+| **CompositeMapper** | `composite.py` | Handles multi-version gaps (V1→V5) |
+| **GapFillService** | `gap_fill.py` | Retrieves missing data without asking customers |
+| **Diff utilities** | `diff.py` | Content hashing, transformation computation |
+
+### Migration Scenarios
+
+| Scenario | When | Action |
+|----------|------|--------|
+| **Clean Graft** | Step unchanged in V2 | Silent teleport to V2 step |
+| **Gap Fill** | New data collection upstream | Try profile/session/LLM extraction, then ask |
+| **Re-Route** | New fork upstream | Evaluate conditions, may block at checkpoint |
+
+### Key Models (`models.py`)
+
+- `MigrationPlan`: Complete plan with transformation map and policies
+- `AnchorTransformation`: Changes around a stable step (anchor)
+- `TransformationMap`: All anchors, deleted nodes, mappings
+- `ScopeFilter`: Filter sessions by channel, age, node
+- `AnchorMigrationPolicy`: Per-anchor override behavior
+- `ReconciliationResult`: Outcome of migration execution
+- `GapFillResult`: Result of gap fill attempt
+
+### Flow
+
+1. **Plan Generation**: `MigrationPlanner.generate_plan()` computes diff
+2. **Plan Approval**: Operator reviews and approves plan
+3. **Deployment**: `MigrationDeployer.deploy()` marks sessions with `pending_migration`
+4. **JIT Execution**: `MigrationExecutor.reconcile()` applies migration on next turn
+5. **Cleanup**: Old plans and archived versions are cleaned up
+
+### Testing
+
+Tests are in `tests/unit/alignment/migration/`:
+- `test_diff.py` - Content hashing, transformation computation
+- `test_planner.py` - Plan generation, deployment
+- `test_executor.py` - JIT migration execution
+- `test_composite.py` - Multi-version gap handling
+- `test_gap_fill.py` - Data retrieval service
+
+---
+
 ## Active Technologies
 - Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog (001-project-foundation)
 - N/A (configuration phase - no database yet) (001-project-foundation)

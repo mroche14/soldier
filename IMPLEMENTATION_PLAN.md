@@ -655,7 +655,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 
 ---
 
-## Phase 15: Scenario Migration System
+## Phase 15: Scenario Migration System ✅
 **Goal**: Implement scenario update handling for active sessions
 > Reference: `docs/design/scenario-update-methods.md`, `specs/008-scenario-migration/`
 
@@ -681,23 +681,56 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 - [x] `soldier/config/models/migration.py` - Migration configuration
 - [x] Store extensions (ConfigStore, SessionStore) for migration
 
-### 15.2 Migration Application (User Story 2)
-- [ ] `soldier/alignment/migration/executor.py`
-  - [ ] `pre_turn_reconciliation()` - Check for updates before turn
-  - [ ] `execute_clean_graft()` - Silent teleport to V2 anchor
-  - [ ] `execute_gap_fill()` - Backfill then teleport
-  - [ ] `execute_re_route()` - Evaluate fork, check checkpoint, teleport
+### 15.2 Migration Application (User Story 2) ✅
+- [x] `soldier/alignment/migration/executor.py`
+  - [x] MigrationExecutor class with reconcile() method
+  - [x] `_execute_clean_graft()` - Silent teleport to V2 anchor
+  - [x] `_execute_gap_fill()` - Collect fields or teleport
+  - [x] `_execute_re_route()` - Evaluate fork, check checkpoint, teleport
+  - [x] `_fallback_reconciliation()` - Content hash matching fallback
+  - [x] `_is_upstream_of_checkpoint()` - Block teleport past checkpoints
+- [x] AlignmentEngine integration
+  - [x] `_pre_turn_reconciliation()` - Check for updates before turn
+  - [x] ReconciliationResult field added to AlignmentResult
 
-### 15.3 Gap Fill (User Story 6)
-- [ ] `soldier/alignment/migration/gap_fill.py`
-  - [ ] `fill_gap()` - Profile → session → extraction → ask
-  - [ ] Conversation extraction via LLM
+### 15.3 Per-Anchor Policies & Checkpoint Blocking (User Stories 3-4) ✅
+- [x] Scope filter matching (channel, age, node filtering)
+- [x] `update_downstream=false` behavior
+- [x] `force_scenario` policy override
+- [x] Checkpoint blocking with `_find_last_checkpoint()`, `_is_upstream_of_checkpoint()`
+- [x] `checkpoint_warning` field in ReconciliationResult
 
-### 15.4 Tests
+### 15.4 Multi-Version Gaps (User Story 5) ✅
+- [x] `soldier/alignment/migration/composite.py`
+  - [x] CompositeMapper class
+  - [x] `get_plan_chain()` - Load V1→V2→...→Vn plans
+  - [x] `accumulate_requirements()` - Collect all fields across chain
+  - [x] `prune_requirements()` - Keep only final version fields
+  - [x] `execute_composite_migration()` - Net effect computation
+
+### 15.5 Gap Fill (User Story 6) ✅
+- [x] `soldier/alignment/migration/gap_fill.py`
+  - [x] GapFillService class
+  - [x] `try_profile_fill()` - Check customer profile
+  - [x] `try_session_fill()` - Check session variables
+  - [x] `try_conversation_extraction()` - LLM extraction
+  - [x] `persist_extracted_values()` - Save to profile
+  - [x] Confidence thresholds (0.85/0.95)
+- [x] Integration into `_execute_gap_fill()` in executor
+
+### 15.6 Polish ✅
+- [x] Migration metrics in `soldier/observability/metrics.py`
+- [x] Plan retention cleanup (`cleanup_old_plans()`)
+- [x] CLAUDE.md migration module documentation
+
+### 15.7 Tests ✅
 - [x] `tests/unit/alignment/migration/test_diff.py` - 12 tests
-- [x] `tests/unit/alignment/migration/test_planner.py` - 19 tests
-- [ ] `tests/unit/alignment/migration/test_executor.py`
-- [ ] `tests/integration/test_scenario_migration.py`
+- [x] `tests/unit/alignment/migration/test_planner.py` - 28 tests
+- [x] `tests/unit/alignment/migration/test_executor.py` - 16 tests
+- [x] `tests/unit/alignment/migration/test_composite.py` - 12 tests
+- [x] `tests/unit/alignment/migration/test_gap_fill.py` - 15 tests
+- [x] `tests/integration/alignment/migration/test_migration_flow.py` - 3 tests
+- [x] `tests/contract/test_config_store_migration.py` - 10 tests
 
 ---
 

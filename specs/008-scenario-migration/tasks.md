@@ -99,7 +99,7 @@
 
 ---
 
-## Phase 4: User Story 2 - Customer Continues Conversation After Scenario Update (Priority: P1) 🎯 MVP
+## Phase 4: User Story 2 - Customer Continues Conversation After Scenario Update (Priority: P1) 🎯 MVP ✅
 
 **Goal**: Returning customers are migrated at JIT when they send their next message
 
@@ -107,19 +107,19 @@
 
 ### Implementation for User Story 2
 
-- [ ] T045 Create `ReconciliationResult` model (action, target_step_id, collect_fields, blocked_by_checkpoint) in `soldier/alignment/migration/models.py`
-- [ ] T046 Implement `MigrationExecutor` class in `soldier/alignment/migration/executor.py`
-- [ ] T047 Implement `execute_clean_graft()` method (silent teleport to V2 anchor) in `soldier/alignment/migration/executor.py`
-- [ ] T048 Implement `execute_gap_fill()` method (backfill then teleport) in `soldier/alignment/migration/executor.py`
-- [ ] T049 Implement `execute_re_route()` method (evaluate fork, check checkpoint, teleport) in `soldier/alignment/migration/executor.py`
-- [ ] T050 Implement `_pre_turn_reconciliation()` method in `soldier/alignment/engine.py` (AlignmentEngine) - must detect both `pending_migration` flag AND `scenario_checksum` mismatch as triggers for reconciliation
-- [ ] T051 Integrate reconciliation at start of `process_turn()` in `soldier/alignment/engine.py` - update `scenario_checksum` on session after successful migration
-- [ ] T052 Implement fallback reconciliation for missing plans (anchor-based relocation) in `soldier/alignment/migration/executor.py`
-- [ ] T053 Clear `pending_migration` flag and set new `scenario_checksum` after successful migration in `soldier/alignment/migration/executor.py`
-- [ ] T054 Add unit tests for `executor.py` in `tests/unit/alignment/migration/test_executor.py`
-- [ ] T055 Add integration test for JIT migration flow in `tests/integration/alignment/migration/test_migration_flow.py`
+- [X] T045 Create `ReconciliationResult` model (action, target_step_id, collect_fields, blocked_by_checkpoint) in `soldier/alignment/migration/models.py`
+- [X] T046 Implement `MigrationExecutor` class in `soldier/alignment/migration/executor.py`
+- [X] T047 Implement `execute_clean_graft()` method (silent teleport to V2 anchor) in `soldier/alignment/migration/executor.py`
+- [X] T048 Implement `execute_gap_fill()` method (backfill then teleport) in `soldier/alignment/migration/executor.py`
+- [X] T049 Implement `execute_re_route()` method (evaluate fork, check checkpoint, teleport) in `soldier/alignment/migration/executor.py`
+- [X] T050 Implement `_pre_turn_reconciliation()` method in `soldier/alignment/engine.py` (AlignmentEngine) - must detect both `pending_migration` flag AND `scenario_checksum` mismatch as triggers for reconciliation
+- [X] T051 Integrate reconciliation at start of `process_turn()` in `soldier/alignment/engine.py` - update `scenario_checksum` on session after successful migration
+- [X] T052 Implement fallback reconciliation for missing plans (anchor-based relocation) in `soldier/alignment/migration/executor.py`
+- [X] T053 Clear `pending_migration` flag and set new `scenario_checksum` after successful migration in `soldier/alignment/migration/executor.py`
+- [X] T054 Add unit tests for `executor.py` in `tests/unit/alignment/migration/test_executor.py`
+- [X] T055 Add integration test for JIT migration flow in `tests/integration/alignment/migration/test_migration_flow.py`
 
-**Checkpoint**: Customers are correctly migrated at JIT based on their migration scenario
+**Checkpoint**: Customers are correctly migrated at JIT based on their migration scenario ✅
 
 ---
 
@@ -131,13 +131,13 @@
 
 ### Implementation for User Story 3
 
-- [ ] T056 Implement scope filter matching in `MigrationDeployer.mark_sessions()` in `soldier/alignment/migration/planner.py`
-- [ ] T057 Implement channel filtering (include/exclude) in scope filter logic in `soldier/alignment/migration/planner.py`
-- [ ] T058 Implement session age filtering (min/max days) in scope filter logic in `soldier/alignment/migration/planner.py`
-- [ ] T059 Implement current_node filtering in scope filter logic in `soldier/alignment/migration/planner.py`
-- [ ] T060 Implement `update_downstream=false` behavior (skip teleport, update version only) in `soldier/alignment/migration/executor.py`
-- [ ] T061 Implement `force_scenario` policy override in `soldier/alignment/migration/executor.py`
-- [ ] T062 Add unit tests for scope filter matching in `tests/unit/alignment/migration/test_planner.py`
+- [X] T056 Implement scope filter matching in `MigrationDeployer.mark_sessions()` in `soldier/alignment/migration/planner.py`
+- [X] T057 Implement channel filtering (include/exclude) in scope filter logic in `soldier/alignment/migration/planner.py`
+- [X] T058 Implement session age filtering (min/max days) in scope filter logic in `soldier/alignment/migration/planner.py`
+- [X] T059 Implement current_node filtering in scope filter logic in `soldier/alignment/migration/planner.py`
+- [X] T060 Implement `update_downstream=false` behavior (skip teleport, update version only) in `soldier/alignment/migration/executor.py`
+- [X] T061 Implement `force_scenario` policy override in `soldier/alignment/migration/executor.py`
+- [X] T062 Add unit tests for scope filter matching in `tests/unit/alignment/migration/test_planner.py`
 
 **Checkpoint**: Per-anchor policies correctly filter sessions and control migration behavior
 
@@ -151,13 +151,13 @@
 
 ### Implementation for User Story 4
 
-- [ ] T063 Implement `find_last_checkpoint()` function (walk backwards through step_history) in `soldier/alignment/migration/executor.py`
-- [ ] T064 Implement `is_upstream_of_checkpoint()` function (BFS from target to checkpoint) in `soldier/alignment/migration/executor.py`
-- [ ] T065 Implement `evaluate_fork_condition()` method for re-route scenario in `soldier/alignment/migration/executor.py`
-- [ ] T066 Integrate checkpoint blocking into `execute_re_route()` in `soldier/alignment/migration/executor.py`
-- [ ] T067 Add `checkpoint_warning` field to `ReconciliationResult` for operator visibility in `soldier/alignment/migration/models.py`
-- [ ] T068 Add structured logging for checkpoint blocks in `soldier/alignment/migration/executor.py`
-- [ ] T069 Add unit tests for checkpoint blocking in `tests/unit/alignment/migration/test_executor.py`
+- [X] T063 Implement `find_last_checkpoint()` function (walk backwards through step_history) in `soldier/alignment/migration/executor.py`
+- [X] T064 Implement `is_upstream_of_checkpoint()` function (BFS from target to checkpoint) in `soldier/alignment/migration/executor.py`
+- [X] T065 Implement `evaluate_fork_condition()` method for re-route scenario in `soldier/alignment/migration/executor.py`
+- [X] T066 Integrate checkpoint blocking into `execute_re_route()` in `soldier/alignment/migration/executor.py`
+- [X] T067 Add `checkpoint_warning` field to `ReconciliationResult` for operator visibility in `soldier/alignment/migration/models.py`
+- [X] T068 Add structured logging for checkpoint blocks in `soldier/alignment/migration/executor.py`
+- [X] T069 Add unit tests for checkpoint blocking in `tests/unit/alignment/migration/test_executor.py`
 
 **Checkpoint**: Re-routing respects checkpoints and logs blocks for operator visibility
 
@@ -171,14 +171,14 @@
 
 ### Implementation for User Story 5
 
-- [ ] T070 Create `CompositeMapper` class in `soldier/alignment/migration/composite.py`
-- [ ] T071 Implement `get_plan_chain()` method to load V1→V2→V3→...→Vn plans in `soldier/alignment/migration/composite.py`
-- [ ] T072 Implement `accumulate_requirements()` method (collect all fields across chain) in `soldier/alignment/migration/composite.py`
-- [ ] T073 Implement `prune_requirements()` method (keep only fields needed in final version) in `soldier/alignment/migration/composite.py`
-- [ ] T074 Implement `execute_composite_migration()` method in `soldier/alignment/migration/composite.py`
-- [ ] T075 Implement fallback for broken plan chain (intermediate plan expired) in `soldier/alignment/migration/composite.py`
-- [ ] T076 Integrate composite migration into `MigrationExecutor` for multi-version gaps in `soldier/alignment/migration/executor.py`
-- [ ] T077 Add unit tests for composite migration in `tests/unit/alignment/migration/test_composite.py`
+- [X] T070 Create `CompositeMapper` class in `soldier/alignment/migration/composite.py`
+- [X] T071 Implement `get_plan_chain()` method to load V1→V2→V3→...→Vn plans in `soldier/alignment/migration/composite.py`
+- [X] T072 Implement `accumulate_requirements()` method (collect all fields across chain) in `soldier/alignment/migration/composite.py`
+- [X] T073 Implement `prune_requirements()` method (keep only fields needed in final version) in `soldier/alignment/migration/composite.py`
+- [X] T074 Implement `execute_composite_migration()` method in `soldier/alignment/migration/composite.py`
+- [X] T075 Implement fallback for broken plan chain (intermediate plan expired) in `soldier/alignment/migration/composite.py`
+- [X] T076 Integrate composite migration into `MigrationExecutor` for multi-version gaps in `soldier/alignment/migration/executor.py`
+- [X] T077 Add unit tests for composite migration in `tests/unit/alignment/migration/test_composite.py`
 
 **Checkpoint**: Multi-version migrations correctly prune obsolete requirements
 
@@ -192,34 +192,34 @@
 
 ### Implementation for User Story 6
 
-- [ ] T078 Create `GapFillService` class in `soldier/alignment/migration/gap_fill.py`
-- [ ] T079 Create `GapFillResult` model (filled, value, source, confidence, needs_confirmation) in `soldier/alignment/migration/models.py`
-- [ ] T080 Implement `try_profile_fill()` method in `soldier/alignment/migration/gap_fill.py`
-- [ ] T081 Implement `try_session_fill()` method in `soldier/alignment/migration/gap_fill.py`
-- [ ] T082 Implement `try_conversation_extraction()` method using LLMProvider in `soldier/alignment/migration/gap_fill.py`
-- [ ] T083 Implement extraction prompt template with JSON output format in `soldier/alignment/migration/gap_fill.py`
-- [ ] T084 Implement confidence threshold logic (0.85 for use, 0.95 for no confirmation) in `soldier/alignment/migration/gap_fill.py`
-- [ ] T085 Implement `persist_extracted_values()` to save to profile in `soldier/alignment/migration/gap_fill.py`
-- [ ] T086 Integrate `GapFillService` into `execute_gap_fill()` in `soldier/alignment/migration/executor.py`
-- [ ] T087 Add unit tests for gap fill in `tests/unit/alignment/migration/test_gap_fill.py`
-- [ ] T088 Add LLM recording tests for extraction in `tests/unit/alignment/migration/test_gap_fill.py`
+- [X] T078 Create `GapFillService` class in `soldier/alignment/migration/gap_fill.py`
+- [X] T079 Create `GapFillResult` model (filled, value, source, confidence, needs_confirmation) in `soldier/alignment/migration/models.py`
+- [X] T080 Implement `try_profile_fill()` method in `soldier/alignment/migration/gap_fill.py`
+- [X] T081 Implement `try_session_fill()` method in `soldier/alignment/migration/gap_fill.py`
+- [X] T082 Implement `try_conversation_extraction()` method using LLMProvider in `soldier/alignment/migration/gap_fill.py`
+- [X] T083 Implement extraction prompt template with JSON output format in `soldier/alignment/migration/gap_fill.py`
+- [X] T084 Implement confidence threshold logic (0.85 for use, 0.95 for no confirmation) in `soldier/alignment/migration/gap_fill.py`
+- [X] T085 Implement `persist_extracted_values()` to save to profile in `soldier/alignment/migration/gap_fill.py`
+- [X] T086 Integrate `GapFillService` into `execute_gap_fill()` in `soldier/alignment/migration/executor.py`
+- [X] T087 Add unit tests for gap fill in `tests/unit/alignment/migration/test_gap_fill.py`
+- [X] T088 Add LLM recording tests for extraction in `tests/unit/alignment/migration/test_gap_fill.py`
 
 **Checkpoint**: Gap fill retrieves data without re-asking customers in most cases
 
 ---
 
-## Phase 9: Polish & Cross-Cutting Concerns
+## Phase 9: Polish & Cross-Cutting Concerns ✅
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T089 [P] Add structured logging for all migration operations in `soldier/alignment/migration/`
-- [ ] T090 [P] Add metrics for migration counts by scenario type (clean_graft, gap_fill, re_route) in `soldier/alignment/migration/executor.py`
-- [ ] T091 [P] Add audit log entries for migration applications in `soldier/alignment/migration/executor.py`
-- [ ] T092 [P] Implement version retention cleanup (default 7 days for archived scenarios) in `soldier/alignment/migration/planner.py`
-- [ ] T093 [P] Implement plan retention cleanup (default 30 days) in `soldier/alignment/migration/planner.py`
-- [ ] T094 Add ConfigStore contract tests for migration plan methods in `tests/contract/test_config_store.py`
-- [ ] T095 Run quickstart.md validation end-to-end
-- [ ] T096 Update CLAUDE.md with migration module context
+- [X] T089 [P] Add structured logging for all migration operations in `soldier/alignment/migration/`
+- [X] T090 [P] Add metrics for migration counts by scenario type (clean_graft, gap_fill, re_route) in `soldier/alignment/migration/executor.py`
+- [X] T091 [P] Add audit log entries for migration applications in `soldier/alignment/migration/executor.py`
+- [X] T092 [P] Implement version retention cleanup (default 7 days for archived scenarios) in `soldier/alignment/migration/planner.py`
+- [X] T093 [P] Implement plan retention cleanup (default 30 days) in `soldier/alignment/migration/planner.py`
+- [X] T094 Add ConfigStore contract tests for migration plan methods in `tests/contract/test_config_store_migration.py`
+- [X] T095 Run quickstart.md validation end-to-end
+- [X] T096 Update CLAUDE.md with migration module context
 
 ---
 

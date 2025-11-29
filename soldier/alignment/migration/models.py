@@ -52,9 +52,7 @@ class InsertedNode(BaseModel):
 
     node_id: UUID = Field(..., description="Step ID in new version")
     node_name: str = Field(..., description="Human-readable name")
-    collects_fields: list[str] = Field(
-        default_factory=list, description="Profile fields collected"
-    )
+    collects_fields: list[str] = Field(default_factory=list, description="Profile fields collected")
     has_rules: bool = Field(default=False, description="Has attached rules")
     is_required_action: bool = Field(default=False, description="Must execute action")
     is_checkpoint: bool = Field(default=False, description="Irreversible action")
@@ -80,9 +78,7 @@ class NewFork(BaseModel):
 
     fork_node_id: UUID = Field(..., description="Fork step ID")
     fork_node_name: str = Field(..., description="Fork step name")
-    branches: list[ForkBranch] = Field(
-        default_factory=list, description="Available branches"
-    )
+    branches: list[ForkBranch] = Field(default_factory=list, description="Available branches")
 
 
 class DeletedNode(BaseModel):
@@ -92,9 +88,7 @@ class DeletedNode(BaseModel):
 
     node_id_v1: UUID = Field(..., description="Step ID in old version")
     node_name: str = Field(..., description="Step name")
-    nearest_anchor_hash: str | None = Field(
-        default=None, description="Anchor to relocate to"
-    )
+    nearest_anchor_hash: str | None = Field(default=None, description="Anchor to relocate to")
     nearest_anchor_id_v2: UUID | None = Field(
         default=None, description="Step ID in V2 for relocation"
     )
@@ -106,12 +100,8 @@ class TransitionChange(BaseModel):
     model_config = ConfigDict(frozen=False, validate_assignment=True)
 
     from_step_id: UUID = Field(..., description="Source step")
-    to_step_id_v1: UUID | None = Field(
-        default=None, description="Old target (None if new)"
-    )
-    to_step_id_v2: UUID | None = Field(
-        default=None, description="New target (None if removed)"
-    )
+    to_step_id_v1: UUID | None = Field(default=None, description="Old target (None if new)")
+    to_step_id_v2: UUID | None = Field(default=None, description="New target (None if removed)")
     change_type: str = Field(..., description="added | removed | modified")
 
 
@@ -123,12 +113,8 @@ class UpstreamChanges(BaseModel):
     inserted_nodes: list[InsertedNode] = Field(
         default_factory=list, description="Nodes added upstream"
     )
-    removed_node_ids: list[UUID] = Field(
-        default_factory=list, description="Nodes removed upstream"
-    )
-    new_forks: list[NewFork] = Field(
-        default_factory=list, description="Forks added upstream"
-    )
+    removed_node_ids: list[UUID] = Field(default_factory=list, description="Nodes removed upstream")
+    new_forks: list[NewFork] = Field(default_factory=list, description="Forks added upstream")
     modified_transitions: list[TransitionChange] = Field(
         default_factory=list, description="Transitions changed upstream"
     )
@@ -145,9 +131,7 @@ class DownstreamChanges(BaseModel):
     removed_node_ids: list[UUID] = Field(
         default_factory=list, description="Nodes removed downstream"
     )
-    new_forks: list[NewFork] = Field(
-        default_factory=list, description="Forks added downstream"
-    )
+    new_forks: list[NewFork] = Field(default_factory=list, description="Forks added downstream")
     modified_transitions: list[TransitionChange] = Field(
         default_factory=list, description="Transitions changed downstream"
     )
@@ -163,9 +147,7 @@ class AnchorTransformation(BaseModel):
 
     model_config = ConfigDict(frozen=False, validate_assignment=True)
 
-    anchor_content_hash: str = Field(
-        ..., description="SHA-256 truncated to 16 chars"
-    )
+    anchor_content_hash: str = Field(..., description="SHA-256 truncated to 16 chars")
     anchor_name: str = Field(..., description="Human-readable name")
     anchor_node_id_v1: UUID = Field(..., description="Step ID in V1")
     anchor_node_id_v2: UUID = Field(..., description="Step ID in V2")
@@ -175,9 +157,7 @@ class AnchorTransformation(BaseModel):
     downstream_changes: DownstreamChanges = Field(
         default_factory=DownstreamChanges, description="Changes downstream"
     )
-    migration_scenario: MigrationScenario = Field(
-        ..., description="Computed migration type"
-    )
+    migration_scenario: MigrationScenario = Field(..., description="Computed migration type")
 
 
 # =============================================================================
@@ -221,9 +201,7 @@ class ScopeFilter(BaseModel):
     include_channels: list[str] = Field(
         default_factory=list, description="Only these channels (empty = all)"
     )
-    exclude_channels: list[str] = Field(
-        default_factory=list, description="Skip these channels"
-    )
+    exclude_channels: list[str] = Field(default_factory=list, description="Skip these channels")
     include_current_nodes: list[str] = Field(
         default_factory=list, description="Only sessions at these nodes"
     )
@@ -236,9 +214,7 @@ class ScopeFilter(BaseModel):
     min_session_age_days: int | None = Field(
         default=None, description="Skip sessions newer than N days"
     )
-    custom_conditions: list[str] = Field(
-        default_factory=list, description="Future: DSL conditions"
-    )
+    custom_conditions: list[str] = Field(default_factory=list, description="Future: DSL conditions")
 
 
 class AnchorMigrationPolicy(BaseModel):
@@ -254,9 +230,7 @@ class AnchorMigrationPolicy(BaseModel):
     update_downstream: bool = Field(
         default=True, description="If True, graft new downstream from V2"
     )
-    force_scenario: str | None = Field(
-        default=None, description="Override migration scenario"
-    )
+    force_scenario: str | None = Field(default=None, description="Override migration scenario")
 
 
 # =============================================================================
@@ -272,9 +246,7 @@ class MigrationWarning(BaseModel):
     severity: str = Field(..., description="info | warning | critical")
     anchor_name: str = Field(..., description="Affected anchor")
     message: str = Field(..., description="Warning text")
-    affected_sessions_estimate: int = Field(
-        default=0, description="Estimated affected sessions"
-    )
+    affected_sessions_estimate: int = Field(default=0, description="Estimated affected sessions")
 
 
 class FieldCollectionInfo(BaseModel):
@@ -303,15 +275,11 @@ class MigrationSummary(BaseModel):
     anchors_with_gap_fill: int = Field(default=0, description="Gap fill count")
     anchors_with_re_route: int = Field(default=0, description="Re-route count")
     nodes_deleted: int = Field(default=0, description="Deleted node count")
-    estimated_sessions_affected: int = Field(
-        default=0, description="Total affected sessions"
-    )
+    estimated_sessions_affected: int = Field(default=0, description="Total affected sessions")
     sessions_by_anchor: dict[str, int] = Field(
         default_factory=dict, description="hash -> session count"
     )
-    warnings: list[MigrationWarning] = Field(
-        default_factory=list, description="Operator warnings"
-    )
+    warnings: list[MigrationWarning] = Field(default_factory=list, description="Operator warnings")
     fields_to_collect: list[FieldCollectionInfo] = Field(
         default_factory=list, description="Data collection requirements"
     )
@@ -346,20 +314,12 @@ class MigrationPlan(BaseModel):
     status: MigrationPlanStatus = Field(
         default=MigrationPlanStatus.PENDING, description="Lifecycle status"
     )
-    created_at: datetime = Field(
-        default_factory=utc_now, description="Creation time"
-    )
+    created_at: datetime = Field(default_factory=utc_now, description="Creation time")
     created_by: str | None = Field(default=None, description="Creator identifier")
-    approved_at: datetime | None = Field(
-        default=None, description="Approval timestamp"
-    )
+    approved_at: datetime | None = Field(default=None, description="Approval timestamp")
     approved_by: str | None = Field(default=None, description="Approver identifier")
-    deployed_at: datetime | None = Field(
-        default=None, description="Deployment timestamp"
-    )
-    expires_at: datetime | None = Field(
-        default=None, description="Auto-cleanup date"
-    )
+    deployed_at: datetime | None = Field(default=None, description="Deployment timestamp")
+    expires_at: datetime | None = Field(default=None, description="Auto-cleanup date")
 
 
 # =============================================================================
@@ -383,30 +343,14 @@ class ReconciliationResult(BaseModel):
     model_config = ConfigDict(frozen=False, validate_assignment=True)
 
     action: ReconciliationAction = Field(..., description="Action to take")
-    target_step_id: UUID | None = Field(
-        default=None, description="For TELEPORT"
-    )
-    teleport_reason: str | None = Field(
-        default=None, description="Why teleporting"
-    )
-    collect_fields: list[str] = Field(
-        default_factory=list, description="For COLLECT"
-    )
-    execute_action_ids: list[UUID] = Field(
-        default_factory=list, description="For EXECUTE_ACTION"
-    )
-    user_message: str | None = Field(
-        default=None, description="User-facing message"
-    )
-    blocked_by_checkpoint: bool = Field(
-        default=False, description="Checkpoint blocking"
-    )
-    checkpoint_warning: str | None = Field(
-        default=None, description="Checkpoint block reason"
-    )
-    migration_scenario: str | None = Field(
-        default=None, description="Which scenario was used"
-    )
+    target_step_id: UUID | None = Field(default=None, description="For TELEPORT")
+    teleport_reason: str | None = Field(default=None, description="Why teleporting")
+    collect_fields: list[str] = Field(default_factory=list, description="For COLLECT")
+    execute_action_ids: list[UUID] = Field(default_factory=list, description="For EXECUTE_ACTION")
+    user_message: str | None = Field(default=None, description="User-facing message")
+    blocked_by_checkpoint: bool = Field(default=False, description="Checkpoint blocking")
+    checkpoint_warning: str | None = Field(default=None, description="Checkpoint block reason")
+    migration_scenario: str | None = Field(default=None, description="Which scenario was used")
     anchor_hash: str | None = Field(default=None, description="Anchor identifier")
     reason: str | None = Field(default=None, description="Debug info")
 
@@ -437,12 +381,8 @@ class GapFillResult(BaseModel):
         default=GapFillSource.NOT_FOUND, description="Where value came from"
     )
     confidence: float = Field(default=1.0, description="Extraction confidence")
-    needs_confirmation: bool = Field(
-        default=False, description="Requires user confirmation"
-    )
-    extraction_quote: str | None = Field(
-        default=None, description="Source text if extracted"
-    )
+    needs_confirmation: bool = Field(default=False, description="Requires user confirmation")
+    extraction_quote: str | None = Field(default=None, description="Source text if extracted")
 
 
 # =============================================================================

@@ -77,9 +77,7 @@ class MigrationPlanner:
             ValueError: If current scenario not found or versions invalid
         """
         # Get current scenario version
-        current_scenario = await self._config_store.get_scenario(
-            tenant_id, scenario_id
-        )
+        current_scenario = await self._config_store.get_scenario(tenant_id, scenario_id)
         if not current_scenario:
             raise ValueError(f"Scenario {scenario_id} not found")
 
@@ -106,9 +104,7 @@ class MigrationPlanner:
             )
 
         # Compute transformation map
-        transformation_map = compute_transformation_map(
-            current_scenario, new_scenario
-        )
+        transformation_map = compute_transformation_map(current_scenario, new_scenario)
 
         # Generate default policies for each anchor
         anchor_policies = {}
@@ -129,9 +125,7 @@ class MigrationPlanner:
         )
 
         # Compute expiration
-        expires_at = datetime.now(UTC) + timedelta(
-            days=self._config.retention.plan_retention_days
-        )
+        expires_at = datetime.now(UTC) + timedelta(days=self._config.retention.plan_retention_days)
 
         # Create plan
         plan = MigrationPlan(
@@ -150,9 +144,7 @@ class MigrationPlanner:
         )
 
         # Archive current scenario version
-        await self._config_store.archive_scenario_version(
-            tenant_id, current_scenario
-        )
+        await self._config_store.archive_scenario_version(tenant_id, current_scenario)
 
         # Save plan
         await self._config_store.save_migration_plan(plan)
@@ -535,3 +527,44 @@ class MigrationDeployer:
             "deployed_at": plan.deployed_at,
             "last_migration_at": None,
         }
+
+    async def cleanup_old_plans(
+        self,
+        tenant_id: UUID,
+        retention_days: int = 30,
+    ) -> int:
+        """Clean up old migration plans.
+
+        Removes migration plans that have been deployed for longer
+        than the retention period.
+
+        Args:
+            tenant_id: Tenant to clean up
+            retention_days: Days to retain deployed plans (default 30)
+
+        Returns:
+            Number of plans deleted
+        """
+        cutoff = datetime.now(UTC) - timedelta(days=retention_days)
+        plans = await self._config_store.list_migration_plans(tenant_id=tenant_id)
+
+        deleted = 0
+        for plan in plans:
+            # Only cleanup deployed/superseded plans older than cutoff
+            if plan.status not in (
+                MigrationPlanStatus.DEPLOYED,
+                MigrationPlanStatus.SUPERSEDED,
+            ):
+                continue
+
+            if plan.deployed_at and plan.deployed_at < cutoff:
+                await self._config_store.delete_migration_plan(tenant_id, plan.id)
+                deleted += 1
+                logger.info(
+                    "migration_plan_cleaned_up",
+                    tenant_id=str(tenant_id),
+                    plan_id=str(plan.id),
+                    deployed_at=plan.deployed_at.isoformat(),
+                )
+
+        return deleted

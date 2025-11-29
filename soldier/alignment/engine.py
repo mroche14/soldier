@@ -23,6 +23,8 @@ from soldier.alignment.filtering import RuleFilter, ScenarioFilter
 from soldier.alignment.filtering.models import MatchedRule, ScenarioFilterResult
 from soldier.alignment.generation import PromptBuilder, ResponseGenerator
 from soldier.alignment.generation.models import GenerationResult
+from soldier.alignment.migration.executor import MigrationExecutor
+from soldier.alignment.migration.models import ReconciliationAction, ReconciliationResult
 from soldier.alignment.models import Rule, Template
 from soldier.alignment.result import AlignmentResult, PipelineStepTiming
 from soldier.alignment.retrieval import RuleReranker, RuleRetriever, ScenarioRetriever
@@ -31,6 +33,7 @@ from soldier.alignment.stores import ConfigStore
 from soldier.alignment.templates_loader import load_templates_for_rules
 from soldier.audit.models import TurnRecord
 from soldier.audit.store import AuditStore
+from soldier.config.models.migration import ScenarioMigrationConfig
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.conversation.models import Session, StepVisit
 from soldier.conversation.models.turn import ToolCall
@@ -74,6 +77,7 @@ class AlignmentEngine:
         enforcement_validator: EnforcementValidator | None = None,
         fallback_handler: FallbackHandler | None = None,
         memory_store: MemoryStore | None = None,
+        migration_config: ScenarioMigrationConfig | None = None,
     ) -> None:
         """Initialize the alignment engine.
 
@@ -89,6 +93,7 @@ class AlignmentEngine:
             enforcement_validator: Validator for hard constraints
             fallback_handler: Handler for enforcement fallbacks
             memory_store: Store for memory episodes
+            migration_config: Configuration for scenario migrations
         """
         self._config_store = config_store
         self._llm_provider = llm_provider
@@ -144,6 +149,15 @@ class AlignmentEngine:
             llm_provider=llm_provider,
             prompt_builder=self._prompt_builder,
         )
+        self._migration_executor = (
+            MigrationExecutor(
+                config_store=config_store,
+                session_store=session_store,
+                config=migration_config,
+            )
+            if session_store
+            else None
+        )
 
     async def process_turn(
         self,
@@ -197,7 +211,45 @@ class AlignmentEngine:
             history = await self._load_history(session_id)
         history = history or []
 
-        # Extract scenario state from session
+        # Step 0c: Pre-turn reconciliation for scenario migrations
+        reconciliation_result = await self._pre_turn_reconciliation(
+            session=session,
+            tenant_id=tenant_id,
+            timings=timings,
+        )
+
+        # If reconciliation requires collecting data, we may need to handle that
+        # For now, COLLECT action means we prompt the user in the response
+        if reconciliation_result and reconciliation_result.action == ReconciliationAction.COLLECT:
+            # Return early with a response asking for the missing data
+            return AlignmentResult(
+                turn_id=turn_id,
+                session_id=session_id,
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                user_message=message,
+                context=Context(message=message, embedding=[]),
+                retrieval=RetrievalResult(),
+                matched_rules=[],
+                scenario_result=None,
+                tool_results=[],
+                generation=GenerationResult(
+                    response=reconciliation_result.user_message or "I need some additional information.",
+                    generation_time_ms=0,
+                ),
+                enforcement=EnforcementResult(
+                    passed=True,
+                    violations=[],
+                    final_response=reconciliation_result.user_message or "I need some additional information.",
+                    enforcement_time_ms=0,
+                ),
+                response=reconciliation_result.user_message or "I need some additional information.",
+                pipeline_timings=timings,
+                total_time_ms=(time.perf_counter() - start_time) * 1000,
+                reconciliation_result=reconciliation_result,
+            )
+
+        # Extract scenario state from session (may have changed after reconciliation)
         active_scenario_id = session.active_scenario_id if session else None
         current_step_id = session.active_step_id if session else None
         visited_steps = (
@@ -855,3 +907,115 @@ class AlignmentEngine:
         for ep in episodes:
             lines.append(f"- {ep.content}")
         return "\n".join(lines)
+
+    async def _pre_turn_reconciliation(
+        self,
+        session: Session | None,
+        tenant_id: UUID,
+        timings: list[PipelineStepTiming],
+    ) -> ReconciliationResult | None:
+        """Check for and apply pending migrations before processing turn.
+
+        This method detects two scenarios that require reconciliation:
+        1. Session has pending_migration flag set (marked during deployment)
+        2. Session scenario_checksum doesn't match current scenario (version changed)
+
+        Args:
+            session: Current session
+            tenant_id: Tenant identifier
+            timings: List to append timing info
+
+        Returns:
+            ReconciliationResult if migration was performed, None otherwise
+        """
+        step_start = datetime.utcnow()
+        start_time = time.perf_counter()
+
+        # Skip if no session, no migration executor, or no active scenario
+        if (
+            session is None
+            or self._migration_executor is None
+            or session.active_scenario_id is None
+        ):
+            timings.append(
+                PipelineStepTiming(
+                    step="reconciliation",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="No session, executor, or active scenario",
+                )
+            )
+            return None
+
+        # Load current scenario version
+        current_scenario = await self._config_store.get_scenario(
+            tenant_id, session.active_scenario_id
+        )
+
+        if current_scenario is None:
+            logger.warning(
+                "scenario_not_found_for_reconciliation",
+                session_id=str(session.session_id),
+                scenario_id=str(session.active_scenario_id),
+            )
+            timings.append(
+                PipelineStepTiming(
+                    step="reconciliation",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="Scenario not found",
+                )
+            )
+            return None
+
+        # Check if reconciliation is needed
+        needs_reconciliation = (
+            session.pending_migration is not None
+            or session.active_scenario_version != current_scenario.version
+        )
+
+        if not needs_reconciliation:
+            timings.append(
+                PipelineStepTiming(
+                    step="reconciliation",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="No reconciliation needed",
+                )
+            )
+            return None
+
+        # Execute reconciliation
+        logger.info(
+            "executing_reconciliation",
+            session_id=str(session.session_id),
+            pending_migration=session.pending_migration is not None,
+            version_mismatch=session.active_scenario_version != current_scenario.version,
+        )
+
+        result = await self._migration_executor.reconcile(session, current_scenario)
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        timings.append(
+            PipelineStepTiming(
+                step="reconciliation",
+                started_at=step_start,
+                ended_at=datetime.utcnow(),
+                duration_ms=elapsed_ms,
+            )
+        )
+
+        logger.info(
+            "reconciliation_complete",
+            session_id=str(session.session_id),
+            action=result.action.value,
+            elapsed_ms=elapsed_ms,
+        )
+
+        return result

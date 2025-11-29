@@ -70,6 +70,38 @@ MEMORY_ENTITIES = Gauge(
     labelnames=["tenant_id"],
 )
 
+# Migration metrics
+MIGRATION_COUNT = Counter(
+    "soldier_migration_count_total",
+    "Total number of migrations executed",
+    labelnames=["tenant_id", "scenario_type", "outcome"],
+)
+
+MIGRATION_LATENCY = Histogram(
+    "soldier_migration_latency_seconds",
+    "Migration execution latency in seconds",
+    labelnames=["tenant_id", "scenario_type"],
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
+)
+
+GAP_FILL_COUNT = Counter(
+    "soldier_gap_fill_count_total",
+    "Total number of gap fills attempted",
+    labelnames=["tenant_id", "source", "outcome"],
+)
+
+MIGRATION_PLANS_CREATED = Counter(
+    "soldier_migration_plans_created_total",
+    "Total number of migration plans created",
+    labelnames=["tenant_id"],
+)
+
+MIGRATION_PLANS_DEPLOYED = Counter(
+    "soldier_migration_plans_deployed_total",
+    "Total number of migration plans deployed",
+    labelnames=["tenant_id"],
+)
+
 
 def setup_metrics() -> None:
     """Initialize metrics configuration.

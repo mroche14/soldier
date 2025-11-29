@@ -1,9 +1,11 @@
 """Tests for migration planner and deployer."""
 
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 
+from soldier.alignment.migration.diff import compute_node_content_hash
 from soldier.alignment.migration.models import (
     AnchorMigrationPolicy,
     MigrationPlanStatus,
@@ -13,7 +15,7 @@ from soldier.alignment.migration.planner import MigrationDeployer, MigrationPlan
 from soldier.alignment.models import Scenario, ScenarioStep, StepTransition
 from soldier.alignment.stores.inmemory import InMemoryConfigStore
 from soldier.config.models.migration import ScenarioMigrationConfig
-from soldier.conversation.models import Channel, PendingMigration, Session
+from soldier.conversation.models import Channel, PendingMigration, Session, StepVisit
 from soldier.conversation.stores.inmemory import InMemorySessionStore
 
 
@@ -89,6 +91,20 @@ def create_scenario(
     for step in scenario.steps:
         step.scenario_id = scenario.id
     return scenario
+
+
+def create_step_visit(
+    step_id,
+    turn_number: int,
+    step_content_hash: str | None = None,
+) -> StepVisit:
+    """Helper to create a step visit."""
+    return StepVisit(
+        step_id=step_id,
+        entered_at=datetime.now(UTC),
+        turn_number=turn_number,
+        step_content_hash=step_content_hash,
+    )
 
 
 class TestMigrationPlanner:
@@ -525,3 +541,145 @@ class TestMigrationDeployer:
         # Session should not be re-marked (still has original pending_migration)
         updated_session = await session_store.get(session.session_id)
         assert updated_session.pending_migration.anchor_content_hash == "existing_hash"
+
+
+class TestScopeFiltering:
+    """Tests for scope filter matching during deployment."""
+
+    @pytest.mark.asyncio
+    async def test_deploy_with_channel_filter(
+        self, tenant_id, agent_id, config_store, session_store, config
+    ):
+        """Test that channel filtering excludes sessions on other channels."""
+        step = create_step(uuid4(), "Step A")
+        v1 = create_scenario(tenant_id, agent_id, "Test", 1, [step])
+        await config_store.save_scenario(v1)
+
+        step_hash = compute_node_content_hash(step)
+
+        # Create sessions on different channels
+        webchat_session = Session(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user1",
+            config_version=1,
+            active_scenario_id=v1.id,
+            active_scenario_version=1,
+            active_step_id=step.id,
+            step_history=[create_step_visit(step.id, 1, step_content_hash=step_hash)],
+        )
+        whatsapp_session = Session(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WHATSAPP,
+            user_channel_id="user2",
+            config_version=1,
+            active_scenario_id=v1.id,
+            active_scenario_version=1,
+            active_step_id=step.id,
+            step_history=[create_step_visit(step.id, 1, step_content_hash=step_hash)],
+        )
+        await session_store.save(webchat_session)
+        await session_store.save(whatsapp_session)
+
+        # Create V2 and plan with channel filter
+        step_v2 = create_step(uuid4(), "Step A")
+        v2 = create_scenario(tenant_id, agent_id, "Test", 2, [step_v2])
+        v2.id = v1.id
+
+        planner = MigrationPlanner(config_store, session_store, config)
+        plan = await planner.generate_plan(tenant_id, v1.id, v2)
+
+        # Update policy to only include webchat
+        plan.anchor_policies[step_hash] = AnchorMigrationPolicy(
+            anchor_content_hash=step_hash,
+            anchor_name="Step A",
+            scope_filter=ScopeFilter(include_channels=["webchat"]),
+            update_downstream=True,
+        )
+        await config_store.save_migration_plan(plan)
+        await planner.approve_plan(tenant_id, plan.id)
+
+        # Deploy
+        deployer = MigrationDeployer(config_store, session_store, config)
+        result = await deployer.deploy(tenant_id, plan.id)
+
+        # Only webchat session should be marked
+        assert result["sessions_marked"] == 1
+
+        webchat_updated = await session_store.get(webchat_session.session_id)
+        whatsapp_updated = await session_store.get(whatsapp_session.session_id)
+
+        assert webchat_updated.pending_migration is not None
+        assert whatsapp_updated.pending_migration is None
+
+    @pytest.mark.asyncio
+    async def test_deploy_with_age_filter(
+        self, tenant_id, agent_id, config_store, session_store, config
+    ):
+        """Test that age filtering excludes old sessions."""
+        step = create_step(uuid4(), "Step A")
+        v1 = create_scenario(tenant_id, agent_id, "Test", 1, [step])
+        await config_store.save_scenario(v1)
+
+        step_hash = compute_node_content_hash(step)
+
+        # Create sessions with different ages
+        recent_session = Session(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user1",
+            config_version=1,
+            active_scenario_id=v1.id,
+            active_scenario_version=1,
+            active_step_id=step.id,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+            step_history=[create_step_visit(step.id, 1, step_content_hash=step_hash)],
+        )
+        old_session = Session(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user2",
+            config_version=1,
+            active_scenario_id=v1.id,
+            active_scenario_version=1,
+            active_step_id=step.id,
+            created_at=datetime.now(UTC) - timedelta(days=100),
+            step_history=[create_step_visit(step.id, 1, step_content_hash=step_hash)],
+        )
+        await session_store.save(recent_session)
+        await session_store.save(old_session)
+
+        # Create V2 and plan with age filter
+        step_v2 = create_step(uuid4(), "Step A")
+        v2 = create_scenario(tenant_id, agent_id, "Test", 2, [step_v2])
+        v2.id = v1.id
+
+        planner = MigrationPlanner(config_store, session_store, config)
+        plan = await planner.generate_plan(tenant_id, v1.id, v2)
+
+        # Update policy to only include sessions < 30 days old
+        plan.anchor_policies[step_hash] = AnchorMigrationPolicy(
+            anchor_content_hash=step_hash,
+            anchor_name="Step A",
+            scope_filter=ScopeFilter(max_session_age_days=30),
+            update_downstream=True,
+        )
+        await config_store.save_migration_plan(plan)
+        await planner.approve_plan(tenant_id, plan.id)
+
+        # Deploy
+        deployer = MigrationDeployer(config_store, session_store, config)
+        result = await deployer.deploy(tenant_id, plan.id)
+
+        # Only recent session should be marked
+        assert result["sessions_marked"] == 1
+
+        recent_updated = await session_store.get(recent_session.session_id)
+        old_updated = await session_store.get(old_session.session_id)
+
+        assert recent_updated.pending_migration is not None
+        assert old_updated.pending_migration is None

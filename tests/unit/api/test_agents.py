@@ -7,11 +7,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from soldier.alignment.models import Agent, AgentSettings
+from soldier.alignment.models import Agent
 from soldier.alignment.stores.inmemory import InMemoryConfigStore
 from soldier.api.dependencies import get_config_store
 from soldier.api.exceptions import SoldierAPIError
-from soldier.api.middleware.auth import TenantContextDep, get_tenant_context
+from soldier.api.middleware.auth import get_tenant_context
 from soldier.api.models.context import TenantContext
 from soldier.api.models.errors import ErrorBody, ErrorResponse
 from soldier.api.routes.agents import router

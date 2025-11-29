@@ -202,9 +202,9 @@ def compute_upstream_changes(
                 branches = [
                     ForkBranch(
                         target_step_id=t.to_step_id,
-                        target_step_name=v2_step_map.get(t.to_step_id, ScenarioStep(
-                            scenario_id=v2.id, name="Unknown"
-                        )).name,
+                        target_step_name=v2_step_map.get(
+                            t.to_step_id, ScenarioStep(scenario_id=v2.id, name="Unknown")
+                        ).name,
                         condition_text=t.condition_text,
                         condition_fields=t.condition_fields,
                     )
@@ -320,9 +320,9 @@ def compute_downstream_changes(
                 branches = [
                     ForkBranch(
                         target_step_id=t.to_step_id,
-                        target_step_name=v2_step_map.get(t.to_step_id, ScenarioStep(
-                            scenario_id=v2.id, name="Unknown"
-                        )).name,
+                        target_step_name=v2_step_map.get(
+                            t.to_step_id, ScenarioStep(scenario_id=v2.id, name="Unknown")
+                        ).name,
                         condition_text=t.condition_text,
                         condition_fields=t.condition_fields,
                     )
@@ -449,9 +449,7 @@ def compute_transformation_map(
         content_hash = compute_node_content_hash(step)
         if content_hash not in anchor_hashes:
             # Find nearest anchor for relocation suggestion
-            nearest_anchor = _find_nearest_anchor(
-                step.id, v1, anchor_transformations
-            )
+            nearest_anchor = _find_nearest_anchor(step.id, v1, anchor_transformations)
             nearest_hash = nearest_anchor.anchor_content_hash if nearest_anchor else None
             nearest_v2_id = nearest_anchor.anchor_node_id_v2 if nearest_anchor else None
 
@@ -467,9 +465,7 @@ def compute_transformation_map(
     # Find new nodes (in V2 but not matching any V1 content hash)
     v1_hashes = {compute_node_content_hash(s) for s in v1.steps}
     new_node_ids = [
-        step.id
-        for step in v2.steps
-        if compute_node_content_hash(step) not in v1_hashes
+        step.id for step in v2.steps if compute_node_content_hash(step) not in v1_hashes
     ]
 
     return TransformationMap(

@@ -13,6 +13,7 @@ from soldier.alignment.enforcement.models import EnforcementResult
 from soldier.alignment.execution.models import ToolResult
 from soldier.alignment.filtering.models import MatchedRule, ScenarioFilterResult
 from soldier.alignment.generation.models import GenerationResult
+from soldier.alignment.migration.models import ReconciliationResult
 from soldier.alignment.retrieval.models import RetrievalResult
 
 
@@ -54,6 +55,11 @@ class AlignmentResult(BaseModel):
 
     # Final output
     response: str = Field(..., description="The response to return to user")
+
+    # Migration
+    reconciliation_result: ReconciliationResult | None = Field(
+        default=None, description="Result of migration reconciliation if applicable"
+    )
 
     # Metadata
     pipeline_timings: list[PipelineStepTiming] = Field(default_factory=list)
