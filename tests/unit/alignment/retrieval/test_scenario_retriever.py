@@ -5,11 +5,11 @@ from uuid import UUID, uuid4
 import pytest
 
 from soldier.alignment.context.models import Context
+from soldier.alignment.models.scenario import Scenario, ScenarioStep
 from soldier.alignment.retrieval.scenario_retriever import ScenarioRetriever
 from soldier.alignment.stores import InMemoryConfigStore
 from soldier.config.models.selection import SelectionConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.alignment.models.scenario import Scenario, ScenarioStep
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):

@@ -1,9 +1,7 @@
 """Tests for conversation domain models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
-
-import pytest
 
 from soldier.conversation.models import (
     Channel,
@@ -67,7 +65,7 @@ class TestSession:
         """Should track step history."""
         visit = StepVisit(
             step_id=uuid4(),
-            entered_at=datetime.now(timezone.utc),
+            entered_at=datetime.now(UTC),
             turn_number=1,
             confidence=0.95,
         )
@@ -90,7 +88,7 @@ class TestStepVisit:
         """Should create a valid step visit."""
         visit = StepVisit(
             step_id=uuid4(),
-            entered_at=datetime.now(timezone.utc),
+            entered_at=datetime.now(UTC),
             turn_number=5,
             transition_reason="User confirmed",
         )

@@ -1,6 +1,6 @@
 """Tests for audit domain models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -24,7 +24,7 @@ class TestTurnRecord:
             agent_response="Hi there!",
             latency_ms=150,
             tokens_used=100,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
         assert record.turn_number == 1
         assert record.latency_ms == 150
@@ -41,7 +41,7 @@ class TestTurnRecord:
             agent_response="Hi",
             latency_ms=100,
             tokens_used=50,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
         with pytest.raises(Exception):  # Pydantic raises ValidationError for frozen models
             record.turn_number = 2  # type: ignore
@@ -67,7 +67,7 @@ class TestTurnRecord:
             tool_calls=[tool_call],
             latency_ms=100,
             tokens_used=50,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
         assert len(record.tool_calls) == 1
 
@@ -85,7 +85,7 @@ class TestTurnRecord:
             step_id=uuid4(),
             latency_ms=200,
             tokens_used=75,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
         assert record.scenario_id is not None
         assert record.step_id is not None

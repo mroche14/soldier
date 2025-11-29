@@ -27,10 +27,17 @@ dependencies = [
     "prometheus-client>=0.20",
     "opentelemetry-sdk>=1.20",
     "opentelemetry-exporter-otlp>=1.20",
+    "opentelemetry-instrumentation-fastapi>=0.45b0",
     "numpy>=2.3.5",
     "scipy>=1.16.3",
     "scikit-learn>=1.7.2",
-    "python-Levenshtein>=0.27.0",  # Required for entity deduplication
+    "python-Levenshtein>=0.27.0", # Required for entity deduplication
+    "fastapi>=0.115",
+    "uvicorn>=0.34",
+    "python-jose>=3.3",
+    "sse-starlette>=2.0",
+    "httpx>=0.28",
+    "redis>=7.1.0",
 ]
 
 [project.optional-dependencies]
@@ -49,6 +56,9 @@ queue = [
     "rq>=2.6.1",  # For Redis-based task queue
     "redis>=6.0.0",
 ]
+api = [
+    "redis>=6.0.0",  # For rate limiting and idempotency cache
+]
 
 [dependency-groups]
 dev = [
@@ -57,6 +67,7 @@ dev = [
     "pytest-cov>=4.0",
     "ruff>=0.4",
     "mypy>=1.10",
+    "types-python-jose>=3.5.0.20250531",
 ]
 
 [build-system]
@@ -94,6 +105,13 @@ ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # do not perform function calls in argument defaults
     "B905",   # zip without strict
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG001",  # Unused function argument (common in fixtures)
+    "ARG002",  # Unused method argument (common in mocks)
+    "B017",    # Assert blind exception (acceptable in tests)
 ]
 
 [tool.ruff.lint.isort]

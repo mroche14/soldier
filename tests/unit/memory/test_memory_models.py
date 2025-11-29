@@ -1,9 +1,7 @@
 """Tests for memory domain models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
-
-import pytest
 
 from soldier.memory.models import Entity, Episode, Relationship
 
@@ -17,7 +15,7 @@ class TestEpisode:
             group_id="tenant:session",
             content="User mentioned order #12345",
             source="user",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
         )
         assert episode.content == "User mentioned order #12345"
         assert episode.source == "user"
@@ -29,7 +27,7 @@ class TestEpisode:
             group_id="tenant:session",
             content="Test content",
             source="agent",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             embedding=[0.1, 0.2, 0.3],
             embedding_model="test-model",
         )
@@ -42,7 +40,7 @@ class TestEpisode:
             group_id="tenant:session",
             content="Test",
             source="system",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
         )
         assert episode.recorded_at is not None
 
@@ -53,7 +51,7 @@ class TestEpisode:
             group_id="tenant:session",
             content="Test",
             source="agent",
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             entity_ids=entity_ids,
         )
         assert len(episode.entity_ids) == 2
@@ -68,7 +66,7 @@ class TestEntity:
             group_id="tenant:session",
             name="Order #12345",
             entity_type="order",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         assert entity.name == "Order #12345"
         assert entity.entity_type == "order"
@@ -81,20 +79,20 @@ class TestEntity:
             name="John Doe",
             entity_type="person",
             attributes={"email": "john@example.com", "role": "customer"},
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         assert entity.attributes["email"] == "john@example.com"
         assert entity.attributes["role"] == "customer"
 
     def test_entity_temporal_validity(self) -> None:
         """Should track temporal validity."""
-        valid_from = datetime.now(timezone.utc)
+        valid_from = datetime.now(UTC)
         entity = Entity(
             group_id="tenant:session",
             name="Test",
             entity_type="test",
             valid_from=valid_from,
-            valid_to=datetime.now(timezone.utc),
+            valid_to=datetime.now(UTC),
         )
         assert entity.valid_from == valid_from
         assert entity.valid_to is not None
@@ -112,7 +110,7 @@ class TestRelationship:
             from_entity_id=from_id,
             to_entity_id=to_id,
             relation_type="ordered",
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         assert relationship.from_entity_id == from_id
         assert relationship.to_entity_id == to_id
@@ -126,7 +124,7 @@ class TestRelationship:
             to_entity_id=uuid4(),
             relation_type="owns",
             attributes={"quantity": 2, "status": "active"},
-            valid_from=datetime.now(timezone.utc),
+            valid_from=datetime.now(UTC),
         )
         assert relationship.attributes["quantity"] == 2
         assert relationship.attributes["status"] == "active"

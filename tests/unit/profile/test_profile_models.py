@@ -1,9 +1,7 @@
 """Tests for profile domain models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
-
-import pytest
 
 from soldier.conversation.models import Channel
 from soldier.profile import (
@@ -88,7 +86,7 @@ class TestChannelIdentity:
             channel=Channel.WHATSAPP,
             channel_user_id="+1234567890",
             verified=True,
-            verified_at=datetime.now(timezone.utc),
+            verified_at=datetime.now(UTC),
             primary=True,
         )
         assert identity.verified is True
@@ -179,7 +177,7 @@ class TestConsent:
         consent = Consent(
             consent_type="marketing",
             granted=True,
-            granted_at=datetime.now(timezone.utc),
+            granted_at=datetime.now(UTC),
         )
         assert consent.granted is True
         assert consent.revoked_at is None
@@ -189,8 +187,8 @@ class TestConsent:
         consent = Consent(
             consent_type="data_sharing",
             granted=False,
-            granted_at=datetime.now(timezone.utc),
-            revoked_at=datetime.now(timezone.utc),
+            granted_at=datetime.now(UTC),
+            revoked_at=datetime.now(UTC),
         )
         assert consent.granted is False
         assert consent.revoked_at is not None

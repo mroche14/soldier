@@ -1,7 +1,7 @@
 """Tests for Prometheus metrics."""
 
 import pytest
-from prometheus_client import REGISTRY, CollectorRegistry
+from prometheus_client import REGISTRY
 
 from soldier.observability.metrics import (
     ACTIVE_SESSIONS,

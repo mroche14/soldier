@@ -5,11 +5,22 @@ from pathlib import Path
 import pytest
 
 from soldier.config import get_settings, reload_settings
-from soldier.config.settings import Settings
+from soldier.config.settings import Settings, set_toml_config
 
 
 class TestSettings:
     """Tests for Settings model."""
+
+    @pytest.fixture(autouse=True)
+    def isolate_config(self) -> None:
+        """Isolate settings from real config files.
+
+        Clears the module-level TOML config so Settings() uses Pydantic defaults only.
+        """
+        # Clear the module-level TOML config cache
+        set_toml_config({})
+        # Clear cached settings
+        get_settings.cache_clear()
 
     def test_default_values(self) -> None:
         """Settings has sensible defaults."""

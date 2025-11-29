@@ -752,8 +752,9 @@ class TestStepHistoryTrimming:
         agent_id = uuid4()
 
         # Create session with 100 steps already
-        from soldier.conversation.models import StepVisit
         from datetime import UTC, datetime
+
+        from soldier.conversation.models import StepVisit
 
         session = Session(
             tenant_id=tenant_id,
@@ -801,8 +802,8 @@ class TestToolOutputVariables:
     @pytest.mark.asyncio
     async def test_tool_outputs_update_session_variables(self, stores) -> None:
         """Tool outputs are stored in session variables."""
-        from soldier.alignment.execution import ToolExecutor
         from soldier.alignment.context.models import Context
+        from soldier.alignment.execution import ToolExecutor
         from soldier.alignment.filtering.models import MatchedRule
         from soldier.config.models.pipeline import PipelineConfig, ToolExecutionConfig
 
@@ -892,8 +893,8 @@ class TestEmbeddingOnlyMode:
     async def test_embedding_only_context_extraction(self, stores) -> None:
         """Engine uses embedding-only mode when configured."""
         from soldier.config.models.pipeline import (
-            PipelineConfig,
             ContextExtractionConfig,
+            PipelineConfig,
         )
 
         pipeline_config = PipelineConfig(
@@ -942,9 +943,10 @@ class TestMemoryRetrieverIntegration:
     @pytest.mark.asyncio
     async def test_memory_retrieval_included_in_result(self, stores) -> None:
         """Memory episodes are retrieved when memory_store provided."""
-        from soldier.memory.stores.inmemory import InMemoryMemoryStore
-        from soldier.memory.models import Episode
         from datetime import UTC, datetime
+
+        from soldier.memory.models import Episode
+        from soldier.memory.stores.inmemory import InMemoryMemoryStore
 
         memory_store = InMemoryMemoryStore()
         tenant_id = uuid4()
@@ -1042,8 +1044,8 @@ class TestRerankerCreation:
     @pytest.mark.asyncio
     async def test_reranker_created_when_provider_and_config_enabled(self, stores) -> None:
         """Reranker is created when rerank_provider provided and enabled."""
-        from soldier.providers.rerank.mock import MockRerankProvider
         from soldier.config.models.pipeline import PipelineConfig, RerankingConfig
+        from soldier.providers.rerank.mock import MockRerankProvider
 
         rerank_provider = MockRerankProvider()
 
@@ -1100,9 +1102,9 @@ class TestEnforcementFallback:
         """Fallback handler is invoked when enforcement validation fails."""
         from soldier.alignment.enforcement import EnforcementValidator, FallbackHandler
         from soldier.alignment.generation import PromptBuilder, ResponseGenerator
-        from soldier.alignment.models import Template
         from soldier.alignment.generation.models import TemplateMode
-        from soldier.config.models.pipeline import PipelineConfig, EnforcementConfig
+        from soldier.alignment.models import Template
+        from soldier.config.models.pipeline import EnforcementConfig, PipelineConfig
 
         tenant_id = uuid4()
         agent_id = uuid4()
@@ -1247,10 +1249,10 @@ class TestEngineWithoutAuditStore:
     @pytest.mark.asyncio
     async def test_persist_turn_record_without_audit_store_returns(self, stores) -> None:
         """_persist_turn_record is no-op when no audit_store."""
-        from soldier.alignment.result import AlignmentResult
         from soldier.alignment.context.models import Context
-        from soldier.alignment.retrieval.models import RetrievalResult
         from soldier.alignment.generation.models import GenerationResult
+        from soldier.alignment.result import AlignmentResult
+        from soldier.alignment.retrieval.models import RetrievalResult
 
         engine = AlignmentEngine(
             config_store=stores["config"],

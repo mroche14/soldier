@@ -560,46 +560,46 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/api-layer.md`, `docs/design/api-crud.md`
 
 ### 13.1 FastAPI Application
-- [ ] `soldier/api/__init__.py`
-- [ ] `soldier/api/app.py` - FastAPI app factory
-  - [ ] Middleware setup
-  - [ ] Route registration
-  - [ ] Exception handlers
+- [x] `soldier/api/__init__.py`
+- [x] `soldier/api/app.py` - FastAPI app factory
+  - [x] Middleware setup
+  - [x] Route registration
+  - [x] Exception handlers
 
 ### 13.2 API Models
-- [ ] `soldier/api/models/__init__.py`
-- [ ] `soldier/api/models/chat.py`
-  - [ ] ChatRequest
-  - [ ] ChatResponse
-- [ ] `soldier/api/models/errors.py`
-  - [ ] ErrorResponse
-  - [ ] Error codes enum
+- [x] `soldier/api/models/__init__.py`
+- [x] `soldier/api/models/chat.py`
+  - [x] ChatRequest
+  - [x] ChatResponse
+- [x] `soldier/api/models/errors.py`
+  - [x] ErrorResponse
+  - [x] Error codes enum
 
 ### 13.3 Core Routes
-- [ ] `soldier/api/routes/__init__.py`
-- [ ] `soldier/api/routes/chat.py`
-  - [ ] `POST /v1/chat` - Process message
-  - [ ] `POST /v1/chat/stream` - SSE streaming
-- [ ] `soldier/api/routes/sessions.py`
-  - [ ] `GET /v1/sessions/{id}` - Get session
-  - [ ] `DELETE /v1/sessions/{id}` - End session
-  - [ ] `GET /v1/sessions/{id}/turns` - Session history
-- [ ] `soldier/api/routes/health.py`
-  - [ ] `GET /health` - Health check
-  - [ ] `GET /metrics` - Prometheus metrics
+- [x] `soldier/api/routes/__init__.py`
+- [x] `soldier/api/routes/chat.py`
+  - [x] `POST /v1/chat` - Process message
+  - [x] `POST /v1/chat/stream` - SSE streaming
+- [x] `soldier/api/routes/sessions.py`
+  - [x] `GET /v1/sessions/{id}` - Get session
+  - [x] `DELETE /v1/sessions/{id}` - End session
+  - [x] `GET /v1/sessions/{id}/turns` - Session history
+- [x] `soldier/api/routes/health.py`
+  - [x] `GET /health` - Health check
+  - [x] `GET /metrics` - Prometheus metrics
 
 ### 13.4 Middleware
-- [ ] `soldier/api/middleware/__init__.py`
-- [ ] `soldier/api/middleware/auth.py`
-  - [ ] JWT validation
-  - [ ] Tenant extraction
-- [ ] `soldier/api/middleware/rate_limit.py`
-  - [ ] Per-tenant rate limiting
+- [x] `soldier/api/middleware/__init__.py`
+- [x] `soldier/api/middleware/auth.py`
+  - [x] JWT validation
+  - [x] Tenant extraction
+- [x] `soldier/api/middleware/rate_limit.py`
+  - [x] Per-tenant rate limiting
 
 ### 13.5 Tests
-- [ ] `tests/unit/api/test_chat.py`
-- [ ] `tests/unit/api/test_sessions.py`
-- [ ] `tests/integration/api/test_chat_flow.py`
+- [x] `tests/unit/api/test_chat.py`
+- [x] `tests/unit/api/test_sessions.py`
+- [x] `tests/integration/api/test_chat_flow.py`
 
 ---
 

@@ -6,11 +6,11 @@ from uuid import uuid4
 import pytest
 
 from soldier.alignment.context.models import Context
+from soldier.config.models.selection import SelectionConfig
 from soldier.memory.models.episode import Episode
 from soldier.memory.retrieval.retriever import MemoryRetriever
 from soldier.memory.stores.inmemory import InMemoryMemoryStore
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.config.models.selection import SelectionConfig
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):

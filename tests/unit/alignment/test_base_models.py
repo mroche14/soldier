@@ -1,6 +1,6 @@
 """Tests for base models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -18,13 +18,13 @@ class TestUtcNow:
     def test_returns_utc_datetime(self) -> None:
         """Should return UTC timezone-aware datetime."""
         result = utc_now()
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
 
     def test_returns_current_time(self) -> None:
         """Should return current time (within tolerance)."""
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         result = utc_now()
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
         assert before <= result <= after
 
 
@@ -46,13 +46,13 @@ class TestTenantScopedModel:
         """Should automatically set created_at."""
         model = TenantScopedModel(tenant_id=uuid4())
         assert model.created_at is not None
-        assert model.created_at.tzinfo == timezone.utc
+        assert model.created_at.tzinfo == UTC
 
     def test_auto_sets_updated_at(self) -> None:
         """Should automatically set updated_at."""
         model = TenantScopedModel(tenant_id=uuid4())
         assert model.updated_at is not None
-        assert model.updated_at.tzinfo == timezone.utc
+        assert model.updated_at.tzinfo == UTC
 
     def test_deleted_at_defaults_to_none(self) -> None:
         """Should default deleted_at to None."""
@@ -68,7 +68,7 @@ class TestTenantScopedModel:
         """Should report deleted when deleted_at is set."""
         model = TenantScopedModel(
             tenant_id=uuid4(),
-            deleted_at=datetime.now(timezone.utc),
+            deleted_at=datetime.now(UTC),
         )
         assert model.is_deleted is True
 
