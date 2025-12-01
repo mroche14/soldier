@@ -126,14 +126,14 @@ All AI capabilities are accessed through abstract interfaces:
 
 | Provider | Purpose |
 |----------|---------|
-| `LLMProvider` | Text generation (context extraction, filtering, generation) |
+| `LLMExecutor` | Text generation via Agno (OpenRouter, Anthropic, OpenAI, Groq) |
 | `EmbeddingProvider` | Vector embeddings for semantic search |
 | `RerankProvider` | Re-ordering search results by relevance |
 
 **Implications**:
-- Never hardcode to a specific AI provider
-- Each pipeline step can use different providers
-- Fallback chains are configured, not coded
+- Model strings drive routing (e.g., `openrouter/anthropic/claude-3-haiku`)
+- Each pipeline step can use different models
+- Fallback chains are configured in `LLMExecutor`
 
 ### 5. Configuration Lives in Files, Not Code
 
@@ -550,7 +550,7 @@ def config_store():
     return InMemoryConfigStore()
 
 @pytest.fixture
-def llm_provider():
+def llm_executor():
     return MockLLMProvider(default_response="Test response")
 ```
 
@@ -799,6 +799,7 @@ Tests are in `tests/unit/alignment/migration/`:
 - ConfigStore interface with InMemoryConfigStore (Phase 4), existing embedding providers (Phase 5) (001-api-crud)
 - Python 3.11+ + FastAPI, pydantic, pydantic-settings, structlog (existing); hashlib (stdlib for content hashing) (008-scenario-migration)
 - ConfigStore (migration plans, archived versions), SessionStore (pending_migration flag, step_history), ProfileStore (gap fill) (008-scenario-migration)
+- Python 3.11+ (using features like `tomllib`, `|` type unions) (009-production-stores-providers)
 
 ## Recent Changes
 - 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog

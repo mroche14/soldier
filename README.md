@@ -119,7 +119,7 @@ Post-generation validation:
 │                                                                              │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
 │   │                           PROVIDERS                                  │   │
-│   │   LLMProvider  │  EmbeddingProvider  │  RerankProvider              │   │
+│   │   LLMExecutor  │  EmbeddingProvider  │  RerankProvider              │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
                                        │
@@ -162,7 +162,7 @@ soldier/
 ├── audit/              # Immutable audit trail
 │   └── stores/         # Turn records, events
 ├── providers/          # AI provider interfaces
-│   ├── llm/            # Anthropic, OpenAI, Bedrock, Ollama
+│   ├── llm/            # LLMExecutor with Agno (OpenRouter, Anthropic, OpenAI, Groq)
 │   ├── embedding/      # OpenAI, Cohere, Voyage, SentenceTransformers
 │   └── rerank/         # Cohere, Voyage, CrossEncoder
 ├── config/             # Configuration loading and models
@@ -869,4 +869,4 @@ Built with:
 - [Pydantic](https://docs.pydantic.dev/) - Data validation
 - [structlog](https://www.structlog.org/) - Structured logging
 - [OpenTelemetry](https://opentelemetry.io/) - Observability
-- [LiteLLM](https://github.com/BerriAI/litellm) - Unified LLM interface
+- [Agno](https://github.com/agno-agi/agno) - Multi-model LLM framework
