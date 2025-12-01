@@ -82,7 +82,7 @@ The alignment engine is the **core** of Soldier's turn processing, but operates 
 │  │  Input: message + conversation history                                 │ │
 │  │  Output: user_intent, entities, sentiment, scenario_signal             │ │
 │  │                                                                         │ │
-│  │  Providers: LLMProvider (Haiku) | EmbeddingProvider (fallback)         │ │
+│  │  Providers: LLMExecutor (Haiku) | EmbeddingProvider (fallback)         │ │
 │  └────────────────────────────────────────────────────────────────────────┘ │
 │      │                                                                       │
 │      ▼                                                                       │
@@ -114,7 +114,7 @@ The alignment engine is the **core** of Soldier's turn processing, but operates 
 │  │  Input: context + candidate rules + current scenario state             │ │
 │  │  Output: filtered rules + scenario decision                            │ │
 │  │                                                                         │ │
-│  │  Providers: LLMProvider (Haiku - fast yes/no decisions)                │ │
+│  │  Providers: LLMExecutor (Haiku - fast yes/no decisions)                │ │
 │  └────────────────────────────────────────────────────────────────────────┘ │
 │      │                                                                       │
 │      ▼                                                                       │
@@ -134,7 +134,7 @@ The alignment engine is the **core** of Soldier's turn processing, but operates 
 │  │  - Build prompt with rules, memory, tools, scenario                    │ │
 │  │  - Call LLM                                                            │ │
 │  │                                                                         │ │
-│  │  Providers: LLMProvider (Sonnet - best quality)                        │ │
+│  │  Providers: LLMExecutor (Sonnet - best quality)                        │ │
 │  └────────────────────────────────────────────────────────────────────────┘ │
 │      │                                                                       │
 │      ▼                                                                       │
@@ -146,7 +146,7 @@ The alignment engine is the **core** of Soldier's turn processing, but operates 
 │  │  - Regenerate if violation                                             │ │
 │  │  - Fallback to template if still violating                             │ │
 │  │                                                                         │ │
-│  │  Providers: LLMProvider (optional self-critique)                       │ │
+│  │  Providers: LLMExecutor (optional self-critique)                       │ │
 │  └────────────────────────────────────────────────────────────────────────┘ │
 │      │                                                                       │
 │      ▼                                                                       │
@@ -161,41 +161,39 @@ The alignment engine is the **core** of Soldier's turn processing, but operates 
 
 The alignment engine uses pluggable providers for each AI capability:
 
-### LLMProvider
+### LLMExecutor
 
 ```python
-class LLMProvider(ABC):
-    """Interface for Large Language Model providers."""
+class LLMExecutor:
+    """Unified LLM interface using Agno for model routing."""
 
-    @abstractmethod
     async def generate(
         self,
-        prompt: str,
+        messages: list[LLMMessage],
         max_tokens: int = 1024,
         temperature: float = 0.7,
         stop_sequences: list[str] | None = None,
     ) -> LLMResponse:
-        """Generate text completion."""
+        """Generate text completion with automatic fallback."""
         pass
 
-    @abstractmethod
     async def generate_structured(
         self,
-        prompt: str,
+        messages: list[LLMMessage],
         schema: type[BaseModel],
     ) -> BaseModel:
         """Generate structured output matching schema."""
         pass
 ```
 
-**Implementations**:
-| Provider | Models | Best For |
-|----------|--------|----------|
-| `AnthropicProvider` | claude-3-haiku, claude-sonnet-4-5-20250514, claude-opus-4 | General use, best quality |
-| `OpenAIProvider` | gpt-4o, gpt-4o-mini | Alternative, function calling |
-| `BedrockProvider` | Various | AWS integration |
-| `VertexProvider` | Gemini | Google Cloud |
-| `OllamaProvider` | Llama, Mistral | Local/self-hosted |
+**Model Routing**: Model strings drive routing to Agno backends:
+| Model Prefix | Backend | Example |
+|--------------|---------|---------|
+| `openrouter/` | Agno OpenRouter | `openrouter/anthropic/claude-3-haiku` |
+| `anthropic/` | Agno Claude | `anthropic/claude-sonnet-4-5-20250514` |
+| `openai/` | Agno OpenAIChat | `openai/gpt-4o` |
+| `groq/` | Agno Groq | `groq/llama-3.1-70b` |
+| `mock/` | MockLLMProvider | `mock/test` (testing) |
 
 ### EmbeddingProvider
 
@@ -1561,7 +1559,7 @@ class Context(BaseModel):
 
 | Mode | Provider | Speed | Quality | Use Case |
 |------|----------|-------|---------|----------|
-| `llm` | LLMProvider | ~200ms | High | Production (recommended) |
+| `llm` | LLMExecutor | ~200ms | High | Production (recommended) |
 | `embedding_only` | EmbeddingProvider | ~50ms | Medium | Cost-sensitive |
 | `disabled` | None | ~0ms | Low | Maximum speed |
 

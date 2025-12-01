@@ -256,13 +256,9 @@ providers/
 │
 ├── llm/                    # Large Language Models
 │   ├── __init__.py
-│   ├── base.py             # LLMProvider interface
-│   ├── anthropic.py        # AnthropicProvider (Claude)
-│   ├── openai.py           # OpenAIProvider (GPT-4, etc.)
-│   ├── bedrock.py          # AWSBedrockProvider
-│   ├── vertex.py           # GoogleVertexProvider
-│   ├── ollama.py           # OllamaProvider (local)
-│   └── mock.py             # MockProvider (testing)
+│   ├── base.py             # LLMMessage, LLMResponse, errors
+│   ├── executor.py         # LLMExecutor (uses Agno for routing)
+│   └── mock.py             # MockLLMProvider (testing)
 │
 ├── embedding/              # Embedding Models
 │   ├── __init__.py
@@ -283,23 +279,21 @@ providers/
 
 **Key Interfaces**:
 ```python
-# providers/llm/base.py
-class LLMProvider(ABC):
-    """Interface for LLM providers."""
+# providers/llm/executor.py
+class LLMExecutor:
+    """Unified LLM interface using Agno for model routing."""
 
-    @abstractmethod
     async def generate(
         self,
-        prompt: str,
+        messages: list[LLMMessage],
         max_tokens: int = 1024,
         temperature: float = 0.7,
         stop_sequences: list[str] | None = None,
     ) -> LLMResponse: ...
 
-    @abstractmethod
     async def generate_structured(
         self,
-        prompt: str,
+        messages: list[LLMMessage],
         schema: type[BaseModel],
     ) -> BaseModel: ...
 
@@ -573,7 +567,7 @@ tests/
 4. **AuditStore** — Immutable history
 
 **Providers** (external services):
-1. **LLMProvider** — Text generation (Anthropic, OpenAI, Bedrock, etc.)
+1. **LLMExecutor** — Text generation via Agno (OpenRouter, Anthropic, OpenAI, Groq)
 2. **EmbeddingProvider** — Vector embeddings (OpenAI, Cohere, Voyage, etc.)
 3. **RerankProvider** — Result reranking (Cohere, Voyage, CrossEncoder)
 

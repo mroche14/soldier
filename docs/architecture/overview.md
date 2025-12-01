@@ -121,7 +121,7 @@ See [configuration.md](./configuration.md) for full deployment configuration opt
 │       ▼             ▼             ▼             ▼             ▼                  │
 │   ┌─────────────────────────────────────────────────────────────────────────┐   │
 │   │                           PROVIDERS                                      │   │
-│   │   LLMProvider  │  EmbeddingProvider  │  RerankProvider                  │   │
+│   │   LLMExecutor  │  EmbeddingProvider  │  RerankProvider                  │   │
 │   └─────────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                        │
@@ -209,13 +209,13 @@ model = "claude-sonnet-4-5-20250514"
 
 ### 3. Providers
 
-External AI services accessed via abstract interfaces. All providers use **LiteLLM** for unified access with fallback chains.
+External AI services accessed via abstract interfaces. LLM providers use **Agno** for unified access with fallback chains.
 
 **Core Providers (Alignment Engine):**
 
 | Provider | Purpose | Implementations |
 |----------|---------|-----------------|
-| **LLMProvider** | Text generation | Anthropic, OpenAI, Bedrock, Vertex, Ollama |
+| **LLMExecutor** | Text generation | Agno (OpenRouter, Anthropic, OpenAI, Groq) |
 | **EmbeddingProvider** | Vector embeddings | OpenAI, Cohere, Voyage, SentenceTransformers |
 | **RerankProvider** | Result reranking | Cohere, Voyage, CrossEncoder |
 
@@ -268,7 +268,7 @@ See [ADR-001](../design/decisions/001-storage-choice.md) for full interface defi
    - Get conversation history (last N turns)
    │
    ▼
-4. CONTEXT EXTRACTION (LLMProvider)
+4. CONTEXT EXTRACTION (LLMExecutor)
    - Analyze message + history
    - Extract: intent, entities, sentiment
    - Output: Context object
@@ -284,7 +284,7 @@ See [ADR-001](../design/decisions/001-storage-choice.md) for full interface defi
    - Re-order candidates by relevance
    │
    ▼
-7. LLM FILTER (LLMProvider)
+7. LLM FILTER (LLMExecutor)
    - Judge which rules apply
    - Decide scenario action (start/continue/exit)
    │
@@ -294,7 +294,7 @@ See [ADR-001](../design/decisions/001-storage-choice.md) for full interface defi
    - Update session variables
    │
    ▼
-9. RESPONSE GENERATION (LLMProvider)
+9. RESPONSE GENERATION (LLMExecutor)
    - Check for EXCLUSIVE template
    - Build prompt with rules, memory, tools
    - Call LLM
@@ -477,7 +477,7 @@ export SOLDIER_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
 
 | Extension | Mechanism |
 |-----------|-----------|
-| New LLM provider | Implement `LLMProvider` interface |
+| New LLM provider | Add model string routing in `LLMExecutor` (uses Agno) |
 | New embedding model | Implement `EmbeddingProvider` interface |
 | New reranker | Implement `RerankProvider` interface |
 | New config backend | Implement `ConfigStore` interface |

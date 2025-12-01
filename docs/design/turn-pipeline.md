@@ -179,7 +179,7 @@ async def extract_context(
     Extract user intent and context from message + history.
 
     Providers:
-    - LLMProvider: Full understanding via LLM
+    - LLMExecutor: Full understanding via LLM
     - EmbeddingProvider: Lightweight embedding-only mode
     """
 
@@ -463,7 +463,7 @@ async def filter_rules(
     is handled by the dedicated ScenarioFilter (step 5b).
 
     Providers:
-    - LLMProvider: Fast model for yes/no decisions
+    - LLMExecutor: Fast model for yes/no decisions
     """
 
     if not config.enabled:
@@ -701,7 +701,7 @@ async def generate_response(
     Generate the agent response.
 
     Providers:
-    - LLMProvider: Main generation model (best quality)
+    - LLMExecutor: Main generation model (best quality)
     """
 
     # Check for EXCLUSIVE template (bypasses LLM)
@@ -819,7 +819,7 @@ async def enforce_constraints(
     Validate response against hard constraint rules.
 
     Providers:
-    - LLMProvider: For self-critique (optional)
+    - LLMExecutor: For self-critique (optional)
     """
 
     hard_rules = [r for r in matched_rules if r.is_hard_constraint]

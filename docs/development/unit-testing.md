@@ -477,7 +477,7 @@ Use the built-in mock providers for AI capabilities:
 
 ```python
 @pytest.fixture
-def llm_provider():
+def llm_executor():
     """Mock LLM that returns predictable responses."""
     return MockLLMProvider(
         default_response="This is a test response",
@@ -690,9 +690,9 @@ class TestContextExtractor:
     """Unit tests for ContextExtractor."""
 
     @pytest.fixture
-    def extractor(self, llm_provider):
+    def extractor(self, llm_executor):
         return LLMContextExtractor(
-            llm_provider=llm_provider,
+            llm_executor=llm_executor,
             history_turns=5,
         )
 
