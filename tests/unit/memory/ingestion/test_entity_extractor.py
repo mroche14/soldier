@@ -46,7 +46,7 @@ class TestEntityExtractorParsing:
         from soldier.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(min_confidence="medium")
-        extractor = EntityExtractor(llm_provider=llm_provider, config=config)
+        extractor = EntityExtractor(llm_executor=llm_provider, config=config)
 
         result = await extractor.extract(episode)
 
@@ -60,7 +60,7 @@ class TestEntityExtractorParsing:
         from soldier.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(min_confidence="high")
-        extractor = EntityExtractor(llm_provider=llm_provider, config=config)
+        extractor = EntityExtractor(llm_executor=llm_provider, config=config)
 
         result = await extractor.extract(episode)
 
@@ -78,7 +78,7 @@ class TestEntityExtractorBatch:
         from soldier.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(batch_size=5)
-        extractor = EntityExtractor(llm_provider=llm_provider, config=config)
+        extractor = EntityExtractor(llm_executor=llm_provider, config=config)
 
         episodes = [
             Episode(
@@ -114,7 +114,7 @@ class TestEntityExtractorErrorHandling:
         from soldier.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(timeout_ms=100)
-        extractor = EntityExtractor(llm_provider=TimeoutLLMProvider(), config=config)
+        extractor = EntityExtractor(llm_executor=TimeoutLLMProvider(), config=config)
 
         # Should raise ExtractionError, not timeout
         with pytest.raises((ExtractionError, Exception)):

@@ -1,16 +1,24 @@
 """Mock LLM provider for testing."""
 
+import json
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, TypeVar
 
-from soldier.providers.llm.base import LLMMessage, LLMProvider, LLMResponse
+from pydantic import BaseModel
+
+from soldier.providers.llm.base import LLMMessage, LLMResponse, TokenUsage
+
+T = TypeVar("T", bound=BaseModel)
 
 
-class MockLLMProvider(LLMProvider):
+class MockLLMProvider:
     """Mock LLM provider for testing.
 
     Returns configurable responses without making actual API calls.
     Useful for unit testing and development.
+
+    This is a standalone class (not extending any base) for backwards
+    compatibility with existing tests.
     """
 
     def __init__(
@@ -96,7 +104,7 @@ class MockLLMProvider(LLMProvider):
             },
         )
 
-    async def generate_stream(
+    def generate_stream(
         self,
         messages: list[LLMMessage],
         *,
@@ -107,6 +115,20 @@ class MockLLMProvider(LLMProvider):
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """Stream mock response in chunks."""
+        return self._generate_stream_impl(
+            messages, model, max_tokens, temperature, stop_sequences, **kwargs
+        )
+
+    async def _generate_stream_impl(
+        self,
+        messages: list[LLMMessage],
+        model: str | None,
+        max_tokens: int,
+        temperature: float,
+        stop_sequences: list[str] | None,
+        **kwargs: Any,
+    ) -> AsyncIterator[str]:
+        """Internal stream implementation."""
         # Get full response first
         response = await self.generate(
             messages,
@@ -121,6 +143,84 @@ class MockLLMProvider(LLMProvider):
         content = response.content
         for i in range(0, len(content), self._stream_chunk_size):
             yield content[i:i + self._stream_chunk_size]
+
+    async def generate_structured(
+        self,
+        prompt: str,
+        schema: type[T],
+        *,
+        system_prompt: str | None = None,
+        max_tokens: int = 1024,
+        **kwargs: Any,
+    ) -> tuple[T, LLMResponse]:
+        """Generate mock structured output matching a Pydantic schema.
+
+        Creates a valid instance of the schema with default/mock values.
+
+        Args:
+            prompt: User prompt
+            schema: Pydantic model class to parse response into
+            system_prompt: Optional system prompt
+            max_tokens: Maximum tokens to generate
+            **kwargs: Provider-specific options
+
+        Returns:
+            Tuple of (parsed model instance, LLMResponse)
+        """
+        # Record the call
+        self._call_history.append({
+            "method": "generate_structured",
+            "prompt": prompt,
+            "schema": schema.__name__,
+            "system_prompt": system_prompt,
+            "max_tokens": max_tokens,
+            "kwargs": kwargs,
+        })
+
+        # Generate a mock instance with default values
+        # This will use Pydantic's model construction with optional fields
+        mock_data = self._generate_mock_data(schema)
+        parsed = schema.model_validate(mock_data)
+
+        # Create response
+        content = json.dumps(mock_data)
+        usage = TokenUsage(
+            prompt_tokens=len(prompt) // 4,
+            completion_tokens=len(content) // 4,
+            total_tokens=(len(prompt) + len(content)) // 4,
+        )
+
+        response = LLMResponse(
+            content=content,
+            model=self._default_model,
+            finish_reason="stop",
+            usage=usage,
+        )
+
+        return parsed, response
+
+    def _generate_mock_data(self, schema: type[BaseModel]) -> dict[str, Any]:
+        """Generate mock data for a Pydantic schema."""
+        result: dict[str, Any] = {}
+        for field_name, field_info in schema.model_fields.items():
+            annotation = field_info.annotation
+            if annotation is None:
+                result[field_name] = "mock"
+            elif annotation is str:
+                result[field_name] = f"mock_{field_name}"
+            elif annotation is int:
+                result[field_name] = 42
+            elif annotation is float:
+                result[field_name] = 3.14
+            elif annotation is bool:
+                result[field_name] = True
+            elif hasattr(annotation, "__origin__") and annotation.__origin__ is list:
+                result[field_name] = ["item1", "item2"]
+            elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
+                result[field_name] = self._generate_mock_data(annotation)
+            else:
+                result[field_name] = "mock"
+        return result
 
     async def count_tokens(self, text: str) -> int:
         """Count tokens (mock uses ~4 chars per token)."""

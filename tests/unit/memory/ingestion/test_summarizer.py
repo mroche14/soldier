@@ -41,7 +41,7 @@ class TestConversationSummarizerWindow:
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=config,
         )
@@ -73,7 +73,7 @@ class TestConversationSummarizerWindow:
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=config,
         )
@@ -107,7 +107,7 @@ class TestConversationSummarizerMeta:
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=config,
         )
@@ -146,7 +146,7 @@ class TestConversationSummarizerThreshold:
         config = SummarizationConfig()
         config.window.turns_per_summary = 10
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=config,
         )
@@ -175,7 +175,7 @@ class TestConversationSummarizerThreshold:
         config = SummarizationConfig()
         config.window.turns_per_summary = 10
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=config,
         )
@@ -208,7 +208,7 @@ class TestConversationSummarizerCompression:
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=config,
         )
@@ -252,7 +252,7 @@ class TestConversationSummarizerErrorHandling:
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
-            llm_provider=SlowLLMProvider(),
+            llm_executor=SlowLLMProvider(),
             memory_store=memory_store,
             config=config,
         )

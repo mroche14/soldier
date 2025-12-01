@@ -1,12 +1,13 @@
 """Conversation summarization for long conversations."""
 
+from typing import Any
 
 from soldier.config.models.pipeline import SummarizationConfig
 from soldier.memory.ingestion.errors import SummarizationError
 from soldier.memory.models.episode import Episode
 from soldier.memory.store import MemoryStore
 from soldier.observability.logging import get_logger
-from soldier.providers.llm.base import LLMMessage, LLMProvider
+from soldier.providers.llm import LLMMessage
 
 logger = get_logger(__name__)
 
@@ -16,18 +17,18 @@ class ConversationSummarizer:
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_executor: Any,
         memory_store: MemoryStore,
         config: SummarizationConfig,
     ):
         """Initialize conversation summarizer.
 
         Args:
-            llm_provider: LLM provider for summarization
+            llm_executor: LLM executor (or any object with compatible generate method)
             memory_store: Memory store
             config: Summarization configuration
         """
-        self._llm_provider = llm_provider
+        self._llm_executor = llm_executor
         self._memory_store = memory_store
         self._config = config
 
@@ -69,9 +70,8 @@ and what was resolved. Be brief (1-2 paragraphs max).""",
                 ),
             ]
 
-            response = await self._llm_provider.generate(
+            response = await self._llm_executor.generate(
                 messages,
-                model=self._config.window.model,
                 max_tokens=self._config.window.max_tokens,
                 temperature=self._config.window.temperature,
             )
@@ -148,9 +148,8 @@ summaries into a high-level overview. Focus on major themes and outcomes.""",
                 ),
             ]
 
-            response = await self._llm_provider.generate(
+            response = await self._llm_executor.generate(
                 messages,
-                model=self._config.meta.model,
                 max_tokens=self._config.meta.max_tokens,
                 temperature=self._config.meta.temperature,
             )

@@ -11,12 +11,11 @@ from typing import TYPE_CHECKING, Any
 
 from soldier.alignment.migration.models import GapFillResult, GapFillSource
 from soldier.observability.logging import get_logger
-from soldier.providers.llm.base import LLMMessage
+from soldier.providers.llm import LLMMessage
 
 if TYPE_CHECKING:
     from soldier.conversation.models import Session
     from soldier.memory.profile import ProfileStore
-    from soldier.providers.llm.base import LLMProvider
 
 logger = get_logger(__name__)
 
@@ -64,16 +63,16 @@ class GapFillService:
     def __init__(
         self,
         profile_store: "ProfileStore | None" = None,
-        llm_provider: "LLMProvider | None" = None,
+        llm_executor: Any = None,
     ) -> None:
         """Initialize the gap fill service.
 
         Args:
             profile_store: Store for customer profiles
-            llm_provider: LLM provider for conversation extraction
+            llm_executor: LLM executor for conversation extraction
         """
         self._profile_store = profile_store
-        self._llm_provider = llm_provider
+        self._llm_executor = llm_executor
 
     async def fill_gap(
         self,
@@ -121,7 +120,7 @@ class GapFillService:
             return result
 
         # Try conversation extraction (LLM)
-        if self._llm_provider:
+        if self._llm_executor:
             result = await self.try_conversation_extraction(
                 field_name=field_name,
                 session=session,
@@ -248,7 +247,7 @@ class GapFillService:
         Returns:
             GapFillResult with extraction or not found
         """
-        if not self._llm_provider:
+        if not self._llm_executor:
             return GapFillResult(
                 field_name=field_name,
                 filled=False,
@@ -279,7 +278,7 @@ class GapFillService:
                 LLMMessage(role="system", content="You extract structured data from conversations."),
                 LLMMessage(role="user", content=prompt),
             ]
-            response = await self._llm_provider.generate(
+            response = await self._llm_executor.generate(
                 messages=messages,
                 max_tokens=200,
             )
