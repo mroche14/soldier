@@ -5,7 +5,7 @@ customers return after a scenario version change.
 """
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from soldier.alignment.migration.composite import CompositeMapper
@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     from soldier.alignment.stores.config_store import ConfigStore
     from soldier.conversation.store import SessionStore
     from soldier.memory.profile import ProfileStore
-    from soldier.providers.llm.base import LLMProvider
 
 logger = get_logger(__name__)
 
@@ -50,7 +49,7 @@ class MigrationExecutor:
         session_store: "SessionStore",
         config: ScenarioMigrationConfig | None = None,
         profile_store: "ProfileStore | None" = None,
-        llm_provider: "LLMProvider | None" = None,
+        llm_executor: Any = None,
     ) -> None:
         """Initialize the migration executor.
 
@@ -59,7 +58,7 @@ class MigrationExecutor:
             session_store: Store for sessions
             config: Migration configuration
             profile_store: Optional profile store for gap fill
-            llm_provider: Optional LLM for conversation extraction
+            llm_executor: Optional LLM executor for conversation extraction
         """
         self._config_store = config_store
         self._session_store = session_store
@@ -67,7 +66,7 @@ class MigrationExecutor:
         self._composite_mapper = CompositeMapper(config_store)
         self._gap_fill_service = GapFillService(
             profile_store=profile_store,
-            llm_provider=llm_provider,
+            llm_executor=llm_executor,
         )
 
     async def reconcile(

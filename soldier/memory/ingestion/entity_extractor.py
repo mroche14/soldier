@@ -22,7 +22,7 @@ from soldier.memory.models.episode import Episode
 from soldier.memory.models.relationship import Relationship
 from soldier.memory.store import MemoryStore
 from soldier.observability.logging import get_logger
-from soldier.providers.llm.base import LLMMessage, LLMProvider
+from soldier.providers.llm import LLMMessage
 
 logger = get_logger(__name__)
 
@@ -32,16 +32,16 @@ class EntityExtractor:
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_executor: Any,
         config: EntityExtractionConfig,
     ):
         """Initialize entity extractor.
 
         Args:
-            llm_provider: LLM provider for extraction
+            llm_executor: LLM executor (or any object with compatible generate method)
             config: Extraction configuration
         """
-        self._llm_provider = llm_provider
+        self._llm_executor = llm_executor
         self._config = config
 
     async def extract(
@@ -76,9 +76,8 @@ class EntityExtractor:
             ]
 
             response = await asyncio.wait_for(
-                self._llm_provider.generate(
+                self._llm_executor.generate(
                     messages,
-                    model=self._config.model,
                     max_tokens=self._config.max_tokens,
                     temperature=self._config.temperature,
                 ),

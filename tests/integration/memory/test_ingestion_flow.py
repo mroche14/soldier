@@ -76,7 +76,7 @@ class TestFullIngestionFlow:
         task_queue = InMemoryTaskQueue()
 
         extractor = EntityExtractor(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             config=EntityExtractionConfig(),
         )
 
@@ -87,7 +87,7 @@ class TestFullIngestionFlow:
         )
 
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=SummarizationConfig(),
         )
@@ -249,7 +249,7 @@ class TestSummarizationQuality:
     ):
         """Should preserve key facts in summaries."""
         summarizer = ConversationSummarizer(
-            llm_provider=llm_provider,
+            llm_executor=llm_provider,
             memory_store=memory_store,
             config=SummarizationConfig(),
         )
