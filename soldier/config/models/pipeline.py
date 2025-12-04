@@ -1,22 +1,146 @@
 """Turn pipeline configuration models."""
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from soldier.config.models.selection import SelectionConfig
 
 ExtractionMode = Literal["llm", "embedding", "hybrid"]
+ProviderSortMode = Literal["price", "latency", "throughput"]
 
 
-class ContextExtractionConfig(BaseModel):
+class OpenRouterProviderConfig(BaseModel):
+    """OpenRouter-specific provider routing configuration.
+
+    Controls how OpenRouter routes requests to underlying providers.
+    See: https://openrouter.ai/docs#provider-routing
+    """
+
+    provider_order: list[str] | None = Field(
+        default=None,
+        description="Ordered list of provider names to try (e.g., ['Hyperbolic', 'Together'])",
+    )
+    provider_sort: ProviderSortMode | None = Field(
+        default=None,
+        description="Sort providers by: 'price', 'latency', or 'throughput'",
+    )
+    allow_fallbacks: bool = Field(
+        default=True,
+        description="Allow fallback to other providers if specified ones fail",
+    )
+    ignore_providers: list[str] = Field(
+        default_factory=list,
+        description="List of provider names to exclude from routing",
+    )
+
+    def to_request_params(self) -> dict | None:
+        """Convert to OpenRouter request_params format."""
+        provider = {}
+
+        if self.provider_order:
+            provider["order"] = self.provider_order
+        if self.provider_sort:
+            provider["sort"] = self.provider_sort
+        if self.ignore_providers:
+            provider["ignore"] = self.ignore_providers
+        # Only include allow_fallbacks if explicitly set to False
+        # (True is the default on OpenRouter side)
+        if not self.allow_fallbacks:
+            provider["allow_fallbacks"] = False
+
+        if provider:
+            return {"provider": provider}
+        return None
+
+    def has_config(self) -> bool:
+        """Check if any provider routing config is set."""
+        return bool(
+            self.provider_order
+            or self.provider_sort
+            or self.ignore_providers
+            or not self.allow_fallbacks
+        )
+
+
+class OpenRouterConfigMixin(BaseModel):
+    """Mixin for step configs that support OpenRouter provider routing.
+
+    Allows flat config structure:
+        [pipeline.context_extraction]
+        provider_order = ["cerebras", "groq"]
+        provider_sort = "latency"
+
+    Instead of nested:
+        [pipeline.context_extraction.openrouter]
+        provider_order = ["cerebras", "groq"]
+    """
+
+    # Flat fields for convenience
+    provider_order: list[str] | None = Field(
+        default=None,
+        description="OpenRouter: ordered list of provider names to try",
+    )
+    provider_sort: ProviderSortMode | None = Field(
+        default=None,
+        description="OpenRouter: sort providers by 'price', 'latency', or 'throughput'",
+    )
+    allow_fallbacks: bool = Field(
+        default=True,
+        description="OpenRouter: allow fallback to other providers if specified ones fail",
+    )
+    ignore_providers: list[str] = Field(
+        default_factory=list,
+        description="OpenRouter: list of provider names to exclude from routing",
+    )
+
+    # Nested config (populated from flat fields or directly)
+    openrouter: OpenRouterProviderConfig | None = Field(
+        default=None,
+        description="OpenRouter-specific provider routing (only applies to openrouter/* models)",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def build_openrouter_config(cls, data: Any) -> Any:
+        """Build openrouter config from flat fields if not explicitly provided."""
+        if not isinstance(data, dict):
+            return data
+
+        # If openrouter is already set as a nested dict, leave it alone
+        if data.get("openrouter") is not None:
+            return data
+
+        # Check if any flat OpenRouter fields are set
+        provider_order = data.get("provider_order")
+        provider_sort = data.get("provider_sort")
+        allow_fallbacks = data.get("allow_fallbacks", True)
+        ignore_providers = data.get("ignore_providers", [])
+
+        # Build openrouter config from flat fields if any are set
+        if provider_order or provider_sort or ignore_providers or not allow_fallbacks:
+            data["openrouter"] = {
+                "provider_order": provider_order,
+                "provider_sort": provider_sort,
+                "allow_fallbacks": allow_fallbacks,
+                "ignore_providers": ignore_providers,
+            }
+
+        return data
+
+
+class ContextExtractionConfig(OpenRouterConfigMixin):
     """Context extraction step configuration."""
 
     enabled: bool = Field(default=True, description="Enable this step")
     mode: ExtractionMode = Field(default="llm", description="Extraction mode")
-    llm_provider: str = Field(
-        default="haiku",
-        description="LLM provider for extraction",
+    model: str = Field(
+        default="openrouter/anthropic/claude-3-haiku-20240307",
+        description="Full model identifier (e.g., 'openrouter/anthropic/claude-3-haiku-20240307')",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=list,
+        description="Fallback models if primary fails",
     )
     history_turns: int = Field(
         default=5,
@@ -67,13 +191,17 @@ class RerankingConfig(BaseModel):
     )
 
 
-class RuleFilteringConfig(BaseModel):
+class RuleFilteringConfig(OpenRouterConfigMixin):
     """Rule filtering step configuration."""
 
     enabled: bool = Field(default=True, description="Enable this step")
-    llm_provider: str = Field(
-        default="haiku",
-        description="LLM provider for filtering",
+    model: str = Field(
+        default="openrouter/anthropic/claude-3-haiku-20240307",
+        description="Full model identifier",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=list,
+        description="Fallback models if primary fails",
     )
     batch_size: int = Field(
         default=5,
@@ -82,13 +210,17 @@ class RuleFilteringConfig(BaseModel):
     )
 
 
-class ScenarioFilteringConfig(BaseModel):
+class ScenarioFilteringConfig(OpenRouterConfigMixin):
     """Scenario filtering step configuration."""
 
     enabled: bool = Field(default=True, description="Enable this step")
-    llm_provider: str = Field(
-        default="haiku",
-        description="LLM provider for scenario evaluation",
+    model: str = Field(
+        default="openrouter/anthropic/claude-3-haiku-20240307",
+        description="Full model identifier",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=list,
+        description="Fallback models if primary fails",
     )
     relocalize_on_inconsistent: bool = Field(
         default=True,
@@ -125,13 +257,17 @@ class ToolExecutionConfig(BaseModel):
 LLMFilteringConfig = RuleFilteringConfig
 
 
-class GenerationConfig(BaseModel):
+class GenerationConfig(OpenRouterConfigMixin):
     """Response generation step configuration."""
 
     enabled: bool = Field(default=True, description="Enable this step")
-    llm_provider: str = Field(
-        default="sonnet",
-        description="LLM provider for generation",
+    model: str = Field(
+        default="openrouter/anthropic/claude-sonnet-4-5-20250514",
+        description="Full model identifier",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=list,
+        description="Fallback models if primary fails",
     )
     temperature: float = Field(
         default=0.7,
@@ -161,12 +297,18 @@ class EnforcementConfig(BaseModel):
     )
 
 
-class EntityExtractionConfig(BaseModel):
+class EntityExtractionConfig(OpenRouterConfigMixin):
     """Entity extraction configuration."""
 
     enabled: bool = Field(default=True, description="Enable entity extraction")
-    llm_provider: str = Field(default="anthropic", description="LLM provider name")
-    model: str = Field(default="haiku", description="Model to use")
+    model: str = Field(
+        default="openrouter/anthropic/claude-3-haiku-20240307",
+        description="Full model identifier",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=list,
+        description="Fallback models if primary fails",
+    )
     max_tokens: int = Field(default=1024, gt=0, description="Max tokens")
     temperature: float = Field(
         default=0.3, ge=0.0, le=2.0, description="LLM temperature"
@@ -201,19 +343,25 @@ class EntityDeduplicationConfig(BaseModel):
     )
 
 
-class WindowSummarizationConfig(BaseModel):
+class WindowSummarizationConfig(OpenRouterConfigMixin):
     """Window summarization configuration."""
 
     turns_per_summary: int = Field(
         default=20, gt=0, description="Turns per summary window"
     )
-    llm_provider: str = Field(default="anthropic", description="LLM provider")
-    model: str = Field(default="haiku", description="Model to use")
+    model: str = Field(
+        default="openrouter/anthropic/claude-3-haiku-20240307",
+        description="Full model identifier",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=list,
+        description="Fallback models if primary fails",
+    )
     max_tokens: int = Field(default=256, gt=0, description="Max tokens")
     temperature: float = Field(default=0.5, ge=0.0, le=2.0, description="Temperature")
 
 
-class MetaSummarizationConfig(BaseModel):
+class MetaSummarizationConfig(OpenRouterConfigMixin):
     """Meta-summarization configuration."""
 
     summaries_per_meta: int = Field(
@@ -222,8 +370,14 @@ class MetaSummarizationConfig(BaseModel):
     enabled_at_turn_count: int = Field(
         default=100, gt=0, description="Enable meta-summaries at turn count"
     )
-    llm_provider: str = Field(default="anthropic", description="LLM provider")
-    model: str = Field(default="haiku", description="Model to use")
+    model: str = Field(
+        default="openrouter/anthropic/claude-3-haiku-20240307",
+        description="Full model identifier",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=list,
+        description="Fallback models if primary fails",
+    )
     max_tokens: int = Field(default=512, gt=0, description="Max tokens")
     temperature: float = Field(default=0.5, ge=0.0, le=2.0, description="Temperature")
 

@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from soldier.alignment.models import Agent, AgentSettings
-from soldier.api.dependencies import ConfigStoreDep
+from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import AgentNotFoundError
 from soldier.api.middleware.auth import TenantContextDep
 from soldier.api.models.crud import AgentCreate, AgentResponse, AgentStats, AgentUpdate
@@ -44,7 +44,7 @@ def _map_agent_to_response(agent: Agent, stats: AgentStats | None = None) -> Age
 @router.get("", response_model=PaginatedResponse[AgentResponse])
 async def list_agents(
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     enabled: bool | None = Query(default=None, description="Filter by enabled status"),
@@ -118,7 +118,7 @@ async def list_agents(
 async def create_agent(
     request: AgentCreate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> AgentResponse:
     """Create a new agent.
 
@@ -161,7 +161,7 @@ async def create_agent(
 async def get_agent(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     include_stats: bool = Query(default=False, description="Include usage statistics"),
 ) -> AgentResponse:
     """Get an agent by ID.
@@ -206,7 +206,7 @@ async def update_agent(
     agent_id: UUID,
     request: AgentUpdate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> AgentResponse:
     """Update an agent.
 
@@ -261,7 +261,7 @@ async def update_agent(
 async def delete_agent(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> None:
     """Delete an agent (soft delete).
 

@@ -356,12 +356,12 @@ class ReconciliationResult(BaseModel):
 
 
 # =============================================================================
-# Gap Fill Models (T079 - Phase 8)
+# Field Resolution Models (T079 - Phase 8)
 # =============================================================================
 
 
-class GapFillSource(str, Enum):
-    """Source of gap-filled data."""
+class ResolutionSource(str, Enum):
+    """Source of resolved field data."""
 
     PROFILE = "profile"
     SESSION = "session"
@@ -369,20 +369,55 @@ class GapFillSource(str, Enum):
     NOT_FOUND = "not_found"
 
 
-class GapFillResult(BaseModel):
-    """Result of gap fill attempt."""
+class FieldResolutionResult(BaseModel):
+    """Result of field resolution attempt.
+
+    Enhanced with:
+    - field_definition reference for schema context
+    - validation_errors for schema validation results
+    - source_item_id/source_item_type for lineage tracking
+    """
 
     model_config = ConfigDict(frozen=False, validate_assignment=True)
 
-    field_name: str = Field(..., description="Field that was filled")
+    field_name: str = Field(..., description="Field that was resolved")
     filled: bool = Field(..., description="Whether value was found")
-    value: Any | None = Field(default=None, description="Extracted value")
-    source: GapFillSource = Field(
-        default=GapFillSource.NOT_FOUND, description="Where value came from"
+    value: Any | None = Field(default=None, description="Resolved value")
+    source: ResolutionSource = Field(
+        default=ResolutionSource.NOT_FOUND, description="Where value came from"
     )
     confidence: float = Field(default=1.0, description="Extraction confidence")
     needs_confirmation: bool = Field(default=False, description="Requires user confirmation")
     extraction_quote: str | None = Field(default=None, description="Source text if extracted")
+
+    # Schema integration (T152)
+    field_definition_id: UUID | None = Field(
+        default=None, description="Reference to ProfileFieldDefinition used"
+    )
+
+    # Validation results (T153)
+    validation_errors: list[str] = Field(
+        default_factory=list, description="Validation errors from schema validation"
+    )
+
+    # Lineage tracking (T154)
+    source_item_id: UUID | None = Field(
+        default=None, description="ID of item this was derived from"
+    )
+    source_item_type: str | None = Field(
+        default=None, description="Type of source item (profile_field, profile_asset, session, etc.)"
+    )
+
+    # Scenario requirement metadata (set by fill_scenario_requirements)
+    required_level: str | None = Field(
+        default=None, description="Requirement level: hard or soft"
+    )
+    fallback_action: str | None = Field(
+        default=None, description="Fallback action: ask, skip, block, extract"
+    )
+    collection_order: int = Field(
+        default=0, description="Order in which to collect if asking user"
+    )
 
 
 # =============================================================================

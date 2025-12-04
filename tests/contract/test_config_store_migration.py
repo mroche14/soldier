@@ -16,8 +16,7 @@ from soldier.alignment.migration.models import (
     MigrationSummary,
     TransformationMap,
 )
-from soldier.alignment.models import Scenario, ScenarioStep
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
 
 
 class ConfigStoreMigrationContract(ABC):
@@ -250,9 +249,9 @@ class ConfigStoreMigrationContract(ABC):
         assert retrieved.approved_at is not None
 
 
-class TestInMemoryConfigStoreMigration(ConfigStoreMigrationContract):
-    """Test InMemoryConfigStore against the migration contract."""
+class TestInMemoryAgentConfigStoreMigration(ConfigStoreMigrationContract):
+    """Test InMemoryAgentConfigStore against the migration contract."""
 
     @pytest.fixture
     def store(self):
-        return InMemoryConfigStore()
+        return InMemoryAgentConfigStore()

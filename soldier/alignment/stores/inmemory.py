@@ -1,4 +1,4 @@
-"""In-memory implementation of ConfigStore."""
+"""In-memory implementation of AgentConfigStore."""
 
 from datetime import UTC, datetime
 from uuid import UUID
@@ -13,12 +13,12 @@ from soldier.alignment.models import (
     ToolActivation,
     Variable,
 )
-from soldier.alignment.stores.config_store import ConfigStore
+from soldier.alignment.stores.agent_config_store import AgentConfigStore
 from soldier.utils.vector import cosine_similarity
 
 
-class InMemoryConfigStore(ConfigStore):
-    """In-memory implementation of ConfigStore for testing and development.
+class InMemoryAgentConfigStore(AgentConfigStore):
+    """In-memory implementation of AgentConfigStore for testing and development.
 
     Uses simple dict storage with linear scan for queries.
     Not suitable for production use.

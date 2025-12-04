@@ -800,6 +800,8 @@ Tests are in `tests/unit/alignment/migration/`:
 - Python 3.11+ + FastAPI, pydantic, pydantic-settings, structlog (existing); hashlib (stdlib for content hashing) (008-scenario-migration)
 - ConfigStore (migration plans, archived versions), SessionStore (pending_migration flag, step_history), ProfileStore (gap fill) (008-scenario-migration)
 - Python 3.11+ (using features like `tomllib`, `|` type unions) (009-production-stores-providers)
+- Python 3.11+ (required for tomllib) + FastAPI, Pydantic, structlog, redis, asyncpg, hatchet-sdk, SQLAlchemy (010-customer-context-vault)
+- PostgreSQL 14+ (pgvector), Redis 6+ (caching) (010-customer-context-vault)
 
 ## Recent Changes
 - 001-project-foundation: Added Python 3.11+ (required for `tomllib` built-in) + pydantic, pydantic-settings, structlog

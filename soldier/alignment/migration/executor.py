@@ -13,7 +13,7 @@ from soldier.alignment.migration.diff import (
     compute_node_content_hash,
     compute_scenario_checksum,
 )
-from soldier.alignment.migration.gap_fill import GapFillService
+from soldier.alignment.migration.field_resolver import MissingFieldResolver
 from soldier.alignment.migration.models import (
     AnchorTransformation,
     MigrationPlan,
@@ -27,7 +27,7 @@ from soldier.observability.logging import get_logger
 
 if TYPE_CHECKING:
     from soldier.alignment.models import Scenario
-    from soldier.alignment.stores.config_store import ConfigStore
+    from soldier.alignment.stores.agent_config_store import AgentConfigStore
     from soldier.conversation.store import SessionStore
     from soldier.memory.profile import ProfileStore
 
@@ -45,7 +45,7 @@ class MigrationExecutor:
 
     def __init__(
         self,
-        config_store: "ConfigStore",
+        config_store: "AgentConfigStore",
         session_store: "SessionStore",
         config: ScenarioMigrationConfig | None = None,
         profile_store: "ProfileStore | None" = None,
@@ -64,7 +64,7 @@ class MigrationExecutor:
         self._session_store = session_store
         self._config = config or ScenarioMigrationConfig()
         self._composite_mapper = CompositeMapper(config_store)
-        self._gap_fill_service = GapFillService(
+        self._missing_field_resolver = MissingFieldResolver(
             profile_store=profile_store,
             llm_executor=llm_executor,
         )
@@ -301,7 +301,7 @@ class MigrationExecutor:
                 if field not in required_fields:
                     required_fields.append(field)
 
-        # Try to fill missing fields using GapFillService
+        # Try to fill missing fields using MissingFieldResolver
         still_missing: list[str] = []
         filled_results = []
 
@@ -311,7 +311,7 @@ class MigrationExecutor:
                 continue
 
             # Try gap fill service
-            result = await self._gap_fill_service.fill_gap(
+            result = await self._missing_field_resolver.fill_gap(
                 field_name=field,
                 session=session,
             )
@@ -332,7 +332,7 @@ class MigrationExecutor:
 
         # Persist any extracted values to profile
         if filled_results:
-            await self._gap_fill_service.persist_extracted_values(
+            await self._missing_field_resolver.persist_extracted_values(
                 session=session,
                 results=filled_results,
             )

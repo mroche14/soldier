@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from soldier.alignment.engine import AlignmentResult
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
 from soldier.api.app import create_app
 from soldier.api.dependencies import (
     get_alignment_engine,
@@ -103,7 +103,7 @@ def app(
 
     app.dependency_overrides[get_tenant_context] = lambda: tenant_context
     app.dependency_overrides[get_settings] = lambda: mock_settings
-    app.dependency_overrides[get_config_store] = lambda: InMemoryConfigStore()
+    app.dependency_overrides[get_config_store] = lambda: InMemoryAgentConfigStore()
     app.dependency_overrides[get_session_store] = lambda: session_store
     app.dependency_overrides[get_audit_store] = lambda: audit_store
     app.dependency_overrides[get_alignment_engine] = lambda: mock_alignment_engine

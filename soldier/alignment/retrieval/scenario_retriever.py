@@ -5,7 +5,7 @@ from uuid import UUID
 from soldier.alignment.context.models import Context
 from soldier.alignment.retrieval.models import ScoredScenario
 from soldier.alignment.retrieval.selection import ScoredItem, create_selection_strategy
-from soldier.alignment.stores import ConfigStore
+from soldier.alignment.stores import AgentConfigStore
 from soldier.config.models.selection import SelectionConfig
 from soldier.observability.logging import get_logger
 from soldier.providers.embedding import EmbeddingProvider
@@ -24,7 +24,7 @@ class ScenarioRetriever:
 
     def __init__(
         self,
-        config_store: ConfigStore,
+        config_store: AgentConfigStore,
         embedding_provider: EmbeddingProvider,
         selection_config: SelectionConfig | None = None,
     ) -> None:

@@ -5,7 +5,7 @@ from typing import Any
 from uuid import UUID
 
 from soldier.alignment.models import PublishJob
-from soldier.alignment.stores.config_store import ConfigStore
+from soldier.alignment.stores.agent_config_store import AgentConfigStore
 from soldier.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +18,7 @@ class PublishService:
     the multi-stage publish process.
     """
 
-    def __init__(self, config_store: ConfigStore) -> None:
+    def __init__(self, config_store: AgentConfigStore) -> None:
         """Initialize publish service.
 
         Args:

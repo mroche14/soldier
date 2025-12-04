@@ -9,7 +9,7 @@ from soldier.alignment.models import Scope
 from soldier.alignment.retrieval.models import RuleSource
 from soldier.alignment.retrieval.reranker import RuleReranker
 from soldier.alignment.retrieval.rule_retriever import RuleRetriever
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.selection import SelectionConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
 from soldier.providers.rerank.mock import MockRerankProvider
@@ -49,8 +49,8 @@ def agent_id() -> UUID:
 
 
 @pytest.fixture
-def config_store() -> InMemoryConfigStore:
-    return InMemoryConfigStore()
+def config_store() -> InMemoryAgentConfigStore:
+    return InMemoryAgentConfigStore()
 
 
 @pytest.fixture
@@ -71,7 +71,7 @@ def embedding_provider() -> StaticEmbeddingProvider:
 
 @pytest.mark.asyncio
 async def test_retrieve_returns_rules_across_scopes(
-    config_store: InMemoryConfigStore,
+    config_store: InMemoryAgentConfigStore,
     embedding_provider: StaticEmbeddingProvider,
     selection_config: SelectionConfig,
     tenant_id: UUID,
@@ -132,7 +132,7 @@ async def test_retrieve_returns_rules_across_scopes(
 
 @pytest.mark.asyncio
 async def test_business_filters_exclude_fired_rules(
-    config_store: InMemoryConfigStore,
+    config_store: InMemoryAgentConfigStore,
     embedding_provider: StaticEmbeddingProvider,
     selection_config: SelectionConfig,
     tenant_id: UUID,
@@ -185,7 +185,7 @@ async def test_business_filters_exclude_fired_rules(
 
 @pytest.mark.asyncio
 async def test_reranker_reorders_results(
-    config_store: InMemoryConfigStore,
+    config_store: InMemoryAgentConfigStore,
     embedding_provider: StaticEmbeddingProvider,
     selection_config: SelectionConfig,
     tenant_id: UUID,

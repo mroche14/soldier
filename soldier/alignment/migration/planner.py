@@ -29,7 +29,7 @@ from soldier.observability.logging import get_logger
 
 if TYPE_CHECKING:
     from soldier.alignment.models import Scenario
-    from soldier.alignment.stores.config_store import ConfigStore
+    from soldier.alignment.stores.agent_config_store import AgentConfigStore
     from soldier.conversation.store import SessionStore
 
 logger = get_logger(__name__)
@@ -40,7 +40,7 @@ class MigrationPlanner:
 
     def __init__(
         self,
-        config_store: "ConfigStore",
+        config_store: "AgentConfigStore",
         session_store: "SessionStore",
         config: ScenarioMigrationConfig | None = None,
     ) -> None:
@@ -387,7 +387,7 @@ class MigrationDeployer:
 
     def __init__(
         self,
-        config_store: "ConfigStore",
+        config_store: "AgentConfigStore",
         session_store: "SessionStore",
         config: ScenarioMigrationConfig | None = None,
     ) -> None:

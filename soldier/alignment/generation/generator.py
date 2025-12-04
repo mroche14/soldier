@@ -13,7 +13,7 @@ from soldier.alignment.generation.models import GenerationResult, TemplateMode
 from soldier.alignment.generation.prompt_builder import PromptBuilder
 from soldier.alignment.models import Template
 from soldier.observability.logging import get_logger
-from soldier.providers.llm import LLMMessage, LLMProvider
+from soldier.providers.llm import LLMExecutor, LLMMessage
 
 logger = get_logger(__name__)
 
@@ -29,7 +29,7 @@ class ResponseGenerator:
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_executor: LLMExecutor,
         prompt_builder: PromptBuilder | None = None,
         default_temperature: float = 0.7,
         default_max_tokens: int = 1024,
@@ -37,12 +37,12 @@ class ResponseGenerator:
         """Initialize the response generator.
 
         Args:
-            llm_provider: Provider for LLM generation
+            llm_executor: Executor for LLM generation
             prompt_builder: Builder for assembling prompts
             default_temperature: Default sampling temperature
             default_max_tokens: Default max tokens for response
         """
-        self._llm_provider = llm_provider
+        self._llm_executor = llm_executor
         self._prompt_builder = prompt_builder or PromptBuilder()
         self._default_temperature = default_temperature
         self._default_max_tokens = default_max_tokens
@@ -109,7 +109,7 @@ class ResponseGenerator:
         llm_messages = [LLMMessage(role=m["role"], content=m["content"]) for m in messages]
 
         # Generate response
-        llm_response = await self._llm_provider.generate(
+        llm_response = await self._llm_executor.generate(
             messages=llm_messages,
             temperature=self._default_temperature,
             max_tokens=self._default_max_tokens,
@@ -124,13 +124,23 @@ class ResponseGenerator:
             model=llm_response.model,
         )
 
+        # Extract token counts from usage (handles both TokenUsage and dict)
+        prompt_tokens = 0
+        completion_tokens = 0
+        if llm_response.usage:
+            if isinstance(llm_response.usage, dict):
+                prompt_tokens = llm_response.usage.get("prompt_tokens", 0)
+                completion_tokens = llm_response.usage.get("completion_tokens", 0)
+            else:
+                # TokenUsage model
+                prompt_tokens = llm_response.usage.prompt_tokens
+                completion_tokens = llm_response.usage.completion_tokens
+
         return GenerationResult(
             response=llm_response.content,
             model=llm_response.model,
-            prompt_tokens=llm_response.usage.get("prompt_tokens", 0) if llm_response.usage else 0,
-            completion_tokens=llm_response.usage.get("completion_tokens", 0)
-            if llm_response.usage
-            else 0,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
             generation_time_ms=elapsed_ms,
             prompt_preview=system_prompt[:200] if system_prompt else None,
         )

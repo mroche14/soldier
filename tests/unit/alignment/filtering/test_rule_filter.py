@@ -10,11 +10,11 @@ from soldier.alignment.context.models import Context, Sentiment, Urgency
 from soldier.alignment.filtering.models import MatchedRule, RuleFilterResult
 from soldier.alignment.filtering.rule_filter import RuleFilter
 from soldier.alignment.models import Rule
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
-class MockLLMProvider(LLMProvider):
-    """Mock LLM provider for testing rule filtering."""
+class MockLLMExecutor(LLMExecutor):
+    """Mock LLM executor for testing rule filtering."""
 
     def __init__(
         self,
@@ -22,14 +22,11 @@ class MockLLMProvider(LLMProvider):
         raise_error: bool = False,
         return_invalid_json: bool = False,
     ) -> None:
+        super().__init__(model="mock/test", step_name="test")
         self._evaluations = evaluations
         self._raise_error = raise_error
         self._return_invalid_json = return_invalid_json
         self.generate_calls: list[list[LLMMessage]] = []
-
-    @property
-    def provider_name(self) -> str:
-        return "mock_filter_llm"
 
     async def generate(
         self,
@@ -54,9 +51,6 @@ class MockLLMProvider(LLMProvider):
             model="mock-model",
             usage={"prompt_tokens": 100, "completion_tokens": 50},
         )
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs: Any):
-        raise NotImplementedError("Streaming not needed for tests")
 
 
 def create_rule(
@@ -106,21 +100,21 @@ class TestRuleFilter:
 
     def test_filter_can_be_created(self) -> None:
         """Test that RuleFilter can be instantiated."""
-        llm = MockLLMProvider()
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor()
+        rule_filter = RuleFilter(llm_executor=llm)
         assert rule_filter is not None
 
     def test_filter_with_custom_threshold(self) -> None:
         """Test creating filter with custom relevance threshold."""
-        llm = MockLLMProvider()
-        rule_filter = RuleFilter(llm_provider=llm, relevance_threshold=0.7)
+        llm = MockLLMExecutor()
+        rule_filter = RuleFilter(llm_executor=llm, relevance_threshold=0.7)
         assert rule_filter._relevance_threshold == 0.7
 
     def test_filter_with_custom_template(self) -> None:
         """Test creating filter with custom prompt template."""
-        llm = MockLLMProvider()
+        llm = MockLLMExecutor()
         custom_template = "Custom: {message} {rules}"
-        rule_filter = RuleFilter(llm_provider=llm, prompt_template=custom_template)
+        rule_filter = RuleFilter(llm_executor=llm, prompt_template=custom_template)
         assert rule_filter._prompt_template == custom_template
 
     # Test filtering behavior
@@ -131,8 +125,8 @@ class TestRuleFilter:
         context: Context,
     ) -> None:
         """Test that filtering no candidates returns empty result."""
-        llm = MockLLMProvider()
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor()
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=[])
 
@@ -153,8 +147,8 @@ class TestRuleFilter:
             {"rule_id": str(sample_rules[1].id), "applies": True, "relevance": 0.7, "reasoning": "Mentions order"},
             {"rule_id": str(sample_rules[2].id), "applies": False, "relevance": 0.2, "reasoning": "No payment topic"},
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=sample_rules)
 
@@ -174,8 +168,8 @@ class TestRuleFilter:
             {"rule_id": str(sample_rules[1].id), "applies": True, "relevance": 0.9, "reasoning": "High match"},
             {"rule_id": str(sample_rules[2].id), "applies": True, "relevance": 0.75, "reasoning": "Good match"},
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=sample_rules)
 
@@ -196,8 +190,8 @@ class TestRuleFilter:
             {"rule_id": str(sample_rules[1].id), "applies": True, "relevance": 0.4, "reasoning": "Below threshold"},
             {"rule_id": str(sample_rules[2].id), "applies": True, "relevance": 0.3, "reasoning": "Below threshold"},
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm, relevance_threshold=0.5)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm, relevance_threshold=0.5)
 
         result = await rule_filter.filter(context=context, candidates=sample_rules)
 
@@ -214,8 +208,8 @@ class TestRuleFilter:
         evaluations = [
             {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Direct match on returns"},
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
 
@@ -235,8 +229,8 @@ class TestRuleFilter:
             {"rule_id": str(r.id), "applies": True, "relevance": 0.8, "reasoning": "Match"}
             for r in rules
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         # Process with batch_size=3 should make 3 calls (3+3+1)
         await rule_filter.filter(context=context, candidates=rules, batch_size=3)
@@ -254,8 +248,8 @@ class TestRuleFilter:
             {"rule_id": str(r.id), "applies": True, "relevance": 0.8, "reasoning": "Match"}
             for r in sample_rules
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         await rule_filter.filter(context=context, candidates=sample_rules, batch_size=10)
 
@@ -270,8 +264,8 @@ class TestRuleFilter:
         sample_rules: list[Rule],
     ) -> None:
         """Test that invalid JSON defaults to applying all rules."""
-        llm = MockLLMProvider(return_invalid_json=True)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(return_invalid_json=True)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=sample_rules)
 
@@ -289,8 +283,8 @@ class TestRuleFilter:
         evaluations = [
             {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Match"},
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=sample_rules)
 
@@ -306,7 +300,7 @@ class TestRuleFilter:
     ) -> None:
         """Test parsing JSON wrapped in markdown code blocks."""
 
-        class MarkdownLLMProvider(MockLLMProvider):
+        class MarkdownLLMExecutor(MockLLMExecutor):
             async def generate(self, messages, **kwargs):
                 evaluations = [
                     {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Match"}
@@ -317,8 +311,8 @@ class TestRuleFilter:
                     usage={},
                 )
 
-        llm = MarkdownLLMProvider()
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MarkdownLLMExecutor()
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
 
@@ -337,8 +331,8 @@ class TestRuleFilter:
             {"rule_id": str(r.id), "applies": True, "relevance": 0.8, "reasoning": "Match"}
             for r in sample_rules
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=sample_rules)
 
@@ -356,8 +350,8 @@ class TestRuleFilter:
         evaluations = [
             {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Match"},
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
 
@@ -376,8 +370,8 @@ class TestRuleFilter:
         evaluations = [
             {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.85, "reasoning": "Match"},
         ]
-        llm = MockLLMProvider(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_provider=llm)
+        llm = MockLLMExecutor(evaluations=evaluations)
+        rule_filter = RuleFilter(llm_executor=llm)
 
         result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
 

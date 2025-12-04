@@ -1,6 +1,7 @@
 """Integration test for response enforcement."""
 
 import json
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -9,30 +10,26 @@ from soldier.alignment.enforcement import EnforcementValidator, FallbackHandler
 from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.generation.generator import ResponseGenerator
 from soldier.alignment.models import Rule, Scope
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
-class SequenceLLMProvider(LLMProvider):
-    """LLM provider that returns responses in sequence."""
+class SequenceLLMExecutor(LLMExecutor):
+    """LLM executor that returns responses in sequence."""
 
     def __init__(self, responses: list[str]) -> None:
+        super().__init__(model="mock/test", step_name="test")
         self._responses = responses
+        self._call_count = 0
         self.generate_calls: list[list[LLMMessage]] = []
 
-    @property
-    def provider_name(self) -> str:
-        return "sequence"
-
-    async def generate(self, messages: list[LLMMessage], **kwargs) -> LLMResponse:
+    async def generate(self, messages: list[LLMMessage], **kwargs: Any) -> LLMResponse:
         self.generate_calls.append(messages)
-        content = self._responses[len(self.generate_calls) - 1]
+        content = self._responses[min(self._call_count, len(self._responses) - 1)]
+        self._call_count += 1
         return LLMResponse(content=content, model="seq-model", usage={})
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs):
-        raise NotImplementedError
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):
@@ -74,30 +71,33 @@ async def test_enforcement_regenerates_and_cleans_response() -> None:
         embedding=[1.0, 0.0, 0.0],
     )
 
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
     await store.save_rule(hard_rule)
 
-    # Sequence: extraction JSON, filter JSON, generation violates, regeneration cleans
-    llm = SequenceLLMProvider(
-        responses=[
-            json.dumps({"intent": "test", "entities": [], "sentiment": "neutral", "urgency": "normal"}),
-            json.dumps({"evaluations": [{"rule_id": str(hard_rule.id), "applies": True, "relevance": 0.9}]}),
-            "This contains secret info",
-            "Safe response with no issues",
-        ]
-    )
+    # Create executors for each step
+    extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral", "urgency": "normal"})
+    filter_resp = json.dumps({"evaluations": [{"rule_id": str(hard_rule.id), "applies": True, "relevance": 0.9}]})
+
+    context_executor = SequenceLLMExecutor([extraction_resp])
+    filter_executor = SequenceLLMExecutor([filter_resp])
+    # Generation returns violation first, then clean response
+    gen_executor = SequenceLLMExecutor(["This contains secret info", "Safe response with no issues"])
 
     embedding_provider = StaticEmbeddingProvider([1.0, 0.0, 0.0])
-    response_generator = ResponseGenerator(llm_provider=llm)
+    response_generator = ResponseGenerator(llm_executor=gen_executor)
     enforcement_validator = EnforcementValidator(response_generator=response_generator)
 
     engine = AlignmentEngine(
         config_store=store,
-        llm_provider=llm,
         embedding_provider=embedding_provider,
         pipeline_config=PipelineConfig(),
         enforcement_validator=enforcement_validator,
         fallback_handler=FallbackHandler(),
+        executors={
+            "context_extraction": context_executor,
+            "rule_filtering": filter_executor,
+            "generation": gen_executor,
+        },
     )
 
     result = await engine.process_turn(

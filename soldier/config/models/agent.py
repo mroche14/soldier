@@ -15,9 +15,9 @@ class AgentConfig(BaseModel):
 
     name: str = Field(description="Agent display name")
     description: str | None = Field(default=None, description="Agent description")
-    llm_provider: str | None = Field(
+    model: str | None = Field(
         default=None,
-        description="Override default LLM provider",
+        description="Override default model (e.g., 'openrouter/anthropic/claude-3-opus-20240229')",
     )
     temperature: float | None = Field(
         default=None,

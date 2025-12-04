@@ -8,7 +8,7 @@ from soldier.alignment.models import Rule, Scope
 from soldier.alignment.retrieval.models import RetrievalResult, RuleSource, ScoredRule
 from soldier.alignment.retrieval.reranker import RuleReranker
 from soldier.alignment.retrieval.selection import ScoredItem, create_selection_strategy
-from soldier.alignment.stores import ConfigStore
+from soldier.alignment.stores import AgentConfigStore
 from soldier.config.models.selection import SelectionConfig
 from soldier.observability.logging import get_logger
 from soldier.providers.embedding import EmbeddingProvider
@@ -29,7 +29,7 @@ class RuleRetriever:
 
     def __init__(
         self,
-        config_store: ConfigStore,
+        config_store: AgentConfigStore,
         embedding_provider: EmbeddingProvider,
         selection_config: SelectionConfig | None = None,
         reranker: RuleReranker | None = None,

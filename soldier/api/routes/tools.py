@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from soldier.alignment.models import ToolActivation
-from soldier.api.dependencies import ConfigStoreDep
+from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import AgentNotFoundError, ToolActivationNotFoundError
 from soldier.api.middleware.auth import TenantContextDep
 from soldier.api.models.crud import (
@@ -37,7 +37,7 @@ def _map_tool_activation_to_response(activation: ToolActivation) -> ToolActivati
 
 
 async def _verify_agent_exists(
-    config_store: ConfigStoreDep, tenant_id: UUID, agent_id: UUID
+    config_store: AgentConfigStoreDep, tenant_id: UUID, agent_id: UUID
 ) -> None:
     """Verify agent exists and belongs to tenant."""
     agent = await config_store.get_agent(tenant_id, agent_id)
@@ -49,7 +49,7 @@ async def _verify_agent_exists(
 async def list_tool_activations(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     status: Literal["enabled", "disabled"] | None = Query(default=None),
@@ -91,7 +91,7 @@ async def enable_tool(
     agent_id: UUID,
     request: ToolActivationCreate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> ToolActivationResponse:
     """Enable a tool for an agent."""
     logger.info(
@@ -142,7 +142,7 @@ async def update_tool_activation(
     tool_id: str,
     request: ToolActivationUpdate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> ToolActivationResponse:
     """Update a tool activation (policy override)."""
     logger.info(
@@ -176,7 +176,7 @@ async def disable_tool(
     agent_id: UUID,
     tool_id: str,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> None:
     """Disable a tool for an agent."""
     logger.info(

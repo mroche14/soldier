@@ -203,3 +203,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
         )
 
     logger.debug("exception_handlers_registered")
+
+
+# Create the app instance for uvicorn
+app = create_app()

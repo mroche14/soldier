@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Query
 
 from soldier.alignment.models import Rule, Scope
-from soldier.api.dependencies import ConfigStoreDep
+from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import AgentNotFoundError, RuleNotFoundError
 from soldier.api.middleware.auth import TenantContextDep
 from soldier.api.models.bulk import BulkRequest, BulkResponse, BulkResult
@@ -49,7 +49,7 @@ def _map_rule_to_response(rule: Rule) -> RuleResponse:
 
 
 async def _verify_agent_exists(
-    config_store: ConfigStoreDep, tenant_id: UUID, agent_id: UUID
+    config_store: AgentConfigStoreDep, tenant_id: UUID, agent_id: UUID
 ) -> None:
     """Verify agent exists and belongs to tenant.
 
@@ -70,7 +70,7 @@ async def _verify_agent_exists(
 async def list_rules(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     scope: Scope | None = Query(default=None, description="Filter by scope"),
@@ -161,7 +161,7 @@ async def create_rule(
     agent_id: UUID,
     request: RuleCreate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     _background_tasks: BackgroundTasks,  # For future async embedding computation
 ) -> RuleResponse:
     """Create a new rule.
@@ -232,7 +232,7 @@ async def get_rule(
     agent_id: UUID,
     rule_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> RuleResponse:
     """Get a rule by ID.
 
@@ -270,7 +270,7 @@ async def update_rule(
     rule_id: UUID,
     request: RuleUpdate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     _background_tasks: BackgroundTasks,  # For future async embedding computation
 ) -> RuleResponse:
     """Update a rule.
@@ -367,7 +367,7 @@ async def delete_rule(
     agent_id: UUID,
     rule_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> None:
     """Delete a rule (soft delete).
 
@@ -410,7 +410,7 @@ async def bulk_rule_operations(
     agent_id: UUID,
     request: BulkRequest[RuleCreate],
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> BulkResponse[RuleResponse]:
     """Execute bulk rule operations.
 

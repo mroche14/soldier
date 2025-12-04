@@ -13,7 +13,7 @@ from soldier.alignment.enforcement.models import EnforcementResult
 from soldier.alignment.execution.models import ToolResult
 from soldier.alignment.filtering.models import MatchedRule, ScenarioFilterResult
 from soldier.alignment.generation.models import GenerationResult
-from soldier.alignment.migration.models import ReconciliationResult
+from soldier.alignment.migration.models import FieldResolutionResult, ReconciliationResult
 from soldier.alignment.retrieval.models import RetrievalResult
 
 
@@ -59,6 +59,16 @@ class AlignmentResult(BaseModel):
     # Migration
     reconciliation_result: ReconciliationResult | None = Field(
         default=None, description="Result of migration reconciliation if applicable"
+    )
+
+    # Missing requirements (scenario field checking)
+    missing_requirements: dict[str, FieldResolutionResult] = Field(
+        default_factory=dict,
+        description="Fields required for scenario that couldn't be filled",
+    )
+    scenario_blocked: bool = Field(
+        default=False,
+        description="True if scenario entry was blocked due to missing hard requirements",
     )
 
     # Metadata

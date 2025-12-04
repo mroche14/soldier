@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from soldier.alignment.models import Scope, Template, TemplateMode
-from soldier.api.dependencies import ConfigStoreDep
+from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import AgentNotFoundError, TemplateNotFoundError
 from soldier.api.middleware.auth import TenantContextDep
 from soldier.api.models.crud import (
@@ -50,7 +50,7 @@ def _map_template_to_response(template: Template) -> TemplateResponse:
 
 
 async def _verify_agent_exists(
-    config_store: ConfigStoreDep, tenant_id: UUID, agent_id: UUID
+    config_store: AgentConfigStoreDep, tenant_id: UUID, agent_id: UUID
 ) -> None:
     """Verify agent exists and belongs to tenant."""
     agent = await config_store.get_agent(tenant_id, agent_id)
@@ -62,7 +62,7 @@ async def _verify_agent_exists(
 async def list_templates(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     mode: TemplateMode | None = Query(default=None, description="Filter by mode"),
@@ -114,7 +114,7 @@ async def create_template(
     agent_id: UUID,
     request: TemplateCreate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> TemplateResponse:
     """Create a new template."""
     logger.info(
@@ -153,7 +153,7 @@ async def get_template(
     agent_id: UUID,
     template_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> TemplateResponse:
     """Get a template by ID."""
     await _verify_agent_exists(config_store, tenant_context.tenant_id, agent_id)
@@ -171,7 +171,7 @@ async def update_template(
     template_id: UUID,
     request: TemplateUpdate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> TemplateResponse:
     """Update a template."""
     logger.info(
@@ -212,7 +212,7 @@ async def delete_template(
     agent_id: UUID,
     template_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> None:
     """Delete a template (soft delete)."""
     logger.info(
@@ -239,7 +239,7 @@ async def preview_template(
     template_id: UUID,
     request: TemplatePreviewRequest,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> TemplatePreviewResponse:
     """Preview a template with variable substitution."""
     await _verify_agent_exists(config_store, tenant_context.tenant_id, agent_id)

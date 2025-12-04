@@ -1,6 +1,5 @@
 """Unit tests for AlignmentEngine."""
 
-import json
 from typing import Any
 from uuid import uuid4
 
@@ -10,60 +9,9 @@ from soldier.alignment.context.models import Context, Turn
 from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.models import Rule
 from soldier.alignment.result import AlignmentResult, PipelineStepTiming
-from soldier.alignment.stores import ConfigStore
+from soldier.alignment.stores import AgentConfigStore
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
-
-
-class MockLLMProvider(LLMProvider):
-    """Mock LLM provider for testing the engine."""
-
-    def __init__(
-        self,
-        extraction_response: dict[str, Any] | None = None,
-        filter_response: dict[str, Any] | None = None,
-        generation_response: str = "Generated response",
-    ) -> None:
-        self._extraction_response = extraction_response or {
-            "intent": "get help",
-            "entities": [],
-            "sentiment": "neutral",
-            "urgency": "normal",
-        }
-        self._filter_response = filter_response
-        self._generation_response = generation_response
-        self._call_count = 0
-        self.generate_calls: list[list[LLMMessage]] = []
-
-    @property
-    def provider_name(self) -> str:
-        return "mock_engine_llm"
-
-    async def generate(
-        self,
-        messages: list[LLMMessage],
-        **kwargs: Any,
-    ) -> LLMResponse:
-        self.generate_calls.append(messages)
-        self._call_count += 1
-
-        # First call is extraction, second is filtering, third is generation
-        if self._call_count == 1:
-            content = json.dumps(self._extraction_response)
-        elif self._call_count == 2 and self._filter_response:
-            content = json.dumps(self._filter_response)
-        else:
-            content = self._generation_response
-
-        return LLMResponse(
-            content=content,
-            model="mock-model",
-            usage={"prompt_tokens": 100, "completion_tokens": 50},
-        )
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs: Any):
-        raise NotImplementedError("Streaming not needed for tests")
 
 
 class MockEmbeddingProvider(EmbeddingProvider):
@@ -97,7 +45,7 @@ class MockEmbeddingProvider(EmbeddingProvider):
         return response.embeddings[0]
 
 
-class MockConfigStore(ConfigStore):
+class MockAgentConfigStore(AgentConfigStore):
     """Mock config store for testing."""
 
     def __init__(self, rules: list[Rule] | None = None) -> None:
@@ -258,17 +206,11 @@ class TestAlignmentEngine:
         return uuid4()
 
     @pytest.fixture
-    def llm_provider(self) -> MockLLMProvider:
-        return MockLLMProvider(
-            generation_response="I can help you with your return request.",
-        )
-
-    @pytest.fixture
     def embedding_provider(self) -> MockEmbeddingProvider:
         return MockEmbeddingProvider()
 
     @pytest.fixture
-    def config_store(self, tenant_id, agent_id) -> MockConfigStore:
+    def config_store(self, tenant_id, agent_id) -> MockAgentConfigStore:
         rules = [
             create_rule(
                 name="Return Policy",
@@ -285,52 +227,61 @@ class TestAlignmentEngine:
                 agent_id=agent_id,
             ),
         ]
-        return MockConfigStore(rules=rules)
+        return MockAgentConfigStore(rules=rules)
+
+    @pytest.fixture
+    def pipeline_config(self) -> PipelineConfig:
+        """Create a pipeline config with mock models for testing."""
+        config = PipelineConfig()
+        # Override all models to use mock provider
+        config.context_extraction.model = "mock/test"
+        config.rule_filtering.model = "mock/test"
+        config.scenario_filtering.model = "mock/test"
+        config.generation.model = "mock/test"
+        return config
 
     @pytest.fixture
     def engine(
         self,
-        config_store: MockConfigStore,
-        llm_provider: MockLLMProvider,
+        config_store: MockAgentConfigStore,
         embedding_provider: MockEmbeddingProvider,
+        pipeline_config: PipelineConfig,
     ) -> AlignmentEngine:
         return AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
+            pipeline_config=pipeline_config,
         )
 
     # Test initialization
 
     def test_engine_can_be_created(
         self,
-        config_store: MockConfigStore,
-        llm_provider: MockLLMProvider,
+        config_store: MockAgentConfigStore,
         embedding_provider: MockEmbeddingProvider,
+        pipeline_config: PipelineConfig,
     ) -> None:
         """Test that AlignmentEngine can be instantiated."""
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
+            pipeline_config=pipeline_config,
         )
         assert engine is not None
 
     def test_engine_with_custom_config(
         self,
-        config_store: MockConfigStore,
-        llm_provider: MockLLMProvider,
+        config_store: MockAgentConfigStore,
         embedding_provider: MockEmbeddingProvider,
+        pipeline_config: PipelineConfig,
     ) -> None:
         """Test engine with custom pipeline config."""
-        config = PipelineConfig()
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
-            pipeline_config=config,
+            pipeline_config=pipeline_config,
         )
-        assert engine._config == config
+        assert engine._config == pipeline_config
 
     # Test process_turn
 
@@ -519,22 +470,20 @@ class TestAlignmentEngine:
     @pytest.mark.asyncio
     async def test_process_turn_disabled_context_extraction(
         self,
-        config_store: MockConfigStore,
-        llm_provider: MockLLMProvider,
+        config_store: MockAgentConfigStore,
         embedding_provider: MockEmbeddingProvider,
+        pipeline_config: PipelineConfig,
         session_id,
         tenant_id,
         agent_id,
     ) -> None:
         """Test with context extraction disabled."""
-        config = PipelineConfig()
-        config.context_extraction.enabled = False
+        pipeline_config.context_extraction.enabled = False
 
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
-            pipeline_config=config,
+            pipeline_config=pipeline_config,
         )
 
         result = await engine.process_turn(
@@ -551,22 +500,20 @@ class TestAlignmentEngine:
     @pytest.mark.asyncio
     async def test_process_turn_disabled_retrieval(
         self,
-        config_store: MockConfigStore,
-        llm_provider: MockLLMProvider,
+        config_store: MockAgentConfigStore,
         embedding_provider: MockEmbeddingProvider,
+        pipeline_config: PipelineConfig,
         session_id,
         tenant_id,
         agent_id,
     ) -> None:
         """Test with retrieval disabled."""
-        config = PipelineConfig()
-        config.retrieval.enabled = False
+        pipeline_config.retrieval.enabled = False
 
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
-            pipeline_config=config,
+            pipeline_config=pipeline_config,
         )
 
         result = await engine.process_turn(
@@ -587,22 +534,20 @@ class TestAlignmentEngine:
     @pytest.mark.asyncio
     async def test_process_turn_disabled_generation(
         self,
-        config_store: MockConfigStore,
-        llm_provider: MockLLMProvider,
+        config_store: MockAgentConfigStore,
         embedding_provider: MockEmbeddingProvider,
+        pipeline_config: PipelineConfig,
         session_id,
         tenant_id,
         agent_id,
     ) -> None:
         """Test with generation disabled."""
-        config = PipelineConfig()
-        config.generation.enabled = False
+        pipeline_config.generation.enabled = False
 
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
-            pipeline_config=config,
+            pipeline_config=pipeline_config,
         )
 
         result = await engine.process_turn(

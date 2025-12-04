@@ -6,6 +6,7 @@ This module exports all configuration models for easy access:
 """
 
 from soldier.config.models.agent import AgentConfig
+from soldier.config.models.jobs import HatchetConfig, JobsConfig
 from soldier.config.models.api import APIConfig, RateLimitConfig
 from soldier.config.models.migration import (
     CheckpointConfig,
@@ -44,11 +45,15 @@ from soldier.config.models.selection import (
 from soldier.config.models.storage import (
     StorageConfig,
     StoreBackendConfig,
+    VectorStoreConfig,
 )
 
 __all__ = [
     # Agent
     "AgentConfig",
+    # Jobs
+    "HatchetConfig",
+    "JobsConfig",
     # API
     "APIConfig",
     "RateLimitConfig",
@@ -84,4 +89,5 @@ __all__ = [
     # Storage
     "StorageConfig",
     "StoreBackendConfig",
+    "VectorStoreConfig",
 ]

@@ -7,7 +7,7 @@ import pytest
 from soldier.alignment.context.models import Context
 from soldier.alignment.models.scenario import Scenario, ScenarioStep
 from soldier.alignment.retrieval.scenario_retriever import ScenarioRetriever
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.selection import SelectionConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
@@ -64,7 +64,7 @@ def _make_scenario(
 async def test_scenario_retriever_returns_top_match() -> None:
     tenant_id = uuid4()
     agent_id = uuid4()
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
 
     best = _make_scenario(tenant_id, agent_id, name="Best", entry_embedding=[1.0, 0.0, 0.0])
     other = _make_scenario(tenant_id, agent_id, name="Other", entry_embedding=[0.0, 1.0, 0.0])
@@ -88,7 +88,7 @@ async def test_scenario_retriever_returns_top_match() -> None:
 async def test_scenario_retriever_embeds_entry_text_when_missing_embedding() -> None:
     tenant_id = uuid4()
     agent_id = uuid4()
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
 
     step_id = uuid4()
     scenario = Scenario(

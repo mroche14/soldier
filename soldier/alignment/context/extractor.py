@@ -19,7 +19,7 @@ from soldier.alignment.context.models import (
 )
 from soldier.observability.logging import get_logger
 from soldier.providers.embedding import EmbeddingProvider
-from soldier.providers.llm import LLMMessage, LLMProvider
+from soldier.providers.llm import LLMExecutor, LLMMessage
 
 logger = get_logger(__name__)
 
@@ -38,18 +38,18 @@ class ContextExtractor:
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_executor: LLMExecutor,
         embedding_provider: EmbeddingProvider,
         prompt_template: str | None = None,
     ) -> None:
         """Initialize the context extractor.
 
         Args:
-            llm_provider: Provider for LLM-based extraction
+            llm_executor: Executor for LLM-based extraction
             embedding_provider: Provider for generating embeddings
             prompt_template: Optional custom prompt template
         """
-        self._llm_provider = llm_provider
+        self._llm_executor = llm_executor
         self._embedding_provider = embedding_provider
 
         if prompt_template:
@@ -150,7 +150,7 @@ Respond with JSON: {"intent": "...", "entities": [], "sentiment": "neutral", "to
             history=history_text,
         )
 
-        response = await self._llm_provider.generate(
+        response = await self._llm_executor.generate(
             messages=[LLMMessage(role="user", content=prompt)],
             temperature=0.0,  # Deterministic for extraction
             max_tokens=500,

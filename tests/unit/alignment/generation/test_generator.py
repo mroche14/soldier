@@ -13,11 +13,11 @@ from soldier.alignment.generation.models import GenerationResult, TemplateMode
 from soldier.alignment.generation.prompt_builder import PromptBuilder
 from soldier.alignment.models import Rule
 from soldier.alignment.models.template import Template
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
-class MockLLMProvider(LLMProvider):
-    """Mock LLM provider for testing response generation."""
+class MockLLMExecutor(LLMExecutor):
+    """Mock LLM executor for testing response generation."""
 
     def __init__(
         self,
@@ -25,14 +25,11 @@ class MockLLMProvider(LLMProvider):
         model: str = "mock-model",
         raise_error: bool = False,
     ) -> None:
+        super().__init__(model="mock/test", step_name="generation")
         self._response = response
-        self._model = model
+        self._model_name = model
         self._raise_error = raise_error
         self.generate_calls: list[list[LLMMessage]] = []
-
-    @property
-    def provider_name(self) -> str:
-        return "mock_generator_llm"
 
     async def generate(
         self,
@@ -46,12 +43,9 @@ class MockLLMProvider(LLMProvider):
 
         return LLMResponse(
             content=self._response,
-            model=self._model,
+            model=self._model_name,
             usage={"prompt_tokens": 100, "completion_tokens": 50},
         )
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs: Any):
-        raise NotImplementedError("Streaming not needed for tests")
 
 
 def create_rule(
@@ -113,12 +107,12 @@ class TestResponseGenerator:
     """Tests for ResponseGenerator class."""
 
     @pytest.fixture
-    def llm_provider(self) -> MockLLMProvider:
-        return MockLLMProvider(response="I can help you with that!")
+    def llm_executor(self) -> MockLLMExecutor:
+        return MockLLMExecutor(response="I can help you with that!")
 
     @pytest.fixture
-    def generator(self, llm_provider: MockLLMProvider) -> ResponseGenerator:
-        return ResponseGenerator(llm_provider=llm_provider)
+    def generator(self, llm_executor: MockLLMExecutor) -> ResponseGenerator:
+        return ResponseGenerator(llm_executor=llm_executor)
 
     @pytest.fixture
     def context(self) -> Context:
@@ -140,31 +134,31 @@ class TestResponseGenerator:
 
     def test_generator_can_be_created(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
     ) -> None:
         """Test that ResponseGenerator can be instantiated."""
-        generator = ResponseGenerator(llm_provider=llm_provider)
+        generator = ResponseGenerator(llm_executor=llm_executor)
         assert generator is not None
 
     def test_generator_with_custom_prompt_builder(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
     ) -> None:
         """Test creating generator with custom prompt builder."""
         custom_builder = PromptBuilder(max_history_turns=5)
         generator = ResponseGenerator(
-            llm_provider=llm_provider,
+            llm_executor=llm_executor,
             prompt_builder=custom_builder,
         )
         assert generator._prompt_builder == custom_builder
 
     def test_generator_with_custom_defaults(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
     ) -> None:
         """Test creating generator with custom defaults."""
         generator = ResponseGenerator(
-            llm_provider=llm_provider,
+            llm_executor=llm_executor,
             default_temperature=0.5,
             default_max_tokens=512,
         )
@@ -253,7 +247,7 @@ class TestResponseGenerator:
     async def test_generate_with_history(
         self,
         generator: ResponseGenerator,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         context: Context,
     ) -> None:
         """Test generation includes history in messages."""
@@ -269,8 +263,8 @@ class TestResponseGenerator:
         )
 
         # Check that LLM received history
-        assert len(llm_provider.generate_calls) == 1
-        messages = llm_provider.generate_calls[0]
+        assert len(llm_executor.generate_calls) == 1
+        messages = llm_executor.generate_calls[0]
         # Should have system + history + current message
         assert len(messages) >= 4
 
@@ -326,7 +320,7 @@ class TestResponseGenerator:
     @pytest.mark.asyncio
     async def test_generate_exclusive_template_skips_llm(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         context: Context,
     ) -> None:
         """Test that EXCLUSIVE template mode skips LLM."""
@@ -342,7 +336,7 @@ class TestResponseGenerator:
             template_ids=[template_id],
         )
 
-        generator = ResponseGenerator(llm_provider=llm_provider)
+        generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
             context=context,
@@ -355,12 +349,12 @@ class TestResponseGenerator:
         assert result.template_mode == TemplateMode.EXCLUSIVE
         assert str(result.template_used) == template_id
         # LLM should not have been called
-        assert len(llm_provider.generate_calls) == 0
+        assert len(llm_executor.generate_calls) == 0
 
     @pytest.mark.asyncio
     async def test_generate_exclusive_template_resolves_variables(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         context: Context,
     ) -> None:
         """Test that EXCLUSIVE template resolves variables."""
@@ -373,7 +367,7 @@ class TestResponseGenerator:
 
         matched_rule = create_matched_rule(template_ids=[template_id])
 
-        generator = ResponseGenerator(llm_provider=llm_provider)
+        generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
             context=context,
@@ -387,7 +381,7 @@ class TestResponseGenerator:
     @pytest.mark.asyncio
     async def test_generate_suggest_template_uses_llm(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         context: Context,
     ) -> None:
         """Test that SUGGEST template mode still uses LLM."""
@@ -400,7 +394,7 @@ class TestResponseGenerator:
 
         matched_rule = create_matched_rule(template_ids=[template_id])
 
-        generator = ResponseGenerator(llm_provider=llm_provider)
+        generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
             context=context,
@@ -411,12 +405,12 @@ class TestResponseGenerator:
         # Should use LLM response
         assert result.response == "I can help you with that!"
         # LLM should have been called
-        assert len(llm_provider.generate_calls) == 1
+        assert len(llm_executor.generate_calls) == 1
 
     @pytest.mark.asyncio
     async def test_generate_fallback_template_uses_llm(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         context: Context,
     ) -> None:
         """Fallback templates are deferred to enforcement, not generation."""
@@ -429,7 +423,7 @@ class TestResponseGenerator:
 
         matched_rule = create_matched_rule(template_ids=[template_id])
 
-        generator = ResponseGenerator(llm_provider=llm_provider)
+        generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
             context=context,
@@ -439,12 +433,12 @@ class TestResponseGenerator:
 
         assert result.response == "I can help you with that!"
         assert result.template_mode is None
-        assert len(llm_provider.generate_calls) == 1
+        assert len(llm_executor.generate_calls) == 1
 
     @pytest.mark.asyncio
     async def test_generate_no_matching_template(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         context: Context,
     ) -> None:
         """Test generation when rule has template ID but template not provided."""
@@ -452,7 +446,7 @@ class TestResponseGenerator:
             template_ids=[str(uuid4())],  # Non-existent template
         )
 
-        generator = ResponseGenerator(llm_provider=llm_provider)
+        generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
             context=context,
@@ -469,7 +463,7 @@ class TestResponseGenerator:
     @pytest.mark.asyncio
     async def test_generate_first_exclusive_template_wins(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         context: Context,
     ) -> None:
         """Test that first exclusive template is used."""
@@ -490,7 +484,7 @@ class TestResponseGenerator:
         rule1 = create_matched_rule(template_ids=[template1_id])
         rule2 = create_matched_rule(template_ids=[template2_id])
 
-        generator = ResponseGenerator(llm_provider=llm_provider)
+        generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
             context=context,

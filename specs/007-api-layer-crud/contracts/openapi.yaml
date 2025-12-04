@@ -41,12 +41,10 @@ components:
     AgentSettings:
       type: object
       properties:
-        llm_provider:
+        model:
           type: string
-          example: anthropic
-        llm_model:
-          type: string
-          example: claude-3-5-sonnet
+          description: Full model identifier
+          example: openrouter/anthropic/claude-3-5-sonnet-20241022
         temperature:
           type: number
           minimum: 0

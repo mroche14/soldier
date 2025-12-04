@@ -1,17 +1,17 @@
-"""Tests for InMemoryConfigStore."""
+"""Tests for InMemoryAgentConfigStore."""
 
 from uuid import uuid4
 
 import pytest
 
 from soldier.alignment.models import Rule, Scenario, Scope, Template, Variable
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 
 
 @pytest.fixture
-def store() -> InMemoryConfigStore:
+def store() -> InMemoryAgentConfigStore:
     """Create a fresh store for each test."""
-    return InMemoryConfigStore()
+    return InMemoryAgentConfigStore()
 
 
 @pytest.fixture

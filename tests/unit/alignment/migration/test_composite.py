@@ -16,7 +16,7 @@ from soldier.alignment.migration.models import (
     UpstreamChanges,
 )
 from soldier.alignment.models import Scenario, ScenarioStep, StepTransition
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
 from soldier.conversation.models import Channel, Session
 
 
@@ -32,7 +32,7 @@ def agent_id():
 
 @pytest.fixture
 def config_store():
-    return InMemoryConfigStore()
+    return InMemoryAgentConfigStore()
 
 
 def create_step(

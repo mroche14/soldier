@@ -1,6 +1,7 @@
 """Integration tests for template modes."""
 
 import json
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -9,31 +10,27 @@ from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.models import Scope
 from soldier.alignment.models.enums import TemplateMode
 from soldier.alignment.models.template import Template
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 
-class SequenceLLMProvider(LLMProvider):
-    """LLM provider returning responses in sequence."""
+class SequenceLLMExecutor(LLMExecutor):
+    """LLM executor returning responses in sequence."""
 
     def __init__(self, responses: list[str]) -> None:
+        super().__init__(model="mock/test", step_name="test")
         self._responses = responses
+        self._call_count = 0
         self.generate_calls: list[list[LLMMessage]] = []
 
-    @property
-    def provider_name(self) -> str:
-        return "seq-llm"
-
-    async def generate(self, messages: list[LLMMessage], **kwargs) -> LLMResponse:
+    async def generate(self, messages: list[LLMMessage], **kwargs: Any) -> LLMResponse:
         self.generate_calls.append(messages)
-        content = self._responses[len(self.generate_calls) - 1]
+        content = self._responses[min(self._call_count, len(self._responses) - 1)]
+        self._call_count += 1
         return LLMResponse(content=content, model="seq-llm", usage={})
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs):
-        raise NotImplementedError
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):
@@ -64,7 +61,7 @@ async def test_exclusive_template_skips_generation() -> None:
     agent_id = uuid4()
     session_id = uuid4()
 
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
     template_id = uuid4()
     template = Template(
         id=template_id,
@@ -88,20 +85,24 @@ async def test_exclusive_template_skips_generation() -> None:
     )
     await store.save_rule(aligned_rule)
 
-    llm = SequenceLLMProvider(
-        responses=[
-            json.dumps({"intent": "test", "entities": [], "sentiment": "neutral", "urgency": "normal"}),
-            json.dumps({"evaluations": [{"rule_id": str(aligned_rule.id), "applies": True, "relevance": 0.9}]}),
-            "LLM generation output",
-        ]
-    )
+    extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral", "urgency": "normal"})
+    filter_resp = json.dumps({"evaluations": [{"rule_id": str(aligned_rule.id), "applies": True, "relevance": 0.9}]})
+
+    context_executor = SequenceLLMExecutor([extraction_resp])
+    filter_executor = SequenceLLMExecutor([filter_resp])
+    gen_executor = SequenceLLMExecutor(["LLM generation output"])
+
     embeddings = StaticEmbeddingProvider([1.0, 0.0, 0.0])
 
     engine = AlignmentEngine(
         config_store=store,
-        llm_provider=llm,
         embedding_provider=embeddings,
         pipeline_config=PipelineConfig(),
+        executors={
+            "context_extraction": context_executor,
+            "rule_filtering": filter_executor,
+            "generation": gen_executor,
+        },
     )
 
     result = await engine.process_turn(
@@ -112,5 +113,5 @@ async def test_exclusive_template_skips_generation() -> None:
     )
 
     assert result.response == "Exact response."
-    # LLM should have been used for extraction + filtering only (no third generation call)
-    assert len(llm.generate_calls) == 2
+    # Generation executor should not have been called (exclusive template)
+    assert len(gen_executor.generate_calls) == 0

@@ -44,7 +44,10 @@ class ScenarioAction(str, Enum):
 
 
 class ScenarioFilterResult(BaseModel):
-    """Result of scenario filtering/navigation."""
+    """Result of scenario filtering/navigation.
+
+    Enhanced with profile requirements support (T156).
+    """
 
     action: ScenarioAction
     scenario_id: UUID | None = None
@@ -56,3 +59,13 @@ class ScenarioFilterResult(BaseModel):
     # For relocalization
     was_relocalized: bool = False
     original_step_id: UUID | None = None
+
+    # Profile requirements (T156)
+    missing_profile_fields: list[str] = Field(
+        default_factory=list,
+        description="Profile fields required but missing for this scenario",
+    )
+    blocked_by_missing_fields: bool = Field(
+        default=False,
+        description="True if scenario entry was blocked due to missing hard requirements",
+    )

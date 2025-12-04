@@ -102,6 +102,90 @@ MIGRATION_PLANS_DEPLOYED = Counter(
     labelnames=["tenant_id"],
 )
 
+# Profile cache metrics
+PROFILE_CACHE_HITS = Counter(
+    "soldier_profile_cache_hits_total",
+    "Total number of profile cache hits",
+    labelnames=["tenant_id", "cache_key_type"],
+)
+
+PROFILE_CACHE_MISSES = Counter(
+    "soldier_profile_cache_misses_total",
+    "Total number of profile cache misses",
+    labelnames=["tenant_id", "cache_key_type"],
+)
+
+PROFILE_CACHE_INVALIDATIONS = Counter(
+    "soldier_profile_cache_invalidations_total",
+    "Total number of profile cache invalidations",
+    labelnames=["tenant_id", "operation"],
+)
+
+PROFILE_CACHE_ERRORS = Counter(
+    "soldier_profile_cache_errors_total",
+    "Total number of profile cache errors",
+    labelnames=["tenant_id", "operation"],
+)
+
+# Customer Context Vault metrics (Phase 11 - T161-T166)
+
+# T161: Derivation chain depth tracking
+DERIVATION_CHAIN_DEPTH = Histogram(
+    "soldier_derivation_chain_depth",
+    "Depth of derivation chains traversed",
+    labelnames=["tenant_id"],
+    buckets=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+)
+
+# T162: Schema validation errors
+SCHEMA_VALIDATION_ERRORS = Counter(
+    "soldier_schema_validation_errors_total",
+    "Total number of schema validation errors",
+    labelnames=["tenant_id", "field_name", "error_type"],
+)
+
+# T163: Profile field status gauge
+FIELD_STATUS_GAUGE = Gauge(
+    "soldier_profile_field_status",
+    "Number of profile fields by status",
+    labelnames=["tenant_id", "status"],
+)
+
+# T164: Gap fill attempts (enhanced - complements GAP_FILL_COUNT)
+GAP_FILL_ATTEMPTS = Counter(
+    "soldier_gap_fill_attempts_total",
+    "Total number of gap fill attempts",
+    labelnames=["tenant_id", "field_name", "source"],
+)
+
+# T165: Schema extraction success
+SCHEMA_EXTRACTION_SUCCESS = Counter(
+    "soldier_schema_extraction_success_total",
+    "Total successful schema extractions",
+    labelnames=["tenant_id", "content_type"],
+)
+
+# T166: Schema extraction failed
+SCHEMA_EXTRACTION_FAILED = Counter(
+    "soldier_schema_extraction_failed_total",
+    "Total failed schema extractions",
+    labelnames=["tenant_id", "content_type", "error_type"],
+)
+
+# Background job metrics
+WORKFLOW_EXECUTIONS = Counter(
+    "soldier_workflow_executions_total",
+    "Total workflow executions",
+    labelnames=["workflow_name", "status"],
+)
+
+WORKFLOW_LATENCY = Histogram(
+    "soldier_workflow_latency_seconds",
+    "Workflow execution latency in seconds",
+    labelnames=["workflow_name"],
+    buckets=(0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0),
+)
+
 
 def setup_metrics() -> None:
     """Initialize metrics configuration.

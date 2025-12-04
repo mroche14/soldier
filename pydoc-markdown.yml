@@ -1,0 +1,17 @@
+loaders:
+  - type: python
+    search_path: [ "soldier" ]
+processors:
+  - type: filter
+  - type: smart
+  - type: crossref
+renderer:
+  type: markdown
+  output_directory: webdoc/docs/reference
+  clean_output_directory: true
+  heading_level: 2
+  add_module_prefix: false
+  add_member_class_prefix: false
+  render_toc: true
+  render_toc_title: "Table of Contents"
+  render_full_path: false

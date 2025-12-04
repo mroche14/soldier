@@ -9,7 +9,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from soldier.api.dependencies import (
     AuditStoreDep,
-    ConfigStoreDep,
+    AgentConfigStoreDep,
     SessionStoreDep,
     SettingsDep,
 )
@@ -58,7 +58,7 @@ async def _check_store_health(
 @router.get("/health", response_model=HealthResponse)
 async def health_check(
     _settings: SettingsDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     session_store: SessionStoreDep,
     audit_store: AuditStoreDep,
 ) -> HealthResponse:
