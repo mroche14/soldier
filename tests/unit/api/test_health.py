@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
 from soldier.api.dependencies import (
     get_audit_store,
     get_config_store,
@@ -28,9 +28,9 @@ def mock_settings() -> MagicMock:
 
 
 @pytest.fixture
-def config_store() -> InMemoryConfigStore:
+def config_store() -> InMemoryAgentConfigStore:
     """In-memory config store."""
-    return InMemoryConfigStore()
+    return InMemoryAgentConfigStore()
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def audit_store() -> InMemoryAuditStore:
 @pytest.fixture
 def app(
     mock_settings: MagicMock,
-    config_store: InMemoryConfigStore,
+    config_store: InMemoryAgentConfigStore,
     session_store: InMemorySessionStore,
     audit_store: InMemoryAuditStore,
 ) -> FastAPI:

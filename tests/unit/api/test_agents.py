@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
 from soldier.alignment.models import Agent
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
 from soldier.api.dependencies import get_config_store
 from soldier.api.exceptions import SoldierAPIError
 from soldier.api.middleware.auth import get_tenant_context
@@ -35,13 +35,13 @@ def tenant_context(tenant_id: UUID) -> TenantContext:
 
 
 @pytest.fixture
-def config_store() -> InMemoryConfigStore:
+def config_store() -> InMemoryAgentConfigStore:
     """Create a fresh in-memory config store."""
-    return InMemoryConfigStore()
+    return InMemoryAgentConfigStore()
 
 
 @pytest.fixture
-def app(config_store: InMemoryConfigStore, tenant_context: TenantContext) -> FastAPI:
+def app(config_store: InMemoryAgentConfigStore, tenant_context: TenantContext) -> FastAPI:
     """Create a test FastAPI application."""
     app = FastAPI()
     app.include_router(router, tags=["Agents"])
@@ -98,8 +98,7 @@ class TestCreateAgent:
             json={
                 "name": "Custom Agent",
                 "settings": {
-                    "llm_provider": "anthropic",
-                    "llm_model": "claude-3-5-sonnet",
+                    "model": "openrouter/anthropic/claude-3-5-sonnet-20241022",
                     "temperature": 0.5,
                     "max_tokens": 2048,
                 },
@@ -108,8 +107,7 @@ class TestCreateAgent:
 
         assert response.status_code == 201
         data = response.json()
-        assert data["settings"]["llm_provider"] == "anthropic"
-        assert data["settings"]["llm_model"] == "claude-3-5-sonnet"
+        assert data["settings"]["model"] == "openrouter/anthropic/claude-3-5-sonnet-20241022"
         assert data["settings"]["temperature"] == 0.5
         assert data["settings"]["max_tokens"] == 2048
 
@@ -139,7 +137,7 @@ class TestGetAgent:
     """Tests for GET /agents/{agent_id} endpoint."""
 
     def test_get_agent_success(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test retrieving an existing agent."""
         # Create agent directly in store
@@ -160,7 +158,7 @@ class TestGetAgent:
         assert data["description"] == "Test description"
 
     def test_get_agent_with_stats(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test retrieving agent with stats included."""
         agent = Agent.create(
@@ -189,7 +187,7 @@ class TestUpdateAgent:
     """Tests for PUT /agents/{agent_id} endpoint."""
 
     def test_update_agent_name(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test updating agent name."""
         agent = Agent.create(tenant_id=tenant_id, name="Original Name")
@@ -206,7 +204,7 @@ class TestUpdateAgent:
         assert data["name"] == "Updated Name"
 
     def test_update_agent_enabled(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test disabling an agent."""
         agent = Agent.create(tenant_id=tenant_id, name="Test Agent")
@@ -223,7 +221,7 @@ class TestUpdateAgent:
         assert data["enabled"] is False
 
     def test_update_agent_settings(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test updating agent settings."""
         agent = Agent.create(tenant_id=tenant_id, name="Test Agent")
@@ -234,7 +232,7 @@ class TestUpdateAgent:
             f"/agents/{agent.id}",
             json={
                 "settings": {
-                    "llm_provider": "openai",
+                    "model": "openrouter/openai/gpt-4o",
                     "temperature": 0.9,
                 },
             },
@@ -242,7 +240,7 @@ class TestUpdateAgent:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["settings"]["llm_provider"] == "openai"
+        assert data["settings"]["model"] == "openrouter/openai/gpt-4o"
         assert data["settings"]["temperature"] == 0.9
 
     def test_update_nonexistent_agent(self, client: TestClient) -> None:
@@ -260,7 +258,7 @@ class TestDeleteAgent:
     """Tests for DELETE /agents/{agent_id} endpoint."""
 
     def test_delete_agent_success(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test soft-deleting an agent."""
         agent = Agent.create(tenant_id=tenant_id, name="Test Agent")
@@ -299,7 +297,7 @@ class TestListAgents:
         assert data["has_more"] is False
 
     def test_list_agents_with_data(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test listing agents with data."""
         import asyncio
@@ -320,7 +318,7 @@ class TestListAgents:
         assert data["total"] == 3
 
     def test_list_agents_pagination(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test pagination of agents list."""
         import asyncio
@@ -345,7 +343,7 @@ class TestListAgents:
         assert data["has_more"] is True
 
     def test_list_agents_filter_by_enabled(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test filtering agents by enabled status."""
         import asyncio
@@ -371,7 +369,7 @@ class TestListAgents:
         assert data["items"][0]["name"] == "Disabled Agent"
 
     def test_list_agents_sorting(
-        self, client: TestClient, config_store: InMemoryConfigStore, tenant_id: UUID
+        self, client: TestClient, config_store: InMemoryAgentConfigStore, tenant_id: UUID
     ) -> None:
         """Test sorting agents by name."""
         import asyncio

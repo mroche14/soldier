@@ -13,9 +13,8 @@ from soldier.alignment.migration.models import (
     DeletedNode,
     DownstreamChanges,
     FieldCollectionInfo,
+    FieldResolutionResult,
     ForkBranch,
-    GapFillResult,
-    GapFillSource,
     InsertedNode,
     MigrationPlan,
     MigrationPlanStatus,
@@ -25,6 +24,7 @@ from soldier.alignment.migration.models import (
     NewFork,
     ReconciliationAction,
     ReconciliationResult,
+    ResolutionSource,
     ScopeFilter,
     TransformationMap,
     TransitionChange,
@@ -79,7 +79,7 @@ __all__ = [
     "MigrationPlanStatus",
     "MigrationScenario",
     "ReconciliationAction",
-    "GapFillSource",
+    "ResolutionSource",
     # Core Models
     "MigrationPlan",
     "TransformationMap",
@@ -99,7 +99,7 @@ __all__ = [
     "DownstreamChanges",
     # Runtime Models
     "ReconciliationResult",
-    "GapFillResult",
+    "FieldResolutionResult",
     "CheckpointInfo",
 ]
 

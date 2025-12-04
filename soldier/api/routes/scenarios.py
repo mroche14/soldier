@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Query
 
 from soldier.alignment.models import Scenario, ScenarioStep, StepTransition
-from soldier.api.dependencies import ConfigStoreDep
+from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import (
     AgentNotFoundError,
     EntryStepDeletionError,
@@ -65,7 +65,7 @@ def _map_scenario_to_response(scenario: Scenario) -> ScenarioResponse:
 
 
 async def _verify_agent_exists(
-    config_store: ConfigStoreDep, tenant_id: UUID, agent_id: UUID
+    config_store: AgentConfigStoreDep, tenant_id: UUID, agent_id: UUID
 ) -> None:
     """Verify agent exists and belongs to tenant."""
     agent = await config_store.get_agent(tenant_id, agent_id)
@@ -74,7 +74,7 @@ async def _verify_agent_exists(
 
 
 async def _get_scenario_or_404(
-    config_store: ConfigStoreDep, tenant_id: UUID, agent_id: UUID, scenario_id: UUID
+    config_store: AgentConfigStoreDep, tenant_id: UUID, agent_id: UUID, scenario_id: UUID
 ) -> Scenario:
     """Get scenario or raise 404."""
     scenario = await config_store.get_scenario(tenant_id, scenario_id)
@@ -87,7 +87,7 @@ async def _get_scenario_or_404(
 async def list_scenarios(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     tag: str | None = Query(default=None, description="Filter by tag"),
@@ -141,7 +141,7 @@ async def create_scenario(
     agent_id: UUID,
     request: ScenarioCreate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> ScenarioResponse:
     """Create a new scenario with steps."""
     logger.info(
@@ -231,7 +231,7 @@ async def get_scenario(
     agent_id: UUID,
     scenario_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> ScenarioResponse:
     """Get a scenario by ID."""
     await _verify_agent_exists(config_store, tenant_context.tenant_id, agent_id)
@@ -247,7 +247,7 @@ async def update_scenario(
     scenario_id: UUID,
     request: ScenarioUpdate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> ScenarioResponse:
     """Update a scenario."""
     logger.info(
@@ -293,7 +293,7 @@ async def delete_scenario(
     agent_id: UUID,
     scenario_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> None:
     """Delete a scenario (soft delete)."""
     logger.info(
@@ -320,7 +320,7 @@ async def add_step(
     scenario_id: UUID,
     request: StepCreate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> StepResponse:
     """Add a step to a scenario."""
     logger.info(
@@ -366,7 +366,7 @@ async def update_step(
     step_id: UUID,
     request: StepUpdate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> StepResponse:
     """Update a scenario step."""
     await _verify_agent_exists(config_store, tenant_context.tenant_id, agent_id)
@@ -404,7 +404,7 @@ async def delete_step(
     scenario_id: UUID,
     step_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> None:
     """Delete a scenario step.
 

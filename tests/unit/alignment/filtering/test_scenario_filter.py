@@ -9,7 +9,7 @@ from soldier.alignment.filtering.models import ScenarioAction
 from soldier.alignment.filtering.scenario_filter import ScenarioFilter
 from soldier.alignment.models.scenario import Scenario, ScenarioStep
 from soldier.alignment.retrieval.models import ScoredScenario
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 
 
 @pytest.mark.asyncio
@@ -26,7 +26,7 @@ async def test_start_new_scenario_when_no_active() -> None:
         steps=[ScenarioStep(id=step_id, scenario_id=step_id, name="entry", transitions=[])],
     )
 
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
     await store.save_scenario(scenario)
 
     filter = ScenarioFilter(store)
@@ -45,7 +45,7 @@ async def test_start_new_scenario_when_no_active() -> None:
 @pytest.mark.asyncio
 async def test_exit_active_scenario_on_signal() -> None:
     tenant_id = uuid4()
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
     filter = ScenarioFilter(store)
 
     context = Context(message="stop", scenario_signal=ScenarioSignal.EXIT)
@@ -64,7 +64,7 @@ async def test_exit_active_scenario_on_signal() -> None:
 @pytest.mark.asyncio
 async def test_loop_detection_triggers_relocalize() -> None:
     tenant_id = uuid4()
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
     filter = ScenarioFilter(store, max_loop_count=2)
     current_step = uuid4()
 

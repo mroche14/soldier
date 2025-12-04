@@ -11,16 +11,13 @@ from soldier.alignment.models.base import TenantScopedModel
 class AgentSettings(BaseModel):
     """Embedded settings for an agent's LLM configuration.
 
-    Controls the LLM provider and generation parameters for
+    Controls the LLM model and generation parameters for
     the agent's responses.
     """
 
-    llm_provider: str | None = Field(
-        default=None, description="LLM provider name (e.g., 'anthropic', 'openai')"
-    )
-
-    llm_model: str | None = Field(
-        default=None, description="Model name (e.g., 'claude-3-5-sonnet')"
+    model: str | None = Field(
+        default=None,
+        description="Full model identifier (e.g., 'openrouter/anthropic/claude-3-5-sonnet-20241022')",
     )
 
     temperature: float = Field(
@@ -47,6 +44,12 @@ class Agent(TenantScopedModel):
     )
 
     description: str | None = Field(default=None, description="Human-readable description")
+
+    system_prompt: str | None = Field(
+        default=None,
+        description="Custom system prompt for the agent's persona and base instructions. "
+        "This is injected into the response generation prompt.",
+    )
 
     enabled: bool = Field(default=True, description="Whether agent is active")
 

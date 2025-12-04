@@ -126,7 +126,7 @@ class TestFieldOperations:
 
     @pytest.mark.asyncio
     async def test_update_field(self, store, sample_profile, tenant_id):
-        """Should update a profile field."""
+        """Should update a profile field and return field ID."""
         await store.save(sample_profile)
 
         field = ProfileField(
@@ -135,8 +135,8 @@ class TestFieldOperations:
             value_type="string",
             source=ProfileFieldSource.USER_PROVIDED,
         )
-        result = await store.update_field(tenant_id, sample_profile.id, field)
-        assert result is True
+        field_id = await store.update_field(tenant_id, sample_profile.id, field)
+        assert field_id == field.id
 
         retrieved = await store.get_by_id(tenant_id, sample_profile.id)
         assert "email" in retrieved.fields
@@ -144,15 +144,15 @@ class TestFieldOperations:
 
     @pytest.mark.asyncio
     async def test_update_field_nonexistent_profile(self, store, tenant_id):
-        """Should return False for nonexistent profile."""
+        """Should raise ValueError for nonexistent profile."""
         field = ProfileField(
             name="email",
             value="test@example.com",
             value_type="string",
             source=ProfileFieldSource.USER_PROVIDED,
         )
-        result = await store.update_field(tenant_id, uuid4(), field)
-        assert result is False
+        with pytest.raises(ValueError):
+            await store.update_field(tenant_id, uuid4(), field)
 
 
 class TestAssetOperations:
@@ -160,7 +160,7 @@ class TestAssetOperations:
 
     @pytest.mark.asyncio
     async def test_add_asset(self, store, sample_profile, tenant_id):
-        """Should add an asset to profile."""
+        """Should add an asset to profile and return asset ID."""
         await store.save(sample_profile)
 
         asset = ProfileAsset(
@@ -172,8 +172,8 @@ class TestAssetOperations:
             size_bytes=1024,
             checksum="abc123",
         )
-        result = await store.add_asset(tenant_id, sample_profile.id, asset)
-        assert result is True
+        asset_id = await store.add_asset(tenant_id, sample_profile.id, asset)
+        assert asset_id == asset.id
 
         retrieved = await store.get_by_id(tenant_id, sample_profile.id)
         assert len(retrieved.assets) == 1
@@ -181,7 +181,7 @@ class TestAssetOperations:
 
     @pytest.mark.asyncio
     async def test_add_asset_nonexistent_profile(self, store, tenant_id):
-        """Should return False for nonexistent profile."""
+        """Should raise ValueError for nonexistent profile."""
         asset = ProfileAsset(
             name="doc.pdf",
             asset_type="pdf",
@@ -191,8 +191,8 @@ class TestAssetOperations:
             size_bytes=100,
             checksum="hash",
         )
-        result = await store.add_asset(tenant_id, uuid4(), asset)
-        assert result is False
+        with pytest.raises(ValueError):
+            await store.add_asset(tenant_id, uuid4(), asset)
 
 
 class TestChannelLinking:
@@ -294,3 +294,179 @@ class TestProfileMerging:
 
         result = await store.merge_profiles(tenant_id, profile.id, uuid4())
         assert result is False
+
+
+class TestLineageOperations:
+    """Tests for lineage tracking (US1)."""
+
+    @pytest.mark.asyncio
+    async def test_get_derivation_chain_single_item(self, store, sample_profile, tenant_id):
+        """Should return single-item chain for root field."""
+        await store.save(sample_profile)
+
+        field = ProfileField(
+            name="email",
+            value="test@example.com",
+            value_type="email",
+            source=ProfileFieldSource.USER_PROVIDED,
+        )
+        await store.update_field(tenant_id, sample_profile.id, field)
+
+        chain = await store.get_derivation_chain(tenant_id, field.id, "profile_field")
+        assert len(chain) == 1
+        assert chain[0]["name"] == "email"
+
+    @pytest.mark.asyncio
+    async def test_get_derived_items_empty(self, store, sample_profile, tenant_id):
+        """Should return empty lists when no items derived from source."""
+        await store.save(sample_profile)
+
+        field = ProfileField(
+            name="email",
+            value="test@example.com",
+            value_type="email",
+            source=ProfileFieldSource.USER_PROVIDED,
+        )
+        await store.update_field(tenant_id, sample_profile.id, field)
+
+        derived = await store.get_derived_items(tenant_id, field.id)
+        assert derived["fields"] == []
+        assert derived["assets"] == []
+
+    @pytest.mark.asyncio
+    async def test_check_has_dependents_no_dependents(self, store, sample_profile, tenant_id):
+        """Should return False when no dependents."""
+        await store.save(sample_profile)
+
+        field = ProfileField(
+            name="email",
+            value="test@example.com",
+            value_type="email",
+            source=ProfileFieldSource.USER_PROVIDED,
+        )
+        await store.update_field(tenant_id, sample_profile.id, field)
+
+        has_deps = await store.check_has_dependents(tenant_id, field.id)
+        assert has_deps is False
+
+    @pytest.mark.asyncio
+    async def test_field_supersession(self, store, sample_profile, tenant_id):
+        """Should supersede existing field when updating."""
+        await store.save(sample_profile)
+
+        # Add first field
+        field1 = ProfileField(
+            name="email",
+            value="old@example.com",
+            value_type="email",
+            source=ProfileFieldSource.USER_PROVIDED,
+        )
+        await store.update_field(tenant_id, sample_profile.id, field1)
+
+        # Add second field with same name
+        field2 = ProfileField(
+            name="email",
+            value="new@example.com",
+            value_type="email",
+            source=ProfileFieldSource.USER_PROVIDED,
+        )
+        await store.update_field(tenant_id, sample_profile.id, field2)
+
+        # Get field history
+        history = await store.get_field_history(tenant_id, sample_profile.id, "email")
+        assert len(history) == 2
+
+        # Current field should be the new one
+        from soldier.profile.enums import ItemStatus
+        current = await store.get_field(tenant_id, sample_profile.id, "email")
+        assert current.value == "new@example.com"
+        assert current.status == ItemStatus.ACTIVE
+
+    @pytest.mark.asyncio
+    async def test_expire_stale_fields(self, store, sample_profile, tenant_id):
+        """Should expire fields past expires_at."""
+        from datetime import UTC, datetime, timedelta
+        await store.save(sample_profile)
+
+        # Add a field that's already expired
+        field = ProfileField(
+            name="temp_code",
+            value="123456",
+            value_type="string",
+            source=ProfileFieldSource.USER_PROVIDED,
+            expires_at=datetime.now(UTC) - timedelta(hours=1),
+        )
+        await store.update_field(tenant_id, sample_profile.id, field)
+
+        # Expire stale fields
+        count = await store.expire_stale_fields(tenant_id)
+        assert count == 1
+
+        # Verify field is now expired
+        from soldier.profile.enums import ItemStatus
+        expired_field = await store.get_field(
+            tenant_id, sample_profile.id, "temp_code", status=ItemStatus.EXPIRED
+        )
+        assert expired_field is not None
+        assert expired_field.status == ItemStatus.EXPIRED
+
+
+class TestSchemaOperations:
+    """Tests for schema management (US3)."""
+
+    @pytest.mark.asyncio
+    async def test_save_and_get_field_definition(self, store, tenant_id):
+        """Should save and retrieve field definition."""
+        from soldier.profile.models import ProfileFieldDefinition
+
+        agent_id = uuid4()
+        definition = ProfileFieldDefinition(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            name="email",
+            display_name="Email Address",
+            value_type="email",
+        )
+        await store.save_field_definition(definition)
+
+        retrieved = await store.get_field_definition(tenant_id, agent_id, "email")
+        assert retrieved is not None
+        assert retrieved.name == "email"
+
+    @pytest.mark.asyncio
+    async def test_get_field_definitions(self, store, tenant_id):
+        """Should get all field definitions for agent."""
+        from soldier.profile.models import ProfileFieldDefinition
+
+        agent_id = uuid4()
+        for name in ["email", "phone", "name"]:
+            definition = ProfileFieldDefinition(
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                name=name,
+                display_name=name.title(),
+                value_type="string",
+            )
+            await store.save_field_definition(definition)
+
+        definitions = await store.get_field_definitions(tenant_id, agent_id)
+        assert len(definitions) == 3
+
+    @pytest.mark.asyncio
+    async def test_save_and_get_scenario_requirement(self, store, tenant_id):
+        """Should save and retrieve scenario requirement."""
+        from soldier.profile.models import ScenarioFieldRequirement
+
+        agent_id = uuid4()
+        scenario_id = uuid4()
+        requirement = ScenarioFieldRequirement(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            scenario_id=scenario_id,
+            field_name="email",
+        )
+        await store.save_scenario_requirement(requirement)
+
+        requirements = await store.get_scenario_requirements(tenant_id, scenario_id)
+        assert len(requirements) == 1
+        assert requirements[0].field_name == "email"

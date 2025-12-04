@@ -1,5 +1,6 @@
 """Unit tests for ContextExtractor."""
 
+import json
 from datetime import datetime
 from typing import Any
 
@@ -15,17 +16,18 @@ from soldier.alignment.context.models import (
     Urgency,
 )
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
-class MockLLMProvider(LLMProvider):
-    """Mock LLM provider for testing context extraction."""
+class MockLLMExecutor(LLMExecutor):
+    """Mock LLM executor for testing context extraction."""
 
     def __init__(
         self,
         response_json: dict[str, Any] | None = None,
         raise_error: bool = False,
     ) -> None:
+        super().__init__(model="mock/test", step_name="test")
         self._response_json = response_json or {
             "intent": "get help",
             "entities": [],
@@ -37,10 +39,6 @@ class MockLLMProvider(LLMProvider):
         self._raise_error = raise_error
         self.generate_calls: list[list[LLMMessage]] = []
 
-    @property
-    def provider_name(self) -> str:
-        return "mock_llm"
-
     async def generate(
         self,
         messages: list[LLMMessage],
@@ -50,16 +48,11 @@ class MockLLMProvider(LLMProvider):
         if self._raise_error:
             raise RuntimeError("LLM error")
 
-        import json
-
         return LLMResponse(
             content=json.dumps(self._response_json),
             model="mock-model",
             usage={"prompt_tokens": 100, "completion_tokens": 50},
         )
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs: Any):
-        raise NotImplementedError("Streaming not needed for tests")
 
 
 class MockEmbeddingProvider(EmbeddingProvider):
@@ -99,8 +92,8 @@ class TestContextExtractor:
     """Tests for ContextExtractor class."""
 
     @pytest.fixture
-    def llm_provider(self) -> MockLLMProvider:
-        return MockLLMProvider(
+    def llm_executor(self) -> MockLLMExecutor:
+        return MockLLMExecutor(
             response_json={
                 "intent": "return damaged order",
                 "entities": [{"type": "order_id", "value": "12345"}],
@@ -118,11 +111,11 @@ class TestContextExtractor:
     @pytest.fixture
     def extractor(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         embedding_provider: MockEmbeddingProvider,
     ) -> ContextExtractor:
         return ContextExtractor(
-            llm_provider=llm_provider,
+            llm_executor=llm_executor,
             embedding_provider=embedding_provider,
         )
 
@@ -138,25 +131,25 @@ class TestContextExtractor:
 
     def test_extractor_can_be_created(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         embedding_provider: MockEmbeddingProvider,
     ) -> None:
         """Test that ContextExtractor can be instantiated."""
         extractor = ContextExtractor(
-            llm_provider=llm_provider,
+            llm_executor=llm_executor,
             embedding_provider=embedding_provider,
         )
         assert extractor is not None
 
     def test_extractor_with_custom_template(
         self,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         embedding_provider: MockEmbeddingProvider,
     ) -> None:
         """Test creating extractor with custom prompt template."""
         custom_template = "Custom template: {message} {history}"
         extractor = ContextExtractor(
-            llm_provider=llm_provider,
+            llm_executor=llm_executor,
             embedding_provider=embedding_provider,
             prompt_template=custom_template,
         )
@@ -221,7 +214,7 @@ class TestContextExtractor:
     async def test_extract_embedding_only_mode_does_not_call_llm(
         self,
         extractor: ContextExtractor,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
     ) -> None:
         """Test embedding_only mode doesn't use LLM."""
         await extractor.extract(
@@ -230,7 +223,7 @@ class TestContextExtractor:
             mode="embedding_only",
         )
 
-        assert len(llm_provider.generate_calls) == 0
+        assert len(llm_executor.generate_calls) == 0
 
     # Test LLM mode
 
@@ -260,7 +253,7 @@ class TestContextExtractor:
     async def test_extract_llm_mode_calls_both_providers(
         self,
         extractor: ContextExtractor,
-        llm_provider: MockLLMProvider,
+        llm_executor: MockLLMExecutor,
         embedding_provider: MockEmbeddingProvider,
     ) -> None:
         """Test LLM mode calls both embedding and LLM providers."""
@@ -271,7 +264,7 @@ class TestContextExtractor:
         )
 
         assert len(embedding_provider.embed_calls) == 1
-        assert len(llm_provider.generate_calls) == 1
+        assert len(llm_executor.generate_calls) == 1
 
     @pytest.mark.asyncio
     async def test_extract_llm_mode_with_history(
@@ -318,7 +311,7 @@ class TestContextExtractor:
         embedding_provider: MockEmbeddingProvider,
     ) -> None:
         """Test that invalid sentiment defaults gracefully."""
-        llm = MockLLMProvider(
+        llm = MockLLMExecutor(
             response_json={
                 "intent": "test",
                 "sentiment": "invalid_sentiment",
@@ -326,7 +319,7 @@ class TestContextExtractor:
             }
         )
         extractor = ContextExtractor(
-            llm_provider=llm,
+            llm_executor=llm,
             embedding_provider=embedding_provider,
         )
 
@@ -339,14 +332,14 @@ class TestContextExtractor:
         embedding_provider: MockEmbeddingProvider,
     ) -> None:
         """Test that invalid urgency defaults to NORMAL."""
-        llm = MockLLMProvider(
+        llm = MockLLMExecutor(
             response_json={
                 "intent": "test",
                 "urgency": "invalid_urgency",
             }
         )
         extractor = ContextExtractor(
-            llm_provider=llm,
+            llm_executor=llm,
             embedding_provider=embedding_provider,
         )
 
@@ -359,7 +352,7 @@ class TestContextExtractor:
         embedding_provider: MockEmbeddingProvider,
     ) -> None:
         """Test that malformed entities are skipped."""
-        llm = MockLLMProvider(
+        llm = MockLLMExecutor(
             response_json={
                 "intent": "test",
                 "entities": [
@@ -370,7 +363,7 @@ class TestContextExtractor:
             }
         )
         extractor = ContextExtractor(
-            llm_provider=llm,
+            llm_executor=llm,
             embedding_provider=embedding_provider,
         )
 
@@ -385,7 +378,7 @@ class TestContextExtractor:
     ) -> None:
         """Test parsing JSON wrapped in markdown code blocks."""
 
-        class MarkdownLLMProvider(MockLLMProvider):
+        class MarkdownLLMExecutor(MockLLMExecutor):
             async def generate(self, messages, **kwargs):
                 return LLMResponse(
                     content='```json\n{"intent": "code_block_test"}\n```',
@@ -394,7 +387,7 @@ class TestContextExtractor:
                 )
 
         extractor = ContextExtractor(
-            llm_provider=MarkdownLLMProvider(),
+            llm_executor=MarkdownLLMExecutor(),
             embedding_provider=embedding_provider,
         )
 

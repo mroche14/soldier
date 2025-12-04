@@ -24,12 +24,17 @@ from soldier.alignment.filtering.models import MatchedRule, ScenarioFilterResult
 from soldier.alignment.generation import PromptBuilder, ResponseGenerator
 from soldier.alignment.generation.models import GenerationResult
 from soldier.alignment.migration.executor import MigrationExecutor
-from soldier.alignment.migration.models import ReconciliationAction, ReconciliationResult
+from soldier.alignment.migration.field_resolver import MissingFieldResolver
+from soldier.alignment.migration.models import (
+    FieldResolutionResult,
+    ReconciliationAction,
+    ReconciliationResult,
+)
 from soldier.alignment.models import Rule, Template
 from soldier.alignment.result import AlignmentResult, PipelineStepTiming
 from soldier.alignment.retrieval import RuleReranker, RuleRetriever, ScenarioRetriever
 from soldier.alignment.retrieval.models import RetrievalResult, ScoredEpisode, ScoredScenario
-from soldier.alignment.stores import ConfigStore
+from soldier.alignment.stores import AgentConfigStore
 from soldier.alignment.templates_loader import load_templates_for_rules
 from soldier.audit.models import TurnRecord
 from soldier.audit.store import AuditStore
@@ -41,8 +46,17 @@ from soldier.conversation.store import SessionStore
 from soldier.memory.retrieval import MemoryRetriever
 from soldier.memory.store import MemoryStore
 from soldier.observability.logging import get_logger
+from soldier.profile.store import ProfileStore
+from soldier.profile.validation import ProfileFieldValidator
 from soldier.providers.embedding import EmbeddingProvider
-from soldier.providers.llm import LLMProvider
+from soldier.providers.llm import (
+    ExecutionContext,
+    LLMExecutor,
+    clear_execution_context,
+    create_executor,
+    create_executors_from_pipeline_config,
+    set_execution_context,
+)
 from soldier.providers.rerank import RerankProvider
 
 logger = get_logger(__name__)
@@ -66,8 +80,7 @@ class AlignmentEngine:
 
     def __init__(
         self,
-        config_store: ConfigStore,
-        llm_provider: LLMProvider,
+        config_store: AgentConfigStore,
         embedding_provider: EmbeddingProvider,
         session_store: SessionStore | None = None,
         audit_store: AuditStore | None = None,
@@ -78,29 +91,39 @@ class AlignmentEngine:
         fallback_handler: FallbackHandler | None = None,
         memory_store: MemoryStore | None = None,
         migration_config: ScenarioMigrationConfig | None = None,
+        executors: dict[str, LLMExecutor] | None = None,
+        profile_store: ProfileStore | None = None,
+        enable_requirement_checking: bool = True,
     ) -> None:
         """Initialize the alignment engine.
 
         Args:
             config_store: Store for rules, scenarios, templates
-            llm_provider: Provider for LLM operations
             embedding_provider: Provider for embeddings
             session_store: Store for session state (optional, enables persistence)
             audit_store: Store for turn records (optional, enables audit trail)
             rerank_provider: Provider for reranking retrieval results
-            pipeline_config: Pipeline configuration
+            pipeline_config: Pipeline configuration (includes model configs per step)
             tool_executor: Executor for tools attached to rules
             enforcement_validator: Validator for hard constraints
             fallback_handler: Handler for enforcement fallbacks
             memory_store: Store for memory episodes
             migration_config: Configuration for scenario migrations
+            executors: Optional pre-configured executors (for testing)
+            profile_store: Store for customer profiles (enables field requirement checking)
+            enable_requirement_checking: Whether to check field requirements on scenario entry
         """
         self._config_store = config_store
-        self._llm_provider = llm_provider
         self._embedding_provider = embedding_provider
         self._session_store = session_store
         self._audit_store = audit_store
         self._config = pipeline_config or PipelineConfig()
+
+        # Use provided executors or create from pipeline config
+        if executors:
+            self._executors = executors
+        else:
+            self._executors = create_executors_from_pipeline_config(self._config)
 
         reranker = None
         if rerank_provider and self._config.reranking.enabled:
@@ -109,9 +132,12 @@ class AlignmentEngine:
                 top_k=self._config.reranking.top_k,
             )
 
-        # Initialize components
+        # Initialize components with their respective executors
         self._context_extractor = ContextExtractor(
-            llm_provider=llm_provider,
+            llm_executor=self._executors.get(
+                "context_extraction",
+                create_executor("mock/default", step_name="context_extraction"),
+            ),
             embedding_provider=embedding_provider,
         )
         self._rule_retriever = RuleRetriever(
@@ -126,7 +152,10 @@ class AlignmentEngine:
             selection_config=self._config.retrieval.scenario_selection,
         )
         self._rule_filter = RuleFilter(
-            llm_provider=llm_provider,
+            llm_executor=self._executors.get(
+                "rule_filtering",
+                create_executor("mock/default", step_name="rule_filtering"),
+            ),
         )
         self._scenario_filter = ScenarioFilter(
             config_store=config_store,
@@ -146,7 +175,10 @@ class AlignmentEngine:
         )
         self._prompt_builder = PromptBuilder()
         self._response_generator = ResponseGenerator(
-            llm_provider=llm_provider,
+            llm_executor=self._executors.get(
+                "generation",
+                create_executor("mock/default", step_name="generation"),
+            ),
             prompt_builder=self._prompt_builder,
         )
         self._migration_executor = (
@@ -156,6 +188,22 @@ class AlignmentEngine:
                 config=migration_config,
             )
             if session_store
+            else None
+        )
+
+        # Profile store and field requirement checking
+        self._profile_store = profile_store
+        self._enable_requirement_checking = enable_requirement_checking
+        self._missing_field_resolver = (
+            MissingFieldResolver(
+                profile_store=profile_store,
+                llm_executor=self._executors.get(
+                    "context_extraction",  # Reuse context extraction model for field extraction
+                    create_executor("mock/default", step_name="context_extraction"),
+                ),
+                field_validator=ProfileFieldValidator(),
+            )
+            if profile_store and enable_requirement_checking
             else None
         )
 
@@ -194,6 +242,46 @@ class AlignmentEngine:
         timings: list[PipelineStepTiming] = []
         turn_id = uuid4()
 
+        # Set execution context for all LLM calls in this turn
+        set_execution_context(
+            ExecutionContext(
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                session_id=session_id,
+                turn_id=turn_id,
+            )
+        )
+
+        try:
+            return await self._process_turn_impl(
+                message=message,
+                session_id=session_id,
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                turn_id=turn_id,
+                session=session,
+                history=history,
+                persist=persist,
+                timings=timings,
+                start_time=start_time,
+            )
+        finally:
+            clear_execution_context()
+
+    async def _process_turn_impl(
+        self,
+        message: str,
+        session_id: UUID,
+        tenant_id: UUID,
+        agent_id: UUID,
+        turn_id: UUID,
+        session: Session | None,
+        history: list[Turn] | None,
+        persist: bool,
+        timings: list[PipelineStepTiming],
+        start_time: float,
+    ) -> AlignmentResult:
+        """Internal implementation of process_turn."""
         logger.info(
             "processing_turn",
             session_id=str(session_id),
@@ -287,6 +375,15 @@ class AlignmentEngine:
             timings,
         )
 
+        # Step 4b: Check Scenario Field Requirements
+        missing_requirements, scenario_blocked = await self._check_scenario_requirements(
+            session=session,
+            scenario_result=scenario_result,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            timings=timings,
+        )
+
         # Step 5: Tool Execution
         tool_results = await self._execute_tools(
             matched_rules,
@@ -341,6 +438,8 @@ class AlignmentEngine:
             response=enforcement_result.final_response,
             pipeline_timings=timings,
             total_time_ms=total_time_ms,
+            missing_requirements=missing_requirements,
+            scenario_blocked=scenario_blocked,
         )
 
         # Step 8: Update session state and persist
@@ -1019,3 +1118,142 @@ class AlignmentEngine:
         )
 
         return result
+
+    async def _check_scenario_requirements(
+        self,
+        session: Session | None,
+        scenario_result: ScenarioFilterResult | None,
+        tenant_id: UUID,
+        agent_id: UUID,
+        timings: list[PipelineStepTiming],
+    ) -> tuple[dict[str, FieldResolutionResult], bool]:
+        """Check and try to fill missing field requirements for scenario entry.
+
+        This method is called after scenario filtering when a scenario entry
+        (action="start") or step transition is detected. It attempts to fill
+        missing fields required by ScenarioFieldRequirement bindings.
+
+        Args:
+            session: Current session
+            scenario_result: Result of scenario filtering
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
+            timings: List to append timing info
+
+        Returns:
+            Tuple of (missing_requirements dict, scenario_blocked bool).
+            - missing_requirements: Fields that couldn't be filled
+            - scenario_blocked: True if hard requirements are unmet
+        """
+        step_start = datetime.utcnow()
+        start_time = time.perf_counter()
+
+        # Skip if no resolver, session, or scenario result
+        if (
+            self._missing_field_resolver is None
+            or session is None
+            or scenario_result is None
+        ):
+            timings.append(
+                PipelineStepTiming(
+                    step="requirement_check",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="No resolver, session, or scenario result",
+                )
+            )
+            return {}, False
+
+        # Only check on scenario entry or step transition
+        if scenario_result.action not in ("start", "transition"):
+            timings.append(
+                PipelineStepTiming(
+                    step="requirement_check",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason=f"Action is {scenario_result.action}, not start/transition",
+                )
+            )
+            return {}, False
+
+        scenario_id = scenario_result.scenario_id
+        step_id = scenario_result.target_step_id
+
+        if scenario_id is None:
+            timings.append(
+                PipelineStepTiming(
+                    step="requirement_check",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="No scenario ID",
+                )
+            )
+            return {}, False
+
+        logger.info(
+            "checking_scenario_requirements",
+            session_id=str(session.session_id),
+            scenario_id=str(scenario_id),
+            step_id=str(step_id) if step_id else None,
+            action=scenario_result.action,
+        )
+
+        # Try to fill missing requirements
+        fill_results = await self._missing_field_resolver.fill_scenario_requirements(
+            session=session,
+            scenario_id=scenario_id,
+            step_id=step_id,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+        )
+
+        # Identify unfilled requirements
+        unfilled = {
+            k: v for k, v in fill_results.items() if not v.filled
+        }
+
+        # Check if any hard requirements are unmet
+        unfilled_hard = self._missing_field_resolver.get_unfilled_hard_requirements(
+            fill_results
+        )
+        scenario_blocked = len(unfilled_hard) > 0
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        timings.append(
+            PipelineStepTiming(
+                step="requirement_check",
+                started_at=step_start,
+                ended_at=datetime.utcnow(),
+                duration_ms=elapsed_ms,
+            )
+        )
+
+        if scenario_blocked:
+            logger.warning(
+                "scenario_entry_blocked",
+                session_id=str(session.session_id),
+                scenario_id=str(scenario_id),
+                unfilled_hard_count=len(unfilled_hard),
+                unfilled_fields=[r.field_name for r in unfilled_hard],
+            )
+        elif unfilled:
+            logger.info(
+                "scenario_requirements_partial",
+                session_id=str(session.session_id),
+                scenario_id=str(scenario_id),
+                unfilled_soft_count=len(unfilled),
+            )
+        else:
+            logger.info(
+                "scenario_requirements_satisfied",
+                session_id=str(session.session_id),
+                scenario_id=str(scenario_id),
+            )
+
+        return unfilled, scenario_blocked

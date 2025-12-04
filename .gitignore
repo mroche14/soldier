@@ -75,3 +75,6 @@ logs/
 # Local development
 *.local
 local/
+
+# Documentation build output
+webdoc/site/

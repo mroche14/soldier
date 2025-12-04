@@ -1,8 +1,10 @@
 """Tests for rerank providers."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
-from soldier.providers.rerank import MockRerankProvider, RerankResponse
+from soldier.providers.rerank import JinaRerankProvider, MockRerankProvider, RerankResponse
 
 
 class TestMockRerankProvider:
@@ -116,3 +118,138 @@ class TestMockRerankProvider:
         assert response.results[0].text == "hello world"
         assert response.results[0].score > response.results[1].score
         assert response.results[1].score > response.results[2].score
+
+
+class TestJinaRerankProvider:
+    """Tests for JinaRerankProvider."""
+
+    @pytest.fixture
+    def mock_response(self):
+        """Create a mock API response."""
+        return {
+            "results": [
+                {"index": 1, "relevance_score": 0.95, "document": {"text": "Python programming"}},
+                {"index": 0, "relevance_score": 0.80, "document": {"text": "Java programming"}},
+                {"index": 2, "relevance_score": 0.30, "document": {"text": "Cooking recipes"}},
+            ],
+            "usage": {"total_tokens": 50, "prompt_tokens": 50},
+        }
+
+    @pytest.fixture
+    def provider(self):
+        """Create a Jina provider with mocked API key."""
+        with patch.dict("os.environ", {"JINA_API_KEY": "test-key"}):
+            return JinaRerankProvider()
+
+    @pytest.mark.asyncio
+    async def test_provider_name(self, provider):
+        """Should return provider name."""
+        assert provider.provider_name == "jina"
+
+    @pytest.mark.asyncio
+    async def test_rerank_documents(self, provider, mock_response):
+        """Should rerank documents via API."""
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 200
+        mock_http_response.json.return_value = mock_response
+
+        provider._client.post = AsyncMock(return_value=mock_http_response)
+
+        response = await provider.rerank(
+            "python programming",
+            ["Java programming", "Python programming", "Cooking recipes"],
+        )
+
+        assert isinstance(response, RerankResponse)
+        assert len(response.results) == 3
+        assert response.results[0].index == 1
+        assert response.results[0].score == 0.95
+        assert response.results[0].text == "Python programming"
+
+    @pytest.mark.asyncio
+    async def test_rerank_top_k(self, provider, mock_response):
+        """Should pass top_n parameter to API."""
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 200
+        mock_http_response.json.return_value = mock_response
+
+        provider._client.post = AsyncMock(return_value=mock_http_response)
+
+        await provider.rerank("query", ["doc1", "doc2", "doc3"], top_k=2)
+
+        call_args = provider._client.post.call_args
+        payload = call_args.kwargs["json"]
+        assert payload["top_n"] == 2
+
+    @pytest.mark.asyncio
+    async def test_empty_documents(self, provider):
+        """Should handle empty document list."""
+        response = await provider.rerank("query", [])
+
+        assert len(response.results) == 0
+        assert response.usage["total_tokens"] == 0
+
+    @pytest.mark.asyncio
+    async def test_api_error_raises_exception(self, provider):
+        """Should raise exception on API error."""
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 401
+        mock_http_response.text = "Unauthorized"
+
+        provider._client.post = AsyncMock(return_value=mock_http_response)
+
+        with pytest.raises(RuntimeError, match="Jina API error"):
+            await provider.rerank("query", ["doc"])
+
+    @pytest.mark.asyncio
+    async def test_usage_tracking(self, provider, mock_response):
+        """Should include usage stats in response."""
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 200
+        mock_http_response.json.return_value = mock_response
+
+        provider._client.post = AsyncMock(return_value=mock_http_response)
+
+        response = await provider.rerank("query", ["doc1", "doc2"])
+
+        assert response.usage is not None
+        assert response.usage["total_tokens"] == 50
+
+    @pytest.mark.asyncio
+    async def test_return_documents_flag(self, provider, mock_response):
+        """Should pass return_documents to API."""
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 200
+        mock_http_response.json.return_value = mock_response
+
+        provider._client.post = AsyncMock(return_value=mock_http_response)
+
+        await provider.rerank("query", ["doc"], return_documents=False)
+
+        call_args = provider._client.post.call_args
+        payload = call_args.kwargs["json"]
+        assert payload["return_documents"] is False
+
+    @pytest.mark.asyncio
+    async def test_model_override(self, provider, mock_response):
+        """Should allow model override."""
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 200
+        mock_http_response.json.return_value = mock_response
+
+        provider._client.post = AsyncMock(return_value=mock_http_response)
+
+        response = await provider.rerank(
+            "query", ["doc"], model="jina-reranker-v3"
+        )
+
+        call_args = provider._client.post.call_args
+        payload = call_args.kwargs["json"]
+        assert payload["model"] == "jina-reranker-v3"
+        assert response.model == "jina-reranker-v3"
+
+    def test_missing_api_key_raises_error(self):
+        """Should raise error if API key not provided."""
+        with patch.dict("os.environ", {}, clear=True):
+            with pytest.raises(ValueError, match="JINA_API_KEY"):
+                JinaRerankProvider()

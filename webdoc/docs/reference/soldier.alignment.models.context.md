@@ -1,0 +1,39 @@
+<a id="soldier.alignment.models.context"></a>
+
+# soldier.alignment.models.context
+
+Context models for alignment domain.
+
+<a id="soldier.alignment.models.context.UserIntent"></a>
+
+## UserIntent Objects
+
+```python
+class UserIntent(BaseModel)
+```
+
+Classified user intent.
+
+<a id="soldier.alignment.models.context.ExtractedEntities"></a>
+
+## ExtractedEntities Objects
+
+```python
+class ExtractedEntities(BaseModel)
+```
+
+Named entities from message.
+
+<a id="soldier.alignment.models.context.Context"></a>
+
+## Context Objects
+
+```python
+class Context(BaseModel)
+```
+
+Extracted understanding of user message.
+
+Contains the processed understanding of a user's message
+including intent, entities, and metadata.
+

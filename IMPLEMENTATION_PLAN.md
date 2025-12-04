@@ -747,8 +747,8 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 
 ### 16.2 Redis Session Store
 - [x] `soldier/conversation/stores/redis.py` - RedisSessionStore
-  - [ ] Two-tier (cache + persistent)
-  - [ ] TTL management
+  - [x] Two-tier (cache + persistent)
+  - [x] TTL management
 
 ### 16.3 Additional Backends (Optional)
 - [ ] MongoDB stores
@@ -756,13 +756,15 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 - [ ] DynamoDB session store
 
 ### 16.4 Database Migrations
-- [ ] Alembic setup for PostgreSQL
-- [ ] Migration scripts
+- [x] Alembic setup for PostgreSQL
+- [x] Migration scripts (001-007)
 
 ### 16.5 Integration Tests
-- [ ] `tests/integration/stores/test_postgres_config.py`
-- [ ] `tests/integration/stores/test_postgres_memory.py`
-- [ ] `tests/integration/stores/test_redis_session.py`
+- [x] `tests/integration/stores/test_postgres_config.py`
+- [x] `tests/integration/stores/test_postgres_memory.py`
+- [x] `tests/integration/stores/test_postgres_audit.py`
+- [x] `tests/integration/stores/test_postgres_profile.py`
+- [x] `tests/integration/stores/test_redis_session.py`
 
 ---
 
@@ -785,8 +787,92 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 - [x] `soldier/providers/rerank/cross_encoder.py` - Local CrossEncoder
 
 ### 17.4 Integration Tests
-- [ ] `tests/integration/providers/test_anthropic.py`
-- [ ] `tests/integration/providers/test_openai.py`
+- [x] `tests/integration/providers/test_anthropic.py`
+- [x] `tests/integration/providers/test_openai.py`
+
+---
+
+## Phase 17.5: Customer Context Vault Enhancement ✅
+**Goal**: Evolve CustomerProfile into a comprehensive Customer Context Vault with lineage tracking, explicit status management, schema-driven field definitions, and Redis caching.
+> Reference: `specs/010-customer-context-vault/spec.md`
+
+### 17.5.1 Model Enhancements ✅
+- [x] Add `ItemStatus` enum (active, superseded, expired, orphaned) to `soldier/profile/enums.py`
+- [x] Add `SourceType` enum (profile_field, profile_asset, session, tool, external)
+- [x] Add `RequiredLevel` enum (hard, soft)
+- [x] Add `FallbackAction` enum (ask, skip, block, extract)
+- [x] Add `ValidationMode` enum (strict, warn, disabled)
+- [x] Enhance `ProfileField` with:
+  - [x] `id: UUID` field for lineage tracking
+  - [x] `source_item_id`, `source_item_type`, `source_metadata` fields
+  - [x] `status`, `superseded_by_id`, `superseded_at` fields
+  - [x] `field_definition_id` field
+- [x] Enhance `ProfileAsset` with lineage and status fields
+- [x] Create `ProfileFieldDefinition` model (schema)
+- [x] Create `ScenarioFieldRequirement` model (bindings)
+- [x] Update `CustomerProfile` with lineage helpers (`get_derived_fields()`)
+
+### 17.5.2 Store Interface Updates ✅
+- [x] Extend `ProfileStore` interface with:
+  - [x] Status-aware queries: `get_field()`, `get_field_history()`, `expire_stale_fields()`
+  - [x] Lineage operations: `get_derivation_chain()`, `get_derived_items()`, `check_has_dependents()`
+  - [x] Schema operations: `get_field_definitions()`, `save_field_definition()`
+  - [x] Requirements operations: `get_scenario_requirements()`, `get_missing_fields()`
+- [x] Update `InMemoryProfileStore` with all new methods
+- [x] Create contract test suite for ProfileStore (`tests/contract/test_profile_store_contract.py`)
+
+### 17.5.3 Database Schema (Alembic Migrations) ✅
+- [x] `008_profile_fields_enhancement.py` - Add lineage + status columns
+- [x] `009_profile_assets_enhancement.py` - Add lineage + status columns
+- [x] `010_profile_field_definitions.py` - New table
+- [x] `011_scenario_field_requirements.py` - New table
+- [x] Update `PostgresProfileStore` with all new methods
+
+### 17.5.4 Redis Caching Layer ✅
+- [x] Create `soldier/profile/stores/cached.py` - `ProfileStoreCacheLayer` wrapper
+- [x] Implement two-tier caching (Redis + PostgreSQL)
+- [x] Cache invalidation on mutations
+- [x] Fallback logic for Redis failures
+- [x] Add `ProfileStoreConfig` to `soldier/config/models/storage.py`
+- [x] Update `config/default.toml` with `[profile]` section
+
+### 17.5.5 Schema Validation Service ✅
+- [x] Create `soldier/profile/validation.py` - `ProfileFieldValidator`
+- [x] Type validators for: string, number, boolean, date, email, phone, json
+- [x] Regex and allowed values validation
+- [x] Validation mode support (strict, warn, disabled)
+
+### 17.5.6 MissingFieldResolver Integration ✅
+- [x] `GapFillResult` with `field_definition`, confidence, source tracking
+- [x] `MissingFieldResolver` class with:
+  - [x] `try_profile_fill()` - Check customer profile
+  - [x] `try_session_fill()` - Check session variables
+  - [x] `try_conversation_extraction()` - LLM extraction
+- [x] Confidence thresholds (0.85/0.95)
+- [x] Track lineage when persisting extracted values
+- [x] Add `fill_scenario_requirements()` method (batch fill)
+- [x] Add `get_unfilled_hard_requirements()` and `get_fields_to_ask()` helpers
+- [x] Update `AlignmentEngine` to check missing fields before scenario entry
+  - [x] `_check_scenario_requirements()` method
+  - [x] `missing_requirements` and `scenario_blocked` fields in `AlignmentResult`
+
+### 17.5.7 Observability ✅
+- [x] Add cache hit/miss/invalidation/error metrics
+- [x] Add derivation chain depth histogram
+- [x] Add schema validation error counter
+- [x] Add gap fill attempts/count metrics
+- [x] Structured logging for validation failures and lineage operations
+
+### 17.5.8 Tests ✅
+- [x] `tests/unit/profile/test_profile_models.py` - Model enhancements (27 tests)
+- [x] `tests/unit/profile/test_validation.py` - Schema validation (17 tests)
+- [x] `tests/unit/profile/stores/test_cached_profile.py` - Cache wrapper (22 tests)
+- [x] `tests/unit/profile/stores/test_inmemory_profile.py` - InMemory store (24 tests)
+- [x] `tests/unit/profile/test_extraction.py` - Field extraction (17 tests)
+- [x] `tests/contract/test_profile_store_contract.py` - Contract tests (26 tests)
+- [x] `tests/integration/stores/test_postgres_profile.py` - PostgreSQL integration
+- [ ] `tests/integration/stores/test_cached_profile.py` - Redis integration
+- [ ] `tests/integration/alignment/test_profile_requirements.py` - Scenario requirements
 
 ---
 
@@ -868,6 +954,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 | 12 | `docs/architecture/memory-layer.md` |
 | 13-14 | `docs/architecture/api-layer.md`, `docs/design/api-crud.md` |
 | 15 | `docs/design/scenario-update-methods.md` |
+| 17.5 | `specs/010-customer-context-vault/spec.md`, `docs/design/customer-profile.md` |
 | All | `docs/vision.md`, `docs/architecture/overview.md` |
 
 ---
@@ -882,6 +969,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 6. **Phases 13-14**: API - Expose the engine externally
 7. **Phase 15**: Migration - Advanced scenario handling
 8. **Phases 16-17**: Production backends - Replace mocks with real implementations
-9. **Phases 18-20**: Polish - Optional features and deployment
+9. **Phase 17.5**: Customer Context Vault - Enhanced profile system with lineage, status, schema, and caching
+10. **Phases 18-20**: Polish - Optional features and deployment
 
 Each phase should be completable independently, with tests passing at each stage.

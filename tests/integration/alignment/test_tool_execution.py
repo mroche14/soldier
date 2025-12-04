@@ -1,6 +1,7 @@
 """Integration test for tool execution flow."""
 
 import json
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -9,40 +10,25 @@ from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.execution import ToolExecutor
 from soldier.alignment.filtering.models import MatchedRule
 from soldier.alignment.models import Scope
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 
-class MockLLMProvider(LLMProvider):
-    """Drive extraction, filtering, and generation for tool flow."""
+class SequenceLLMExecutor(LLMExecutor):
+    """LLM executor returning responses in sequence."""
 
-    def __init__(self, rule_id):
-        self.rule_id = rule_id
-        self.calls = 0
+    def __init__(self, responses: list[str]) -> None:
+        super().__init__(model="mock/test", step_name="test")
+        self._responses = responses
+        self._call_count = 0
 
-    @property
-    def provider_name(self) -> str:
-        return "mock"
-
-    async def generate(self, messages: list[LLMMessage], **kwargs) -> LLMResponse:
-        self.calls += 1
-        if self.calls == 1:
-            content = json.dumps(
-                {"intent": "order_status", "entities": [], "sentiment": "neutral", "urgency": "normal"}
-            )
-        elif self.calls == 2:
-            content = json.dumps(
-                {"evaluations": [{"rule_id": str(self.rule_id), "applies": True, "relevance": 0.9}]}
-            )
-        else:
-            content = "Here is the result with tool output."
+    async def generate(self, messages: list[LLMMessage], **kwargs: Any) -> LLMResponse:
+        content = self._responses[min(self._call_count, len(self._responses) - 1)]
+        self._call_count += 1
         return LLMResponse(content=content, model="mock-model", usage={})
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs):
-        raise NotImplementedError
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):
@@ -81,22 +67,37 @@ async def test_tool_execution_flow_integration() -> None:
         embedding=[1.0, 0.0, 0.0],
     )
 
-    store = InMemoryConfigStore()
+    store = InMemoryAgentConfigStore()
     await store.save_rule(rule)
 
     async def lookup_order_tool(context, matched_rule: MatchedRule):
         return {"status": "shipped", "rule": matched_rule.rule.name, "message": context.message}
 
+    # Create executors for each step
+    extraction_resp = json.dumps(
+        {"intent": "order_status", "entities": [], "sentiment": "neutral", "urgency": "normal"}
+    )
+    filter_resp = json.dumps(
+        {"evaluations": [{"rule_id": str(rule.id), "applies": True, "relevance": 0.9}]}
+    )
+
+    context_executor = SequenceLLMExecutor([extraction_resp])
+    filter_executor = SequenceLLMExecutor([filter_resp])
+    gen_executor = SequenceLLMExecutor(["Here is the result with tool output."])
+
     tool_executor = ToolExecutor({"lookup_order": lookup_order_tool})
-    llm_provider = MockLLMProvider(rule_id=rule.id)
     embedding_provider = StaticEmbeddingProvider([1.0, 0.0, 0.0])
 
     engine = AlignmentEngine(
         config_store=store,
-        llm_provider=llm_provider,
         embedding_provider=embedding_provider,
         pipeline_config=PipelineConfig(),
         tool_executor=tool_executor,
+        executors={
+            "context_extraction": context_executor,
+            "rule_filtering": filter_executor,
+            "generation": gen_executor,
+        },
     )
 
     result = await engine.process_turn(

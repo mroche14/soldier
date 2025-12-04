@@ -3,7 +3,9 @@
 Tests the full migration lifecycle from plan generation through execution.
 """
 
+import json
 from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -17,12 +19,40 @@ from soldier.alignment.migration.models import (
 )
 from soldier.alignment.migration.planner import MigrationDeployer, MigrationPlanner
 from soldier.alignment.models import Scenario, ScenarioStep, StepTransition
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
 from soldier.config.models.migration import ScenarioMigrationConfig
 from soldier.conversation.models import Channel, Session, StepVisit
 from soldier.conversation.stores.inmemory import InMemorySessionStore
 from soldier.providers.embedding.mock import MockEmbeddingProvider
-from soldier.providers.llm.mock import MockLLMProvider
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+
+
+class MockLLMExecutor(LLMExecutor):
+    """Mock LLM executor for testing."""
+
+    def __init__(self, default_response: str = "Test response") -> None:
+        super().__init__(model="mock/test", step_name="test")
+        self._default_response = default_response
+
+    async def generate(self, messages: list[LLMMessage], **kwargs: Any) -> LLMResponse:
+        return LLMResponse(content=self._default_response, model="mock", usage={})
+
+
+def create_test_executors() -> dict[str, LLMExecutor]:
+    """Create mock executors for testing."""
+    extraction_resp = json.dumps({
+        "intent": "test",
+        "entities": [],
+        "sentiment": "neutral",
+        "urgency": "normal",
+    })
+    filter_resp = json.dumps({"evaluations": []})
+
+    return {
+        "context_extraction": MockLLMExecutor(extraction_resp),
+        "rule_filtering": MockLLMExecutor(filter_resp),
+        "generation": MockLLMExecutor("Test response"),
+    }
 
 
 @pytest.fixture
@@ -37,7 +67,7 @@ def agent_id():
 
 @pytest.fixture
 def config_store():
-    return InMemoryConfigStore()
+    return InMemoryAgentConfigStore()
 
 
 @pytest.fixture
@@ -48,11 +78,6 @@ def session_store():
 @pytest.fixture
 def migration_config():
     return ScenarioMigrationConfig()
-
-
-@pytest.fixture
-def llm_provider():
-    return MockLLMProvider(default_response="Test response")
 
 
 @pytest.fixture
@@ -113,7 +138,6 @@ class TestMigrationFullFlow:
         config_store,
         session_store,
         migration_config,
-        llm_provider,
         embedding_provider,
     ):
         """Test complete clean graft migration from plan to execution."""
@@ -192,10 +216,10 @@ class TestMigrationFullFlow:
         # Create alignment engine with migration support
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
             session_store=session_store,
             migration_config=migration_config,
+            executors=create_test_executors(),
         )
 
         # Process a turn - should trigger JIT migration
@@ -223,7 +247,6 @@ class TestMigrationFullFlow:
         config_store,
         session_store,
         migration_config,
-        llm_provider,
         embedding_provider,
     ):
         """Test that gap fill migration prompts for missing data."""
@@ -286,10 +309,10 @@ class TestMigrationFullFlow:
         # Create engine and process turn
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
             session_store=session_store,
             migration_config=migration_config,
+            executors=create_test_executors(),
         )
 
         result = await engine.process_turn(
@@ -312,7 +335,6 @@ class TestMigrationFullFlow:
         config_store,
         session_store,
         migration_config,
-        llm_provider,
         embedding_provider,
     ):
         """Test fallback reconciliation when no migration plan exists."""
@@ -355,10 +377,10 @@ class TestMigrationFullFlow:
         # Create engine
         engine = AlignmentEngine(
             config_store=config_store,
-            llm_provider=llm_provider,
             embedding_provider=embedding_provider,
             session_store=session_store,
             migration_config=migration_config,
+            executors=create_test_executors(),
         )
 
         # Process turn - should trigger fallback reconciliation

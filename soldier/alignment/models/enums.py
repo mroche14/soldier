@@ -12,9 +12,9 @@ class Scope(str, Enum):
     - STEP: Only when in the specific step
     """
 
-    GLOBAL = "global"
-    SCENARIO = "scenario"
-    STEP = "step"
+    GLOBAL = "GLOBAL"
+    SCENARIO = "SCENARIO"
+    STEP = "STEP"
 
 
 class TemplateMode(str, Enum):
@@ -25,9 +25,9 @@ class TemplateMode(str, Enum):
     - FALLBACK: Use if LLM fails or violates rules
     """
 
-    SUGGEST = "suggest"
-    EXCLUSIVE = "exclusive"
-    FALLBACK = "fallback"
+    SUGGEST = "SUGGEST"
+    EXCLUSIVE = "EXCLUSIVE"
+    FALLBACK = "FALLBACK"
 
 
 class VariableUpdatePolicy(str, Enum):

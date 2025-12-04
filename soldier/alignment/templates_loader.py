@@ -4,11 +4,11 @@ from uuid import UUID
 
 from soldier.alignment.filtering.models import MatchedRule
 from soldier.alignment.models import Template
-from soldier.alignment.stores import ConfigStore
+from soldier.alignment.stores import AgentConfigStore
 
 
 async def load_templates_for_rules(
-    config_store: ConfigStore,
+    config_store: AgentConfigStore,
     tenant_id: UUID,
     matched_rules: list[MatchedRule],
 ) -> list[Template]:

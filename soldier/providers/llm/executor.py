@@ -42,7 +42,7 @@ from soldier.providers.llm.base import (
 if TYPE_CHECKING:
     from agno.agent import Agent
 
-    from soldier.config.models.pipeline import PipelineConfig
+    from soldier.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
 
 logger = get_logger(__name__)
 
@@ -136,6 +136,7 @@ class LLMExecutor:
         max_retries: int = 2,
         timeout: float = 60.0,
         step_name: str | None = None,
+        openrouter_config: OpenRouterProviderConfig | None = None,
     ) -> None:
         """Initialize the executor.
 
@@ -145,12 +146,14 @@ class LLMExecutor:
             max_retries: Max retries per model (not used yet, for future)
             timeout: Request timeout in seconds
             step_name: Pipeline step name for logging
+            openrouter_config: OpenRouter-specific provider routing config
         """
         self._model = model
         self._fallback_models = fallback_models or []
         self._max_retries = max_retries
         self._timeout = timeout
         self._step_name = step_name
+        self._openrouter_config = openrouter_config
 
         # Cache for Agno agents (one per model string)
         self._agents: dict[str, Agent] = {}
@@ -367,7 +370,22 @@ class LLMExecutor:
         if provider_type == "openrouter":
             from agno.models.openrouter import OpenRouter
 
-            return OpenRouter(id=api_model)
+            # Build extra_body from openrouter config if present
+            # Note: Must use extra_body, not request_params, because OpenRouter-specific
+            # fields like 'provider' need to be passed via extra_body to the OpenAI client
+            extra_body = None
+            if self._openrouter_config:
+                extra_body = self._openrouter_config.to_request_params()
+                if extra_body:
+                    logger.debug(
+                        "openrouter_provider_config_applied",
+                        model=model,
+                        step=self._step_name,
+                        provider_order=self._openrouter_config.provider_order,
+                        provider_sort=self._openrouter_config.provider_sort,
+                    )
+
+            return OpenRouter(id=api_model, extra_body=extra_body)
 
         elif provider_type == "anthropic":
             from agno.models.anthropic import Claude
@@ -472,17 +490,28 @@ class LLMExecutor:
 
         latency_ms = (time.perf_counter() - start_time) * 1000
 
+        # Extract backend provider info from Agno response (useful for OpenRouter)
+        backend_provider = getattr(run_response, "model_provider", None)
+        provider_data = getattr(run_response, "model_provider_data", None)
+
+        # Build metadata
+        metadata: dict[str, Any] = {
+            "latency_ms": latency_ms,
+            "model_requested": model,
+            "provider": provider_type,
+        }
+        if backend_provider:
+            metadata["backend_provider"] = backend_provider
+        if provider_data:
+            metadata["provider_data"] = provider_data
+
         # Build response
         response = LLMResponse(
             content=content,
             model=model,
             finish_reason="stop",
             usage=None,  # Agno doesn't expose token usage consistently
-            metadata={
-                "latency_ms": latency_ms,
-                "model_requested": model,
-                "provider": provider_type,
-            },
+            metadata=metadata,
         )
 
         logger.debug(
@@ -491,6 +520,7 @@ class LLMExecutor:
             step=self._step_name,
             latency_ms=round(latency_ms, 2),
             content_length=len(content),
+            backend_provider=backend_provider,
         )
 
         return response
@@ -634,6 +664,7 @@ def create_executor(
     fallback_models: list[str] | None = None,
     step_name: str | None = None,
     timeout: float = 60.0,
+    openrouter_config: OpenRouterProviderConfig | None = None,
 ) -> LLMExecutor:
     """Create an LLMExecutor with the given configuration.
 
@@ -642,6 +673,7 @@ def create_executor(
         fallback_models: Models to try if primary fails
         step_name: Pipeline step name for logging
         timeout: Request timeout
+        openrouter_config: OpenRouter-specific provider routing config
 
     Returns:
         Configured LLMExecutor
@@ -651,6 +683,7 @@ def create_executor(
         fallback_models=fallback_models,
         step_name=step_name,
         timeout=timeout,
+        openrouter_config=openrouter_config,
     )
 
 
@@ -661,7 +694,7 @@ def create_executor_from_step_config(
     """Create an LLMExecutor from pipeline step configuration.
 
     Args:
-        step_config: Pipeline step config with model and fallback_models
+        step_config: Pipeline step config with model, fallback_models, and optional openrouter
         step_name: Name of the step
 
     Returns:
@@ -672,6 +705,7 @@ def create_executor_from_step_config(
         fallback_models=getattr(step_config, "fallback_models", []),
         timeout=getattr(step_config, "timeout", 60.0),
         step_name=step_name,
+        openrouter_config=getattr(step_config, "openrouter", None),
     )
 
 

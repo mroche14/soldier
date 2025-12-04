@@ -23,7 +23,7 @@ from soldier.alignment.migration.models import (
 )
 from soldier.alignment.migration.planner import MigrationDeployer, MigrationPlanner
 from soldier.alignment.models import Scenario, ScenarioStep, StepTransition
-from soldier.alignment.stores import ConfigStore
+from soldier.alignment.stores import AgentConfigStore
 from soldier.api.dependencies import get_config_store, get_session_store, get_settings
 from soldier.conversation.store import SessionStore
 from soldier.observability.logging import get_logger
@@ -195,7 +195,7 @@ def _convert_scenario_input(
 
 
 async def _get_planner(
-    config_store: ConfigStore,
+    config_store: AgentConfigStore,
     session_store: SessionStore,
 ) -> MigrationPlanner:
     """Get configured MigrationPlanner instance."""
@@ -208,7 +208,7 @@ async def _get_planner(
 
 
 async def _get_deployer(
-    config_store: ConfigStore,
+    config_store: AgentConfigStore,
     session_store: SessionStore,
 ) -> MigrationDeployer:
     """Get configured MigrationDeployer instance."""
@@ -234,7 +234,7 @@ async def generate_migration_plan(
     scenario_id: UUID,
     request: GenerateMigrationPlanRequest,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
     session_store: SessionStore = Depends(get_session_store),
 ) -> MigrationPlan:
     """Generate a migration plan for a scenario update.
@@ -283,7 +283,7 @@ async def list_migration_plans(
     plan_status: MigrationPlanStatus | None = None,
     limit: int = 50,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
 ) -> dict[str, Any]:
     """List migration plans for a tenant."""
     plans = await config_store.list_migration_plans(
@@ -315,7 +315,7 @@ async def list_migration_plans(
 async def get_migration_plan(
     plan_id: UUID,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
 ) -> MigrationPlan:
     """Get full details of a migration plan."""
     plan = await config_store.get_migration_plan(x_tenant_id, plan_id)
@@ -331,7 +331,7 @@ async def get_migration_plan(
 async def get_migration_summary(
     plan_id: UUID,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
 ) -> MigrationSummary:
     """Get operator-friendly summary of a migration plan."""
     plan = await config_store.get_migration_plan(x_tenant_id, plan_id)
@@ -348,7 +348,7 @@ async def update_anchor_policies(
     plan_id: UUID,
     request: UpdatePoliciesRequest,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
     session_store: SessionStore = Depends(get_session_store),
 ) -> MigrationPlan:
     """Update per-anchor migration policies."""
@@ -378,7 +378,7 @@ async def approve_migration_plan(
     plan_id: UUID,
     request: ApprovePlanRequest | None = None,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
     session_store: SessionStore = Depends(get_session_store),
 ) -> MigrationPlan:
     """Approve a migration plan for deployment."""
@@ -409,7 +409,7 @@ async def reject_migration_plan(
     plan_id: UUID,
     request: RejectPlanRequest | None = None,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
     session_store: SessionStore = Depends(get_session_store),
 ) -> MigrationPlan:
     """Reject a migration plan."""
@@ -441,7 +441,7 @@ async def reject_migration_plan(
 async def deploy_migration_plan(
     plan_id: UUID,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
     session_store: SessionStore = Depends(get_session_store),
 ) -> DeploymentResult:
     """Deploy an approved migration plan.
@@ -482,7 +482,7 @@ async def deploy_migration_plan(
 async def get_deployment_status(
     plan_id: UUID,
     x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
-    config_store: ConfigStore = Depends(get_config_store),
+    config_store: AgentConfigStore = Depends(get_config_store),
     session_store: SessionStore = Depends(get_session_store),
 ) -> DeploymentStatus:
     """Get current deployment status."""

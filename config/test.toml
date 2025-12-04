@@ -23,15 +23,7 @@ backend = "inmemory"
 [storage.audit]
 backend = "inmemory"
 
-# All providers use mock implementations for testing
-[providers.llm.haiku]
-provider = "mock"
-model = "mock-haiku"
-
-[providers.llm.sonnet]
-provider = "mock"
-model = "mock-sonnet"
-
+# Embedding and rerank providers use mock implementations
 [providers.embedding.default]
 provider = "mock"
 model = "mock-embedding"
@@ -39,6 +31,28 @@ model = "mock-embedding"
 [providers.rerank.default]
 provider = "mock"
 model = "mock-rerank"
+
+# Pipeline uses mock models for testing
+[pipeline.context_extraction]
+model = "mock/haiku"
+
+[pipeline.rule_filtering]
+model = "mock/haiku"
+
+[pipeline.scenario_filtering]
+model = "mock/haiku"
+
+[pipeline.generation]
+model = "mock/sonnet"
+
+[pipeline.memory_ingestion.entity_extraction]
+model = "mock/haiku"
+
+[pipeline.memory_ingestion.summarization.window]
+model = "mock/haiku"
+
+[pipeline.memory_ingestion.summarization.meta]
+model = "mock/haiku"
 
 [observability.logging]
 level = "DEBUG"

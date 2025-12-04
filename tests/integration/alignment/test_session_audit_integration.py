@@ -10,31 +10,28 @@ import pytest
 from soldier.alignment.context.models import Turn
 from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.filtering.models import ScenarioAction, ScenarioFilterResult
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.audit.models import TurnRecord
 from soldier.audit.stores.inmemory import InMemoryAuditStore
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.conversation.models import Channel, Session
 from soldier.conversation.stores.inmemory import InMemorySessionStore
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 
-class MockLLMProvider(LLMProvider):
-    """Mock LLM for testing."""
+class MockLLMExecutor(LLMExecutor):
+    """Mock LLM executor for testing."""
 
     def __init__(self, responses: list[str] | None = None) -> None:
+        super().__init__(model="mock/test", step_name="test")
         self._responses = responses or [
             json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"}),
             json.dumps({"evaluations": []}),
             "Test response",
         ]
         self._call_index = 0
-
-    @property
-    def provider_name(self) -> str:
-        return "mock"
 
     async def generate(self, messages: list[LLMMessage], **kwargs: Any) -> LLMResponse:
         response = self._responses[min(self._call_index, len(self._responses) - 1)]
@@ -45,8 +42,19 @@ class MockLLMProvider(LLMProvider):
             usage={"prompt_tokens": 10, "completion_tokens": 5},
         )
 
-    def generate_stream(self, messages: list[LLMMessage], **kwargs: Any):
-        raise NotImplementedError
+
+def create_test_executors(responses: list[str] | None = None) -> dict[str, LLMExecutor]:
+    """Create a set of mock executors for testing."""
+    default_responses = responses or [
+        json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"}),
+        json.dumps({"evaluations": []}),
+        "Test response",
+    ]
+    return {
+        "context_extraction": MockLLMExecutor([default_responses[0]]),
+        "rule_filtering": MockLLMExecutor([default_responses[1]] if len(default_responses) > 1 else default_responses),
+        "generation": MockLLMExecutor([default_responses[2]] if len(default_responses) > 2 else default_responses),
+    }
 
 
 class MockEmbeddingProvider(EmbeddingProvider):
@@ -74,7 +82,7 @@ class TestSessionLoading:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -83,11 +91,11 @@ class TestSessionLoading:
     def engine(self, stores):
         return AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
+            executors=create_test_executors(),
         )
 
     @pytest.mark.asyncio
@@ -155,7 +163,7 @@ class TestHistoryLoading:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -164,8 +172,8 @@ class TestHistoryLoading:
     def engine(self, stores):
         return AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -244,7 +252,7 @@ class TestSessionStateUpdates:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -257,8 +265,8 @@ class TestSessionStateUpdates:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -308,24 +316,29 @@ class TestSessionStateUpdates:
         )
         await stores["config"].save_rule(rule)
 
-        # LLM that matches the rule
-        llm = MockLLMProvider([
-            json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"}),
-            json.dumps({
-                "evaluations": [
-                    {"rule_id": str(rule.id), "applies": True, "relevance": 0.9}
-                ]
-            }),
-            "Response with matched rule",
-        ])
+        # Create executors that match the rule
+        extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"})
+        filter_resp = json.dumps({
+            "evaluations": [
+                {"rule_id": str(rule.id), "applies": True, "relevance": 0.9}
+            ]
+        })
+
+        context_executor = MockLLMExecutor([extraction_resp])
+        filter_executor = MockLLMExecutor([filter_resp])
+        gen_executor = MockLLMExecutor(["Response with matched rule"])
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=llm,
             embedding_provider=MockEmbeddingProvider(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
+            executors={
+                "context_extraction": context_executor,
+                "rule_filtering": filter_executor,
+                "generation": gen_executor,
+            },
         )
 
         session = Session(
@@ -359,8 +372,8 @@ class TestSessionStateUpdates:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -393,7 +406,7 @@ class TestTurnRecordPersistence:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -402,8 +415,8 @@ class TestTurnRecordPersistence:
     def engine(self, stores):
         return AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -548,7 +561,7 @@ class TestScenarioStateUpdates:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -560,8 +573,8 @@ class TestScenarioStateUpdates:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -601,8 +614,8 @@ class TestScenarioStateUpdates:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -638,8 +651,8 @@ class TestScenarioStateUpdates:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -675,7 +688,7 @@ class TestScenarioTransition:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -685,8 +698,8 @@ class TestScenarioTransition:
         """Scenario transition updates step without changing scenario."""
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -731,7 +744,7 @@ class TestStepHistoryTrimming:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -741,8 +754,8 @@ class TestStepHistoryTrimming:
         """Step history is trimmed when exceeding max size."""
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -794,7 +807,7 @@ class TestToolOutputVariables:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -830,16 +843,17 @@ class TestToolOutputVariables:
             timeout_ms=5000,
         )
 
-        # LLM that matches the rule
-        llm = MockLLMProvider([
-            json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"}),
-            json.dumps({
-                "evaluations": [
-                    {"rule_id": str(rule.id), "applies": True, "relevance": 0.9}
-                ]
-            }),
-            "Response with tool result",
-        ])
+        # Create executors that match the rule
+        extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"})
+        filter_resp = json.dumps({
+            "evaluations": [
+                {"rule_id": str(rule.id), "applies": True, "relevance": 0.9}
+            ]
+        })
+
+        context_executor = MockLLMExecutor([extraction_resp])
+        filter_executor = MockLLMExecutor([filter_resp])
+        gen_executor = MockLLMExecutor(["Response with tool result"])
 
         pipeline_config = PipelineConfig(
             tool_execution=ToolExecutionConfig(enabled=True),
@@ -847,12 +861,16 @@ class TestToolOutputVariables:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=llm,
             embedding_provider=MockEmbeddingProvider(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=pipeline_config,
             tool_executor=tool_executor,
+            executors={
+                "context_extraction": context_executor,
+                "rule_filtering": filter_executor,
+                "generation": gen_executor,
+            },
         )
 
         session = Session(
@@ -884,7 +902,7 @@ class TestEmbeddingOnlyMode:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -906,8 +924,8 @@ class TestEmbeddingOnlyMode:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=pipeline_config,
@@ -935,7 +953,7 @@ class TestMemoryRetrieverIntegration:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -965,8 +983,8 @@ class TestMemoryRetrieverIntegration:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             memory_store=memory_store,
@@ -993,7 +1011,7 @@ class TestScenarioFilteringDisabled:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -1012,8 +1030,8 @@ class TestScenarioFilteringDisabled:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=pipeline_config,
@@ -1036,7 +1054,7 @@ class TestRerankerCreation:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -1066,8 +1084,8 @@ class TestRerankerCreation:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             rerank_provider=rerank_provider,
@@ -1092,7 +1110,7 @@ class TestEnforcementFallback:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -1130,20 +1148,21 @@ class TestEnforcementFallback:
         )
         await stores["config"].save_rule(hard_rule)
 
-        # LLM that matches the rule and generates violating response
-        llm = MockLLMProvider([
-            json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"}),
-            json.dumps({
-                "evaluations": [
-                    {"rule_id": str(hard_rule.id), "applies": True, "relevance": 0.9}
-                ]
-            }),
-            "This response contains prohibited phrase",  # Violates hard constraint
-        ])
+        # Create executors that match the rule and generate violating response
+        extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"})
+        filter_resp = json.dumps({
+            "evaluations": [
+                {"rule_id": str(hard_rule.id), "applies": True, "relevance": 0.9}
+            ]
+        })
+
+        context_executor = MockLLMExecutor([extraction_resp])
+        filter_executor = MockLLMExecutor([filter_resp])
+        gen_executor = MockLLMExecutor(["This response contains prohibited phrase"])  # Violates hard constraint
 
         prompt_builder = PromptBuilder()
         response_generator = ResponseGenerator(
-            llm_provider=llm,
+            llm_executor=gen_executor,
             prompt_builder=prompt_builder,
         )
         enforcement_validator = EnforcementValidator(
@@ -1158,13 +1177,17 @@ class TestEnforcementFallback:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=llm,
             embedding_provider=MockEmbeddingProvider(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=pipeline_config,
             enforcement_validator=enforcement_validator,
             fallback_handler=fallback_handler,
+            executors={
+                "context_extraction": context_executor,
+                "rule_filtering": filter_executor,
+                "generation": gen_executor,
+            },
         )
 
         result = await engine.process_turn(
@@ -1187,7 +1210,7 @@ class TestEngineWithoutAuditStore:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
         }
 
@@ -1196,8 +1219,8 @@ class TestEngineWithoutAuditStore:
         """Engine works correctly when no audit_store is provided."""
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=None,  # No audit store
             pipeline_config=PipelineConfig(),
@@ -1235,8 +1258,8 @@ class TestEngineWithoutAuditStore:
         """_load_history returns empty list when no audit_store."""
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=None,
             pipeline_config=PipelineConfig(),
@@ -1256,8 +1279,8 @@ class TestEngineWithoutAuditStore:
 
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=None,
             pipeline_config=PipelineConfig(),
@@ -1291,7 +1314,7 @@ class TestMemoryContextBuilding:
     @pytest.fixture
     def stores(self):
         return {
-            "config": InMemoryConfigStore(),
+            "config": InMemoryAgentConfigStore(),
             "session": InMemorySessionStore(),
             "audit": InMemoryAuditStore(),
         }
@@ -1301,8 +1324,8 @@ class TestMemoryContextBuilding:
         """Memory context is formatted from episodes."""
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),
@@ -1335,8 +1358,8 @@ class TestMemoryContextBuilding:
         """Memory context is None when no episodes."""
         engine = AlignmentEngine(
             config_store=stores["config"],
-            llm_provider=MockLLMProvider(),
             embedding_provider=MockEmbeddingProvider(),
+            executors=create_test_executors(),
             session_store=stores["session"],
             audit_store=stores["audit"],
             pipeline_config=PipelineConfig(),

@@ -598,8 +598,112 @@ class ProfileAuditEntry(BaseModel):
 
 ---
 
+## Enhanced Features (Spec 010)
+
+The Customer Context Vault extends the profile system with advanced data management capabilities.
+
+### Lineage Tracking
+
+Profile fields and assets track their derivation chain:
+
+```python
+class ProfileField(BaseModel):
+    # ... existing fields ...
+
+    # Lineage tracking
+    id: UUID = Field(default_factory=uuid4)  # Unique identifier
+    source_item_id: UUID | None = None       # Parent item this was derived from
+    source_item_type: SourceType | None = None  # "profile_field", "profile_asset", "session"
+
+    # Status management
+    status: ItemStatus = ItemStatus.ACTIVE   # active | superseded | expired | orphaned
+    superseded_by_id: UUID | None = None     # ID of field that replaced this one
+    superseded_at: datetime | None = None
+```
+
+Use cases:
+- Track how extracted fields relate to source documents
+- Audit derivation chains for compliance
+- Detect orphaned fields when sources are deleted
+
+### Status Management
+
+Profile items have explicit lifecycle states:
+
+| Status | Meaning |
+|--------|---------|
+| `active` | Current, valid value |
+| `superseded` | Replaced by newer value |
+| `expired` | Past `expires_at` timestamp |
+| `orphaned` | Source was deleted |
+
+Background jobs manage status transitions:
+- `ExpireStaleFieldsWorkflow` - Marks expired fields hourly
+- `DetectOrphanedItemsWorkflow` - Detects orphaned items daily
+
+### Schema Validation
+
+Field definitions define validation rules:
+
+```python
+class ProfileFieldDefinition(AgentScopedModel):
+    # ... existing fields ...
+
+    # Validation rules
+    validation_mode: ValidationMode = ValidationMode.STRICT  # strict | warn | disabled
+    validation_regex: str | None = None
+    allowed_values: list[str] | None = None
+```
+
+The `SchemaValidationService` validates fields against definitions:
+- Type validation (email, phone, date, number, boolean, json)
+- Regex pattern matching
+- Allowed values enforcement
+
+### LLM Schema Extraction
+
+The `ProfileItemSchemaExtractor` uses LLM to automatically identify profile requirements:
+
+```python
+extractor = ProfileItemSchemaExtractor(llm_executor=llm)
+
+# Extract from scenario text
+result = await extractor.extract_requirements(
+    content="if customer is over 18, send email notification",
+    content_type="scenario",
+)
+# result.field_names = ["date_of_birth", "email"]
+# result.confidence_scores = {"date_of_birth": 0.95, "email": 0.9}
+```
+
+Features:
+- Confidence scoring (0.0 - 1.0)
+- Human review flag when confidence < 0.8
+- Field definition suggestions with collection prompts
+- Background extraction via `ExtractSchemaRequirementsWorkflow`
+
+### Observability
+
+Prometheus metrics for monitoring:
+- `soldier_derivation_chain_depth` - Histogram of chain depths
+- `soldier_schema_validation_errors_total` - Validation error counts
+- `soldier_profile_field_status` - Gauge of fields by status
+- `soldier_schema_extraction_success_total` - Extraction successes
+- `soldier_profile_cache_hits_total` - Cache performance
+
+Structured log events:
+- `profile_field_superseded` - When a field is replaced
+- `profile_field_expired` - When a field expires
+- `profile_field_orphaned` - When a field becomes orphaned
+- `derivation_chain_traversed` - When lineage is followed
+- `schema_validation_failed` - When validation fails
+- `schema_extraction_completed` - When extraction finishes
+
+---
+
 ## See Also
 
 - [Domain Model](./domain-model.md) - Core entity definitions
 - [Scenario Update Methods](./scenario-update-methods.md) - How profile enables migrations
 - [Alignment Engine](../architecture/alignment-engine.md) - Scenario navigation
+- [Spec 010: Customer Context Vault](/specs/010-customer-context-vault/) - Full specification

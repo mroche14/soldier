@@ -45,13 +45,13 @@ class TestSettings:
     def test_provider_defaults(self) -> None:
         """Provider configuration has defaults."""
         settings = Settings()
-        assert settings.providers.default_llm == "haiku"
+        assert settings.providers.default_embedding == "default"
 
     def test_pipeline_defaults(self) -> None:
         """Pipeline configuration has defaults."""
         settings = Settings()
         assert settings.pipeline.context_extraction.enabled is True
-        assert settings.pipeline.generation.llm_provider == "sonnet"
+        assert "openrouter/anthropic/claude-sonnet" in settings.pipeline.generation.model
 
     def test_observability_defaults(self) -> None:
         """Observability configuration has defaults."""

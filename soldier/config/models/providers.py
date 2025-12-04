@@ -4,29 +4,51 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr
 
-LLMProviderType = Literal["anthropic", "openai", "bedrock", "vertex", "ollama", "mock"]
-EmbeddingProviderType = Literal["openai", "cohere", "voyage", "sentence_transformers", "mock"]
-RerankProviderType = Literal["cohere", "voyage", "cross_encoder", "mock"]
+# Provider types for LLM
+# Model string format: "{aggregator}/{provider}/{model}" or "{provider}/{model}"
+# Examples:
+#   - "openrouter/anthropic/claude-3-haiku-20240307" -> OpenRouter
+#   - "anthropic/claude-3-haiku-20240307" -> Direct Anthropic
+#   - "openai/gpt-4o-mini" -> Direct OpenAI
+LLMProviderType = Literal[
+    "openrouter",   # OpenRouter aggregator (primary)
+    "anthropic",    # Direct Anthropic API (fallback)
+    "openai",       # Direct OpenAI API (fallback)
+    "bedrock",      # AWS Bedrock
+    "vertex",       # Google Vertex AI
+    "ollama",       # Local Ollama
+    "mock",         # Testing
+]
+EmbeddingProviderType = Literal["openai", "cohere", "voyage", "jina", "sentence_transformers", "mock"]
+RerankProviderType = Literal["cohere", "voyage", "jina", "cross_encoder", "mock"]
 
 
 class LLMProviderConfig(BaseModel):
-    """Configuration for an LLM provider."""
+    """Configuration for an LLM provider.
 
-    provider: LLMProviderType = Field(
-        default="anthropic",
-        description="Provider type",
-    )
+    Model string format determines the provider:
+    - "openrouter/anthropic/claude-3-haiku-20240307" -> uses OpenRouter
+    - "anthropic/claude-3-haiku-20240307" -> uses direct Anthropic API
+    - "openai/gpt-4o-mini" -> uses direct OpenAI API
+
+    The provider field can be set explicitly or auto-detected from model string.
+    """
+
     model: str = Field(
-        default="claude-3-haiku-20240307",
-        description="Model identifier",
+        ...,  # Required - full model identifier
+        description="Full model identifier (e.g., 'openrouter/anthropic/claude-3-haiku-20240307')",
     )
     api_key: SecretStr | None = Field(
         default=None,
-        description="API key (prefer env var)",
+        description="API key (prefer env var: OPENROUTER_API_KEY, ANTHROPIC_API_KEY, etc.)",
+    )
+    api_key_env: str | None = Field(
+        default=None,
+        description="Environment variable name for API key",
     )
     base_url: str | None = Field(
         default=None,
-        description="Custom API base URL",
+        description="Custom API base URL (overrides default)",
     )
     max_tokens: int = Field(
         default=4096,
@@ -44,6 +66,39 @@ class LLMProviderConfig(BaseModel):
         gt=0,
         description="Request timeout in seconds",
     )
+    max_retries: int = Field(
+        default=3,
+        ge=0,
+        description="Max retries for transient errors",
+    )
+
+    def get_provider_type(self) -> str:
+        """Detect provider type from model string.
+
+        Returns:
+            Provider type based on model string prefix
+        """
+        parts = self.model.split("/")
+        if len(parts) >= 3 and parts[0] == "openrouter":
+            return "openrouter"
+        elif len(parts) >= 2:
+            return parts[0]  # anthropic, openai, etc.
+        return "unknown"
+
+    def get_model_for_api(self) -> str:
+        """Get model identifier to send to the API.
+
+        For OpenRouter: strips the 'openrouter/' prefix
+        For direct providers: returns as-is
+
+        Returns:
+            Model identifier for API calls
+        """
+        parts = self.model.split("/")
+        if len(parts) >= 3 and parts[0] == "openrouter":
+            # OpenRouter format: openrouter/anthropic/claude-3-haiku -> anthropic/claude-3-haiku
+            return "/".join(parts[1:])
+        return self.model
 
 
 class EmbeddingProviderConfig(BaseModel):
@@ -96,12 +151,13 @@ class RerankProviderConfig(BaseModel):
 
 
 class ProvidersConfig(BaseModel):
-    """Configuration for AI providers."""
+    """Configuration for AI providers.
 
-    default_llm: str = Field(
-        default="haiku",
-        description="Default LLM provider name",
-    )
+    Note: LLM models are configured directly on each pipeline step
+    using full model strings (e.g., 'openrouter/anthropic/claude-3-haiku-20240307').
+    This config only handles embedding and rerank providers.
+    """
+
     default_embedding: str = Field(
         default="default",
         description="Default embedding provider name",
@@ -109,10 +165,6 @@ class ProvidersConfig(BaseModel):
     default_rerank: str = Field(
         default="default",
         description="Default rerank provider name",
-    )
-    llm: dict[str, LLMProviderConfig] = Field(
-        default_factory=dict,
-        description="Named LLM providers",
     )
     embedding: dict[str, EmbeddingProviderConfig] = Field(
         default_factory=dict,

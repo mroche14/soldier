@@ -43,6 +43,9 @@ dependencies = [
     "tiktoken>=0.12.0",
     "asyncpg>=0.31.0",
     "agno>=2.3.4",
+    "qdrant-client>=1.16.1",
+    "alembic>=1.17.2",
+    "hatchet-sdk>=1.21.3",
 ]
 
 [project.optional-dependencies]
@@ -86,6 +89,10 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "types-python-jose>=3.5.0.20250531",
+    "jupyter>=1.1.1",
+    "ipykernel>=7.1.0",
+    "nest-asyncio>=1.6.0",
+    "python-dotenv>=1.2.1",
 ]
 
 [build-system]

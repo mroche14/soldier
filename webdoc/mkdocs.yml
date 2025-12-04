@@ -1,6 +1,7 @@
 site_name: Soldier Documentation
 theme:
   name: material
+  logo: logo.svg
   palette:
     # Palette toggle for light vs dark mode
     - scheme: default
@@ -24,8 +25,6 @@ theme:
     - content.code.annotation
     - content.code.copy
   language: en
-  icon:
-    logo: logo.svg
 
 extra_css:
   - stylesheets/extra.css
@@ -46,3 +45,288 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Project Documentation:
+    - Vision: project_docs/vision.md
+    - Skeleton: project_docs/doc_skeleton.md
+    - Architecture:
+      - Alignment Engine: project_docs/architecture/alignment-engine.md
+      - API Layer: project_docs/architecture/api-layer.md
+      - Configuration: project_docs/architecture/configuration.md
+      - Configuration Models: project_docs/architecture/configuration-models.md
+      - Configuration Overview: project_docs/architecture/configuration-overview.md
+      - Configuration Secrets: project_docs/architecture/configuration-secrets.md
+      - Configuration TOML: project_docs/architecture/configuration-toml.md
+      - Configuration Usage Validation: project_docs/architecture/configuration-usage-validation.md
+      - Folder Structure: project_docs/architecture/folder-structure.md
+      - Kernel Agent Integration: project_docs/architecture/kernel-agent-integration.md
+      - Memory Layer: project_docs/architecture/memory-layer.md
+      - Observability: project_docs/architecture/observability.md
+      - Overview: project_docs/architecture/overview.md
+      - Selection Strategies: project_docs/architecture/selection-strategies.md
+    - Design:
+      - API CRUD: project_docs/design/api-crud.md
+      - Customer Profile: project_docs/design/customer-profile.md
+      - Domain Model: project_docs/design/domain-model.md
+      - Scenario Update Methods: project_docs/design/scenario-update-methods.md
+      - Turn Pipeline: project_docs/design/turn-pipeline.md
+      - Decisions:
+        - 001 Storage Choice: project_docs/design/decisions/001-storage-choice.md
+        - 002 Rule Matching Strategy: project_docs/design/decisions/002-rule-matching-strategy.md
+    - Development:
+      - Testing Strategy: project_docs/development/testing-strategy.md
+      - Unit Testing: project_docs/development/unit-testing.md
+  - Specifications:
+    - 001 Project Foundation:
+      - Checklist: project_specs/001-project-foundation/checklists/requirements.md
+      - Data Model: project_specs/001-project-foundation/data-model.md
+      - Plan: project_specs/001-project-foundation/plan.md
+      - Quickstart: project_specs/001-project-foundation/quickstart.md
+      - Research: project_specs/001-project-foundation/research.md
+      - Spec: project_specs/001-project-foundation/spec.md
+      - Tasks: project_specs/001-project-foundation/tasks.md
+    - 002 Configuration System:
+      - Checklist: project_specs/002-configuration-system/checklists/requirements.md
+      - Spec: project_specs/002-configuration-system/spec.md
+    - 003 Core Abstractions:
+      - Checklist: project_specs/003-core-abstractions/checklists/requirements.md
+      - Contracts:
+        - Observability: project_specs/003-core-abstractions/contracts/observability.md
+        - Providers: project_specs/003-core-abstractions/contracts/providers.md
+        - Stores: project_specs/003-core-abstractions/contracts/stores.md
+      - Data Model: project_specs/003-core-abstractions/data-model.md
+      - Plan: project_specs/003-core-abstractions/plan.md
+      - Quickstart: project_specs/003-core-abstractions/quickstart.md
+      - Research: project_specs/003-core-abstractions/research.md
+      - Spec: project_specs/003-core-abstractions/spec.md
+      - Tasks: project_specs/003-core-abstractions/tasks.md
+    - 004 Alignment Pipeline:
+      - Checklist: project_specs/004-alignment-pipeline/checklists/requirements.md
+      - Data Model: project_specs/004-alignment-pipeline/data-model.md
+      - Plan: project_specs/004-alignment-pipeline/plan.md
+      - Quickstart: project_specs/004-alignment-pipeline/quickstart.md
+      - Research: project_specs/004-alignment-pipeline/research.md
+      - Spec: project_specs/004-alignment-pipeline/spec.md
+      - Tasks: project_specs/004-alignment-pipeline/tasks.md
+    - 005 Memory Ingestion:
+      - Contracts:
+        - Service Interfaces: project_specs/005-memory-ingestion/contracts/service-interfaces.md
+      - Data Model: project_specs/005-memory-ingestion/data-model.md
+      - Plan: project_specs/005-memory-ingestion/plan.md
+      - Quickstart: project_specs/005-memory-ingestion/quickstart.md
+      - Research: project_specs/005-memory-ingestion/research.md
+      - Spec: project_specs/005-memory-ingestion/spec.md
+      - Tasks: project_specs/005-memory-ingestion/tasks.md
+    - 006 API Layer Core:
+      - Checklist: project_specs/006-api-layer-core/checklists/requirements.md
+      - Data Model: project_specs/006-api-layer-core/data-model.md
+      - Plan: project_specs/006-api-layer-core/plan.md
+      - Quickstart: project_specs/006-api-layer-core/quickstart.md
+      - Research: project_specs/006-api-layer-core/research.md
+      - Spec: project_specs/006-api-layer-core/spec.md
+      - Tasks: project_specs/006-api-layer-core/tasks.md
+    - 007 API Layer CRUD:
+      - Checklist: project_specs/007-api-layer-crud/checklists/requirements.md
+      - Data Model: project_specs/007-api-layer-crud/data-model.md
+      - Plan: project_specs/007-api-layer-crud/plan.md
+      - Quickstart: project_specs/007-api-layer-crud/quickstart.md
+      - Research: project_specs/007-api-layer-crud/research.md
+      - Spec: project_specs/007-api-layer-crud/spec.md
+      - Tasks: project_specs/007-api-layer-crud/tasks.md
+    - 008 Scenario Migration:
+      - Checklist: project_specs/008-scenario-migration/checklists/requirements.md
+      - Data Model: project_specs/008-scenario-migration/data-model.md
+      - Plan: project_specs/008-scenario-migration/plan.md
+      - Quickstart: project_specs/008-scenario-migration/quickstart.md
+      - Research: project_specs/008-scenario-migration/research.md
+      - Spec: project_specs/008-scenario-migration/spec.md
+      - Tasks: project_specs/008-scenario-migration/tasks.md
+    - 009 Production Stores Providers:
+      - Checklist: project_specs/009-production-stores-providers/checklists/requirements.md
+      - Plan: project_specs/009-production-stores-providers/plan.md
+      - Spec: project_specs/009-production-stores-providers/spec.md
+  - API Reference:
+    - Alignment:
+      - Core:
+        - Engine: reference/soldier.alignment.engine.md
+        - Result: reference/soldier.alignment.result.md
+        - Templates Loader: reference/soldier.alignment.templates_loader.md
+      - Context:
+        - Extractor: reference/soldier.alignment.context.extractor.md
+        - Models: reference/soldier.alignment.context.models.md
+      - Enforcement:
+        - Fallback: reference/soldier.alignment.enforcement.fallback.md
+        - Models: reference/soldier.alignment.enforcement.models.md
+        - Validator: reference/soldier.alignment.enforcement.validator.md
+      - Execution:
+        - Models: reference/soldier.alignment.execution.models.md
+        - Tool Executor: reference/soldier.alignment.execution.tool_executor.md
+        - Variable Resolver: reference/soldier.alignment.execution.variable_resolver.md
+      - Filtering:
+        - Models: reference/soldier.alignment.filtering.models.md
+        - Rule Filter: reference/soldier.alignment.filtering.rule_filter.md
+        - Scenario Filter: reference/soldier.alignment.filtering.scenario_filter.md
+      - Generation:
+        - Generator: reference/soldier.alignment.generation.generator.md
+        - Models: reference/soldier.alignment.generation.models.md
+        - Prompt Builder: reference/soldier.alignment.generation.prompt_builder.md
+      - Migration:
+        - Composite: reference/soldier.alignment.migration.composite.md
+        - Diff: reference/soldier.alignment.migration.diff.md
+        - Executor: reference/soldier.alignment.migration.executor.md
+        - Gap Fill: reference/soldier.alignment.migration.gap_fill.md
+        - Models: reference/soldier.alignment.migration.models.md
+        - Planner: reference/soldier.alignment.migration.planner.md
+      - Models:
+        - Agent: reference/soldier.alignment.models.agent.md
+        - Base: reference/soldier.alignment.models.base.md
+        - Context: reference/soldier.alignment.models.context.md
+        - Enums: reference/soldier.alignment.models.enums.md
+        - Publish: reference/soldier.alignment.models.publish.md
+        - Rule: reference/soldier.alignment.models.rule.md
+        - Scenario: reference/soldier.alignment.models.scenario.md
+        - Template: reference/soldier.alignment.models.template.md
+        - Tool Activation: reference/soldier.alignment.models.tool_activation.md
+        - Variable: reference/soldier.alignment.models.variable.md
+      - Retrieval:
+        - Models: reference/soldier.alignment.retrieval.models.md
+        - Reranker: reference/soldier.alignment.retrieval.reranker.md
+        - Rule Retriever: reference/soldier.alignment.retrieval.rule_retriever.md
+        - Scenario Retriever: reference/soldier.alignment.retrieval.scenario_retriever.md
+        - Selection: reference/soldier.alignment.retrieval.selection.md
+      - Stores:
+        - Config Store: reference/soldier.alignment.stores.config_store.md
+        - In-Memory: reference/soldier.alignment.stores.inmemory.md
+    - API:
+      - Core:
+        - App: reference/soldier.api.app.md
+        - Dependencies: reference/soldier.api.dependencies.md
+        - Exceptions: reference/soldier.api.exceptions.md
+      - gRPC:
+        - Server: reference/soldier.api.grpc.server.md
+      - Middleware:
+        - Auth: reference/soldier.api.middleware.auth.md
+        - Context: reference/soldier.api.middleware.context.md
+        - Idempotency: reference/soldier.api.middleware.idempotency.md
+        - Rate Limit: reference/soldier.api.middleware.rate_limit.md
+      - Models:
+        - Bulk: reference/soldier.api.models.bulk.md
+        - Chat: reference/soldier.api.models.chat.md
+        - Context: reference/soldier.api.models.context.md
+        - CRUD: reference/soldier.api.models.crud.md
+        - Errors: reference/soldier.api.models.errors.md
+        - Health: reference/soldier.api.models.health.md
+        - Pagination: reference/soldier.api.models.pagination.md
+        - Session: reference/soldier.api.models.session.md
+      - Routes:
+        - Agents: reference/soldier.api.routes.agents.md
+        - Chat: reference/soldier.api.routes.chat.md
+        - Config: reference/soldier.api.routes.config.md
+        - Health: reference/soldier.api.routes.health.md
+        - Migrations: reference/soldier.api.routes.migrations.md
+        - Publish: reference/soldier.api.routes.publish.md
+        - Rules: reference/soldier.api.routes.rules.md
+        - Scenarios: reference/soldier.api.routes.scenarios.md
+        - Sessions: reference/soldier.api.routes.sessions.md
+        - Templates: reference/soldier.api.routes.templates.md
+        - Tools: reference/soldier.api.routes.tools.md
+        - Variables: reference/soldier.api.routes.variables.md
+      - Services:
+        - Embedding: reference/soldier.api.services.embedding.md
+        - Publish: reference/soldier.api.services.publish.md
+        - Scenario Validation: reference/soldier.api.services.scenario_validation.md
+    - Audit:
+      - Models:
+        - Event: reference/soldier.audit.models.event.md
+        - Turn Record: reference/soldier.audit.models.turn_record.md
+      - Store: reference/soldier.audit.store.md
+      - Stores:
+        - ClickHouse: reference/soldier.audit.stores.clickhouse.md
+        - In-Memory: reference/soldier.audit.stores.inmemory.md
+        - MongoDB: reference/soldier.audit.stores.mongodb.md
+        - PostgreSQL: reference/soldier.audit.stores.postgres.md
+        - Timescale: reference/soldier.audit.stores.timescale.md
+    - Config:
+      - Core:
+        - Loader: reference/soldier.config.loader.md
+        - Settings: reference/soldier.config.settings.md
+      - Models:
+        - Agent: reference/soldier.config.models.agent.md
+        - API: reference/soldier.config.models.api.md
+        - Migration: reference/soldier.config.models.migration.md
+        - Observability: reference/soldier.config.models.observability.md
+        - Pipeline: reference/soldier.config.models.pipeline.md
+        - Providers: reference/soldier.config.models.providers.md
+        - Selection: reference/soldier.config.models.selection.md
+        - Storage: reference/soldier.config.models.storage.md
+    - Conversation:
+      - Core:
+        - Store: reference/soldier.conversation.store.md
+      - Models:
+        - Enums: reference/soldier.conversation.models.enums.md
+        - Session: reference/soldier.conversation.models.session.md
+        - Turn: reference/soldier.conversation.models.turn.md
+      - Stores:
+        - DynamoDB: reference/soldier.conversation.stores.dynamodb.md
+        - In-Memory: reference/soldier.conversation.stores.inmemory.md
+        - MongoDB: reference/soldier.conversation.stores.mongodb.md
+        - Redis: reference/soldier.conversation.stores.redis.md
+    - Memory:
+      - Core:
+        - Store: reference/soldier.memory.store.md
+      - Ingestion:
+        - Entity Extractor: reference/soldier.memory.ingestion.entity_extractor.md
+        - Errors: reference/soldier.memory.ingestion.errors.md
+        - Ingestor: reference/soldier.memory.ingestion.ingestor.md
+        - Models: reference/soldier.memory.ingestion.models.md
+        - Queue: reference/soldier.memory.ingestion.queue.md
+        - Summarizer: reference/soldier.memory.ingestion.summarizer.md
+        - Tasks: reference/soldier.memory.ingestion.tasks.md
+      - Models:
+        - Entity: reference/soldier.memory.models.entity.md
+        - Episode: reference/soldier.memory.models.episode.md
+        - Relationship: reference/soldier.memory.models.relationship.md
+      - Retrieval:
+        - Reranker: reference/soldier.memory.retrieval.reranker.md
+        - Retriever: reference/soldier.memory.retrieval.retriever.md
+      - Stores:
+        - In-Memory: reference/soldier.memory.stores.inmemory.md
+        - MongoDB: reference/soldier.memory.stores.mongodb.md
+        - Neo4j: reference/soldier.memory.stores.neo4j.md
+        - PostgreSQL: reference/soldier.memory.stores.postgres.md
+    - Observability:
+      - Core:
+        - Logging: reference/soldier.observability.logging.md
+        - Metrics: reference/soldier.observability.metrics.md
+        - Middleware: reference/soldier.observability.middleware.md
+        - Tracing: reference/soldier.observability.tracing.md
+    - Profile:
+      - Core:
+        - Enums: reference/soldier.profile.enums.md
+        - Models: reference/soldier.profile.models.md
+        - Store: reference/soldier.profile.store.md
+      - Stores:
+        - In-Memory: reference/soldier.profile.stores.inmemory.md
+    - Providers:
+      - Embedding:
+        - Base: reference/soldier.providers.embedding.base.md
+        - Cohere: reference/soldier.providers.embedding.cohere.md
+        - Mock: reference/soldier.providers.embedding.mock.md
+        - OpenAI: reference/soldier.providers.embedding.openai.md
+        - Sentence Transformers: reference/soldier.providers.embedding.sentence_transformers.md
+        - Voyage: reference/soldier.providers.embedding.voyage.md
+      - LLM:
+        - Anthropic: reference/soldier.providers.llm.anthropic.md
+        - Base: reference/soldier.providers.llm.base.md
+        - Bedrock: reference/soldier.providers.llm.bedrock.md
+        - Mock: reference/soldier.providers.llm.mock.md
+        - Ollama: reference/soldier.providers.llm.ollama.md
+        - OpenAI: reference/soldier.providers.llm.openai.md
+        - Vertex: reference/soldier.providers.llm.vertex.md
+      - Rerank:
+        - Base: reference/soldier.providers.rerank.base.md
+        - Cohere: reference/soldier.providers.rerank.cohere.md
+        - Cross-Encoder: reference/soldier.providers.rerank.cross_encoder.md
+        - Mock: reference/soldier.providers.rerank.mock.md
+        - Voyage: reference/soldier.providers.rerank.voyage.md
+    - Utils:
+      - Vector: reference/soldier.utils.vector.md

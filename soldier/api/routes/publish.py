@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks
 
 from soldier.alignment.models import PublishJob
-from soldier.api.dependencies import ConfigStoreDep
+from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import (
     AgentNotFoundError,
     PublishInProgressError,
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/agents/{agent_id}/publish")
 _publish_service: PublishService | None = None
 
 
-def _get_publish_service(config_store: ConfigStoreDep) -> PublishService:
+def _get_publish_service(config_store: AgentConfigStoreDep) -> PublishService:
     """Get or create the publish service."""
     global _publish_service
     if _publish_service is None:
@@ -39,7 +39,7 @@ def _get_publish_service(config_store: ConfigStoreDep) -> PublishService:
 
 
 async def _verify_agent_exists(
-    config_store: ConfigStoreDep, tenant_id: UUID, agent_id: UUID
+    config_store: AgentConfigStoreDep, tenant_id: UUID, agent_id: UUID
 ) -> None:
     """Verify agent exists and belongs to tenant."""
     agent = await config_store.get_agent(tenant_id, agent_id)
@@ -71,7 +71,7 @@ def _map_publish_job_to_response(job: PublishJob) -> PublishJobResponse:
 async def get_publish_status(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> PublishStatusResponse:
     """Get current publish status for an agent."""
     logger.debug(
@@ -100,7 +100,7 @@ async def initiate_publish(
     agent_id: UUID,
     request: PublishRequest,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     background_tasks: BackgroundTasks,
 ) -> PublishJobResponse:
     """Initiate a publish operation.
@@ -145,7 +145,7 @@ async def get_publish_job(
     agent_id: UUID,
     publish_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> PublishJobResponse:
     """Get the status of a publish job."""
     await _verify_agent_exists(config_store, tenant_context.tenant_id, agent_id)
@@ -164,7 +164,7 @@ async def rollback_to_version(
     agent_id: UUID,
     request: RollbackRequest,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> PublishJobResponse:
     """Rollback agent configuration to a previous version."""
     logger.info(

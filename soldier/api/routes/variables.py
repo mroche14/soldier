@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from soldier.alignment.models import Variable
-from soldier.api.dependencies import ConfigStoreDep
+from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import AgentNotFoundError, VariableNotFoundError
 from soldier.api.middleware.auth import TenantContextDep
 from soldier.api.models.crud import VariableCreate, VariableResponse, VariableUpdate
@@ -33,7 +33,7 @@ def _map_variable_to_response(variable: Variable) -> VariableResponse:
 
 
 async def _verify_agent_exists(
-    config_store: ConfigStoreDep, tenant_id: UUID, agent_id: UUID
+    config_store: AgentConfigStoreDep, tenant_id: UUID, agent_id: UUID
 ) -> None:
     """Verify agent exists and belongs to tenant."""
     agent = await config_store.get_agent(tenant_id, agent_id)
@@ -45,7 +45,7 @@ async def _verify_agent_exists(
 async def list_variables(
     agent_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     sort_by: Literal["name", "created_at", "updated_at"] = Query(default="name"),
@@ -89,7 +89,7 @@ async def create_variable(
     agent_id: UUID,
     request: VariableCreate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> VariableResponse:
     """Create a new variable."""
     logger.info(
@@ -127,7 +127,7 @@ async def get_variable(
     agent_id: UUID,
     variable_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> VariableResponse:
     """Get a variable by ID."""
     await _verify_agent_exists(config_store, tenant_context.tenant_id, agent_id)
@@ -145,7 +145,7 @@ async def update_variable(
     variable_id: UUID,
     request: VariableUpdate,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> VariableResponse:
     """Update a variable."""
     logger.info(
@@ -182,7 +182,7 @@ async def delete_variable(
     agent_id: UUID,
     variable_id: UUID,
     tenant_context: TenantContextDep,
-    config_store: ConfigStoreDep,
+    config_store: AgentConfigStoreDep,
 ) -> None:
     """Delete a variable (soft delete)."""
     logger.info(

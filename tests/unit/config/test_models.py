@@ -131,36 +131,53 @@ class TestLLMProviderConfig:
 
     def test_defaults(self) -> None:
         """Default values are correct."""
-        config = LLMProviderConfig()
-        assert config.provider == "anthropic"
+        config = LLMProviderConfig(model="openrouter/anthropic/claude-3-haiku-20240307")
         assert config.temperature == 0.7
         assert config.max_tokens == 4096
+        assert config.timeout == 60
 
     def test_temperature_range_lower(self) -> None:
         """Temperature must be >= 0.0."""
         with pytest.raises(ValidationError):
-            LLMProviderConfig(temperature=-0.1)
+            LLMProviderConfig(model="mock/test", temperature=-0.1)
 
     def test_temperature_range_upper(self) -> None:
         """Temperature must be <= 2.0."""
         with pytest.raises(ValidationError):
-            LLMProviderConfig(temperature=2.1)
+            LLMProviderConfig(model="mock/test", temperature=2.1)
 
     def test_valid_temperature(self) -> None:
         """Valid temperature values are accepted."""
-        config = LLMProviderConfig(temperature=1.5)
+        config = LLMProviderConfig(model="mock/test", temperature=1.5)
         assert config.temperature == 1.5
 
-    def test_valid_providers(self) -> None:
-        """All valid provider types are accepted."""
-        valid_providers = ["anthropic", "openai", "bedrock", "vertex", "ollama", "mock"]
-        for provider in valid_providers:
-            config = LLMProviderConfig(provider=provider)
-            assert config.provider == provider
+    def test_provider_detection_openrouter(self) -> None:
+        """Provider is auto-detected from openrouter model string."""
+        config = LLMProviderConfig(model="openrouter/anthropic/claude-3-haiku-20240307")
+        assert config.get_provider_type() == "openrouter"
+        assert config.get_model_for_api() == "anthropic/claude-3-haiku-20240307"
+
+    def test_provider_detection_anthropic(self) -> None:
+        """Provider is auto-detected from anthropic model string."""
+        config = LLMProviderConfig(model="anthropic/claude-3-haiku-20240307")
+        assert config.get_provider_type() == "anthropic"
+        assert config.get_model_for_api() == "anthropic/claude-3-haiku-20240307"
+
+    def test_provider_detection_openai(self) -> None:
+        """Provider is auto-detected from openai model string."""
+        config = LLMProviderConfig(model="openai/gpt-4o-mini")
+        assert config.get_provider_type() == "openai"
+        assert config.get_model_for_api() == "openai/gpt-4o-mini"
+
+    def test_provider_detection_mock(self) -> None:
+        """Provider is auto-detected from mock model string."""
+        config = LLMProviderConfig(model="mock/test-model")
+        assert config.get_provider_type() == "mock"
+        assert config.get_model_for_api() == "mock/test-model"
 
     def test_api_key_is_secret(self) -> None:
         """API key is stored as SecretStr."""
-        config = LLMProviderConfig(api_key="sk-test-key")
+        config = LLMProviderConfig(model="mock/test", api_key="sk-test-key")
         # SecretStr should not reveal value in string representation
         assert "sk-test-key" not in str(config.api_key)
 
@@ -202,10 +219,10 @@ class TestProvidersConfig:
     def test_defaults(self) -> None:
         """Default values are correct."""
         config = ProvidersConfig()
-        assert config.default_llm == "haiku"
         assert config.default_embedding == "default"
-        assert config.llm == {}
+        assert config.default_rerank == "default"
         assert config.embedding == {}
+        assert config.rerank == {}
 
 
 class TestSelectionConfig:
@@ -260,7 +277,7 @@ class TestPipelineConfig:
         config = PipelineConfig()
         assert config.context_extraction.enabled is True
         assert config.retrieval.enabled is True
-        assert config.generation.llm_provider == "sonnet"
+        assert "openrouter/anthropic/claude-sonnet" in config.generation.model
 
     def test_step_can_be_disabled(self) -> None:
         """Pipeline steps can be disabled."""
@@ -271,6 +288,17 @@ class TestPipelineConfig:
         assert config.context_extraction.enabled is False
         assert config.reranking.enabled is False
 
+    def test_model_and_fallbacks(self) -> None:
+        """Model and fallback_models can be configured."""
+        config = PipelineConfig(
+            generation={
+                "model": "openrouter/anthropic/claude-3-opus-20240229",
+                "fallback_models": ["anthropic/claude-3-opus-20240229"],
+            }
+        )
+        assert config.generation.model == "openrouter/anthropic/claude-3-opus-20240229"
+        assert len(config.generation.fallback_models) == 1
+
 
 class TestGenerationConfig:
     """Tests for GenerationConfig model."""
@@ -279,7 +307,8 @@ class TestGenerationConfig:
         """Default values are correct."""
         config = GenerationConfig()
         assert config.enabled is True
-        assert config.llm_provider == "sonnet"
+        assert "openrouter/anthropic/claude-sonnet" in config.model
+        assert config.fallback_models == []
         assert config.temperature == 0.7
         assert config.max_tokens == 1024
 

@@ -14,7 +14,7 @@ from soldier.alignment.context.models import Context, ScenarioSignal
 from soldier.alignment.filtering.models import MatchedRule, RuleFilterResult
 from soldier.alignment.models import Rule
 from soldier.observability.logging import get_logger
-from soldier.providers.llm import LLMMessage, LLMProvider
+from soldier.providers.llm import LLMExecutor, LLMMessage
 
 logger = get_logger(__name__)
 
@@ -30,18 +30,18 @@ class RuleFilter:
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_executor: LLMExecutor,
         prompt_template: str | None = None,
         relevance_threshold: float = 0.5,
     ) -> None:
         """Initialize the rule filter.
 
         Args:
-            llm_provider: Provider for LLM-based filtering
+            llm_executor: Executor for LLM-based filtering
             prompt_template: Optional custom prompt template
             relevance_threshold: Minimum relevance score to consider a match
         """
-        self._llm_provider = llm_provider
+        self._llm_executor = llm_executor
         self._relevance_threshold = relevance_threshold
 
         if prompt_template:
@@ -148,7 +148,7 @@ Respond with JSON: {"evaluations": [{"rule_id": "...", "applies": true, "relevan
             rules=rules_text,
         )
 
-        response = await self._llm_provider.generate(
+        response = await self._llm_executor.generate(
             messages=[LLMMessage(role="user", content=prompt)],
             temperature=0.0,
             max_tokens=1000,

@@ -21,7 +21,7 @@ from soldier.observability.logging import get_logger
 
 if TYPE_CHECKING:
     from soldier.alignment.models import Scenario
-    from soldier.alignment.stores.config_store import ConfigStore
+    from soldier.alignment.stores.agent_config_store import AgentConfigStore
     from soldier.conversation.models import Session
 
 logger = get_logger(__name__)
@@ -37,7 +37,7 @@ class CompositeMapper:
     4. Executes a single composite migration
     """
 
-    def __init__(self, config_store: "ConfigStore") -> None:
+    def __init__(self, config_store: "AgentConfigStore") -> None:
         """Initialize the composite mapper.
 
         Args:

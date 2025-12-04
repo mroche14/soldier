@@ -7,50 +7,34 @@ from uuid import uuid4
 import pytest
 
 from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.stores import InMemoryConfigStore
+from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.pipeline import PipelineConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMMessage, LLMProvider, LLMResponse
+from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 
-class MockLLMProvider(LLMProvider):
-    """Mock LLM provider driving extraction, filtering, and generation."""
+class MockSequencedLLMExecutor(LLMExecutor):
+    """Mock LLM executor that returns different responses based on call sequence."""
 
     def __init__(
         self,
-        extraction_response: dict[str, Any],
-        filter_response: dict[str, Any],
-        generation_response: str,
+        responses: list[str],
     ) -> None:
-        self._extraction_response = extraction_response
-        self._filter_response = filter_response
-        self._generation_response = generation_response
+        super().__init__(model="mock/test", step_name="test")
+        self._responses = responses
+        self._call_count = 0
         self.generate_calls: list[list[LLMMessage]] = []
-
-    @property
-    def provider_name(self) -> str:
-        return "mock"
 
     async def generate(self, messages: list[LLMMessage], **kwargs: Any) -> LLMResponse:
         self.generate_calls.append(messages)
-        call_index = len(self.generate_calls)
-
-        if call_index == 1:
-            content = json.dumps(self._extraction_response)
-        elif call_index == 2:
-            content = json.dumps(self._filter_response)
-        else:
-            content = self._generation_response
-
+        response_index = min(self._call_count, len(self._responses) - 1)
+        self._call_count += 1
         return LLMResponse(
-            content=content,
+            content=self._responses[response_index],
             model="mock-model",
             usage={"prompt_tokens": 10, "completion_tokens": 5},
         )
-
-    def generate_stream(self, messages: list[LLMMessage], **kwargs: Any):
-        raise NotImplementedError("Streaming not required for this test")
 
 
 class MockEmbeddingProvider(EmbeddingProvider):
@@ -82,7 +66,7 @@ async def test_alignment_engine_full_pipeline() -> None:
     agent_id = uuid4()
     session_id = uuid4()
 
-    config_store = InMemoryConfigStore()
+    config_store = InMemoryAgentConfigStore()
     rule = RuleFactory.create(
         tenant_id=tenant_id,
         agent_id=agent_id,
@@ -92,28 +76,35 @@ async def test_alignment_engine_full_pipeline() -> None:
     )
     await config_store.save_rule(rule)
 
-    llm_provider = MockLLMProvider(
-        extraction_response={
-            "intent": "return_request",
-            "entities": [],
-            "sentiment": "neutral",
-            "urgency": "normal",
-        },
-        filter_response={
-            "evaluations": [
-                {"rule_id": str(rule.id), "applies": True, "relevance": 0.9, "reasoning": "Matches return intent"}
-            ]
-        },
-        generation_response="Here is the return policy.",
-    )
+    extraction_response = json.dumps({
+        "intent": "return_request",
+        "entities": [],
+        "sentiment": "neutral",
+        "urgency": "normal",
+    })
+    filter_response = json.dumps({
+        "evaluations": [
+            {"rule_id": str(rule.id), "applies": True, "relevance": 0.9, "reasoning": "Matches return intent"}
+        ]
+    })
+    generation_response = "Here is the return policy."
+
+    # Create executors for each step
+    context_executor = MockSequencedLLMExecutor(responses=[extraction_response])
+    filter_executor = MockSequencedLLMExecutor(responses=[filter_response])
+    gen_executor = MockSequencedLLMExecutor(responses=[generation_response])
 
     embedding_provider = MockEmbeddingProvider()
 
     engine = AlignmentEngine(
         config_store=config_store,
-        llm_provider=llm_provider,
         embedding_provider=embedding_provider,
         pipeline_config=PipelineConfig(),
+        executors={
+            "context_extraction": context_executor,
+            "rule_filtering": filter_executor,
+            "generation": gen_executor,
+        },
     )
 
     result = await engine.process_turn(

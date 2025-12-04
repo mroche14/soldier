@@ -104,6 +104,16 @@ class RuleResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    @property
+    def condition(self) -> str:
+        """Alias for condition_text."""
+        return self.condition_text
+
+    @property
+    def action(self) -> str:
+        """Alias for action_text."""
+        return self.action_text
+
 
 # Scenario models
 class StepTransitionCreate(BaseModel):
