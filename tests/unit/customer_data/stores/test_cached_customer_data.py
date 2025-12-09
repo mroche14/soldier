@@ -1,4 +1,4 @@
-"""Unit tests for ProfileStoreCacheLayer.
+"""Unit tests for CustomerDataStoreCacheLayer.
 
 Tests cache hit/miss behavior, invalidation, and Redis failure fallback.
 """
@@ -12,14 +12,14 @@ import redis.asyncio as redis
 
 from soldier.config.models.storage import RedisProfileCacheConfig
 from soldier.conversation.models import Channel
-from soldier.profile.enums import ItemStatus, ProfileFieldSource
-from soldier.profile.models import (
+from soldier.customer_data.enums import ItemStatus, VariableSource
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
-    ProfileField,
+    CustomerDataStore,
+    VariableEntry,
 )
-from soldier.profile.stores.cached import ProfileStoreCacheLayer
-from soldier.profile.stores.inmemory import InMemoryProfileStore
+from soldier.customer_data.stores.cached import CustomerDataStoreCacheLayer
+from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
 
 
 @pytest.fixture
@@ -49,16 +49,16 @@ def customer_id():
 @pytest.fixture
 def sample_profile(tenant_id, profile_id, customer_id):
     """Create a sample customer profile."""
-    email_field = ProfileField(
+    email_field = VariableEntry(
         id=uuid4(),
         name="email",
         value="test@example.com",
         value_type="email",
-        source=ProfileFieldSource.USER_PROVIDED,
+        source=VariableSource.USER_PROVIDED,
         collected_at=datetime.now(UTC),
         status=ItemStatus.ACTIVE,
     )
-    return CustomerProfile(
+    return CustomerDataStore(
         tenant_id=tenant_id,
         id=profile_id,
         customer_id=customer_id,
@@ -76,7 +76,7 @@ def sample_profile(tenant_id, profile_id, customer_id):
 @pytest.fixture
 def backend_store():
     """Create an in-memory backend store."""
-    return InMemoryProfileStore()
+    return InMemoryCustomerDataStore()
 
 
 @pytest.fixture
@@ -104,7 +104,7 @@ def config():
 @pytest.fixture
 def cached_store(backend_store, mock_redis, config):
     """Create a cached profile store."""
-    return ProfileStoreCacheLayer(backend_store, mock_redis, config)
+    return CustomerDataStoreCacheLayer(backend_store, mock_redis, config)
 
 
 class TestCacheHitBehavior:
@@ -227,12 +227,12 @@ class TestCacheInvalidation:
         await backend_store.save(sample_profile)
 
         # Update a field
-        new_field = ProfileField(
+        new_field = VariableEntry(
             id=uuid4(),
             name="phone",
             value="+1234567890",
             value_type="phone",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             collected_at=datetime.now(UTC),
             status=ItemStatus.ACTIVE,
         )
@@ -248,7 +248,7 @@ class TestCacheInvalidation:
         self, cached_store, backend_store, mock_redis, sample_profile, tenant_id
     ):
         """Test that add_asset invalidates profile cache."""
-        from soldier.profile.models import ProfileAsset
+        from soldier.customer_data.models import ProfileAsset
 
         await backend_store.save(sample_profile)
 
@@ -353,7 +353,7 @@ class TestRedisFailureFallback:
             enabled=True,
             fallback_on_error=False,  # Disable fallback
         )
-        cached_store = ProfileStoreCacheLayer(backend_store, mock_redis, config)
+        cached_store = CustomerDataStoreCacheLayer(backend_store, mock_redis, config)
         mock_redis.get.side_effect = redis.RedisError("Connection failed")
 
         with pytest.raises(redis.RedisError):
@@ -369,7 +369,7 @@ class TestCacheDisabled:
     ):
         """Test that disabled cache skips Redis entirely."""
         config = RedisProfileCacheConfig(enabled=False)
-        cached_store = ProfileStoreCacheLayer(backend_store, mock_redis, config)
+        cached_store = CustomerDataStoreCacheLayer(backend_store, mock_redis, config)
         await backend_store.save(sample_profile)
 
         result = await cached_store.get_by_id(tenant_id, sample_profile.id)
@@ -409,12 +409,12 @@ class TestFieldDefinitionCaching:
         self, cached_store, backend_store, mock_redis, tenant_id, agent_id
     ):
         """Test that field definitions are cached."""
-        from soldier.profile.models import ProfileFieldDefinition
-        from soldier.profile.enums import ValidationMode
+        from soldier.customer_data.models import CustomerDataField
+        from soldier.customer_data.enums import ValidationMode
 
         mock_redis.get.return_value = None
 
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -434,10 +434,10 @@ class TestFieldDefinitionCaching:
         self, cached_store, backend_store, mock_redis, tenant_id, agent_id
     ):
         """Test that save_field_definition invalidates cache."""
-        from soldier.profile.models import ProfileFieldDefinition
-        from soldier.profile.enums import ValidationMode
+        from soldier.customer_data.models import CustomerDataField
+        from soldier.customer_data.enums import ValidationMode
 
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -460,8 +460,8 @@ class TestScenarioRequirementCaching:
         self, cached_store, backend_store, mock_redis, tenant_id, agent_id
     ):
         """Test that scenario requirements are cached."""
-        from soldier.profile.models import ScenarioFieldRequirement
-        from soldier.profile.enums import RequiredLevel, FallbackAction
+        from soldier.customer_data.models import ScenarioFieldRequirement
+        from soldier.customer_data.enums import RequiredLevel, FallbackAction
 
         mock_redis.get.return_value = None
         scenario_id = uuid4()

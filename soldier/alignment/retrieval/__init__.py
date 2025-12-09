@@ -1,9 +1,13 @@
 """Alignment retrieval module.
 
-Contains components for retrieving candidate rules, scenarios, and memory
+Contains components for retrieving candidate rules, scenarios, intents, and memory
 using vector similarity and selection strategies.
 """
 
+from soldier.alignment.retrieval.intent_retriever import (
+    IntentRetriever,
+    decide_canonical_intent,
+)
 from soldier.alignment.retrieval.models import (
     RetrievalResult,
     RuleSource,
@@ -11,7 +15,7 @@ from soldier.alignment.retrieval.models import (
     ScoredRule,
     ScoredScenario,
 )
-from soldier.alignment.retrieval.reranker import RuleReranker
+from soldier.alignment.retrieval.reranker import RuleReranker, ScenarioReranker
 from soldier.alignment.retrieval.rule_retriever import RuleRetriever
 from soldier.alignment.retrieval.scenario_retriever import ScenarioRetriever
 from soldier.alignment.retrieval.selection import (
@@ -41,6 +45,9 @@ __all__ = [
     "RuleRetriever",
     "RuleReranker",
     "ScenarioRetriever",
+    "ScenarioReranker",
+    "IntentRetriever",
+    "decide_canonical_intent",
     # Retrieval models
     "ScoredRule",
     "ScoredScenario",

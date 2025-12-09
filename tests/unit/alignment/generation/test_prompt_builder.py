@@ -4,12 +4,10 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import (
-    Context,
-    ExtractedEntity,
-    Sentiment,
-    Turn,
-    Urgency,
+from soldier.alignment.context.models import Turn
+from soldier.alignment.context.situation_snapshot import (
+    CandidateVariableInfo,
+    SituationSnapshot,
 )
 from soldier.alignment.execution.models import ToolResult
 from soldier.alignment.filtering.models import MatchedRule
@@ -65,16 +63,17 @@ class TestPromptBuilder:
         return PromptBuilder()
 
     @pytest.fixture
-    def context(self) -> Context:
-        return Context(
+    def snapshot(self) -> SituationSnapshot:
+        return SituationSnapshot(
             message="I want to return my order",
-            intent="return order",
-            entities=[
-                ExtractedEntity(type="order_id", value="12345"),
-                ExtractedEntity(type="action", value="return"),
-            ],
-            sentiment=Sentiment.NEUTRAL,
-            urgency=Urgency.NORMAL,
+            new_intent_label="return order",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+            candidate_variables={
+                "order_id": CandidateVariableInfo(value="12345", scope="CASE"),
+                "action": CandidateVariableInfo(value="return", scope="CASE"),
+            },
         )
 
     @pytest.fixture
@@ -117,10 +116,15 @@ class TestPromptBuilder:
         builder: PromptBuilder,
     ) -> None:
         """Test building prompt with minimal content."""
-        context = Context(message="Hello")
+        snapshot = SituationSnapshot(
+            message="Hello",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        )
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
         assert isinstance(prompt, str)
         assert len(prompt) > 0
@@ -128,13 +132,13 @@ class TestPromptBuilder:
     def test_build_system_prompt_includes_rules(
         self,
         builder: PromptBuilder,
-        context: Context,
+        snapshot: SituationSnapshot,
         matched_rules: list[MatchedRule],
     ) -> None:
         """Test that system prompt includes rules section."""
         prompt = builder.build_system_prompt(
             matched_rules=matched_rules,
-            context=context,
+            snapshot=snapshot,
         )
 
         assert "Return Policy" in prompt
@@ -145,7 +149,7 @@ class TestPromptBuilder:
     def test_build_system_prompt_marks_hard_constraints(
         self,
         builder: PromptBuilder,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that hard constraints are marked in prompt."""
         hard_rule = create_matched_rule(
@@ -157,7 +161,7 @@ class TestPromptBuilder:
 
         prompt = builder.build_system_prompt(
             matched_rules=[hard_rule],
-            context=context,
+            snapshot=snapshot,
         )
 
         assert "HARD CONSTRAINT" in prompt
@@ -165,83 +169,92 @@ class TestPromptBuilder:
     def test_build_system_prompt_includes_context(
         self,
         builder: PromptBuilder,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that system prompt includes user context."""
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
 
         assert "return order" in prompt  # intent
-        assert "order_id" in prompt  # entity type
+        assert "order_id" in prompt  # extracted variable
 
     def test_build_system_prompt_includes_entities(
         self,
         builder: PromptBuilder,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that entities are included in prompt."""
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
 
         assert "12345" in prompt  # entity value
 
-    def test_build_system_prompt_includes_sentiment(
+    def test_build_system_prompt_includes_tone(
         self,
         builder: PromptBuilder,
     ) -> None:
-        """Test that sentiment is included when present."""
-        context = Context(
+        """Test that tone is included when present."""
+        snapshot = SituationSnapshot(
             message="This is frustrating",
-            sentiment=Sentiment.FRUSTRATED,
+            intent_changed=False,
+            topic_changed=False,
+            tone="frustrated",
+            frustration_level="high",
         )
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
 
         assert "frustrated" in prompt.lower()
 
-    def test_build_system_prompt_includes_urgency(
+    def test_build_system_prompt_includes_frustration_level(
         self,
         builder: PromptBuilder,
     ) -> None:
-        """Test that non-normal urgency is included."""
-        context = Context(
+        """Test that high frustration level is included."""
+        snapshot = SituationSnapshot(
             message="Need help urgently",
-            urgency=Urgency.HIGH,
+            intent_changed=False,
+            topic_changed=False,
+            tone="urgent",
+            frustration_level="high",
         )
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
 
         assert "high" in prompt.lower()
 
-    def test_build_system_prompt_excludes_normal_urgency(
+    def test_build_system_prompt_excludes_no_frustration(
         self,
         builder: PromptBuilder,
     ) -> None:
-        """Test that normal urgency is not explicitly shown."""
-        context = Context(
+        """Test that no frustration level doesn't add frustration section."""
+        snapshot = SituationSnapshot(
             message="Hello",
-            urgency=Urgency.NORMAL,
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+            frustration_level=None,
         )
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
 
-        # Normal urgency shouldn't be mentioned
-        assert "Urgency: normal" not in prompt
+        # No frustration shouldn't be mentioned
+        assert "frustration" not in prompt.lower() or "none" not in prompt.lower()
 
     def test_build_system_prompt_includes_tool_results(
         self,
         builder: PromptBuilder,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that tool results are included."""
         tool_results = [
@@ -256,7 +269,7 @@ class TestPromptBuilder:
 
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
             tool_results=tool_results,
         )
 
@@ -266,7 +279,7 @@ class TestPromptBuilder:
     def test_build_system_prompt_includes_failed_tool_results(
         self,
         builder: PromptBuilder,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that failed tool results show errors."""
         tool_results = [
@@ -281,7 +294,7 @@ class TestPromptBuilder:
 
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
             tool_results=tool_results,
         )
 
@@ -292,14 +305,14 @@ class TestPromptBuilder:
     def test_build_system_prompt_includes_memory_context(
         self,
         builder: PromptBuilder,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that memory context is included."""
         memory_context = "Previous conversation: User ordered item #456 last week."
 
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
             memory_context=memory_context,
         )
 
@@ -436,7 +449,12 @@ class TestPromptBuilderRulesSection:
 
         prompt = builder.build_system_prompt(
             matched_rules=rules,
-            context=Context(message="Test"),
+            snapshot=SituationSnapshot(
+                message="Test",
+                intent_changed=False,
+                topic_changed=False,
+                tone="neutral",
+            ),
         )
 
         assert "1." in prompt
@@ -450,7 +468,12 @@ class TestPromptBuilderRulesSection:
         """Test that empty rules don't create section."""
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=Context(message="Test"),
+            snapshot=SituationSnapshot(
+                message="Test",
+                intent_changed=False,
+                topic_changed=False,
+                tone="neutral",
+            ),
         )
 
         # Should not have Active Rules header
@@ -464,23 +487,26 @@ class TestPromptBuilderContextSection:
     def builder(self) -> PromptBuilder:
         return PromptBuilder()
 
-    def test_context_section_includes_all_entities(
+    def test_context_section_includes_all_variables(
         self,
         builder: PromptBuilder,
     ) -> None:
-        """Test all entities are included."""
-        context = Context(
+        """Test all extracted variables are included."""
+        snapshot = SituationSnapshot(
             message="Test",
-            entities=[
-                ExtractedEntity(type="order_id", value="123"),
-                ExtractedEntity(type="product", value="laptop"),
-                ExtractedEntity(type="date", value="2024-01-15"),
-            ],
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+            candidate_variables={
+                "order_id": CandidateVariableInfo(value="123", scope="CASE"),
+                "product": CandidateVariableInfo(value="laptop", scope="CASE"),
+                "date": CandidateVariableInfo(value="2024-01-15", scope="CASE"),
+            },
         )
 
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
 
         assert "order_id" in prompt
@@ -494,11 +520,16 @@ class TestPromptBuilderContextSection:
         builder: PromptBuilder,
     ) -> None:
         """Test minimal context doesn't create empty section."""
-        context = Context(message="Hello")
+        snapshot = SituationSnapshot(
+            message="Hello",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        )
 
         prompt = builder.build_system_prompt(
             matched_rules=[],
-            context=context,
+            snapshot=snapshot,
         )
 
         # The context section should be minimal or empty

@@ -17,7 +17,7 @@ class Scope(str, Enum):
     STEP = "STEP"
 
 
-class TemplateMode(str, Enum):
+class TemplateResponseMode(str, Enum):
     """How templates are used in response generation.
 
     - SUGGEST: LLM can adapt the text as a suggestion

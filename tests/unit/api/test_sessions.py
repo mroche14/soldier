@@ -129,14 +129,14 @@ def mock_settings() -> MagicMock:
 
 
 @pytest.fixture
-def app(
+async def app(
     tenant_context: TenantContext,
     mock_session_store: MagicMock,
     mock_audit_store: MagicMock,
     mock_settings: MagicMock,
 ) -> FastAPI:
     """Create test FastAPI app."""
-    reset_dependencies()
+    await reset_dependencies()
 
     app = FastAPI()
     app.include_router(router)

@@ -52,7 +52,7 @@ class ValidationMode(str, Enum):
     DISABLED = "disabled"  # Skip validation entirely
 
 
-class ProfileFieldSource(str, Enum):
+class VariableSource(str, Enum):
     """How a profile field was populated.
 
     Tracks the provenance of profile data.

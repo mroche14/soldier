@@ -8,12 +8,15 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from soldier.alignment.context.models import Context
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
+from soldier.alignment.customer.models import CustomerDataUpdate
 from soldier.alignment.enforcement.models import EnforcementResult
 from soldier.alignment.execution.models import ToolResult
 from soldier.alignment.filtering.models import MatchedRule, ScenarioFilterResult
 from soldier.alignment.generation.models import GenerationResult
 from soldier.alignment.migration.models import FieldResolutionResult, ReconciliationResult
+from soldier.alignment.models.outcome import TurnOutcome
+from soldier.alignment.planning.models import ResponsePlan
 from soldier.alignment.retrieval.models import RetrievalResult
 
 
@@ -45,16 +48,18 @@ class AlignmentResult(BaseModel):
     user_message: str
 
     # Pipeline outputs
-    context: Context | None = None
+    snapshot: SituationSnapshot | None = None
     retrieval: RetrievalResult | None = None
     matched_rules: list[MatchedRule] = Field(default_factory=list)
     scenario_result: ScenarioFilterResult | None = None
     tool_results: list[ToolResult] = Field(default_factory=list)
+    response_plan: ResponsePlan | None = Field(default=None, description="Phase 8 response plan")
     generation: GenerationResult | None = None
     enforcement: EnforcementResult | None = None
 
     # Final output
     response: str = Field(..., description="The response to return to user")
+    outcome: TurnOutcome | None = Field(default=None, description="Turn outcome with resolution and categories")
 
     # Migration
     reconciliation_result: ReconciliationResult | None = Field(
@@ -69,6 +74,12 @@ class AlignmentResult(BaseModel):
     scenario_blocked: bool = Field(
         default=False,
         description="True if scenario entry was blocked due to missing hard requirements",
+    )
+
+    # Customer data updates (Phase 3)
+    persistent_customer_updates: list[CustomerDataUpdate] = Field(
+        default_factory=list,
+        description="Customer data updates marked for P11 persistence",
     )
 
     # Metadata

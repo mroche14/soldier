@@ -7,6 +7,7 @@ from pydantic import Field, ValidationInfo, field_validator
 
 from soldier.alignment.models.base import AgentScopedModel
 from soldier.alignment.models.enums import Scope
+from soldier.alignment.models.tool_binding import ToolBinding
 
 
 class Rule(AgentScopedModel):
@@ -35,7 +36,16 @@ class Rule(AgentScopedModel):
     max_fires_per_session: int = Field(default=0, ge=0, description="0 = unlimited")
     cooldown_turns: int = Field(default=0, ge=0, description="Min turns between re-fire")
     is_hard_constraint: bool = Field(default=False, description="Must be satisfied or fallback")
-    attached_tool_ids: list[str] = Field(default_factory=list, description="Tool IDs from ToolHub")
+    enforcement_expression: str | None = Field(
+        default=None,
+        description="Formal expression for deterministic enforcement (e.g., 'amount <= 50')"
+    )
+    attached_tool_ids: list[str] = Field(
+        default_factory=list, description="DEPRECATED: Tool IDs from ToolHub (use tool_bindings)"
+    )
+    tool_bindings: list[ToolBinding] = Field(
+        default_factory=list, description="Tool bindings with timing and dependencies"
+    )
     attached_template_ids: list[UUID] = Field(
         default_factory=list, description="Template references"
     )

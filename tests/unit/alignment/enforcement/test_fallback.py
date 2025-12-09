@@ -4,11 +4,11 @@ from uuid import uuid4
 
 from soldier.alignment.enforcement.fallback import FallbackHandler
 from soldier.alignment.enforcement.models import EnforcementResult
-from soldier.alignment.generation.models import TemplateMode
 from soldier.alignment.models import Template
+from soldier.alignment.models.enums import Scope, TemplateResponseMode
 
 
-def _template(mode: TemplateMode) -> Template:
+def _template(mode: TemplateResponseMode) -> Template:
     return Template(
         id=uuid4(),
         tenant_id=uuid4(),
@@ -16,7 +16,7 @@ def _template(mode: TemplateMode) -> Template:
         name=f"{mode}-template",
         description=None,
         text="fallback text",
-        scope="global",
+        scope=Scope.GLOBAL,
         scope_id=None,
         mode=mode,
     )
@@ -25,18 +25,18 @@ def _template(mode: TemplateMode) -> Template:
 def test_select_fallback_picks_mode_fallback() -> None:
     handler = FallbackHandler()
     templates = [
-        _template(TemplateMode.SUGGEST),
-        _template(TemplateMode.FALLBACK),
+        _template(TemplateResponseMode.SUGGEST),
+        _template(TemplateResponseMode.FALLBACK),
     ]
 
     selected = handler.select_fallback(templates)
     assert selected is not None
-    assert selected.mode == TemplateMode.FALLBACK
+    assert selected.mode == TemplateResponseMode.FALLBACK
 
 
 def test_apply_fallback_updates_result() -> None:
     handler = FallbackHandler()
-    template = _template(TemplateMode.FALLBACK)
+    template = _template(TemplateResponseMode.FALLBACK)
     original = EnforcementResult(
         passed=False,
         violations=[],

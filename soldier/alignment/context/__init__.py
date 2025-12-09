@@ -4,7 +4,10 @@ Contains context extraction components and models for understanding
 user messages.
 """
 
-from soldier.alignment.context.extractor import ContextExtractor
+from soldier.alignment.context.customer_schema_mask import (
+    CustomerSchemaMask,
+    CustomerSchemaMaskEntry,
+)
 from soldier.alignment.context.models import (
     Context,
     ExtractedEntity,
@@ -13,13 +16,22 @@ from soldier.alignment.context.models import (
     Turn,
     Urgency,
 )
+from soldier.alignment.context.situation_sensor import SituationSensor
+from soldier.alignment.context.situation_snapshot import (
+    CandidateVariableInfo,
+    SituationSnapshot,
+)
 
 __all__ = [
-    "ContextExtractor",
     "Context",
     "ExtractedEntity",
     "Sentiment",
     "Urgency",
     "ScenarioSignal",
     "Turn",
+    "CustomerSchemaMask",
+    "CustomerSchemaMaskEntry",
+    "SituationSensor",
+    "SituationSnapshot",
+    "CandidateVariableInfo",
 ]

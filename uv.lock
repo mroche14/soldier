@@ -3765,6 +3765,18 @@ wheels = [
 ]
 
 [[package]]
+name = "rank-bm25"
+version = "0.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fc/0a/f9579384aa017d8b4c15613f86954b92a95a93d641cc849182467cf0bb3b/rank_bm25-0.2.2.tar.gz", hash = "sha256:096ccef76f8188563419aaf384a02f0ea459503fdf77901378d4fd9d87e5e51d", size = 8347, upload-time = "2022-02-16T12:10:52.196Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/21/f691fb2613100a62b3fa91e9988c991e9ca5b89ea31c0d3152a3210344f9/rank_bm25-0.2.2-py3-none-any.whl", hash = "sha256:7bd4a95571adadfc271746fa146a4bcfd89c0cf731e49c3d1ad863290adbe8ae", size = 8584, upload-time = "2022-02-16T12:10:50.626Z" },
+]
+
+[[package]]
 name = "rapidfuzz"
 version = "3.14.3"
 source = { registry = "https://pypi.org/simple" }
@@ -4361,6 +4373,15 @@ wheels = [
 ]
 
 [[package]]
+name = "simpleeval"
+version = "1.0.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/6f/15be211749430f52f2c8f0c69158a6fc961c03aac93fa28d44d1a6f5ebc7/simpleeval-1.0.3.tar.gz", hash = "sha256:67bbf246040ac3b57c29cf048657b9cf31d4e7b9d6659684daa08ca8f1e45829", size = 24358, upload-time = "2024-11-02T10:29:46.912Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/e9/e58082fbb8cecbb6fb4133033c40cc50c248b1a331582be3a0f39138d65b/simpleeval-1.0.3-py3-none-any.whl", hash = "sha256:e3bdbb8c82c26297c9a153902d0fd1858a6c3774bf53ff4f134788c3f2035c38", size = 15762, upload-time = "2024-11-02T10:29:45.706Z" },
+]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4399,6 +4420,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "hatchet-sdk" },
     { name = "httpx" },
+    { name = "nest-asyncio" },
     { name = "numpy" },
     { name = "openai" },
     { name = "opentelemetry-exporter-otlp" },
@@ -4410,9 +4432,11 @@ dependencies = [
     { name = "python-jose" },
     { name = "python-levenshtein" },
     { name = "qdrant-client" },
+    { name = "rank-bm25" },
     { name = "redis" },
     { name = "scikit-learn" },
     { name = "scipy" },
+    { name = "simpleeval" },
     { name = "sse-starlette" },
     { name = "structlog" },
     { name = "tiktoken" },
@@ -4478,6 +4502,7 @@ requires-dist = [
     { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.0" },
     { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.5.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
+    { name = "nest-asyncio", specifier = ">=1.6.0" },
     { name = "numpy", specifier = ">=2.3.5" },
     { name = "openai", specifier = ">=2.8.1" },
     { name = "opentelemetry-exporter-otlp", specifier = ">=1.20" },
@@ -4494,6 +4519,7 @@ requires-dist = [
     { name = "python-jose", specifier = ">=3.3" },
     { name = "python-levenshtein", specifier = ">=0.27.0" },
     { name = "qdrant-client", specifier = ">=1.16.1" },
+    { name = "rank-bm25", specifier = ">=0.2.2" },
     { name = "redis", specifier = ">=7.1.0" },
     { name = "redis", marker = "extra == 'api'", specifier = ">=6.0.0" },
     { name = "redis", marker = "extra == 'queue'", specifier = ">=6.0.0" },
@@ -4502,6 +4528,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "scipy", specifier = ">=1.16.3" },
     { name = "sentence-transformers", marker = "extra == 'embeddings'", specifier = ">=5.1.2" },
+    { name = "simpleeval", specifier = ">=1.0.3" },
     { name = "sse-starlette", specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "tiktoken", specifier = ">=0.12.0" },

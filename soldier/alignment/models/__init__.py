@@ -14,12 +14,18 @@ Contains all Pydantic models for the alignment engine:
 from soldier.alignment.models.agent import Agent, AgentSettings
 from soldier.alignment.models.base import AgentScopedModel, TenantScopedModel
 from soldier.alignment.models.context import Context, ExtractedEntities, UserIntent
-from soldier.alignment.models.enums import Scope, TemplateMode, VariableUpdatePolicy
+from soldier.alignment.models.enums import Scope, TemplateResponseMode, VariableUpdatePolicy
+from soldier.alignment.models.glossary import GlossaryItem
+from soldier.alignment.models.intent import Intent, IntentCandidate, ScoredIntent
 from soldier.alignment.models.publish import PublishJob, PublishStage
 from soldier.alignment.models.rule import MatchedRule, Rule
+from soldier.alignment.models.rule_relationship import RuleRelationship, RuleRelationshipKind
 from soldier.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
 from soldier.alignment.models.template import Template
 from soldier.alignment.models.tool_activation import ToolActivation
+from soldier.alignment.models.tool_binding import ToolBinding
+from soldier.alignment.models.turn_context import TurnContext
+from soldier.alignment.models.turn_input import TurnInput
 from soldier.alignment.models.variable import Variable
 
 __all__ = [
@@ -31,11 +37,13 @@ __all__ = [
     "AgentSettings",
     # Enums
     "Scope",
-    "TemplateMode",
+    "TemplateResponseMode",
     "VariableUpdatePolicy",
     # Rule models
     "Rule",
     "MatchedRule",
+    "RuleRelationship",
+    "RuleRelationshipKind",
     # Scenario models
     "Scenario",
     "ScenarioStep",
@@ -46,6 +54,8 @@ __all__ = [
     "Variable",
     # Tool activation models
     "ToolActivation",
+    # Tool binding models
+    "ToolBinding",
     # Publish models
     "PublishJob",
     "PublishStage",
@@ -53,4 +63,12 @@ __all__ = [
     "Context",
     "UserIntent",
     "ExtractedEntities",
+    # Turn models (Phase 1)
+    "TurnInput",
+    "TurnContext",
+    "GlossaryItem",
+    # Intent models (Phase 4)
+    "Intent",
+    "IntentCandidate",
+    "ScoredIntent",
 ]

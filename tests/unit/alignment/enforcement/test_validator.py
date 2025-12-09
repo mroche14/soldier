@@ -4,11 +4,19 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.alignment.enforcement.validator import EnforcementValidator
 from soldier.alignment.filtering.models import MatchedRule
 from soldier.alignment.generation.generator import ResponseGenerator
 from soldier.alignment.models import Rule
+
+
+class DummyConfigStore:
+    """Mock config store for testing."""
+
+    async def get_rules(self, **kwargs):
+        """Return empty list of rules."""
+        return []
 
 
 class DummyGenerator(ResponseGenerator):
@@ -27,11 +35,21 @@ class DummyGenerator(ResponseGenerator):
 
 @pytest.mark.asyncio
 async def test_validator_passes_when_no_constraints() -> None:
-    validator = EnforcementValidator(response_generator=DummyGenerator("ok"))
+    validator = EnforcementValidator(
+        response_generator=DummyGenerator("ok"),
+        agent_config_store=DummyConfigStore(),
+    )
     result = await validator.validate(
         response="hello",
-        context=Context(message="hello"),
+        snapshot=SituationSnapshot(
+            message="hello",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        ),
         matched_rules=[],
+        tenant_id=uuid4(),
+        agent_id=uuid4(),
         hard_rules=[],
     )
     assert result.passed is True
@@ -40,10 +58,12 @@ async def test_validator_passes_when_no_constraints() -> None:
 
 @pytest.mark.asyncio
 async def test_validator_detects_violation_and_regenerates() -> None:
+    tenant_id = uuid4()
+    agent_id = uuid4()
     hard_rule = Rule(
         id=uuid4(),
-        tenant_id=uuid4(),
-        agent_id=uuid4(),
+        tenant_id=tenant_id,
+        agent_id=agent_id,
         name="No secret",
         condition_text="Always",
         action_text="secret",
@@ -51,11 +71,21 @@ async def test_validator_detects_violation_and_regenerates() -> None:
     )
     matched = MatchedRule(rule=hard_rule, match_score=1.0, relevance_score=1.0, reasoning="")
 
-    validator = EnforcementValidator(response_generator=DummyGenerator("clean response"))
+    validator = EnforcementValidator(
+        response_generator=DummyGenerator("clean response"),
+        agent_config_store=DummyConfigStore(),
+    )
     result = await validator.validate(
         response="This contains secret",
-        context=Context(message=""),
+        snapshot=SituationSnapshot(
+            message="",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        ),
         matched_rules=[matched],
+        tenant_id=tenant_id,
+        agent_id=agent_id,
         hard_rules=[hard_rule],
     )
 
@@ -66,10 +96,12 @@ async def test_validator_detects_violation_and_regenerates() -> None:
 
 @pytest.mark.asyncio
 async def test_validator_returns_original_on_regen_failure() -> None:
+    tenant_id = uuid4()
+    agent_id = uuid4()
     hard_rule = Rule(
         id=uuid4(),
-        tenant_id=uuid4(),
-        agent_id=uuid4(),
+        tenant_id=tenant_id,
+        agent_id=agent_id,
         name="No secret",
         condition_text="Always",
         action_text="secret",
@@ -81,11 +113,21 @@ async def test_validator_returns_original_on_regen_failure() -> None:
         async def generate(self, *args, **kwargs):
             raise RuntimeError("fail")
 
-    validator = EnforcementValidator(response_generator=FailingGenerator(None))
+    validator = EnforcementValidator(
+        response_generator=FailingGenerator(None),
+        agent_config_store=DummyConfigStore(),
+    )
     result = await validator.validate(
         response="This contains secret",
-        context=Context(message=""),
+        snapshot=SituationSnapshot(
+            message="",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        ),
         matched_rules=[matched],
+        tenant_id=tenant_id,
+        agent_id=agent_id,
         hard_rules=[hard_rule],
     )
 

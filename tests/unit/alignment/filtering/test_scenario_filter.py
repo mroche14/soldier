@@ -4,7 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context, ScenarioSignal
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
+from soldier.alignment.context.models import ScenarioSignal
 from soldier.alignment.filtering.models import ScenarioAction
 from soldier.alignment.filtering.scenario_filter import ScenarioFilter
 from soldier.alignment.models.scenario import Scenario, ScenarioStep
@@ -30,10 +31,16 @@ async def test_start_new_scenario_when_no_active() -> None:
     await store.save_scenario(scenario)
 
     filter = ScenarioFilter(store)
-    context = Context(message="start return", scenario_signal=ScenarioSignal.START)
+    snapshot = SituationSnapshot(
+        message="start return",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        scenario_signal=ScenarioSignal.START,
+    )
     result = await filter.evaluate(
         tenant_id,
-        context,
+        snapshot,
         candidates=[ScoredScenario(scenario_id=scenario.id, scenario_name="Return Flow", score=0.9)],
     )
 
@@ -48,11 +55,17 @@ async def test_exit_active_scenario_on_signal() -> None:
     store = InMemoryAgentConfigStore()
     filter = ScenarioFilter(store)
 
-    context = Context(message="stop", scenario_signal=ScenarioSignal.EXIT)
+    snapshot = SituationSnapshot(
+        message="stop",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        scenario_signal=ScenarioSignal.EXIT,
+    )
 
     result = await filter.evaluate(
         tenant_id,
-        context,
+        snapshot,
         candidates=[],
         active_scenario_id=uuid4(),
         current_step_id=uuid4(),
@@ -68,11 +81,17 @@ async def test_loop_detection_triggers_relocalize() -> None:
     filter = ScenarioFilter(store, max_loop_count=2)
     current_step = uuid4()
 
-    context = Context(message="looping", scenario_signal=ScenarioSignal.CONTINUE)
+    snapshot = SituationSnapshot(
+        message="looping",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        scenario_signal=ScenarioSignal.CONTINUE,
+    )
 
     result = await filter.evaluate(
         tenant_id,
-        context,
+        snapshot,
         candidates=[],
         active_scenario_id=uuid4(),
         current_step_id=current_step,

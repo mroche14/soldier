@@ -1,8 +1,8 @@
 """Fallback handler for enforcement failures."""
 
 from soldier.alignment.enforcement.models import EnforcementResult
-from soldier.alignment.generation.models import TemplateMode
 from soldier.alignment.models import Template
+from soldier.alignment.models.enums import TemplateResponseMode
 
 
 class FallbackHandler:
@@ -27,11 +27,7 @@ class FallbackHandler:
             First template with FALLBACK mode, or None
         """
         for template in templates:
-            if (
-                hasattr(template, "mode")
-                and getattr(template.mode, "value", str(template.mode))
-                == TemplateMode.FALLBACK.value
-            ):
+            if template.mode == TemplateResponseMode.FALLBACK:
                 return template
         return None
 

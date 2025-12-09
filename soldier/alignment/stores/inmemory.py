@@ -6,7 +6,10 @@ from uuid import UUID
 from soldier.alignment.migration.models import MigrationPlan, MigrationPlanStatus
 from soldier.alignment.models import (
     Agent,
+    GlossaryItem,
+    Intent,
     Rule,
+    RuleRelationship,
     Scenario,
     Scope,
     Template,
@@ -14,6 +17,7 @@ from soldier.alignment.models import (
     Variable,
 )
 from soldier.alignment.stores.agent_config_store import AgentConfigStore
+from soldier.customer_data import CustomerDataField
 from soldier.utils.vector import cosine_similarity
 
 
@@ -27,6 +31,7 @@ class InMemoryAgentConfigStore(AgentConfigStore):
     def __init__(self) -> None:
         """Initialize empty storage."""
         self._rules: dict[UUID, Rule] = {}
+        self._rule_relationships: dict[UUID, RuleRelationship] = {}
         self._scenarios: dict[UUID, Scenario] = {}
         self._templates: dict[UUID, Template] = {}
         self._variables: dict[UUID, Variable] = {}
@@ -34,6 +39,9 @@ class InMemoryAgentConfigStore(AgentConfigStore):
         self._tool_activations: dict[tuple[UUID, UUID, str], ToolActivation] = {}
         self._migration_plans: dict[UUID, MigrationPlan] = {}
         self._archived_scenarios: dict[tuple[UUID, UUID, int], Scenario] = {}
+        self._glossary_items: dict[UUID, GlossaryItem] = {}
+        self._customer_data_fields: dict[UUID, CustomerDataField] = {}
+        self._intents: dict[UUID, Intent] = {}
 
     # Rule operations
     async def get_rule(self, tenant_id: UUID, rule_id: UUID) -> Rule | None:
@@ -114,6 +122,51 @@ class InMemoryAgentConfigStore(AgentConfigStore):
         # Sort by score descending
         results.sort(key=lambda x: x[1], reverse=True)
         return results[:limit]
+
+    # Rule relationship operations
+    async def get_rule_relationships(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        rule_ids: list[UUID] | None = None,
+    ) -> list[RuleRelationship]:
+        """Get rule relationships, optionally filtered by rule IDs."""
+        results = []
+        for rel in self._rule_relationships.values():
+            if rel.tenant_id != tenant_id:
+                continue
+            if rel.agent_id != agent_id:
+                continue
+            if rel.is_deleted:
+                continue
+            if rule_ids and rel.source_rule_id not in rule_ids and rel.target_rule_id not in rule_ids:
+                continue
+            results.append(rel)
+        return results
+
+    async def save_rule_relationship(
+        self,
+        relationship: RuleRelationship,
+    ) -> UUID:
+        """Save a rule relationship, returning its ID."""
+        if relationship.id not in self._rule_relationships:
+            relationship.created_at = datetime.now(UTC)
+        relationship.updated_at = datetime.now(UTC)
+        self._rule_relationships[relationship.id] = relationship
+        return relationship.id
+
+    async def delete_rule_relationship(
+        self,
+        tenant_id: UUID,
+        relationship_id: UUID,
+    ) -> bool:
+        """Soft-delete a rule relationship."""
+        rel = self._rule_relationships.get(relationship_id)
+        if rel and rel.tenant_id == tenant_id and not rel.is_deleted:
+            rel.deleted_at = datetime.now(UTC)
+            return True
+        return False
 
     # Scenario operations
     async def get_scenario(self, tenant_id: UUID, scenario_id: UUID) -> Scenario | None:
@@ -419,3 +472,83 @@ class InMemoryAgentConfigStore(AgentConfigStore):
         """Get archived scenario by version."""
         key = (tenant_id, scenario_id, version)
         return self._archived_scenarios.get(key)
+
+    # Glossary operations
+    async def get_glossary_items(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        enabled_only: bool = True,
+    ) -> list[GlossaryItem]:
+        """Get all glossary items for an agent."""
+        results = []
+        for item in self._glossary_items.values():
+            if item.tenant_id != tenant_id or item.agent_id != agent_id:
+                continue
+            if enabled_only and not item.enabled:
+                continue
+            results.append(item)
+        return results
+
+    async def save_glossary_item(self, item: GlossaryItem) -> None:
+        """Save a glossary item."""
+        self._glossary_items[item.id] = item
+
+    # Customer data field operations
+    async def get_customer_data_fields(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        enabled_only: bool = True,
+    ) -> list[CustomerDataField]:
+        """Get all customer data field definitions for an agent."""
+        results = []
+        for field in self._customer_data_fields.values():
+            if field.tenant_id != tenant_id or field.agent_id != agent_id:
+                continue
+            if enabled_only and not field.enabled:
+                continue
+            results.append(field)
+        return results
+
+    async def save_customer_data_field(self, field: CustomerDataField) -> None:
+        """Save a customer data field definition."""
+        self._customer_data_fields[field.id] = field
+
+    # Intent operations
+    async def get_intent(self, tenant_id: UUID, intent_id: UUID) -> Intent | None:
+        """Get an intent by ID."""
+        intent = self._intents.get(intent_id)
+        if intent and intent.tenant_id == tenant_id:
+            return intent
+        return None
+
+    async def get_intents(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list[Intent]:
+        """Get all intents for an agent."""
+        results = []
+        for intent in self._intents.values():
+            if intent.tenant_id != tenant_id or intent.agent_id != agent_id:
+                continue
+            if enabled_only and not intent.enabled:
+                continue
+            results.append(intent)
+        return results
+
+    async def save_intent(self, intent: Intent) -> UUID:
+        """Save an intent, returning its ID."""
+        self._intents[intent.id] = intent
+        return intent.id
+
+    async def delete_intent(self, tenant_id: UUID, intent_id: UUID) -> bool:
+        """Soft-delete an intent."""
+        intent = self._intents.get(intent_id)
+        if intent and intent.tenant_id == tenant_id and intent.enabled:
+            intent.enabled = False
+            return True
+        return False

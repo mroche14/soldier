@@ -32,9 +32,9 @@ def mock_settings_tracing_disabled():
 
 
 @pytest.fixture
-def app_with_tracing(mock_settings_tracing_enabled):
+async def app_with_tracing(mock_settings_tracing_enabled):
     """Create test app with tracing enabled."""
-    reset_dependencies()
+    await reset_dependencies()
 
     app = FastAPI()
     app.add_middleware(RequestContextMiddleware)
@@ -129,12 +129,13 @@ class TestRequestTracing:
 class TestTracingConfiguration:
     """Tests for tracing configuration."""
 
-    def test_tracing_can_be_disabled(
+    @pytest.mark.asyncio
+    async def test_tracing_can_be_disabled(
         self,
         mock_settings_tracing_disabled,
     ) -> None:
         """Tracing can be disabled via settings."""
-        reset_dependencies()
+        await reset_dependencies()
 
         app = FastAPI()
         app.add_middleware(RequestContextMiddleware)

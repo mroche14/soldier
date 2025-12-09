@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.config.models.selection import SelectionConfig
 from soldier.memory.models.episode import Episode
 from soldier.memory.retrieval.retriever import MemoryRetriever
@@ -65,12 +65,18 @@ async def test_memory_retriever_returns_top_results() -> None:
         selection_config=SelectionConfig(strategy="fixed_k", params={"k": 1}),
     )
 
-    context = Context(message="returns", embedding=[1.0, 0.0, 0.0])
+    snapshot = SituationSnapshot(
+        message="returns",
+        embedding=[1.0, 0.0, 0.0],
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+    )
 
     results = await retriever.retrieve(
         tenant_id=tenant_id,
         agent_id=agent_id,
-        context=context,
+        snapshot=snapshot,
     )
 
     assert len(results) == 1

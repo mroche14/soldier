@@ -1,6 +1,6 @@
-"""ProfileRequirementExtractor - extracts profile requirements from scenarios/rules.
+"""CustomerDataRequirementExtractor - extracts customer data requirements from scenarios/rules.
 
-Triggers ProfileItemSchemaExtraction workflow on Scenario/Rule create/update.
+Triggers CustomerDataSchemaExtraction workflow on Scenario/Rule create/update.
 Non-blocking: extraction runs as background job via Hatchet.
 """
 
@@ -15,8 +15,8 @@ from soldier.observability.logging import get_logger
 logger = get_logger(__name__)
 
 
-class ProfileRequirementExtractor:
-    """Extracts profile field requirements from scenarios and rules.
+class CustomerDataRequirementExtractor:
+    """Extracts customer data field requirements from scenarios and rules.
 
     Implements T135-T138: Trigger extraction on Scenario/Rule create/update.
 
@@ -25,7 +25,7 @@ class ProfileRequirementExtractor:
     block the save operation.
 
     Usage:
-        store = ProfileRequirementExtractor(
+        store = CustomerDataRequirementExtractor(
             config_store=InMemoryAgentConfigStore(),
             hatchet_client=hatchet,  # Optional
         )

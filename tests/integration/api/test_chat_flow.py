@@ -89,7 +89,7 @@ def mock_alignment_engine(tenant_id, agent_id):
 
 
 @pytest.fixture
-def app(
+async def app(
     tenant_context,
     mock_settings,
     session_store,
@@ -97,7 +97,7 @@ def app(
     mock_alignment_engine,
 ):
     """Create test FastAPI app."""
-    reset_dependencies()
+    await reset_dependencies()
 
     app = create_app()
 

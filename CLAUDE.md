@@ -594,13 +594,16 @@ class TestPostgresConfigStore(ConfigStoreContract):
 
 The alignment engine processes turns through these steps:
 
-1. **Context Extraction** - Understand user intent
-2. **Retrieval** - Find candidate rules/scenarios/memory
-3. **Reranking** - Improve candidate ordering
-4. **LLM Filtering** - Judge which rules apply
-5. **Tool Execution** - Run tools from matched rules
-6. **Response Generation** - Generate response
-7. **Enforcement** - Validate against constraints
+1. **Context Extraction (Phase 1)** - Understand user intent
+2. **Situational Sensor (Phase 2)** - Extract structured metadata and candidate variables
+3. **Customer Data Update (Phase 3)** - Apply variable updates to CustomerDataStore (in-memory)
+4. **Retrieval (Phase 4)** - Find candidate rules/scenarios/memory
+5. **Reranking** - Improve candidate ordering
+6. **LLM Filtering** - Judge which rules apply
+7. **Tool Execution** - Run tools from matched rules
+8. **Response Generation** - Generate response
+9. **Enforcement** - Validate against constraints
+10. **Persistence (Phase 11)** - Save session state, customer data, memory
 
 ### Adding Pipeline Steps
 
@@ -626,6 +629,58 @@ provider = "some_provider"
 | `ScenarioFilter` | Which step should we be in? |
 
 Don't conflate these responsibilities.
+
+### Phase 3: Customer Data Update
+
+**Purpose**: Map extracted candidate variables from Phase 2 into the CustomerDataStore, validate them, and mark persistent updates for Phase 11.
+
+**Key Principle**: Updates are **in-memory only** during Phase 3. Persistence happens at Phase 11.
+
+**Architecture**:
+- `CustomerDataField` (schema) - Defines what fields can exist with validation rules
+- `VariableEntry` (runtime) - Actual values with history and confidence
+- `CustomerDataStore` - In-memory snapshot of customer data for this turn
+- `CustomerDataUpdate` - Delta representing one field update
+
+**Scope-Based Persistence**:
+| Scope | Behavior | Example |
+|-------|----------|---------|
+| `IDENTITY` | Always persisted | `first_name`, `email` |
+| `BUSINESS` | Always persisted | `subscription_plan`, `account_tier` |
+| `CASE` | Persisted for case duration | `refund_request_id`, `case_number` |
+| `SESSION` | Ephemeral (never saved) | `temp_cart_total`, `draft_selection` |
+
+**Phase 3 Flow**:
+1. **P3.1 Match** - Match candidate variables to field definitions
+2. **P3.2 Validate** - Type coercion and validation (regex, allowed_values)
+3. **P3.3 Apply** - Update CustomerDataStore in-memory with history tracking
+4. **P3.4 Mark** - Filter updates for persistence (skip SESSION scope, persist=False)
+
+**Configuration**:
+```toml
+[pipeline.customer_data_update]
+enabled = true
+validation_mode = "strict"  # strict, warn, disabled
+max_history_entries = 10
+```
+
+**Usage Pattern**:
+```python
+# In AlignmentEngine.process_turn()
+customer_data_store, persistent_updates = await self._customer_data_updater.update(
+    customer_data_store=customer_data_store,
+    candidate_variables=situational_snapshot.candidate_variables,
+    field_definitions=customer_data_fields,
+)
+
+# Later at Phase 11
+await self._customer_data_persister.persist(
+    tenant_id=tenant_id,
+    customer_id=customer_id,
+    updates=persistent_updates,
+    customer_data_store=customer_data_store,
+)
+```
 
 ---
 
@@ -692,6 +747,104 @@ try:
 except SpecificError as e:
     logger.error("operation_failed", error=str(e))
     raise
+```
+
+---
+
+## Focal Turn Pipeline Patterns (Phase 2+)
+
+### Jinja2 Template Pattern for LLM Tasks
+
+All LLM task prompts use Jinja2 templates, not string formatting:
+
+```python
+# Good: Jinja2 template
+from soldier.alignment.context.template_loader import TemplateLoader
+from pathlib import Path
+
+loader = TemplateLoader(Path(__file__).parent / "prompts")
+prompt = loader.render(
+    "situational_sensor.jinja2",
+    message=message,
+    schema_mask=schema_mask,
+    glossary=glossary,
+)
+```
+
+Template location: `soldier/alignment/{module}/prompts/{task}.jinja2`
+
+### CustomerDataStore Pattern
+
+**CustomerDataStore** (formerly CustomerProfile) is the runtime variable storage:
+
+- **Where**: `soldier/customer_data/models.py`
+- **Contains**: `fields: dict[str, VariableEntry]` - current variable values
+- **Scopes**: IDENTITY, BUSINESS, CASE, SESSION
+- **Access**: `ProfileStore.get_by_customer_id()` / `.save()`
+
+**CustomerDataField** is the schema definition:
+
+- **Where**: Stored in ConfigStore per agent
+- **Purpose**: Defines what fields exist, their types, scopes, validation
+- **Access**: `ConfigStore.get_customer_data_fields(tenant_id, agent_id)`
+
+**Don't confuse**:
+- CustomerDataStore = runtime values for a customer
+- CustomerDataField = schema/metadata for what fields are allowed
+
+### Schema Mask Pattern for Privacy
+
+Never expose actual customer data values to LLMs. Use CustomerSchemaMask:
+
+```python
+from soldier.alignment.context.customer_schema_mask import build_customer_schema_mask
+
+# Show LLM what fields exist, not their values
+schema_mask = build_customer_schema_mask(
+    customer_data=customer_data_store,
+    schema=customer_data_fields,
+)
+
+# LLM sees: {"email": {scope: "IDENTITY", type: "string", exists: true}}
+# LLM does NOT see: actual email address
+```
+
+### Glossary Usage Pattern
+
+GlossaryItem provides domain-specific terminology to LLMs:
+
+```python
+# Load from ConfigStore
+glossary = await config_store.get_glossary_items(tenant_id, agent_id)
+
+# Convert to dict for template
+glossary_dict = {item.term: item for item in glossary}
+
+# Pass to Jinja2 template
+prompt = loader.render("task.jinja2", glossary=glossary_dict)
+```
+
+### SituationalSnapshot Pattern
+
+SituationalSnapshot replaces basic Context extraction:
+
+```python
+# Old (Phase 1): Context with intent/entities
+context = await context_extractor.extract(message, history)
+
+# New (Phase 2): SituationalSnapshot with candidate variables
+snapshot = await situational_sensor.sense(
+    message=message,
+    history=history,
+    customer_data_store=customer_data,
+    customer_data_fields=schema,
+    glossary_items=glossary,
+    previous_intent_label=session.last_intent,
+)
+
+# snapshot.candidate_variables = {
+#     "email": CandidateVariableInfo(value="user@example.com", scope="IDENTITY", is_update=False)
+# }
 ```
 
 ---
@@ -782,6 +935,56 @@ Tests are in `tests/unit/alignment/migration/`:
 - `test_executor.py` - JIT migration execution
 - `test_composite.py` - Multi-version gap handling
 - `test_gap_fill.py` - Data retrieval service
+
+---
+
+## Focal Turn Pipeline (Phase 1 Implementation)
+
+The turn pipeline processes a user message through 11 phases. Phase 1 (Identification & Context Loading) is implemented:
+
+### Key Models
+
+| Model | Location | Purpose |
+|-------|----------|---------|
+| `TurnContext` | `soldier/alignment/models/turn_context.py` | Aggregated context for a turn |
+| `TurnInput` | `soldier/alignment/models/turn_input.py` | Inbound event format |
+| `GlossaryItem` | `soldier/alignment/models/glossary.py` | Domain terminology for LLM |
+| `CustomerSchemaMask` | `soldier/alignment/context/customer_schema_mask.py` | Privacy-safe schema view |
+
+### Customer Data Module
+
+The `soldier/customer_data/` module (renamed from `profile/`) contains:
+
+| Class | Purpose |
+|-------|---------|
+| `CustomerDataField` | Schema definition for customer fields (has `scope`, `persist`) |
+| `VariableEntry` | Runtime variable with value and history |
+| `CustomerDataStore` | Collection of variables for a customer |
+| `VariableSource` | Enum for where variable came from |
+
+### Loaders
+
+| Loader | Location | Purpose |
+|--------|----------|---------|
+| `CustomerDataLoader` | `soldier/alignment/loaders/customer_data_loader.py` | Loads customer variables |
+| `StaticConfigLoader` | `soldier/alignment/loaders/static_config_loader.py` | Loads glossary and schema |
+
+### Usage in AlignmentEngine
+
+```python
+# Phase 1 is integrated into process_turn:
+# 1. _resolve_customer() - Resolves customer from channel identity
+# 2. _build_turn_context() - Builds TurnContext with parallel loading
+
+result = await engine.process_turn(
+    message="Hello",
+    tenant_id=tenant_id,
+    agent_id=agent_id,
+    session_id=session_id,
+    channel="whatsapp",           # Channel identifier
+    channel_user_id="+1234567890", # For customer resolution
+)
+```
 
 ---
 

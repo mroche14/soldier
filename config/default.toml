@@ -85,6 +85,30 @@ top_k = 10
 # =============================================================================
 # Pipeline Configuration
 # =============================================================================
+
+# Phase 1: Turn Context Loading
+[pipeline.turn_context]
+load_glossary = true
+load_customer_data_schema = true
+enable_scenario_reconciliation = true
+
+# Phase 3: Customer Data Update
+[pipeline.customer_data_update]
+enabled = true
+validation_mode = "strict"  # strict, warn, disabled
+max_history_entries = 10    # Max history items per variable
+
+# Glossary Configuration
+[glossary]
+enabled = true
+max_items_per_turn = 50  # Limit to avoid token bloat
+external_source = ""  # e.g., "s3://bucket/glossary.json"
+
+# Customer Data Configuration
+[customer_data]
+enabled = true
+session_scope_ttl_minutes = 120  # SESSION-scoped variables expire after 2 hours
+strict_validation = false  # If true, reject invalid values; if false, warn
 # Each step specifies its model directly with optional fallbacks.
 # Model strings include the aggregator prefix when using OpenRouter.
 #
@@ -100,19 +124,19 @@ top_k = 10
 #
 #   See: https://openrouter.ai/docs#provider-routing
 
-[pipeline.context_extraction]
+[pipeline.situational_sensor]
 enabled = true
-mode = "llm"
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
-provider_order = ["cerebras", "groq","google-vertex","sambanova"]  # Try Anthropic first
-provider_sort = "latency"                # Or "price" or "throughput"
-allow_fallbacks = true                   # Allow other providers if listed fail
+provider_order = ["cerebras", "groq", "google-vertex", "sambanova"]
+provider_sort = "latency"
+allow_fallbacks = true
 ignore_providers = []
-history_turns = 5
-# Optional: uncomment to configure OpenRouter provider routing for this step
-# [pipeline.context_extraction.openrouter]
-# provider_sort = "latency"  # Prioritize fastest providers for context extraction
+temperature = 0.0  # Deterministic for extraction
+max_tokens = 800
+history_turns = 5  # Configurable K (currently hardcoded)
+include_glossary = true
+include_schema_mask = true
 
 [pipeline.retrieval]
 enabled = true
@@ -134,10 +158,54 @@ strategy = "clustering"
 min_score = 0.4
 max_k = 15
 
-[pipeline.reranking]
+[pipeline.retrieval.intent_selection]
+strategy = "elbow"
+min_score = 0.6
+max_k = 5
+
+# Per-object-type reranking configuration
+[pipeline.retrieval.rule_reranking]
+enabled = true
+rerank_provider = "default"
+top_k = 20
+
+[pipeline.retrieval.scenario_reranking]
+enabled = false  # Optional - enable if needed
+
+[pipeline.retrieval.memory_reranking]
 enabled = true
 rerank_provider = "default"
 top_k = 10
+
+[pipeline.retrieval.intent_reranking]
+enabled = true
+rerank_provider = "default"
+top_k = 10
+
+# Hybrid (vector + BM25) retrieval configuration per object type
+[pipeline.retrieval.rule_hybrid]
+enabled = false
+vector_weight = 0.7
+bm25_weight = 0.3
+normalization = "min_max"
+
+[pipeline.retrieval.scenario_hybrid]
+enabled = false
+vector_weight = 0.7
+bm25_weight = 0.3
+normalization = "min_max"
+
+[pipeline.retrieval.memory_hybrid]
+enabled = false
+vector_weight = 0.7
+bm25_weight = 0.3
+normalization = "min_max"
+
+[pipeline.retrieval.intent_hybrid]
+enabled = false
+vector_weight = 0.7
+bm25_weight = 0.3
+normalization = "min_max"
 
 [pipeline.rule_filtering]
 enabled = true
@@ -149,6 +217,12 @@ allow_fallbacks = true                   # Allow other providers if listed fail
 ignore_providers = []
 history_turns = 5
 batch_size = 5
+confidence_threshold = 0.7               # Minimum confidence for APPLIES
+unsure_policy = "exclude"                # "include" | "exclude" | "log_only"
+
+[pipeline.relationship_expansion]
+enabled = true
+max_depth = 2                            # Maximum relationship chain depth
 
 [pipeline.scenario_filtering]
 enabled = true
@@ -159,6 +233,33 @@ provider_sort = "latency"                # Or "price" or "throughput"
 allow_fallbacks = true                   # Allow other providers if listed fail
 ignore_providers = []
 
+# Phase 6: Scenario Orchestration
+[pipeline.scenario_orchestration]
+enabled = true
+max_loop_count = 3  # Maximum visits to a step before triggering relocalization
+max_simultaneous_scenarios = 5  # Limit active scenarios per session
+block_on_missing_hard_fields = true  # Block scenario entry when hard requirements missing
+enable_step_skipping = true  # Enable automatic step skipping with available data
+enable_multi_scenario = true  # Allow multiple active scenarios
+
+# Phase 7: Tool Execution
+[pipeline.tool_execution]
+enabled = true
+timeout_ms = 5000  # Timeout per tool execution
+max_parallel = 5  # Max tools to execute in parallel
+fail_fast = false  # Stop on first tool failure
+enable_before_step = true  # Enable BEFORE_STEP tool execution
+enable_during_step = true  # Enable DURING_STEP tool execution
+enable_after_step = true  # Enable AFTER_STEP tool execution
+
+# Phase 8: Response Planning
+[pipeline.response_planning]
+enabled = true
+prioritize_escalation = true  # Escalation rules override all other types
+merge_templates = true  # Combine templates from multiple scenarios
+extract_must_include = true  # Extract must_include constraints from rules
+extract_must_avoid = true  # Extract must_avoid constraints from rules
+sort_by_urgency = true  # Sort contributions by urgency before scenario order
 
 [pipeline.generation]
 enabled = true
@@ -170,6 +271,15 @@ allow_fallbacks = true                   # Allow other providers if listed fail
 ignore_providers = []
 temperature = 0.7
 max_tokens = 1024
+
+# Structured output for categories
+structured_output = true
+
+# Channel formatting
+[pipeline.generation.channels]
+whatsapp_max_length = 4096
+sms_max_length = 160
+email_add_signature = true
 
 [pipeline.enforcement]
 enabled = true
@@ -222,23 +332,6 @@ fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 max_tokens = 512
 temperature = 0.5
 
-# =============================================================================
-# Selection Strategies
-# =============================================================================
-[selection.rule]
-strategy = "adaptive_k"
-min_score = 0.5
-max_k = 10
-
-[selection.scenario]
-strategy = "entropy"
-min_score = 0.5
-max_k = 5
-
-[selection.memory]
-strategy = "clustering"
-min_score = 0.4
-max_k = 15
 
 # =============================================================================
 # Observability Configuration

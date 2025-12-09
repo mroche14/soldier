@@ -1,10 +1,13 @@
 """SessionStore abstract interface."""
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from soldier.alignment.migration.models import ScopeFilter
 from soldier.conversation.models import Channel, Session, SessionStatus
+
+if TYPE_CHECKING:
+    from soldier.alignment.migration.models import ScopeFilter
 
 
 class SessionStore(ABC):
@@ -69,7 +72,7 @@ class SessionStore(ABC):
         scenario_id: UUID,
         scenario_version: int,
         step_content_hash: str,
-        scope_filter: ScopeFilter | None = None,
+        scope_filter: "ScopeFilter | None" = None,
     ) -> list[Session]:
         """Find sessions at a step matching the content hash.
 

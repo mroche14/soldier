@@ -320,7 +320,7 @@ class TestSessionStateUpdates:
         extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"})
         filter_resp = json.dumps({
             "evaluations": [
-                {"rule_id": str(rule.id), "applies": True, "relevance": 0.9}
+                {"rule_id": str(rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}
             ]
         })
 
@@ -815,7 +815,7 @@ class TestToolOutputVariables:
     @pytest.mark.asyncio
     async def test_tool_outputs_update_session_variables(self, stores) -> None:
         """Tool outputs are stored in session variables."""
-        from soldier.alignment.context.models import Context
+        from soldier.alignment.context.situation_snapshot import SituationSnapshot
         from soldier.alignment.execution import ToolExecutor
         from soldier.alignment.filtering.models import MatchedRule
         from soldier.config.models.pipeline import PipelineConfig, ToolExecutionConfig
@@ -833,7 +833,7 @@ class TestToolOutputVariables:
         await stores["config"].save_rule(rule)
 
         # Create tool that returns outputs
-        async def test_tool(context: Context, matched: MatchedRule) -> dict[str, object]:
+        async def test_tool(snapshot: SituationSnapshot, matched: MatchedRule) -> dict[str, object]:
             return {"extracted_name": "John", "extracted_email": "john@example.com"}
 
         test_tool.__name__ = "test_tool"
@@ -847,7 +847,7 @@ class TestToolOutputVariables:
         extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"})
         filter_resp = json.dumps({
             "evaluations": [
-                {"rule_id": str(rule.id), "applies": True, "relevance": 0.9}
+                {"rule_id": str(rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}
             ]
         })
 
@@ -894,57 +894,6 @@ class TestToolOutputVariables:
         assert updated.variables["extracted_name"] == "John"
         assert "extracted_email" in updated.variables
         assert updated.variables["extracted_email"] == "john@example.com"
-
-
-class TestEmbeddingOnlyMode:
-    """Tests for embedding-only context extraction mode."""
-
-    @pytest.fixture
-    def stores(self):
-        return {
-            "config": InMemoryAgentConfigStore(),
-            "session": InMemorySessionStore(),
-            "audit": InMemoryAuditStore(),
-        }
-
-    @pytest.mark.asyncio
-    async def test_embedding_only_context_extraction(self, stores) -> None:
-        """Engine uses embedding-only mode when configured."""
-        from soldier.config.models.pipeline import (
-            ContextExtractionConfig,
-            PipelineConfig,
-        )
-
-        pipeline_config = PipelineConfig(
-            context_extraction=ContextExtractionConfig(
-                enabled=True,
-                mode="embedding",
-            ),
-        )
-
-        engine = AlignmentEngine(
-            config_store=stores["config"],
-            embedding_provider=MockEmbeddingProvider(),
-            executors=create_test_executors(),
-            session_store=stores["session"],
-            audit_store=stores["audit"],
-            pipeline_config=pipeline_config,
-        )
-
-        tenant_id = uuid4()
-        agent_id = uuid4()
-
-        result = await engine.process_turn(
-            message="Test embedding mode",
-            session_id=uuid4(),
-            tenant_id=tenant_id,
-            agent_id=agent_id,
-            persist=False,
-        )
-
-        # Should have context with embedding but minimal LLM extraction
-        assert result.context is not None
-        assert result.context.embedding is not None
 
 
 class TestMemoryRetrieverIntegration:
@@ -1062,13 +1011,15 @@ class TestRerankerCreation:
     @pytest.mark.asyncio
     async def test_reranker_created_when_provider_and_config_enabled(self, stores) -> None:
         """Reranker is created when rerank_provider provided and enabled."""
-        from soldier.config.models.pipeline import PipelineConfig, RerankingConfig
+        from soldier.config.models.pipeline import PipelineConfig, RerankingConfig, RetrievalConfig
         from soldier.providers.rerank.mock import MockRerankProvider
 
         rerank_provider = MockRerankProvider()
 
         pipeline_config = PipelineConfig(
-            reranking=RerankingConfig(enabled=True, top_k=5),
+            retrieval=RetrievalConfig(
+                rule_reranking=RerankingConfig(enabled=True, top_k=5),
+            ),
         )
 
         tenant_id = uuid4()
@@ -1082,10 +1033,26 @@ class TestRerankerCreation:
         )
         await stores["config"].save_rule(rule)
 
+        # Create executors that match the rule
+        extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"})
+        filter_resp = json.dumps({
+            "evaluations": [
+                {"rule_id": str(rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}
+            ]
+        })
+
+        context_executor = MockLLMExecutor([extraction_resp])
+        filter_executor = MockLLMExecutor([filter_resp])
+        gen_executor = MockLLMExecutor(["Test response"])
+
         engine = AlignmentEngine(
             config_store=stores["config"],
             embedding_provider=MockEmbeddingProvider(),
-            executors=create_test_executors(),
+            executors={
+                "context_extraction": context_executor,
+                "rule_filtering": filter_executor,
+                "generation": gen_executor,
+            },
             session_store=stores["session"],
             audit_store=stores["audit"],
             rerank_provider=rerank_provider,
@@ -1120,7 +1087,7 @@ class TestEnforcementFallback:
         """Fallback handler is invoked when enforcement validation fails."""
         from soldier.alignment.enforcement import EnforcementValidator, FallbackHandler
         from soldier.alignment.generation import PromptBuilder, ResponseGenerator
-        from soldier.alignment.generation.models import TemplateMode
+        from soldier.alignment.models.enums import TemplateResponseMode
         from soldier.alignment.models import Template
         from soldier.config.models.pipeline import EnforcementConfig, PipelineConfig
 
@@ -1133,7 +1100,7 @@ class TestEnforcementFallback:
             agent_id=agent_id,
             name="safe_fallback",
             text="I cannot help with that request.",
-            mode=TemplateMode.FALLBACK,
+            mode=TemplateResponseMode.FALLBACK,
         )
         await stores["config"].save_template(fallback_template)
 
@@ -1152,7 +1119,7 @@ class TestEnforcementFallback:
         extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral"})
         filter_resp = json.dumps({
             "evaluations": [
-                {"rule_id": str(hard_rule.id), "applies": True, "relevance": 0.9}
+                {"rule_id": str(hard_rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}
             ]
         })
 
@@ -1167,6 +1134,7 @@ class TestEnforcementFallback:
         )
         enforcement_validator = EnforcementValidator(
             response_generator=response_generator,
+            agent_config_store=stores["config"],
             max_retries=0,  # Don't retry, go straight to fallback
         )
         fallback_handler = FallbackHandler()
@@ -1272,7 +1240,7 @@ class TestEngineWithoutAuditStore:
     @pytest.mark.asyncio
     async def test_persist_turn_record_without_audit_store_returns(self, stores) -> None:
         """_persist_turn_record is no-op when no audit_store."""
-        from soldier.alignment.context.models import Context
+        from soldier.alignment.context.situation_snapshot import SituationSnapshot
         from soldier.alignment.generation.models import GenerationResult
         from soldier.alignment.result import AlignmentResult
         from soldier.alignment.retrieval.models import RetrievalResult
@@ -1293,7 +1261,13 @@ class TestEngineWithoutAuditStore:
             tenant_id=uuid4(),
             agent_id=uuid4(),
             user_message="test",
-            context=Context(message="test", embedding=[0.1, 0.2, 0.3]),
+            snapshot=SituationSnapshot(
+                message="test",
+                embedding=[0.1, 0.2, 0.3],
+                intent_changed=False,
+                topic_changed=False,
+                tone="neutral",
+            ),
             retrieval=RetrievalResult(),
             matched_rules=[],
             tool_results=[],

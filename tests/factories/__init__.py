@@ -1,8 +1,8 @@
 """Test factories for creating test data."""
 
-from tests.factories.alignment import ContextFactory, RuleFactory
+from tests.factories.alignment import RuleFactory, SituationSnapshotFactory
 
 __all__ = [
-    "ContextFactory",
     "RuleFactory",
+    "SituationSnapshotFactory",
 ]

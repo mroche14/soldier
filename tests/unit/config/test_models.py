@@ -21,6 +21,7 @@ from soldier.config.models import (
     StoreBackendConfig,
     TracingConfig,
 )
+from soldier.config.models.pipeline import SituationSensorConfig
 
 
 class TestRateLimitConfig:
@@ -382,3 +383,65 @@ class TestObservabilityConfig:
         assert config.logging.level == "INFO"
         assert config.tracing.enabled is True
         assert config.metrics.enabled is True
+
+
+class TestSituationSensorConfig:
+    """Tests for SituationSensorConfig model (Phase 2)."""
+
+    def test_defaults(self) -> None:
+        """Default values are correct."""
+        config = SituationSensorConfig()
+        assert config.enabled is True
+        assert config.model == "openrouter/openai/gpt-oss-120b"
+        assert config.fallback_models == ["anthropic/claude-3-5-haiku-20241022"]
+        assert config.temperature == 0.0
+        assert config.max_tokens == 800
+        assert config.history_turns == 5
+        assert config.include_glossary is True
+        assert config.include_schema_mask is True
+
+    def test_history_turns_must_be_non_negative(self) -> None:
+        """history_turns must be >= 0."""
+        with pytest.raises(ValidationError):
+            SituationSensorConfig(history_turns=-1)
+
+        # Zero is valid (no history)
+        config = SituationSensorConfig(history_turns=0)
+        assert config.history_turns == 0
+
+    def test_max_tokens_must_be_positive(self) -> None:
+        """max_tokens must be > 0."""
+        with pytest.raises(ValidationError):
+            SituationSensorConfig(max_tokens=0)
+
+    def test_temperature_range(self) -> None:
+        """temperature must be between 0 and 2."""
+        with pytest.raises(ValidationError):
+            SituationSensorConfig(temperature=-0.1)
+        with pytest.raises(ValidationError):
+            SituationSensorConfig(temperature=2.1)
+
+        # Valid range
+        config = SituationSensorConfig(temperature=0.7)
+        assert config.temperature == 0.7
+
+    def test_custom_model(self) -> None:
+        """Can specify custom model."""
+        config = SituationSensorConfig(model="openrouter/anthropic/claude-3-opus")
+        assert config.model == "openrouter/anthropic/claude-3-opus"
+
+    def test_disabling_features(self) -> None:
+        """Can disable glossary and schema mask."""
+        config = SituationSensorConfig(
+            include_glossary=False,
+            include_schema_mask=False,
+        )
+        assert config.include_glossary is False
+        assert config.include_schema_mask is False
+
+    def test_embedded_in_pipeline_config(self) -> None:
+        """SituationSensorConfig is embedded in PipelineConfig."""
+        pipeline = PipelineConfig()
+        assert hasattr(pipeline, "situation_sensor")
+        assert isinstance(pipeline.situation_sensor, SituationSensorConfig)
+        assert pipeline.situation_sensor.enabled is True

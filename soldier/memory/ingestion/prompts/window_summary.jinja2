@@ -1,0 +1,33 @@
+{# Window Summary Prompt Template #}
+{# Summarizes a window of conversation turns #}
+
+Summarize the following {{ turn_count }} conversation turns concisely.
+
+Focus on:
+- Key facts and information shared
+- Decisions made or agreed upon
+- Actions taken or promised
+- Important context or sentiment
+
+## Conversation Turns
+
+{% for turn in turns %}
+**Turn {{ loop.index }}**:
+{% if turn.role == "user" %}
+Customer: {{ turn.content }}
+{% else %}
+Agent: {{ turn.content %}
+{% endif %}
+
+{% endfor %}
+
+## Summary Guidelines
+
+- Maximum {{ max_tokens }} tokens
+- Use past tense
+- Be factual and objective
+- Include specific details (names, numbers, dates)
+- Capture customer sentiment if relevant
+
+## Summary
+

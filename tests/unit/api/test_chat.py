@@ -83,14 +83,14 @@ def mock_engine(tenant_id: UUID, agent_id: UUID) -> AsyncMock:
 
 
 @pytest.fixture
-def app(
+async def app(
     tenant_context: TenantContext,
     mock_settings: MagicMock,
     session_store: InMemorySessionStore,
     mock_engine: AsyncMock,
 ) -> FastAPI:
     """Create test FastAPI app."""
-    reset_dependencies()
+    await reset_dependencies()
 
     app = FastAPI()
     app.include_router(router, prefix="/v1")

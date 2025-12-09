@@ -9,12 +9,14 @@ Handles the complete turn lifecycle including:
 - Turn record creation for audit trail (via AuditStore)
 """
 
+import asyncio
 import time
 from datetime import UTC, datetime
-from typing import Literal
 from uuid import UUID, uuid4
 
-from soldier.alignment.context import Context, ContextExtractor, Turn
+from soldier.alignment.context import SituationSensor, Turn
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
+from soldier.alignment.customer import CustomerDataUpdater
 from soldier.alignment.enforcement import EnforcementValidator, FallbackHandler
 from soldier.alignment.enforcement.models import EnforcementResult
 from soldier.alignment.execution import ToolExecutor
@@ -23,6 +25,8 @@ from soldier.alignment.filtering import RuleFilter, ScenarioFilter
 from soldier.alignment.filtering.models import MatchedRule, ScenarioFilterResult
 from soldier.alignment.generation import PromptBuilder, ResponseGenerator
 from soldier.alignment.generation.models import GenerationResult
+from soldier.alignment.loaders.customer_data_loader import CustomerDataLoader
+from soldier.alignment.loaders.static_config_loader import StaticConfigLoader
 from soldier.alignment.migration.executor import MigrationExecutor
 from soldier.alignment.migration.field_resolver import MissingFieldResolver
 from soldier.alignment.migration.models import (
@@ -30,9 +34,19 @@ from soldier.alignment.migration.models import (
     ReconciliationAction,
     ReconciliationResult,
 )
-from soldier.alignment.models import Rule, Template
+from soldier.alignment.models import Rule, Template, TurnContext
+from soldier.alignment.models.outcome import TurnOutcome
+from soldier.alignment.planning import ResponsePlanner
+from soldier.alignment.planning.models import ResponsePlan, ScenarioContributionPlan
 from soldier.alignment.result import AlignmentResult, PipelineStepTiming
-from soldier.alignment.retrieval import RuleReranker, RuleRetriever, ScenarioRetriever
+from soldier.alignment.retrieval import (
+    IntentRetriever,
+    RuleReranker,
+    RuleRetriever,
+    ScenarioReranker,
+    ScenarioRetriever,
+    decide_canonical_intent,
+)
 from soldier.alignment.retrieval.models import RetrievalResult, ScoredEpisode, ScoredScenario
 from soldier.alignment.stores import AgentConfigStore
 from soldier.alignment.templates_loader import load_templates_for_rules
@@ -43,11 +57,13 @@ from soldier.config.models.pipeline import PipelineConfig
 from soldier.conversation.models import Session, StepVisit
 from soldier.conversation.models.turn import ToolCall
 from soldier.conversation.store import SessionStore
+from soldier.customer_data.models import VariableEntry
+from soldier.customer_data.store import CustomerDataStoreInterface
+from soldier.customer_data.validation import CustomerDataFieldValidator
 from soldier.memory.retrieval import MemoryRetriever
+from soldier.memory.retrieval.reranker import MemoryReranker
 from soldier.memory.store import MemoryStore
 from soldier.observability.logging import get_logger
-from soldier.profile.store import ProfileStore
-from soldier.profile.validation import ProfileFieldValidator
 from soldier.providers.embedding import EmbeddingProvider
 from soldier.providers.llm import (
     ExecutionContext,
@@ -92,7 +108,7 @@ class AlignmentEngine:
         memory_store: MemoryStore | None = None,
         migration_config: ScenarioMigrationConfig | None = None,
         executors: dict[str, LLMExecutor] | None = None,
-        profile_store: ProfileStore | None = None,
+        profile_store: CustomerDataStoreInterface | None = None,
         enable_requirement_checking: bool = True,
     ) -> None:
         """Initialize the alignment engine.
@@ -125,31 +141,52 @@ class AlignmentEngine:
         else:
             self._executors = create_executors_from_pipeline_config(self._config)
 
-        reranker = None
-        if rerank_provider and self._config.reranking.enabled:
-            reranker = RuleReranker(
+        # Create per-object-type rerankers if configured
+        rule_reranker = None
+        if rerank_provider and self._config.retrieval.rule_reranking and self._config.retrieval.rule_reranking.enabled:
+            rule_reranker = RuleReranker(
                 provider=rerank_provider,
-                top_k=self._config.reranking.top_k,
+                top_k=self._config.retrieval.rule_reranking.top_k,
+            )
+
+        scenario_reranker = None
+        if rerank_provider and self._config.retrieval.scenario_reranking and self._config.retrieval.scenario_reranking.enabled:
+            scenario_reranker = ScenarioReranker(
+                provider=rerank_provider,
+                top_k=self._config.retrieval.scenario_reranking.top_k,
+            )
+
+        memory_reranker = None
+        if rerank_provider and self._config.retrieval.memory_reranking and self._config.retrieval.memory_reranking.enabled:
+            memory_reranker = MemoryReranker(
+                provider=rerank_provider,
+                top_k=self._config.retrieval.memory_reranking.top_k,
             )
 
         # Initialize components with their respective executors
-        self._context_extractor = ContextExtractor(
+        self._situation_sensor = SituationSensor(
             llm_executor=self._executors.get(
-                "context_extraction",
-                create_executor("mock/default", step_name="context_extraction"),
+                "situation_sensor",
+                create_executor("mock/default", step_name="situation_sensor"),
             ),
-            embedding_provider=embedding_provider,
+            config=self._config.situation_sensor,
         )
         self._rule_retriever = RuleRetriever(
             config_store=config_store,
             embedding_provider=embedding_provider,
             selection_config=self._config.retrieval.rule_selection,
-            reranker=reranker,
+            reranker=rule_reranker,
         )
         self._scenario_retriever = ScenarioRetriever(
             config_store=config_store,
             embedding_provider=embedding_provider,
             selection_config=self._config.retrieval.scenario_selection,
+            reranker=scenario_reranker,
+        )
+        self._intent_retriever = IntentRetriever(
+            config_store=config_store,
+            embedding_provider=embedding_provider,
+            selection_config=self._config.retrieval.intent_selection,
         )
         self._rule_filter = RuleFilter(
             llm_executor=self._executors.get(
@@ -169,6 +206,7 @@ class AlignmentEngine:
                 memory_store=memory_store,
                 embedding_provider=embedding_provider,
                 selection_config=self._config.retrieval.memory_selection,
+                reranker=memory_reranker,
             )
             if memory_store
             else None
@@ -181,6 +219,7 @@ class AlignmentEngine:
             ),
             prompt_builder=self._prompt_builder,
         )
+        self._response_planner = ResponsePlanner()
         self._migration_executor = (
             MigrationExecutor(
                 config_store=config_store,
@@ -198,12 +237,27 @@ class AlignmentEngine:
             MissingFieldResolver(
                 profile_store=profile_store,
                 llm_executor=self._executors.get(
-                    "context_extraction",  # Reuse context extraction model for field extraction
-                    create_executor("mock/default", step_name="context_extraction"),
+                    "situation_sensor",  # Reuse situation sensor model for field extraction
+                    create_executor("mock/default", step_name="situation_sensor"),
                 ),
-                field_validator=ProfileFieldValidator(),
+                field_validator=CustomerDataFieldValidator(),
             )
             if profile_store and enable_requirement_checking
+            else None
+        )
+
+        # Phase 1 loaders
+        self._customer_data_loader = (
+            CustomerDataLoader(profile_store=profile_store)
+            if profile_store
+            else None
+        )
+        self._static_config_loader = StaticConfigLoader(config_store=config_store)
+
+        # Phase 3 customer data updater
+        self._customer_data_updater = (
+            CustomerDataUpdater(validator=CustomerDataFieldValidator())
+            if profile_store
             else None
         )
 
@@ -216,15 +270,20 @@ class AlignmentEngine:
         session: Session | None = None,
         history: list[Turn] | None = None,
         persist: bool = True,
+        channel: str = "api",
+        channel_user_id: str | None = None,
+        customer_id: UUID | None = None,
     ) -> AlignmentResult:
         """Process a user message through the alignment pipeline.
 
         This method handles the complete turn lifecycle:
-        1. Load session from SessionStore (if not provided)
-        2. Load conversation history from AuditStore
-        3. Run all pipeline steps (context, retrieval, filtering, generation, enforcement)
-        4. Update session state (rule fires, scenario step, variables)
-        5. Persist session and turn record to stores
+        1. Resolve customer from channel identity (Phase 1)
+        2. Load session from SessionStore (if not provided)
+        3. Load conversation history from AuditStore
+        4. Build TurnContext with customer data and static config (Phase 1)
+        5. Run all pipeline steps (context, retrieval, filtering, generation, enforcement)
+        6. Update session state (rule fires, scenario step, variables)
+        7. Persist session and turn record to stores
 
         Args:
             message: The user's message
@@ -234,6 +293,9 @@ class AlignmentEngine:
             session: Optional pre-loaded session (skips SessionStore load)
             history: Optional conversation history (skips AuditStore load)
             persist: Whether to persist session and turn record (default True)
+            channel: Channel identifier (default "api")
+            channel_user_id: Channel-specific user ID (for customer resolution)
+            customer_id: Optional explicit customer ID (skips resolution)
 
         Returns:
             AlignmentResult with response and all intermediate results
@@ -264,6 +326,9 @@ class AlignmentEngine:
                 persist=persist,
                 timings=timings,
                 start_time=start_time,
+                channel=channel,
+                channel_user_id=channel_user_id,
+                customer_id=customer_id,
             )
         finally:
             clear_execution_context()
@@ -280,6 +345,9 @@ class AlignmentEngine:
         persist: bool,
         timings: list[PipelineStepTiming],
         start_time: float,
+        channel: str,
+        channel_user_id: str | None,
+        customer_id: UUID | None,
     ) -> AlignmentResult:
         """Internal implementation of process_turn."""
         logger.info(
@@ -288,6 +356,31 @@ class AlignmentEngine:
             tenant_id=str(tenant_id),
             agent_id=str(agent_id),
             message_length=len(message),
+        )
+
+        # Phase 1.1-1.2: Resolve customer identity
+        step_start = datetime.utcnow()
+        phase1_start = time.perf_counter()
+
+        # Use channel_user_id or fallback to session_id as identifier
+        effective_channel_user_id = channel_user_id or str(session_id)
+
+        resolved_customer_id, is_new_customer = await self._resolve_customer(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=channel,
+            channel_user_id=effective_channel_user_id,
+            customer_id=customer_id,
+        )
+
+        elapsed_ms = (time.perf_counter() - phase1_start) * 1000
+        timings.append(
+            PipelineStepTiming(
+                step="customer_resolution",
+                started_at=step_start,
+                ended_at=datetime.utcnow(),
+                duration_ms=elapsed_ms,
+            )
         )
 
         # Step 0: Load session if not provided
@@ -316,7 +409,12 @@ class AlignmentEngine:
                 tenant_id=tenant_id,
                 agent_id=agent_id,
                 user_message=message,
-                context=Context(message=message, embedding=[]),
+                snapshot=SituationSnapshot(
+                    message=message,
+                    intent_changed=False,
+                    topic_changed=False,
+                    tone="neutral",
+                ),
                 retrieval=RetrievalResult(),
                 matched_rules=[],
                 scenario_result=None,
@@ -337,6 +435,28 @@ class AlignmentEngine:
                 reconciliation_result=reconciliation_result,
             )
 
+        # Phase 1.8: Build TurnContext
+        turn_context = None
+        if session:
+            turn_context = await self._build_turn_context(
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                customer_id=resolved_customer_id,
+                session=session,
+                reconciliation_result=reconciliation_result,
+            )
+
+            logger.info(
+                "turn_context_built",
+                tenant_id=str(tenant_id),
+                agent_id=str(agent_id),
+                session_id=str(session_id),
+                customer_id=str(resolved_customer_id),
+                turn_number=turn_context.turn_number,
+                is_new_customer=is_new_customer,
+                has_reconciliation=reconciliation_result is not None,
+            )
+
         # Extract scenario state from session (may have changed after reconciliation)
         active_scenario_id = session.active_scenario_id if session else None
         current_step_id = session.active_step_id if session else None
@@ -346,20 +466,92 @@ class AlignmentEngine:
             else None
         )
 
-        # Step 1: Context Extraction
-        context = await self._extract_context(message, history, timings)
+        # Step 1: Situational Sensing
+        snapshot = await self._sense_situation(
+            message=message,
+            history=history,
+            timings=timings,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            customer_id=resolved_customer_id,
+            previous_intent_label=None,  # TODO: Track from session
+        )
+
+        # Phase 3: Customer Data Update
+        persistent_customer_updates = []
+        if (
+            self._config.customer_data_update.enabled
+            and self._customer_data_updater
+            and snapshot.candidate_variables
+        ):
+            step_start_p3 = datetime.utcnow()
+            start_time_p3 = time.perf_counter()
+
+            try:
+                # Get customer data store from snapshot
+                customer_data_store = getattr(snapshot, "customer_data_store", None)
+                if customer_data_store:
+                    # Load field definitions
+                    customer_data_fields = []
+                    if self._static_config_loader:
+                        customer_data_fields_dict = await self._static_config_loader.load_customer_data_schema(
+                            tenant_id=tenant_id,
+                            agent_id=agent_id,
+                        )
+                        customer_data_fields = list(customer_data_fields_dict.values())
+
+                    # Execute Phase 3 update
+                    customer_data_store, persistent_customer_updates = await self._customer_data_updater.update(
+                        customer_data_store=customer_data_store,
+                        candidate_variables=snapshot.candidate_variables,
+                        field_definitions=customer_data_fields,
+                    )
+
+                    logger.info(
+                        "customer_data_update_completed",
+                        tenant_id=str(tenant_id),
+                        updates_count=len(persistent_customer_updates),
+                    )
+
+                elapsed_ms_p3 = (time.perf_counter() - start_time_p3) * 1000
+                timings.append(
+                    PipelineStepTiming(
+                        step="customer_data_update",
+                        started_at=step_start_p3,
+                        ended_at=datetime.utcnow(),
+                        duration_ms=elapsed_ms_p3,
+                    )
+                )
+            except Exception as e:
+                logger.warning(
+                    "customer_data_update_failed",
+                    error=str(e),
+                    tenant_id=str(tenant_id),
+                    agent_id=str(agent_id),
+                )
+                elapsed_ms_p3 = (time.perf_counter() - start_time_p3) * 1000
+                timings.append(
+                    PipelineStepTiming(
+                        step="customer_data_update",
+                        started_at=step_start_p3,
+                        ended_at=datetime.utcnow(),
+                        duration_ms=elapsed_ms_p3,
+                        skipped=True,
+                        skip_reason=f"Error: {str(e)}",
+                    )
+                )
 
         # Step 2: Retrieval (get candidate rules)
         retrieval_result = await self._retrieve_rules(
             tenant_id,
             agent_id,
-            context,
+            snapshot,
             timings,
         )
 
         # Step 3: Rule Filtering
         matched_rules = await self._filter_rules(
-            context,
+            snapshot,
             [scored.rule for scored in retrieval_result.rules],
             timings,
         )
@@ -367,7 +559,7 @@ class AlignmentEngine:
         # Step 4: Scenario Filtering
         scenario_result = await self._filter_scenarios(
             tenant_id,
-            context,
+            snapshot,
             retrieval_result.scenarios,
             active_scenario_id,
             current_step_id,
@@ -387,7 +579,17 @@ class AlignmentEngine:
         # Step 5: Tool Execution
         tool_results = await self._execute_tools(
             matched_rules,
-            context,
+            snapshot,
+            timings,
+        )
+
+        # Step 6: Response Planning (Phase 8)
+        response_plan = await self._build_response_plan(
+            scenario_result,
+            matched_rules,
+            tool_results,
+            snapshot,
+            tenant_id,
             timings,
         )
 
@@ -398,9 +600,10 @@ class AlignmentEngine:
             matched_rules,
         )
 
-        # Step 6: Generation
+        # Step 7: Generation
         generation_result = await self._generate_response(
-            context,
+            response_plan,
+            snapshot,
             matched_rules,
             history,
             timings,
@@ -409,13 +612,15 @@ class AlignmentEngine:
             templates,
         )
 
-        # Step 7: Enforcement
+        # Step 8: Enforcement
         enforcement_result = await self._enforce_response(
             generation_result.response,
-            context,
+            snapshot,
             matched_rules,
             templates,
             timings,
+            tenant_id,
+            agent_id,
         )
 
         # Calculate total time
@@ -428,11 +633,12 @@ class AlignmentEngine:
             tenant_id=tenant_id,
             agent_id=agent_id,
             user_message=message,
-            context=context,
+            snapshot=snapshot,
             retrieval=retrieval_result,
             matched_rules=matched_rules,
             scenario_result=scenario_result,
             tool_results=tool_results,
+            response_plan=response_plan,
             generation=generation_result,
             enforcement=enforcement_result,
             response=enforcement_result.final_response,
@@ -440,24 +646,79 @@ class AlignmentEngine:
             total_time_ms=total_time_ms,
             missing_requirements=missing_requirements,
             scenario_blocked=scenario_blocked,
+            persistent_customer_updates=persistent_customer_updates,
         )
 
-        # Step 8: Update session state and persist
-        if session and persist:
-            await self._update_and_persist_session(
-                session=session,
-                scenario_result=scenario_result,
-                matched_rules=matched_rules,
-                tool_results=tool_results,
-            )
+        # Step 8: Compute turn outcome
+        outcome = self._compute_turn_outcome(
+            matched_rules=matched_rules,
+            scenario_result=scenario_result,
+            tool_results=tool_results,
+            enforcement_result=enforcement_result,
+        )
+        result.outcome = outcome
 
-        # Step 9: Create and persist turn record
-        if persist and self._audit_store:
-            await self._persist_turn_record(
-                result=result,
-                session=session,
-                generation_result=generation_result,
-            )
+        # Step 9: Parallel persistence
+        if persist:
+            from soldier.observability.metrics import PERSISTENCE_DURATION
+
+            persistence_tasks = []
+            persistence_start = time.perf_counter()
+
+            # Task 1: Session persistence
+            if session and self._session_store:
+                persistence_tasks.append(
+                    self._update_and_persist_session(
+                        session=session,
+                        scenario_result=scenario_result,
+                        matched_rules=matched_rules,
+                        tool_results=tool_results,
+                    )
+                )
+
+            # Task 2: CustomerData persistence (if updates exist)
+            if persistent_customer_updates and self._profile_store:
+                persistence_tasks.append(
+                    self._persist_customer_data(
+                        session=session,
+                        updates=persistent_customer_updates,
+                    )
+                )
+
+            # Task 3: TurnRecord
+            if self._audit_store:
+                persistence_tasks.append(
+                    self._persist_turn_record(
+                        result=result,
+                        session=session,
+                        generation_result=generation_result,
+                        outcome=outcome,
+                    )
+                )
+
+            # Execute all persistence in parallel
+            if persistence_tasks:
+                with PERSISTENCE_DURATION.labels(operation="parallel").time():
+                    results = await asyncio.gather(*persistence_tasks, return_exceptions=True)
+
+                # Check for exceptions in gather results
+                for i, task_result in enumerate(results):
+                    if isinstance(task_result, Exception):
+                        logger.error(
+                            "persistence_failed",
+                            task_index=i,
+                            error=str(task_result),
+                            session_id=str(session_id),
+                        )
+
+                persistence_duration = time.perf_counter() - persistence_start
+                logger.info(
+                    "parallel_persistence_complete",
+                    session_id=str(session_id),
+                    operations=len(persistence_tasks),
+                    duration_ms=persistence_duration * 1000,
+                    failures=sum(1 for r in results if isinstance(r, Exception)),
+                )
 
         logger.info(
             "turn_processed",
@@ -596,8 +857,11 @@ class AlignmentEngine:
         result: AlignmentResult,
         session: Session | None,
         generation_result: GenerationResult,
+        outcome: "TurnOutcome | None" = None,
     ) -> None:
         """Create and persist turn record to AuditStore."""
+        from soldier.observability.metrics import PERSISTENCE_OPERATIONS
+
         if not self._audit_store:
             return
 
@@ -620,6 +884,38 @@ class AlignmentEngine:
         if generation_result:
             tokens_used = generation_result.prompt_tokens + generation_result.completion_tokens
 
+        # Build tool execution list for phase decisions
+        tool_executions = [
+            {
+                "tool_name": tr.tool_name,
+                "success": tr.success,
+                "error": tr.error,
+                "latency_ms": tr.execution_time_ms,
+            }
+            for tr in result.tool_results
+        ]
+
+        # Build scenario lifecycle decisions
+        scenario_lifecycle_decisions = {}
+        if result.scenario_result:
+            scenario_id_str = str(result.scenario_result.scenario_id) if result.scenario_result.scenario_id else "unknown"
+            scenario_lifecycle_decisions[scenario_id_str] = result.scenario_result.action
+
+        # Build step transitions
+        step_transitions = {}
+        if result.scenario_result and result.scenario_result.action in ("start", "transition"):
+            scenario_id_str = str(result.scenario_result.scenario_id) if result.scenario_result.scenario_id else "unknown"
+            step_transitions[scenario_id_str] = {
+                "from_step": str(result.scenario_result.current_step_id) if result.scenario_result.current_step_id else None,
+                "to_step": str(result.scenario_result.target_step_id) if result.scenario_result.target_step_id else None,
+                "reason": result.scenario_result.reasoning or result.scenario_result.action,
+            }
+
+        # Extract enforcement violations
+        enforcement_violations = []
+        if result.enforcement and result.enforcement.violations:
+            enforcement_violations = [v.message for v in result.enforcement.violations]
+
         turn_record = TurnRecord(
             turn_id=result.turn_id,
             tenant_id=result.tenant_id,
@@ -635,14 +931,33 @@ class AlignmentEngine:
             latency_ms=int(result.total_time_ms),
             tokens_used=tokens_used,
             timestamp=datetime.now(UTC),
+            outcome=outcome,
+            canonical_intent=result.snapshot.canonical_intent_label if result.snapshot else None,
+            matched_rules_count=len(result.matched_rules),
+            scenario_lifecycle_decisions=scenario_lifecycle_decisions,
+            step_transitions=step_transitions,
+            tool_executions=tool_executions,
+            enforcement_violations=enforcement_violations,
+            regeneration_attempts=0,  # TODO: Track this in enforcement phase
         )
 
-        await self._audit_store.save_turn(turn_record)
+        try:
+            await self._audit_store.save_turn(turn_record)
+            PERSISTENCE_OPERATIONS.labels(operation="turn_record", status="success").inc()
+        except Exception as e:
+            logger.error(
+                "turn_record_persistence_failed",
+                session_id=str(result.session_id),
+                turn_id=str(result.turn_id),
+                error=str(e),
+            )
+            PERSISTENCE_OPERATIONS.labels(operation="turn_record", status="failure").inc()
+            raise
 
     async def _execute_tools(
         self,
         matched_rules: list[MatchedRule],
-        context: Context,
+        snapshot: SituationSnapshot,
         timings: list[PipelineStepTiming],
     ) -> list[ToolResult]:
         """Execute tools from matched rules."""
@@ -668,7 +983,7 @@ class AlignmentEngine:
 
         results = await self._tool_executor.execute(
             matched_rules=matched_rules,
-            context=context,
+            snapshot=snapshot,
         )
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
@@ -682,51 +997,123 @@ class AlignmentEngine:
         )
         return results
 
-    async def _extract_context(
+    async def _sense_situation(
         self,
         message: str,
         history: list[Turn],
         timings: list[PipelineStepTiming],
-    ) -> Context:
-        """Extract context from user message."""
-        step_start = datetime.utcnow()
-        start_time = time.perf_counter()
+        tenant_id: UUID | None = None,
+        agent_id: UUID | None = None,
+        customer_id: UUID | None = None,
+        previous_intent_label: str | None = None,
+    ) -> SituationSnapshot:
+        """Extract situation snapshot from user message.
 
-        mode: Literal["llm", "embedding_only", "disabled"]
-        if not self._config.context_extraction.enabled:
-            mode = "disabled"
-        elif self._config.context_extraction.mode == "embedding":
-            mode = "embedding_only"
-        else:
-            mode = "llm"
-
-        context = await self._context_extractor.extract(
-            message=message,
-            history=history,
-            mode=mode,
-        )
-
-        elapsed_ms = (time.perf_counter() - start_time) * 1000
-        timings.append(
-            PipelineStepTiming(
-                step="context_extraction",
-                started_at=step_start,
-                ended_at=datetime.utcnow(),
-                duration_ms=elapsed_ms,
-                skipped=not self._config.context_extraction.enabled,
+        Returns SituationSnapshot with message context and extracted fields.
+        If sensor is disabled or fails, returns minimal snapshot with just message.
+        """
+        # If sensor disabled or missing IDs, return minimal snapshot
+        if not self._config.situation_sensor.enabled or not tenant_id or not agent_id or not customer_id:
+            return SituationSnapshot(
+                message=message,
+                intent_changed=False,
+                topic_changed=False,
+                tone="neutral",
             )
-        )
 
-        return context
+        step_start_sensor = datetime.utcnow()
+        start_time_sensor = time.perf_counter()
+
+        try:
+            # Load customer data and schema
+            customer_data_store = None
+            if self._customer_data_loader:
+                customer_data_store = await self._customer_data_loader.load(
+                    customer_id=customer_id,
+                    tenant_id=tenant_id,
+                    schema={},  # Schema will be loaded separately
+                )
+            else:
+                from soldier.customer_data import CustomerDataStore
+                customer_data_store = CustomerDataStore(
+                    id=customer_id,
+                    tenant_id=tenant_id,
+                    customer_id=customer_id,
+                    channel_identities=[],
+                    fields={},
+                    assets=[],
+                )
+
+            # Load glossary and customer data schema
+            glossary = {}
+            customer_data_fields = {}
+            if self._static_config_loader:
+                glossary = await self._static_config_loader.load_glossary(
+                    tenant_id=tenant_id,
+                    agent_id=agent_id,
+                )
+                customer_data_fields = await self._static_config_loader.load_customer_data_schema(
+                    tenant_id=tenant_id,
+                    agent_id=agent_id,
+                )
+
+            # Call situation sensor
+            snapshot = await self._situation_sensor.sense(
+                message=message,
+                history=history,
+                customer_data_store=customer_data_store,
+                customer_data_fields=customer_data_fields,
+                glossary_items=glossary,
+                previous_intent_label=previous_intent_label,
+            )
+
+            elapsed_ms_sensor = (time.perf_counter() - start_time_sensor) * 1000
+            timings.append(
+                PipelineStepTiming(
+                    step="situation_sensor",
+                    started_at=step_start_sensor,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=elapsed_ms_sensor,
+                )
+            )
+
+            return snapshot
+
+        except Exception as e:
+            logger.warning(
+                "situation_sensor_failed",
+                error=str(e),
+                tenant_id=str(tenant_id),
+                agent_id=str(agent_id),
+            )
+            elapsed_ms_sensor = (time.perf_counter() - start_time_sensor) * 1000
+            timings.append(
+                PipelineStepTiming(
+                    step="situation_sensor",
+                    started_at=step_start_sensor,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=elapsed_ms_sensor,
+                    skipped=True,
+                    skip_reason=f"Error: {str(e)}",
+                )
+            )
+
+            # Return minimal snapshot on failure
+            return SituationSnapshot(
+                message=message,
+                intent_changed=False,
+                topic_changed=False,
+                tone="neutral",
+            )
 
     async def _retrieve_rules(
         self,
         tenant_id: UUID,
         agent_id: UUID,
-        context: Context,
+        snapshot: SituationSnapshot,
         timings: list[PipelineStepTiming],
     ) -> RetrievalResult:
-        """Retrieve candidate rules from the config store."""
+        """Retrieve candidate rules, scenarios, and memory in parallel."""
         step_start = datetime.utcnow()
         start_time = time.perf_counter()
 
@@ -743,19 +1130,74 @@ class AlignmentEngine:
             )
             return RetrievalResult()
 
-        retrieval_result = await self._rule_retriever.retrieve(
+        # Build parallel retrieval tasks
+        rule_task = self._rule_retriever.retrieve(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            context=context,
+            snapshot=snapshot,
         )
 
-        # Retrieve scenarios as part of the same step
-        scenarios = await self._scenario_retriever.retrieve(
+        scenario_task = self._scenario_retriever.retrieve(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            context=context,
+            snapshot=snapshot,
         )
+
+        intent_task = self._intent_retriever.retrieve(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            snapshot=snapshot,
+        )
+
+        memory_task = None
+        if self._memory_retriever:
+            memory_task = self._memory_retriever.retrieve(
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                snapshot=snapshot,
+            )
+
+        # Execute all retrievals in parallel (P4: rules, scenarios, intents, memory)
+        tasks = [rule_task, scenario_task, intent_task]
+        if memory_task:
+            tasks.append(memory_task)
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Unpack results
+        retrieval_result = results[0] if isinstance(results[0], RetrievalResult) else RetrievalResult()
+        scenarios = results[1] if not isinstance(results[1], Exception) else []
+        intent_candidates = results[2] if not isinstance(results[2], Exception) else []
+        memories = results[3] if len(results) > 3 and not isinstance(results[3], Exception) else []
+
+        # Handle exceptions
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                obj_type = ["rules", "scenarios", "intents", "memory"][i] if i < 4 else "unknown"
+                logger.error(
+                    "retrieval_failed",
+                    object_type=obj_type,
+                    error=str(result),
+                    tenant_id=str(tenant_id),
+                    agent_id=str(agent_id),
+                )
+
+        # P4.3: Decide canonical intent (merge LLM sensor intent with hybrid retrieval)
+        sensor_intent = snapshot.new_intent_label  # From Phase 2 Situational Sensor
+        sensor_confidence = None  # Phase 2 would set this, but not yet implemented
+        canonical_intent, intent_score = decide_canonical_intent(
+            sensor_intent=sensor_intent,
+            sensor_confidence=sensor_confidence,
+            hybrid_candidates=intent_candidates,
+        )
+        snapshot.canonical_intent_label = canonical_intent
+        snapshot.canonical_intent_score = intent_score
+
+        # Merge results into RetrievalResult
         retrieval_result.scenarios = scenarios
+        retrieval_result.memory_episodes = memories
+
+        # Add selection metadata
         retrieval_result.selection_metadata["scenarios"] = {
             "strategy": self._scenario_retriever.selection_strategy_name,
             "min_score": self._config.retrieval.scenario_selection.min_score,
@@ -763,13 +1205,7 @@ class AlignmentEngine:
             "min_k": self._config.retrieval.scenario_selection.min_k,
         }
 
-        if self._memory_retriever:
-            memories = await self._memory_retriever.retrieve(
-                tenant_id=tenant_id,
-                agent_id=agent_id,
-                context=context,
-            )
-            retrieval_result.memory_episodes = memories
+        if self._memory_retriever and memories:
             retrieval_result.selection_metadata["memory"] = {
                 "strategy": self._memory_retriever.selection_strategy_name,
                 "min_score": self._config.retrieval.memory_selection.min_score,
@@ -797,11 +1233,11 @@ class AlignmentEngine:
 
     async def _filter_rules(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         candidate_rules: list[Rule],
         timings: list[PipelineStepTiming],
     ) -> list[MatchedRule]:
-        """Filter rules by relevance to context."""
+        """Filter rules by relevance to snapshot."""
         step_start = datetime.utcnow()
         start_time = time.perf_counter()
 
@@ -825,7 +1261,7 @@ class AlignmentEngine:
             ]
 
         filter_result = await self._rule_filter.filter(
-            context=context,
+            snapshot=snapshot,
             candidates=candidate_rules,
             batch_size=self._config.rule_filtering.batch_size,
         )
@@ -845,7 +1281,7 @@ class AlignmentEngine:
     async def _filter_scenarios(
         self,
         tenant_id: UUID,
-        context: Context,
+        snapshot: SituationSnapshot,
         candidates: list[ScoredScenario],
         active_scenario_id: UUID | None,
         current_step_id: UUID | None,
@@ -871,7 +1307,7 @@ class AlignmentEngine:
 
         result = await self._scenario_filter.evaluate(
             tenant_id,
-            context,
+            snapshot,
             candidates=candidates,
             active_scenario_id=active_scenario_id,
             current_step_id=current_step_id,
@@ -890,15 +1326,71 @@ class AlignmentEngine:
 
         return result
 
+    async def _build_response_plan(
+        self,
+        scenario_result: ScenarioFilterResult | None,
+        matched_rules: list[MatchedRule],
+        tool_results: list[ToolResult],
+        snapshot: SituationSnapshot,
+        tenant_id: UUID,
+        timings: list[PipelineStepTiming],
+    ) -> ResponsePlan | None:
+        """Build response plan from scenario contributions and rule constraints."""
+        step_start = datetime.utcnow()
+        start_time = time.perf_counter()
+
+        if not self._config.response_planning.enabled:
+            timings.append(
+                PipelineStepTiming(
+                    step="response_planning",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="Response planning disabled",
+                )
+            )
+            return None
+
+        # Build scenario contribution plan from scenario result
+        scenario_contribution_plan = ScenarioContributionPlan(contributions=[])
+
+        # If there's a scenario result, extract contributions
+        # For now, we'll use an empty contribution plan
+        # In a full implementation, Phase 6 would build this
+
+        # Build the response plan
+        response_plan = await self._response_planner.build_response_plan(
+            scenario_contribution_plan=scenario_contribution_plan,
+            matched_rules=matched_rules,
+            tool_results={},  # Convert list to dict if needed
+            snapshot=snapshot,
+            tenant_id=str(tenant_id),
+        )
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        timings.append(
+            PipelineStepTiming(
+                step="response_planning",
+                started_at=step_start,
+                ended_at=datetime.utcnow(),
+                duration_ms=elapsed_ms,
+            )
+        )
+
+        return response_plan
+
     async def _generate_response(
         self,
-        context: Context,
+        response_plan: ResponsePlan | None,
+        snapshot: SituationSnapshot,
         matched_rules: list[MatchedRule],
         history: list[Turn],
         timings: list[PipelineStepTiming],
         tool_results: list[ToolResult],
         memory_context: str | None,
         templates: list[Template],
+        glossary_items: list | None = None,
     ) -> GenerationResult:
         """Generate response using matched rules."""
         step_start = datetime.utcnow()
@@ -923,12 +1415,14 @@ class AlignmentEngine:
             )
 
         result = await self._response_generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=matched_rules,
             history=history,
             tool_results=tool_results,
             memory_context=memory_context,
             templates=templates,
+            response_plan=response_plan,
+            glossary_items=glossary_items,
         )
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
@@ -946,10 +1440,12 @@ class AlignmentEngine:
     async def _enforce_response(
         self,
         response: str,
-        context: Context,
+        snapshot: SituationSnapshot,
         matched_rules: list[MatchedRule],
         templates: list[Template],
         timings: list[PipelineStepTiming],
+        tenant_id: UUID,
+        agent_id: UUID,
     ) -> EnforcementResult:
         """Run enforcement validation and optional fallback."""
         step_start = datetime.utcnow()
@@ -976,8 +1472,10 @@ class AlignmentEngine:
         hard_rules = [m.rule for m in matched_rules if m.rule.is_hard_constraint]
         result = await self._enforcement_validator.validate(
             response=response,
-            context=context,
+            snapshot=snapshot,
             matched_rules=matched_rules,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
             hard_rules=hard_rules,
         )
 
@@ -997,6 +1495,147 @@ class AlignmentEngine:
             )
         )
         return result
+
+    async def _persist_customer_data(
+        self,
+        session: Session,
+        updates: list,
+    ) -> None:
+        """Persist customer data updates, filtering by scope.
+
+        Only persists fields with:
+        - scope != SESSION (SESSION scope is ephemeral)
+        - persist = True in CustomerDataField
+
+        Args:
+            session: Current session
+            updates: List of customer data updates from Phase 3
+        """
+        from soldier.customer_data.enums import VariableSource
+        from soldier.observability.metrics import PERSISTENCE_OPERATIONS
+
+        if not self._profile_store:
+            return
+
+        # Filter: only persist non-SESSION scope with persist=True
+        persistent_updates = [
+            update for update in updates
+            if update.field_definition.scope != "SESSION"
+            and update.field_definition.persist
+        ]
+
+        if not persistent_updates:
+            logger.debug(
+                "no_customer_data_to_persist",
+                session_id=str(session.session_id),
+                total_updates=len(updates),
+            )
+            return
+
+        # Get or create customer profile
+        profile = await self._profile_store.get_by_customer_id(
+            tenant_id=session.tenant_id,
+            customer_id=session.customer_id,
+        )
+
+        if not profile:
+            logger.warning(
+                "profile_not_found_for_persistence",
+                session_id=str(session.session_id),
+                customer_id=str(session.customer_id),
+            )
+            PERSISTENCE_OPERATIONS.labels(operation="customer_data", status="failure").inc()
+            return
+
+        # Update each field
+        for update in persistent_updates:
+            try:
+                field = VariableEntry(
+                    name=update.field_name,
+                    value=update.validated_value if update.validated_value is not None else update.raw_value,
+                    value_type=update.field_definition.value_type,
+                    source=VariableSource.CONVERSATION,
+                    source_session_id=session.session_id,
+                )
+
+                await self._profile_store.update_field(
+                    tenant_id=session.tenant_id,
+                    profile_id=profile.id,
+                    field=field,
+                    supersede_existing=True,
+                )
+                PERSISTENCE_OPERATIONS.labels(operation="customer_data", status="success").inc()
+            except Exception as e:
+                logger.error(
+                    "customer_data_field_persistence_failed",
+                    session_id=str(session.session_id),
+                    field_name=update.field_name,
+                    error=str(e),
+                )
+                PERSISTENCE_OPERATIONS.labels(operation="customer_data", status="failure").inc()
+
+        logger.info(
+            "customer_data_persisted",
+            session_id=str(session.session_id),
+            fields_persisted=len(persistent_updates),
+            fields_skipped=len(updates) - len(persistent_updates),
+        )
+
+    def _compute_turn_outcome(
+        self,
+        matched_rules: list[MatchedRule],
+        scenario_result: ScenarioFilterResult | None,
+        tool_results: list[ToolResult],
+        enforcement_result: EnforcementResult | None,
+    ):
+        """Compute turn outcome based on pipeline decisions.
+
+        Args:
+            matched_rules: Rules that matched
+            scenario_result: Scenario orchestration result
+            tool_results: Tool execution results
+            enforcement_result: Enforcement validation result
+
+        Returns:
+            TurnOutcome with resolution and categories
+        """
+        from soldier.alignment.models.outcome import OutcomeCategory, TurnOutcome
+
+        categories = []
+
+        # Pipeline-determined categories
+        if not matched_rules:
+            categories.append(OutcomeCategory.ANSWERED)  # No rules matched, but we answered
+
+        # Check if scenario is waiting for user input (has missing profile fields to collect)
+        awaiting_input = (
+            scenario_result
+            and scenario_result.missing_profile_fields
+            and len(scenario_result.missing_profile_fields) > 0
+        )
+        if awaiting_input:
+            categories.append(OutcomeCategory.AWAITING_USER_INPUT)
+
+        if any(not tool.success for tool in tool_results):
+            categories.append(OutcomeCategory.SYSTEM_ERROR)
+
+        if enforcement_result and enforcement_result.violations:
+            categories.append(OutcomeCategory.POLICY_RESTRICTION)
+
+        # Determine resolution
+        if enforcement_result and not enforcement_result.passed:
+            resolution = "BLOCKED"
+        elif any(not tool.success for tool in tool_results):
+            resolution = "ERROR"
+        elif awaiting_input:
+            resolution = "PARTIAL"
+        else:
+            resolution = "ANSWERED"
+
+        return TurnOutcome(
+            resolution=resolution,
+            categories=categories,
+        )
 
     def _build_memory_context(self, episodes: list[ScoredEpisode]) -> str | None:
         """Format memory episodes into a text block."""
@@ -1257,3 +1896,183 @@ class AlignmentEngine:
             )
 
         return unfilled, scenario_blocked
+
+    async def _resolve_customer(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        channel: str,
+        channel_user_id: str,
+        customer_id: UUID | None = None,
+    ) -> tuple[UUID, bool]:
+        """Resolve customer from channel identity or create new.
+
+        Returns:
+            (customer_id, is_new_customer)
+        """
+        if customer_id:
+            # Customer ID explicitly provided
+            return customer_id, False
+
+        if not self._profile_store:
+            # No profile store, generate ephemeral customer ID
+            ephemeral_id = uuid4()
+            logger.warning(
+                "customer_resolution_ephemeral",
+                tenant_id=str(tenant_id),
+                channel=channel,
+                customer_id=str(ephemeral_id),
+            )
+            return ephemeral_id, True
+
+        # Try to find by channel identity
+        from soldier.conversation.models.enums import Channel
+
+        try:
+            channel_enum = Channel(channel)
+        except ValueError:
+            channel_enum = Channel.API
+
+        profile = await self._profile_store.get_by_channel_identity(
+            tenant_id=tenant_id,
+            channel=channel_enum,
+            channel_user_id=channel_user_id,
+        )
+
+        if profile:
+            logger.info(
+                "customer_resolved",
+                tenant_id=str(tenant_id),
+                customer_id=str(profile.customer_id),
+                channel=channel,
+            )
+            return profile.customer_id, False
+
+        # Create new profile
+        profile = await self._profile_store.get_or_create(
+            tenant_id=tenant_id,
+            channel=channel_enum,
+            channel_user_id=channel_user_id,
+        )
+
+        logger.info(
+            "customer_created",
+            tenant_id=str(tenant_id),
+            customer_id=str(profile.customer_id),
+            channel=channel,
+        )
+
+        return profile.customer_id, True
+
+    async def _build_turn_context(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        customer_id: UUID,
+        session: Session,
+        reconciliation_result: ReconciliationResult | None,
+    ) -> TurnContext:
+        """Build TurnContext (P1.8).
+
+        Aggregates all Phase 1 outputs into a single context object.
+
+        Args:
+            tenant_id: Tenant ID
+            agent_id: Agent ID
+            customer_id: Customer ID
+            session: Session state
+            reconciliation_result: Result of scenario migration if applicable
+
+        Returns:
+            TurnContext with all turn-scoped data
+        """
+        from soldier.customer_data import CustomerDataStore
+
+        # Load static config if enabled
+        glossary = {}
+        customer_data_fields = {}
+
+        if self._config.turn_context.load_glossary:
+            try:
+                glossary = await self._static_config_loader.load_glossary(
+                    tenant_id=tenant_id,
+                    agent_id=agent_id,
+                )
+            except Exception as e:
+                logger.warning(
+                    "glossary_load_failed",
+                    tenant_id=str(tenant_id),
+                    agent_id=str(agent_id),
+                    error=str(e),
+                )
+
+        if self._config.turn_context.load_customer_data_schema:
+            try:
+                customer_data_fields = await self._static_config_loader.load_customer_data_schema(
+                    tenant_id=tenant_id,
+                    agent_id=agent_id,
+                )
+            except Exception as e:
+                logger.warning(
+                    "customer_data_schema_load_failed",
+                    tenant_id=str(tenant_id),
+                    agent_id=str(agent_id),
+                    error=str(e),
+                )
+
+        # Load customer data
+        customer_data = None
+        if self._customer_data_loader:
+            try:
+                customer_data = await self._customer_data_loader.load(
+                    customer_id=customer_id,
+                    tenant_id=tenant_id,
+                    schema=customer_data_fields,
+                )
+            except Exception as e:
+                logger.warning(
+                    "customer_data_load_failed",
+                    tenant_id=str(tenant_id),
+                    customer_id=str(customer_id),
+                    error=str(e),
+                )
+                # Create empty store on failure
+                customer_data = CustomerDataStore(
+                    id=customer_id,
+                    tenant_id=tenant_id,
+                    customer_id=customer_id,
+                    channel_identities=[],
+                    fields={},
+                    assets=[],
+                )
+        else:
+            # No loader, create empty store
+            customer_data = CustomerDataStore(
+                id=customer_id,
+                tenant_id=tenant_id,
+                customer_id=customer_id,
+                channel_identities=[],
+                fields={},
+                assets=[],
+            )
+
+        return TurnContext(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            customer_id=customer_id,
+            session_id=session.session_id,
+            turn_number=session.turn_count + 1,
+            session=session.model_dump(),  # Convert to dict for now
+            customer_data=customer_data.model_dump(),  # Convert to dict for now
+            pipeline_config=self._config.model_dump(),  # Convert to dict for now
+            customer_data_fields={
+                name: field.model_dump() for name, field in customer_data_fields.items()
+            },
+            glossary={
+                term: item.model_dump() for term, item in glossary.items()
+            },
+            reconciliation_result=(
+                reconciliation_result.model_dump() if reconciliation_result else None
+            ),
+            turn_started_at=datetime.now(UTC),
+        )

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from soldier.alignment.models import AgentSettings, Scope, TemplateMode, VariableUpdatePolicy
+from soldier.alignment.models import AgentSettings, Scope, TemplateResponseMode, VariableUpdatePolicy
 
 
 # Agent models
@@ -203,7 +203,7 @@ class TemplateCreate(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=100)
     text: str = Field(..., min_length=1)
-    mode: TemplateMode = Field(default=TemplateMode.SUGGEST)
+    mode: TemplateResponseMode = Field(default=TemplateResponseMode.SUGGEST)
     scope: Scope = Field(default=Scope.GLOBAL)
     scope_id: UUID | None = Field(default=None)
     conditions: str | None = Field(default=None)
@@ -214,7 +214,7 @@ class TemplateUpdate(BaseModel):
 
     name: str | None = Field(default=None, min_length=1, max_length=100)
     text: str | None = Field(default=None, min_length=1)
-    mode: TemplateMode | None = Field(default=None)
+    mode: TemplateResponseMode | None = Field(default=None)
     scope: Scope | None = Field(default=None)
     scope_id: UUID | None = Field(default=None)
     conditions: str | None = Field(default=None)
@@ -226,7 +226,7 @@ class TemplateResponse(BaseModel):
     id: UUID
     name: str
     text: str
-    mode: TemplateMode
+    mode: TemplateResponseMode
     scope: Scope
     scope_id: UUID | None
     conditions: str | None

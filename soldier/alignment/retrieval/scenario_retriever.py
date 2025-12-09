@@ -2,13 +2,18 @@
 
 from uuid import UUID
 
-from soldier.alignment.context.models import Context
+from rank_bm25 import BM25Okapi
+
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.alignment.retrieval.models import ScoredScenario
+from soldier.alignment.retrieval.reranker import ScenarioReranker
 from soldier.alignment.retrieval.selection import ScoredItem, create_selection_strategy
 from soldier.alignment.stores import AgentConfigStore
+from soldier.config.models.pipeline import HybridRetrievalConfig
 from soldier.config.models.selection import SelectionConfig
 from soldier.observability.logging import get_logger
 from soldier.providers.embedding import EmbeddingProvider
+from soldier.utils.hybrid import HybridScorer
 from soldier.utils.vector import cosine_similarity
 
 logger = get_logger(__name__)
@@ -19,7 +24,7 @@ class ScenarioRetriever:
 
     Scenarios are retrieved by comparing the user message embedding against
     each scenario's entry condition embedding. Selection strategies filter
-    to the most relevant candidates.
+    to the most relevant candidates. Optional reranking improves precision.
     """
 
     def __init__(
@@ -27,6 +32,8 @@ class ScenarioRetriever:
         config_store: AgentConfigStore,
         embedding_provider: EmbeddingProvider,
         selection_config: SelectionConfig | None = None,
+        reranker: ScenarioReranker | None = None,
+        hybrid_config: HybridRetrievalConfig | None = None,
     ) -> None:
         """Initialize the scenario retriever.
 
@@ -34,6 +41,8 @@ class ScenarioRetriever:
             config_store: Store for scenario definitions
             embedding_provider: Provider for query embeddings
             selection_config: Configuration for selection strategy
+            reranker: Optional reranker for result refinement
+            hybrid_config: Optional hybrid retrieval configuration
         """
         self._config_store = config_store
         self._embedding_provider = embedding_provider
@@ -41,6 +50,17 @@ class ScenarioRetriever:
         self._selection_strategy = create_selection_strategy(
             self._selection_config.strategy,
             **self._selection_config.params,
+        )
+        self._reranker = reranker
+        self._hybrid_config = hybrid_config
+        self._hybrid_scorer = (
+            HybridScorer(
+                vector_weight=hybrid_config.vector_weight,
+                bm25_weight=hybrid_config.bm25_weight,
+                normalization=hybrid_config.normalization,
+            )
+            if hybrid_config and hybrid_config.enabled
+            else None
         )
 
     @property
@@ -52,14 +72,14 @@ class ScenarioRetriever:
         self,
         tenant_id: UUID,
         agent_id: UUID,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> list[ScoredScenario]:
         """Retrieve scenarios for an agent and apply selection.
 
         Args:
             tenant_id: Tenant identifier
             agent_id: Agent identifier
-            context: Extracted context with embedding
+            snapshot: Situational snapshot with message and embedding
 
         Returns:
             List of scored scenarios sorted by relevance
@@ -73,10 +93,41 @@ class ScenarioRetriever:
         if not scenarios:
             return []
 
-        context_embedding = context.embedding or await self._embedding_provider.embed_single(
-            context.message
+        query_embedding = snapshot.embedding or await self._embedding_provider.embed_single(
+            snapshot.message
         )
 
+        # Use hybrid scoring if configured, else vector-only
+        if self._hybrid_scorer:
+            scored = await self._hybrid_retrieval(scenarios, query_embedding, snapshot.message)
+        else:
+            scored = await self._vector_only_retrieval(scenarios, query_embedding)
+
+        scored.sort(key=lambda s: s.score, reverse=True)
+
+        # Optional reranking
+        if self._reranker and scored:
+            scored = await self._reranker.rerank(snapshot.message, scored)
+
+        # Filter by min_score but ensure min_k is honored
+        above_min = [s for s in scored if s.score >= self._selection_config.min_score]
+        pool = above_min if len(above_min) >= self._selection_config.min_k else scored
+
+        items = [ScoredItem(item=s, score=s.score) for s in pool]
+        selection = self._selection_strategy.select(
+            items,
+            max_k=self._selection_config.max_k,
+            min_k=self._selection_config.min_k,
+        )
+
+        return [item.item for item in selection.selected]
+
+    async def _vector_only_retrieval(
+        self,
+        scenarios,
+        context_embedding: list[float],
+    ) -> list[ScoredScenario]:
+        """Vector-only retrieval using cosine similarity."""
         scored: list[ScoredScenario] = []
         for scenario in scenarios:
             entry_embedding = scenario.entry_condition_embedding
@@ -96,21 +147,56 @@ class ScenarioRetriever:
                     score=score,
                 )
             )
+        return scored
 
-        scored.sort(key=lambda s: s.score, reverse=True)
+    async def _hybrid_retrieval(
+        self,
+        scenarios,
+        context_embedding: list[float],
+        query_text: str,
+    ) -> list[ScoredScenario]:
+        """Hybrid retrieval combining vector and BM25 scores."""
+        # Ensure all scenarios have embeddings
+        entry_embeddings = []
+        for scenario in scenarios:
+            entry_embedding = scenario.entry_condition_embedding
+            if entry_embedding is None and scenario.entry_condition_text:
+                try:
+                    entry_embedding = await self._embedding_provider.embed_single(
+                        scenario.entry_condition_text
+                    )
+                except Exception:
+                    entry_embedding = None
+            entry_embeddings.append(entry_embedding)
 
-        # Filter by min_score but ensure min_k is honored
-        above_min = [s for s in scored if s.score >= self._selection_config.min_score]
-        pool = above_min if len(above_min) >= self._selection_config.min_k else scored
+        # Compute vector scores
+        vector_scores = [
+            cosine_similarity(context_embedding, emb) if emb else 0.0
+            for emb in entry_embeddings
+        ]
 
-        items = [ScoredItem(item=s, score=s.score) for s in pool]
-        selection = self._selection_strategy.select(
-            items,
-            max_k=self._selection_config.max_k,
-            min_k=self._selection_config.min_k,
-        )
+        # Compute BM25 scores
+        corpus = [
+            scenario.entry_condition_text.split() if scenario.entry_condition_text else []
+            for scenario in scenarios
+        ]
+        bm25 = BM25Okapi(corpus)
+        bm25_scores = bm25.get_scores(query_text.split())
 
-        return [item.item for item in selection.selected]
+        # Combine scores
+        combined_scores = self._hybrid_scorer.combine_scores(vector_scores, list(bm25_scores))
+
+        # Build scored scenarios
+        scored = [
+            ScoredScenario(
+                scenario_id=scenario.id,
+                scenario_name=scenario.name,
+                score=score,
+            )
+            for scenario, score in zip(scenarios, combined_scores)
+        ]
+
+        return scored
 
     def _score_scenario(
         self,

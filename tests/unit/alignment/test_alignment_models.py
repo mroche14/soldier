@@ -15,7 +15,7 @@ from soldier.alignment.models import (
     Scope,
     StepTransition,
     Template,
-    TemplateMode,
+    TemplateResponseMode,
     UserIntent,
     Variable,
     VariableUpdatePolicy,
@@ -164,11 +164,11 @@ class TestTemplate:
             text="Hello {name}, how can I help you?",
         )
         assert template.name == "Welcome Template"
-        assert template.mode == TemplateMode.SUGGEST
+        assert template.mode == TemplateResponseMode.SUGGEST
 
     def test_template_modes(self) -> None:
         """Should accept different modes."""
-        for mode in TemplateMode:
+        for mode in TemplateResponseMode:
             template = Template(
                 tenant_id=uuid4(),
                 agent_id=uuid4(),

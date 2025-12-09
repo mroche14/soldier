@@ -6,26 +6,26 @@ feature flags, and tenant-level settings.
 Enhanced with:
 - Lineage tracking via source_item_id
 - Explicit status management (active/superseded/expired/orphaned)
-- Schema-driven validation via ProfileFieldDefinition
+- Schema-driven validation via CustomerDataField
 - Scenario requirements via ScenarioFieldRequirement
 """
 
-from soldier.profile.enums import (
+from soldier.customer_data.enums import (
     FallbackAction,
     ItemStatus,
-    ProfileFieldSource,
+    VariableSource,
     RequiredLevel,
     SourceType,
     ValidationMode,
     VerificationLevel,
 )
-from soldier.profile.models import (
+from soldier.customer_data.models import (
     ChannelIdentity,
     Consent,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
-    ProfileFieldDefinition,
+    VariableEntry,
+    CustomerDataField,
     ScenarioFieldRequirement,
 )
 
@@ -33,17 +33,17 @@ __all__ = [
     # Enums
     "FallbackAction",
     "ItemStatus",
-    "ProfileFieldSource",
+    "VariableSource",
     "RequiredLevel",
     "SourceType",
     "ValidationMode",
     "VerificationLevel",
     # Models
-    "CustomerProfile",
+    "CustomerDataStore",
     "ChannelIdentity",
-    "ProfileField",
+    "VariableEntry",
     "ProfileAsset",
     "Consent",
-    "ProfileFieldDefinition",
+    "CustomerDataField",
     "ScenarioFieldRequirement",
 ]

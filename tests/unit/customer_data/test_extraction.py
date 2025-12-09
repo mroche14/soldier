@@ -1,4 +1,4 @@
-"""Unit tests for ProfileItemSchemaExtractor.
+"""Unit tests for CustomerDataSchemaExtractor.
 
 Tests extraction logic, confidence scoring, and field definition suggestions.
 """
@@ -8,12 +8,12 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.profile.extraction import (
+from soldier.customer_data.extraction import (
     ExtractionResult,
     FieldDefinitionSuggestion,
-    ProfileItemSchemaExtractor,
+    CustomerDataSchemaExtractor,
 )
-from soldier.profile.enums import RequiredLevel
+from soldier.customer_data.enums import RequiredLevel
 
 
 @pytest.fixture
@@ -43,13 +43,13 @@ def mock_llm():
 @pytest.fixture
 def extractor_no_llm():
     """Create extractor without LLM (mock mode)."""
-    return ProfileItemSchemaExtractor(llm_executor=None)
+    return CustomerDataSchemaExtractor(llm_executor=None)
 
 
 @pytest.fixture
 def extractor_with_llm(mock_llm):
     """Create extractor with mock LLM."""
-    return ProfileItemSchemaExtractor(llm_executor=mock_llm)
+    return CustomerDataSchemaExtractor(llm_executor=mock_llm)
 
 
 class TestExtractionFromScenarioConditions:
@@ -335,7 +335,7 @@ class TestCreateFieldDefinitions:
     """Tests for creating field definitions from suggestions."""
 
     def test_create_definitions(self, extractor_no_llm, tenant_id, agent_id):
-        """Test creating ProfileFieldDefinition objects."""
+        """Test creating CustomerDataField objects."""
         suggestions = [
             FieldDefinitionSuggestion(
                 name="email",

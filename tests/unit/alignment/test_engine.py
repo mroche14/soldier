@@ -5,7 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context, Turn
+from soldier.alignment.context.models import Turn
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.models import Rule
 from soldier.alignment.result import AlignmentResult, PipelineStepTiming
@@ -168,6 +169,43 @@ class MockAgentConfigStore(AgentConfigStore):
 
     async def get_archived_scenario(self, tenant_id, scenario_id, version):
         return None
+
+    # Glossary operations (stubs for abstract methods)
+    async def get_glossary_items(self, tenant_id, agent_id, enabled_only=True):
+        return []
+
+    async def save_glossary_item(self, item):
+        pass
+
+    # Customer data field operations (stubs for abstract methods)
+    async def get_customer_data_fields(self, tenant_id, agent_id, enabled_only=True):
+        return []
+
+    async def save_customer_data_field(self, field):
+        pass
+
+    # Intent operations (stubs for abstract methods)
+    async def get_intent(self, tenant_id, intent_id):
+        return None
+
+    async def get_intents(self, tenant_id, agent_id, *, enabled_only=True):
+        return []
+
+    async def save_intent(self, intent):
+        return intent.id
+
+    async def delete_intent(self, tenant_id, intent_id):
+        return True
+
+    # Rule relationship operations (stubs for abstract methods)
+    async def get_rule_relationships(self, tenant_id, agent_id, *, source_rule_id=None, kind=None):
+        return []
+
+    async def save_rule_relationship(self, relationship):
+        return relationship.id
+
+    async def delete_rule_relationship(self, tenant_id, relationship_id):
+        return True
 
 
 def create_rule(
@@ -338,9 +376,9 @@ class TestAlignmentEngine:
             agent_id=agent_id,
         )
 
-        assert result.context is not None
-        assert isinstance(result.context, Context)
-        assert result.context.message == "I want to return my order"
+        assert result.snapshot is not None
+        assert isinstance(result.snapshot, SituationSnapshot)
+        assert result.snapshot.message == "I want to return my order"
 
     @pytest.mark.asyncio
     async def test_process_turn_includes_matched_rules(
@@ -409,14 +447,14 @@ class TestAlignmentEngine:
     # Test pipeline steps
 
     @pytest.mark.asyncio
-    async def test_process_turn_step_context_extraction(
+    async def test_process_turn_step_situation_sensor(
         self,
         engine: AlignmentEngine,
         session_id,
         tenant_id,
         agent_id,
     ) -> None:
-        """Test that context extraction step is recorded."""
+        """Test that situation sensor step is recorded."""
         result = await engine.process_turn(
             message="Test",
             session_id=session_id,
@@ -425,7 +463,7 @@ class TestAlignmentEngine:
         )
 
         step_names = [t.step for t in result.pipeline_timings]
-        assert "context_extraction" in step_names
+        assert "situation_sensor" in step_names
 
     @pytest.mark.asyncio
     async def test_process_turn_step_retrieval(
@@ -468,7 +506,7 @@ class TestAlignmentEngine:
     # Test with disabled steps
 
     @pytest.mark.asyncio
-    async def test_process_turn_disabled_context_extraction(
+    async def test_process_turn_disabled_situation_sensor(
         self,
         config_store: MockAgentConfigStore,
         embedding_provider: MockEmbeddingProvider,
@@ -477,8 +515,8 @@ class TestAlignmentEngine:
         tenant_id,
         agent_id,
     ) -> None:
-        """Test with context extraction disabled."""
-        pipeline_config.context_extraction.enabled = False
+        """Test with situation sensor disabled."""
+        pipeline_config.situation_sensor.enabled = False
 
         engine = AlignmentEngine(
             config_store=config_store,
@@ -493,9 +531,9 @@ class TestAlignmentEngine:
             agent_id=agent_id,
         )
 
-        # Context should be minimal
-        assert result.context.intent is None
-        assert result.context.embedding is None
+        # Snapshot should be minimal (no enrichment from sensor)
+        assert result.snapshot.canonical_intent_label is None
+        assert result.snapshot.embedding is None
 
     @pytest.mark.asyncio
     async def test_process_turn_disabled_retrieval(
@@ -571,7 +609,12 @@ class TestAlignmentResult:
             tenant_id=uuid4(),
             agent_id=uuid4(),
             user_message="Hello",
-            context=Context(message="Hello"),
+            snapshot=SituationSnapshot(
+                message="Hello",
+                intent_changed=False,
+                topic_changed=False,
+                tone="neutral",
+            ),
             matched_rules=[],
             generation=None,
             enforcement=None,
@@ -594,7 +637,12 @@ class TestAlignmentResult:
             tenant_id=tenant_id,
             agent_id=agent_id,
             user_message="Test",
-            context=Context(message="Test"),
+            snapshot=SituationSnapshot(
+                message="Test",
+                intent_changed=False,
+                topic_changed=False,
+                tone="neutral",
+            ),
             matched_rules=[],
             generation=None,
             enforcement=None,

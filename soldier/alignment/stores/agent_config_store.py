@@ -6,13 +6,17 @@ from uuid import UUID
 from soldier.alignment.migration.models import MigrationPlan, MigrationPlanStatus
 from soldier.alignment.models import (
     Agent,
+    GlossaryItem,
+    Intent,
     Rule,
+    RuleRelationship,
     Scenario,
     Scope,
     Template,
     ToolActivation,
     Variable,
 )
+from soldier.customer_data import CustomerDataField
 
 
 class AgentConfigStore(ABC):
@@ -62,6 +66,35 @@ class AgentConfigStore(ABC):
         min_score: float = 0.0,
     ) -> list[tuple[Rule, float]]:
         """Search rules by vector similarity, returning (rule, score) pairs."""
+        pass
+
+    # Rule relationship operations
+    @abstractmethod
+    async def get_rule_relationships(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        rule_ids: list[UUID] | None = None,
+    ) -> list[RuleRelationship]:
+        """Get rule relationships, optionally filtered by rule IDs."""
+        pass
+
+    @abstractmethod
+    async def save_rule_relationship(
+        self,
+        relationship: RuleRelationship,
+    ) -> UUID:
+        """Save a rule relationship, returning its ID."""
+        pass
+
+    @abstractmethod
+    async def delete_rule_relationship(
+        self,
+        tenant_id: UUID,
+        relationship_id: UUID,
+    ) -> bool:
+        """Soft-delete a rule relationship."""
         pass
 
     # Scenario operations
@@ -267,4 +300,97 @@ class AgentConfigStore(ABC):
         self, tenant_id: UUID, scenario_id: UUID, version: int
     ) -> Scenario | None:
         """Get archived scenario by version."""
+        pass
+
+    # Glossary operations (Phase 1)
+    @abstractmethod
+    async def get_glossary_items(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list[GlossaryItem]:
+        """Get all glossary items for an agent."""
+        pass
+
+    @abstractmethod
+    async def save_glossary_item(self, item: GlossaryItem) -> UUID:
+        """Save a glossary item."""
+        pass
+
+    # Customer data field operations (Phase 1)
+    @abstractmethod
+    async def get_customer_data_fields(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list[CustomerDataField]:
+        """Get all customer data field definitions for an agent."""
+        pass
+
+    @abstractmethod
+    async def save_customer_data_field(self, field: CustomerDataField) -> UUID:
+        """Save a customer data field definition."""
+        pass
+
+    # Intent operations (Phase 4)
+    @abstractmethod
+    async def get_intent(self, tenant_id: UUID, intent_id: UUID) -> Intent | None:
+        """Get an intent by ID.
+
+        Args:
+            tenant_id: Tenant identifier
+            intent_id: Intent identifier
+
+        Returns:
+            Intent if found, None otherwise
+        """
+        pass
+
+    @abstractmethod
+    async def get_intents(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list[Intent]:
+        """Get all intents for an agent.
+
+        Args:
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
+            enabled_only: Only return enabled intents
+
+        Returns:
+            List of intents for the agent
+        """
+        pass
+
+    @abstractmethod
+    async def save_intent(self, intent: Intent) -> UUID:
+        """Save an intent, returning its ID.
+
+        Args:
+            intent: Intent to save
+
+        Returns:
+            UUID of the saved intent
+        """
+        pass
+
+    @abstractmethod
+    async def delete_intent(self, tenant_id: UUID, intent_id: UUID) -> bool:
+        """Soft-delete an intent.
+
+        Args:
+            tenant_id: Tenant identifier
+            intent_id: Intent identifier
+
+        Returns:
+            True if deleted, False if not found
+        """
         pass
