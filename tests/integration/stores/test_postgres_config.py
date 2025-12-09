@@ -16,7 +16,7 @@ from soldier.alignment.models import (
     ScenarioStep,
     Scope,
     Template,
-    TemplateMode,
+    TemplateResponseMode,
     Variable,
     VariableUpdatePolicy,
 )
@@ -91,7 +91,7 @@ def sample_template(tenant_id, sample_agent):
         agent_id=sample_agent.id,
         name="Test Template",
         content="Hello, how can I help you today?",
-        mode=TemplateMode.SUGGEST,
+        mode=TemplateResponseMode.SUGGEST,
         scope=Scope.GLOBAL,
     )
 

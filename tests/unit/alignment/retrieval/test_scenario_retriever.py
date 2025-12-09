@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.alignment.models.scenario import Scenario, ScenarioStep
 from soldier.alignment.retrieval.scenario_retriever import ScenarioRetriever
 from soldier.alignment.stores import InMemoryAgentConfigStore
@@ -77,8 +77,14 @@ async def test_scenario_retriever_returns_top_match() -> None:
         selection_config=SelectionConfig(strategy="fixed_k", params={"k": 1}),
     )
 
-    context = Context(message="start return", embedding=[1.0, 0.0, 0.0])
-    result = await retriever.retrieve(tenant_id, agent_id, context)
+    snapshot = SituationSnapshot(
+        message="start return",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        embedding=[1.0, 0.0, 0.0],
+    )
+    result = await retriever.retrieve(tenant_id, agent_id, snapshot)
 
     assert len(result) == 1
     assert result[0].scenario_name == "Best"
@@ -109,8 +115,14 @@ async def test_scenario_retriever_embeds_entry_text_when_missing_embedding() -> 
         selection_config=SelectionConfig(strategy="fixed_k", params={"k": 1}),
     )
 
-    context = Context(message="hello", embedding=[0.5, 0.5])
-    result = await retriever.retrieve(tenant_id, agent_id, context)
+    snapshot = SituationSnapshot(
+        message="hello",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        embedding=[0.5, 0.5],
+    )
+    result = await retriever.retrieve(tenant_id, agent_id, snapshot)
 
     assert len(result) == 1
     assert result[0].scenario_name == "NeedsEmbedding"

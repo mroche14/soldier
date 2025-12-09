@@ -4,34 +4,34 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from soldier.conversation.models import Channel
-from soldier.profile import (
+from soldier.customer_data import (
     ChannelIdentity,
     Consent,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
-    ProfileFieldSource,
+    VariableEntry,
+    VariableSource,
     VerificationLevel,
 )
-from soldier.profile.enums import (
+from soldier.customer_data.enums import (
     FallbackAction,
     ItemStatus,
     RequiredLevel,
     SourceType,
     ValidationMode,
 )
-from soldier.profile.models import (
-    ProfileFieldDefinition,
+from soldier.customer_data.models import (
+    CustomerDataField,
     ScenarioFieldRequirement,
 )
 
 
 class TestCustomerProfile:
-    """Tests for CustomerProfile model."""
+    """Tests for CustomerDataStore model."""
 
     def test_create_valid_profile(self) -> None:
         """Should create a valid customer profile."""
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             tenant_id=uuid4(),
         )
         assert profile.verification_level == VerificationLevel.UNVERIFIED
@@ -46,7 +46,7 @@ class TestCustomerProfile:
             verified=True,
             primary=True,
         )
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             tenant_id=uuid4(),
             channel_identities=[identity],
         )
@@ -55,13 +55,13 @@ class TestCustomerProfile:
 
     def test_profile_with_fields(self) -> None:
         """Should create profile with fields."""
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="user@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             tenant_id=uuid4(),
             fields={"email": field},
         )
@@ -71,7 +71,7 @@ class TestCustomerProfile:
     def test_profile_verification_levels(self) -> None:
         """Should accept all verification levels."""
         for level in VerificationLevel:
-            profile = CustomerProfile(
+            profile = CustomerDataStore(
                 tenant_id=uuid4(),
                 verification_level=level,
             )
@@ -105,15 +105,15 @@ class TestChannelIdentity:
 
 
 class TestProfileField:
-    """Tests for ProfileField model."""
+    """Tests for VariableEntry model."""
 
     def test_create_valid_field(self) -> None:
         """Should create a valid profile field."""
-        field = ProfileField(
+        field = VariableEntry(
             name="first_name",
             value="John",
             value_type="string",
-            source=ProfileFieldSource.LLM_EXTRACTED,
+            source=VariableSource.LLM_EXTRACTED,
         )
         assert field.name == "first_name"
         assert field.value == "John"
@@ -121,11 +121,11 @@ class TestProfileField:
 
     def test_field_with_provenance(self) -> None:
         """Should track provenance."""
-        field = ProfileField(
+        field = VariableEntry(
             name="order_preference",
             value="express_shipping",
             value_type="string",
-            source=ProfileFieldSource.TOOL_RESULT,
+            source=VariableSource.TOOL_RESULT,
             source_session_id=uuid4(),
             source_scenario_id=uuid4(),
             confidence=0.85,
@@ -135,8 +135,8 @@ class TestProfileField:
 
     def test_all_field_sources(self) -> None:
         """Should accept all field sources."""
-        for source in ProfileFieldSource:
-            field = ProfileField(
+        for source in VariableSource:
+            field = VariableEntry(
                 name="test",
                 value="value",
                 value_type="string",
@@ -255,36 +255,36 @@ class TestValidationModeEnum:
 
 
 class TestProfileFieldLineageAndStatus:
-    """Tests for ProfileField lineage and status fields (T021)."""
+    """Tests for VariableEntry lineage and status fields (T021)."""
 
     def test_field_has_id(self) -> None:
-        """ProfileField should have unique ID."""
-        field = ProfileField(
+        """VariableEntry should have unique ID."""
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         assert field.id is not None
 
     def test_field_default_status_is_active(self) -> None:
-        """ProfileField should default to ACTIVE status."""
-        field = ProfileField(
+        """VariableEntry should default to ACTIVE status."""
+        field = VariableEntry(
             name="name",
             value="John",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         assert field.status == ItemStatus.ACTIVE
 
     def test_field_with_lineage(self) -> None:
-        """ProfileField should track lineage."""
+        """VariableEntry should track lineage."""
         source_id = uuid4()
-        field = ProfileField(
+        field = VariableEntry(
             name="extracted_name",
             value="Jane Doe",
             value_type="string",
-            source=ProfileFieldSource.DOCUMENT_EXTRACTED,
+            source=VariableSource.DOCUMENT_EXTRACTED,
             source_item_id=source_id,
             source_item_type=SourceType.PROFILE_ASSET,
             source_metadata={"tool": "ocr", "confidence": 0.95},
@@ -294,13 +294,13 @@ class TestProfileFieldLineageAndStatus:
         assert field.source_metadata["tool"] == "ocr"
 
     def test_field_superseded_status(self) -> None:
-        """ProfileField should track superseded status."""
+        """VariableEntry should track superseded status."""
         new_field_id = uuid4()
-        field = ProfileField(
+        field = VariableEntry(
             name="phone",
             value="+1234567890",
             value_type="phone",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             status=ItemStatus.SUPERSEDED,
             superseded_by_id=new_field_id,
             superseded_at=datetime.now(UTC),
@@ -310,35 +310,35 @@ class TestProfileFieldLineageAndStatus:
         assert field.superseded_at is not None
 
     def test_field_is_orphaned_property(self) -> None:
-        """ProfileField.is_orphaned should return True when status is ORPHANED."""
-        field = ProfileField(
+        """VariableEntry.is_orphaned should return True when status is ORPHANED."""
+        field = VariableEntry(
             name="derived_field",
             value="data",
             value_type="string",
-            source=ProfileFieldSource.TOOL_RESULT,
+            source=VariableSource.TOOL_RESULT,
             status=ItemStatus.ORPHANED,
         )
         assert field.is_orphaned is True
 
     def test_field_not_orphaned_when_active(self) -> None:
-        """ProfileField.is_orphaned should return False when status is ACTIVE."""
-        field = ProfileField(
+        """VariableEntry.is_orphaned should return False when status is ACTIVE."""
+        field = VariableEntry(
             name="active_field",
             value="data",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             status=ItemStatus.ACTIVE,
         )
         assert field.is_orphaned is False
 
     def test_field_definition_id_reference(self) -> None:
-        """ProfileField should reference field definition."""
+        """VariableEntry should reference field definition."""
         def_id = uuid4()
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             field_definition_id=def_id,
         )
         assert field.field_definition_id == def_id
@@ -411,11 +411,11 @@ class TestProfileAssetLineageAndStatus:
 
 
 class TestProfileFieldDefinition:
-    """Tests for ProfileFieldDefinition model (T023)."""
+    """Tests for CustomerDataField model (T023)."""
 
     def test_create_valid_definition(self) -> None:
         """Should create valid field definition."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=uuid4(),
             agent_id=uuid4(),
             name="email",
@@ -427,7 +427,7 @@ class TestProfileFieldDefinition:
 
     def test_definition_with_validation_regex(self) -> None:
         """Should support regex validation."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=uuid4(),
             agent_id=uuid4(),
             name="phone",
@@ -439,7 +439,7 @@ class TestProfileFieldDefinition:
 
     def test_definition_with_allowed_values(self) -> None:
         """Should support allowed values."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=uuid4(),
             agent_id=uuid4(),
             name="country",
@@ -451,7 +451,7 @@ class TestProfileFieldDefinition:
 
     def test_definition_with_collection_prompt(self) -> None:
         """Should support collection prompts for gap fill."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=uuid4(),
             agent_id=uuid4(),
             name="date_of_birth",
@@ -465,7 +465,7 @@ class TestProfileFieldDefinition:
 
     def test_definition_pii_classification(self) -> None:
         """Should support PII classification."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=uuid4(),
             agent_id=uuid4(),
             name="ssn",
@@ -481,7 +481,7 @@ class TestProfileFieldDefinition:
 
     def test_definition_freshness(self) -> None:
         """Should support freshness settings."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=uuid4(),
             agent_id=uuid4(),
             name="credit_score",

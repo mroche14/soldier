@@ -64,13 +64,13 @@ def rate_limiter():
     return SlidingWindowRateLimiter(window_seconds=60)
 
 
-def create_test_app(
+async def create_test_app(
     tenant_context: TenantContext,
     mock_settings: MagicMock,
     rate_limiter: SlidingWindowRateLimiter,
 ) -> FastAPI:
     """Create test app with rate limiting enabled."""
-    reset_dependencies()
+    await reset_dependencies()
 
     app = FastAPI()
 
@@ -124,14 +124,15 @@ def create_test_app(
 class TestRateLimitingIntegration:
     """Integration tests for rate limiting middleware."""
 
-    def test_requests_under_limit_succeed(
+    @pytest.mark.asyncio
+    async def test_requests_under_limit_succeed(
         self,
         free_tenant_context: TenantContext,
         mock_settings: MagicMock,
         rate_limiter: SlidingWindowRateLimiter,
     ) -> None:
         """Requests under the rate limit succeed."""
-        app = create_test_app(free_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(free_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app)
 
         # Free tier has 60 requests/min limit
@@ -139,14 +140,15 @@ class TestRateLimitingIntegration:
             response = client.get("/test")
             assert response.status_code == 200
 
-    def test_rate_limit_headers_present(
+    @pytest.mark.asyncio
+    async def test_rate_limit_headers_present(
         self,
         free_tenant_context: TenantContext,
         mock_settings: MagicMock,
         rate_limiter: SlidingWindowRateLimiter,
     ) -> None:
         """Rate limit headers are included in response."""
-        app = create_test_app(free_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(free_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app)
 
         response = client.get("/test")
@@ -156,14 +158,15 @@ class TestRateLimitingIntegration:
         assert "X-RateLimit-Remaining" in response.headers
         assert "X-RateLimit-Reset" in response.headers
 
-    def test_rate_limit_remaining_decreases(
+    @pytest.mark.asyncio
+    async def test_rate_limit_remaining_decreases(
         self,
         free_tenant_context: TenantContext,
         mock_settings: MagicMock,
         rate_limiter: SlidingWindowRateLimiter,
     ) -> None:
         """Rate limit remaining count decreases with each request."""
-        app = create_test_app(free_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(free_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app)
 
         response1 = client.get("/test")
@@ -174,14 +177,15 @@ class TestRateLimitingIntegration:
 
         assert remaining2 < remaining1
 
-    def test_excluded_paths_not_rate_limited(
+    @pytest.mark.asyncio
+    async def test_excluded_paths_not_rate_limited(
         self,
         free_tenant_context: TenantContext,
         mock_settings: MagicMock,
         rate_limiter: SlidingWindowRateLimiter,
     ) -> None:
         """Health endpoint is excluded from rate limiting."""
-        app = create_test_app(free_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(free_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app)
 
         # Health endpoint should not have rate limit headers
@@ -190,14 +194,15 @@ class TestRateLimitingIntegration:
         # Note: excluded paths don't go through rate limit middleware
         # so they won't have rate limit headers
 
-    def test_pro_tier_has_higher_limit(
+    @pytest.mark.asyncio
+    async def test_pro_tier_has_higher_limit(
         self,
         pro_tenant_context: TenantContext,
         mock_settings: MagicMock,
         rate_limiter: SlidingWindowRateLimiter,
     ) -> None:
         """Pro tier has higher rate limit than free tier."""
-        app = create_test_app(pro_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(pro_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app)
 
         response = client.get("/test")
@@ -205,14 +210,15 @@ class TestRateLimitingIntegration:
         limit = int(response.headers["X-RateLimit-Limit"])
         assert limit == 600  # Pro tier limit
 
-    def test_free_tier_limit_is_60(
+    @pytest.mark.asyncio
+    async def test_free_tier_limit_is_60(
         self,
         free_tenant_context: TenantContext,
         mock_settings: MagicMock,
         rate_limiter: SlidingWindowRateLimiter,
     ) -> None:
         """Free tier has 60 requests/min limit."""
-        app = create_test_app(free_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(free_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app)
 
         response = client.get("/test")
@@ -224,7 +230,8 @@ class TestRateLimitingIntegration:
 class TestRateLimitExceeded:
     """Tests for rate limit exceeded behavior."""
 
-    def test_exceeding_limit_returns_429(
+    @pytest.mark.asyncio
+    async def test_exceeding_limit_returns_429(
         self,
         free_tenant_context: TenantContext,
         mock_settings: MagicMock,
@@ -233,7 +240,7 @@ class TestRateLimitExceeded:
         # Use a very small limit for testing
         rate_limiter = SlidingWindowRateLimiter(window_seconds=60)
 
-        app = create_test_app(free_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(free_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app, raise_server_exceptions=False)
 
         # Exhaust the limit (60 for free tier)
@@ -253,7 +260,8 @@ class TestRateLimitExceeded:
             assert "error" in data
             assert data["error"]["code"] == "RATE_LIMIT_EXCEEDED"
 
-    def test_rate_limit_error_includes_retry_info(
+    @pytest.mark.asyncio
+    async def test_rate_limit_error_includes_retry_info(
         self,
         free_tenant_context: TenantContext,
         mock_settings: MagicMock,
@@ -261,7 +269,7 @@ class TestRateLimitExceeded:
         """Rate limit error response includes retry information."""
         rate_limiter = SlidingWindowRateLimiter(window_seconds=60)
 
-        app = create_test_app(free_tenant_context, mock_settings, rate_limiter)
+        app = await create_test_app(free_tenant_context, mock_settings, rate_limiter)
         client = TestClient(app, raise_server_exceptions=False)
 
         # Exhaust the limit

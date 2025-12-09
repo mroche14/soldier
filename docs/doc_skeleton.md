@@ -42,6 +42,32 @@ The document also provides details on the configuration of each step, including 
 
 ---
 
+### `docs/design/enhanced-enforcement.md`
+
+This document describes enhancements to Soldier's enforcement pipeline, extending the existing rule-based system with deterministic expression evaluation, LLM-as-Judge for subjective rules, and optional grounding/relevance verification. It is grounded in and reconciled with the existing Rule model and EnforcementValidator.
+
+Key concepts and enhancements:
+
+*   **Two-Lane Architecture:** Rules fall into two categories requiring different verification:
+    *   **Lane 1 (Deterministic):** For quantitative rules with `enforcement_expression` (e.g., `amount <= 50`). Uses `simpleeval` for 100% reliable evaluation after variable extraction.
+    *   **Lane 2 (Probabilistic):** For subjective rules without expressions (e.g., "be professional"). Uses LLM-as-Judge for ~85-95% accurate semantic judgment.
+
+*   **Extended Rule Model:** Adds `enforcement_expression` field to the existing Rule model for formal verification expressions. No new entity - reuses existing Rule system.
+
+*   **Always-Enforce GLOBAL Constraints:** GLOBAL rules with `is_hard_constraint=True` are enforced on every response, even if they didn't semantically match the user input. This keeps prompts focused (only matched rules) while ensuring critical guardrails are never bypassed.
+
+*   **Variable Extraction:** Before deterministic evaluation, structured data (amounts, percentages, flags) is extracted from responses using regex patterns (fast) and LLM extraction (complex), combined with session/profile variables.
+
+*   **Relevance Verification (Optional):** Checks if response addresses the user's question (Query ↔ Response). Supports embedding similarity or cross-encoder strategies. Includes refusal bypass to allow valid "I don't know" responses.
+
+*   **Grounding Verification (Optional):** Detects hallucinations by verifying response is factually supported by context (Response ↔ Context). Uses NLI classification (entailment/neutral/contradiction).
+
+*   **The Formalization Gap:** The document acknowledges that for deterministic rules, the CHECK is 100% reliable - the only uncertainty is in variable EXTRACTION from natural language to formal variables.
+
+The configuration uses TOML with boolean flags to enable/disable each capability independently. Security is maintained through `simpleeval`'s sandboxed evaluation (no arbitrary code execution).
+
+---
+
 ### `docs/architecture/alignment-engine.md`
 
 This document describes the "Alignment Engine," the core component of Soldier that ensures agent behavior follows predefined policies. It's a text-based pipeline that processes user messages through a series of steps to ensure predictable and controlled responses.
@@ -363,6 +389,63 @@ Key aspects include:
 *   **Privacy:** The document emphasizes never logging secrets or raw PII at INFO level, using `SecretStr` in Pydantic models, and auto-redacting sensitive patterns (email, SSN).
 
 *   **Configuration:** Observability settings are defined in TOML under `[observability.logging]`, `[observability.tracing]`, and `[observability.metrics]`, with environment variable overrides.
+
+---
+
+### `docs/focal_turn_pipeline/README.md`
+
+This document specifies the **Focal Turn Pipeline**, the redesigned 11-phase turn processing pipeline for Soldier. It consolidates earlier fragmented designs into a single, cohesive specification.
+
+Key aspects include:
+
+*   **11 Phases:** The pipeline consists of 11 sequential phases that transform a user message into an agent response:
+    1. Context Loading - Loads customer data, session, glossary
+    2. Situational Sensor - Schema-aware context extraction with candidate variables
+    3. Customer Data Update - Updates customer profile with new facts
+    4. Retrieval - Vector search for rules, scenarios, memory
+    5. Reranking - Improves candidate ordering
+    6. LLM Filtering - Judges which rules/scenarios apply
+    7. Response Planning - Plans multi-tool/multi-turn responses
+    8. Tool Execution - Executes tools from matched rules
+    9. Response Generation - Generates final response text
+    10. Enforcement - Validates against constraints
+    11. Persistence - Saves session, audit records
+
+*   **Schema-Aware Processing:** Phase 2 (Situational Sensor) shows LLM a privacy-safe view of customer data schema (field names/types, not values) and extracts candidate variables with proper scoping.
+
+*   **Customer Data Lifecycle:** Phase 3 validates and persists candidate variables from Phase 2 into the CustomerDataStore, with LLM-based confidence scoring and conflict resolution.
+
+*   **Response Planning:** Phase 7 introduces explicit planning for multi-tool workflows and multi-turn interactions, replacing implicit sequencing.
+
+*   **Data Models:** Defines TurnContext, SituationalSnapshot, CustomerSchemaMask, ResponsePlan, and TurnOutcome models.
+
+*   **Configuration:** Each phase has dedicated TOML configuration section with enable/disable flags, model selection, and parameters.
+
+*   **Execution Model:** Specifies parallelization opportunities (Context Loading substeps, Retrieval types) and performance targets.
+
+---
+
+### `docs/focal_turn_pipeline/spec/pipeline.md`
+
+Detailed specifications for each of the 11 phases in the Focal Turn Pipeline, including substeps, inputs/outputs, and implementation notes.
+
+---
+
+### `docs/focal_turn_pipeline/spec/data_models.md`
+
+Complete data model definitions for all pipeline phases, including field-by-field specifications for TurnContext, SituationalSnapshot, CandidateVariableInfo, CustomerSchemaMask, ResponsePlan, and TurnOutcome.
+
+---
+
+### `docs/focal_turn_pipeline/spec/configuration.md`
+
+Configuration patterns and TOML structure for the Focal Turn Pipeline, including examples of different configuration profiles (speed-optimized, balanced, quality-optimized).
+
+---
+
+### `docs/focal_turn_pipeline/spec/llm_task_configuration.md`
+
+Pattern for configuring LLM tasks in the pipeline, including Jinja2 template usage, prompt configuration sections, and model selection strategies.
 
 ---
 

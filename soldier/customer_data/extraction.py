@@ -1,7 +1,7 @@
 """Profile schema extraction service.
 
 Uses LLM to automatically extract required profile fields from scenarios and rules.
-Generates ProfileFieldDefinition and ScenarioFieldRequirement suggestions.
+Generates CustomerDataField and ScenarioFieldRequirement suggestions.
 """
 
 from dataclasses import dataclass, field
@@ -10,8 +10,8 @@ from uuid import UUID, uuid4
 
 from soldier.config.models.agent import AgentConfig
 from soldier.observability.logging import get_logger
-from soldier.profile.enums import FallbackAction, RequiredLevel, ValidationMode
-from soldier.profile.models import ProfileFieldDefinition, ScenarioFieldRequirement
+from soldier.customer_data.enums import FallbackAction, RequiredLevel, ValidationMode
+from soldier.customer_data.models import CustomerDataField, ScenarioFieldRequirement
 
 logger = get_logger(__name__)
 
@@ -44,7 +44,7 @@ class ExtractionOutput:
     """Full output from schema extraction."""
 
     requirements: list[ScenarioFieldRequirement]
-    field_definitions: list[ProfileFieldDefinition]
+    field_definitions: list[CustomerDataField]
     needs_human_review: bool
     extraction_results: list[ExtractionResult] = field(default_factory=list)
 
@@ -98,7 +98,7 @@ Respond in JSON format:
 """
 
 
-class ProfileItemSchemaExtractor:
+class CustomerDataSchemaExtractor:
     """Extracts profile field requirements from scenarios and rules.
 
     Uses LLM to analyze scenario conditions, step content, and rule
@@ -316,8 +316,8 @@ class ProfileItemSchemaExtractor:
         suggestions: list[FieldDefinitionSuggestion],
         tenant_id: UUID,
         agent_id: UUID,
-    ) -> list[ProfileFieldDefinition]:
-        """Create ProfileFieldDefinition objects from suggestions.
+    ) -> list[CustomerDataField]:
+        """Create CustomerDataField objects from suggestions.
 
         Args:
             suggestions: List of field definition suggestions
@@ -325,12 +325,12 @@ class ProfileItemSchemaExtractor:
             agent_id: Agent identifier
 
         Returns:
-            List of ProfileFieldDefinition objects
+            List of CustomerDataField objects
         """
         definitions = []
 
         for suggestion in suggestions:
-            definition = ProfileFieldDefinition(
+            definition = CustomerDataField(
                 id=uuid4(),
                 tenant_id=tenant_id,
                 agent_id=agent_id,

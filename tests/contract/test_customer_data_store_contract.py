@@ -1,6 +1,6 @@
-"""Contract tests for ProfileStore implementations.
+"""Contract tests for CustomerDataStoreInterface implementations.
 
-These tests define the contract that ALL ProfileStore implementations must satisfy.
+These tests define the contract that ALL CustomerDataStoreInterface implementations must satisfy.
 Each implementation (InMemory, PostgreSQL, etc.) should pass these tests.
 """
 
@@ -11,35 +11,35 @@ from uuid import uuid4
 import pytest
 
 from soldier.conversation.models import Channel
-from soldier.profile.enums import (
+from soldier.customer_data.enums import (
     FallbackAction,
     ItemStatus,
-    ProfileFieldSource,
+    VariableSource,
     RequiredLevel,
     SourceType,
     ValidationMode,
 )
-from soldier.profile.models import (
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
-    ProfileFieldDefinition,
+    VariableEntry,
+    CustomerDataField,
     ScenarioFieldRequirement,
 )
-from soldier.profile.stores import InMemoryProfileStore
+from soldier.customer_data.stores import InMemoryCustomerDataStore
 
 
-class ProfileStoreContract(ABC):
-    """Contract tests for ProfileStore methods.
+class CustomerDataStoreInterfaceContract(ABC):
+    """Contract tests for CustomerDataStoreInterface methods.
 
-    All ProfileStore implementations must pass these tests.
+    All CustomerDataStoreInterface implementations must pass these tests.
     """
 
     @abstractmethod
     @pytest.fixture
     def store(self):
-        """Return a ProfileStore implementation to test."""
+        """Return a CustomerDataStoreInterface implementation to test."""
         pass
 
     @pytest.fixture
@@ -55,14 +55,14 @@ class ProfileStoreContract(ABC):
         return uuid4()
 
     @pytest.fixture
-    def sample_profile(self, tenant_id) -> CustomerProfile:
+    def sample_profile(self, tenant_id) -> CustomerDataStore:
         """Create a sample customer profile."""
         identity = ChannelIdentity(
             channel=Channel.WEBCHAT,
             channel_user_id="user123",
             primary=True,
         )
-        return CustomerProfile(
+        return CustomerDataStore(
             tenant_id=tenant_id,
             channel_identities=[identity],
         )
@@ -73,7 +73,7 @@ class ProfileStoreContract(ABC):
 # =============================================================================
 
 
-class LineageTrackingContract(ProfileStoreContract):
+class LineageTrackingContract(CustomerDataStoreInterfaceContract):
     """Contract tests for US1: Lineage Tracking."""
 
     @pytest.mark.asyncio
@@ -83,11 +83,11 @@ class LineageTrackingContract(ProfileStoreContract):
         """Should return single-item chain for root field (no source)."""
         await store.save(sample_profile)
 
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             # No source_item_id = root item
         )
         await store.update_field(tenant_id, sample_profile.id, field)
@@ -106,20 +106,20 @@ class LineageTrackingContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Create root field
-        root_field = ProfileField(
+        root_field = VariableEntry(
             name="id_document",
             value="uploaded",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, root_field)
 
         # Create derived field
-        derived_field = ProfileField(
+        derived_field = VariableEntry(
             name="document_number",
             value="ABC123",
             value_type="string",
-            source=ProfileFieldSource.SYSTEM_INFERRED,
+            source=VariableSource.SYSTEM_INFERRED,
             source_item_id=root_field.id,
             source_item_type=SourceType.PROFILE_FIELD,
             source_metadata={"extraction_tool": "ocr"},
@@ -146,11 +146,11 @@ class LineageTrackingContract(ProfileStoreContract):
         prev_id = None
         field_ids = []
         for i in range(15):
-            field = ProfileField(
+            field = VariableEntry(
                 name=f"field_{i}",
                 value=f"value_{i}",
                 value_type="string",
-                source=ProfileFieldSource.SYSTEM_INFERRED,
+                source=VariableSource.SYSTEM_INFERRED,
                 source_item_id=prev_id,
                 source_item_type=SourceType.PROFILE_FIELD if prev_id else None,
             )
@@ -175,22 +175,22 @@ class LineageTrackingContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Create field A
-        field_a = ProfileField(
+        field_a = VariableEntry(
             name="field_a",
             value="value_a",
             value_type="string",
-            source=ProfileFieldSource.SYSTEM_INFERRED,
+            source=VariableSource.SYSTEM_INFERRED,
         )
         await store.update_field(
             tenant_id, sample_profile.id, field_a, supersede_existing=False
         )
 
         # Create field B pointing to A
-        field_b = ProfileField(
+        field_b = VariableEntry(
             name="field_b",
             value="value_b",
             value_type="string",
-            source=ProfileFieldSource.SYSTEM_INFERRED,
+            source=VariableSource.SYSTEM_INFERRED,
             source_item_id=field_a.id,
             source_item_type=SourceType.PROFILE_FIELD,
         )
@@ -216,28 +216,28 @@ class LineageTrackingContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Create source field
-        source_field = ProfileField(
+        source_field = VariableEntry(
             name="id_document",
             value="uploaded",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, source_field)
 
         # Create multiple derived fields
-        derived1 = ProfileField(
+        derived1 = VariableEntry(
             name="doc_number",
             value="123",
             value_type="string",
-            source=ProfileFieldSource.SYSTEM_INFERRED,
+            source=VariableSource.SYSTEM_INFERRED,
             source_item_id=source_field.id,
             source_item_type=SourceType.PROFILE_FIELD,
         )
-        derived2 = ProfileField(
+        derived2 = VariableEntry(
             name="doc_type",
             value="passport",
             value_type="string",
-            source=ProfileFieldSource.SYSTEM_INFERRED,
+            source=VariableSource.SYSTEM_INFERRED,
             source_item_id=source_field.id,
             source_item_type=SourceType.PROFILE_FIELD,
         )
@@ -260,11 +260,11 @@ class LineageTrackingContract(ProfileStoreContract):
         """Should return empty lists when no items derived from source."""
         await store.save(sample_profile)
 
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field)
 
@@ -277,19 +277,19 @@ class LineageTrackingContract(ProfileStoreContract):
         """Should return True when item has dependents."""
         await store.save(sample_profile)
 
-        source_field = ProfileField(
+        source_field = VariableEntry(
             name="source",
             value="source_value",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, source_field)
 
-        derived_field = ProfileField(
+        derived_field = VariableEntry(
             name="derived",
             value="derived_value",
             value_type="string",
-            source=ProfileFieldSource.SYSTEM_INFERRED,
+            source=VariableSource.SYSTEM_INFERRED,
             source_item_id=source_field.id,
             source_item_type=SourceType.PROFILE_FIELD,
         )
@@ -305,11 +305,11 @@ class LineageTrackingContract(ProfileStoreContract):
         """Should return False when item has no dependents."""
         await store.save(sample_profile)
 
-        field = ProfileField(
+        field = VariableEntry(
             name="standalone",
             value="value",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field)
 
@@ -322,7 +322,7 @@ class LineageTrackingContract(ProfileStoreContract):
 # =============================================================================
 
 
-class StatusManagementContract(ProfileStoreContract):
+class StatusManagementContract(CustomerDataStoreInterfaceContract):
     """Contract tests for US2: Status Management."""
 
     @pytest.mark.asyncio
@@ -333,11 +333,11 @@ class StatusManagementContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Add active field
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="active@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field)
 
@@ -353,19 +353,19 @@ class StatusManagementContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Add and supersede field
-        old_field = ProfileField(
+        old_field = VariableEntry(
             name="email",
             value="old@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, old_field)
 
-        new_field = ProfileField(
+        new_field = VariableEntry(
             name="email",
             value="new@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, new_field)
 
@@ -386,11 +386,11 @@ class StatusManagementContract(ProfileStoreContract):
 
         # Create multiple versions
         for i, value in enumerate(["first@ex.com", "second@ex.com", "third@ex.com"]):
-            field = ProfileField(
+            field = VariableEntry(
                 name="email",
                 value=value,
                 value_type="email",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             )
             await store.update_field(tenant_id, sample_profile.id, field)
 
@@ -408,20 +408,20 @@ class StatusManagementContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Save first version
-        old_field = ProfileField(
+        old_field = VariableEntry(
             name="email",
             value="old@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         old_field_id = await store.update_field(tenant_id, sample_profile.id, old_field)
 
         # Save second version
-        new_field = ProfileField(
+        new_field = VariableEntry(
             name="email",
             value="new@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, new_field)
 
@@ -440,11 +440,11 @@ class StatusManagementContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Add expired field
-        field = ProfileField(
+        field = VariableEntry(
             name="temp_code",
             value="123456",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             expires_at=datetime.now(UTC) - timedelta(hours=1),
         )
         await store.update_field(tenant_id, sample_profile.id, field)
@@ -466,11 +466,11 @@ class StatusManagementContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Add non-expired field
-        field = ProfileField(
+        field = VariableEntry(
             name="valid_code",
             value="654321",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             expires_at=datetime.now(UTC) + timedelta(hours=1),
         )
         await store.update_field(tenant_id, sample_profile.id, field)
@@ -490,20 +490,20 @@ class StatusManagementContract(ProfileStoreContract):
         await store.save(sample_profile)
 
         # Create source field
-        source_field = ProfileField(
+        source_field = VariableEntry(
             name="source",
             value="source_value",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, source_field)
 
         # Create derived field that references source
-        derived_field = ProfileField(
+        derived_field = VariableEntry(
             name="derived",
             value="derived_value",
             value_type="string",
-            source=ProfileFieldSource.SYSTEM_INFERRED,
+            source=VariableSource.SYSTEM_INFERRED,
             source_item_id=uuid4(),  # Non-existent source
             source_item_type=SourceType.PROFILE_FIELD,
         )
@@ -526,13 +526,13 @@ class StatusManagementContract(ProfileStoreContract):
 # =============================================================================
 
 
-class SchemaDefinitionsContract(ProfileStoreContract):
+class SchemaDefinitionsContract(CustomerDataStoreInterfaceContract):
     """Contract tests for US3: Schema-Driven Field Definitions."""
 
     @pytest.mark.asyncio
     async def test_save_field_definition(self, store, tenant_id, agent_id):
         """Should save and return field definition ID."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -545,7 +545,7 @@ class SchemaDefinitionsContract(ProfileStoreContract):
     @pytest.mark.asyncio
     async def test_get_field_definition_by_name(self, store, tenant_id, agent_id):
         """Should retrieve field definition by name."""
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -563,7 +563,7 @@ class SchemaDefinitionsContract(ProfileStoreContract):
     async def test_get_field_definitions_for_agent(self, store, tenant_id, agent_id):
         """Should return all field definitions for an agent."""
         for name in ["email", "phone", "name"]:
-            definition = ProfileFieldDefinition(
+            definition = CustomerDataField(
                 tenant_id=tenant_id,
                 agent_id=agent_id,
                 name=name,
@@ -582,7 +582,7 @@ class SchemaDefinitionsContract(ProfileStoreContract):
         self, store, tenant_id, agent_id
     ):
         """Should filter disabled definitions by default."""
-        enabled_def = ProfileFieldDefinition(
+        enabled_def = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="enabled",
@@ -590,7 +590,7 @@ class SchemaDefinitionsContract(ProfileStoreContract):
             value_type="string",
             enabled=True,
         )
-        disabled_def = ProfileFieldDefinition(
+        disabled_def = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="disabled",
@@ -681,11 +681,11 @@ class SchemaDefinitionsContract(ProfileStoreContract):
             await store.save_scenario_requirement(requirement)
 
         # Add only email to profile
-        email_field = ProfileField(
+        email_field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, email_field)
 
@@ -713,11 +713,11 @@ class SchemaDefinitionsContract(ProfileStoreContract):
         await store.save_scenario_requirement(requirement)
 
         # Add email to profile
-        email_field = ProfileField(
+        email_field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, email_field)
 
@@ -749,29 +749,29 @@ class SchemaDefinitionsContract(ProfileStoreContract):
 
 
 # =============================================================================
-# Concrete Test Classes for InMemoryProfileStore
+# Concrete Test Classes for InMemoryCustomerDataStore
 # =============================================================================
 
 
 class TestInMemoryLineageTracking(LineageTrackingContract):
-    """Run lineage tracking contract tests against InMemoryProfileStore."""
+    """Run lineage tracking contract tests against InMemoryCustomerDataStore."""
 
     @pytest.fixture
     def store(self):
-        return InMemoryProfileStore()
+        return InMemoryCustomerDataStore()
 
 
 class TestInMemoryStatusManagement(StatusManagementContract):
-    """Run status management contract tests against InMemoryProfileStore."""
+    """Run status management contract tests against InMemoryCustomerDataStore."""
 
     @pytest.fixture
     def store(self):
-        return InMemoryProfileStore()
+        return InMemoryCustomerDataStore()
 
 
 class TestInMemorySchemaDefinitions(SchemaDefinitionsContract):
-    """Run schema definitions contract tests against InMemoryProfileStore."""
+    """Run schema definitions contract tests against InMemoryCustomerDataStore."""
 
     @pytest.fixture
     def store(self):
-        return InMemoryProfileStore()
+        return InMemoryCustomerDataStore()

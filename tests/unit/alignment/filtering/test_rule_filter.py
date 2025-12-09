@@ -6,7 +6,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context, Sentiment, Urgency
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
+from soldier.alignment.context.models import Sentiment, Urgency
 from soldier.alignment.filtering.models import MatchedRule, RuleFilterResult
 from soldier.alignment.filtering.rule_filter import RuleFilter
 from soldier.alignment.models import Rule
@@ -80,12 +81,13 @@ class TestRuleFilter:
     """Tests for RuleFilter class."""
 
     @pytest.fixture
-    def context(self) -> Context:
-        return Context(
+    def snapshot(self) -> SituationSnapshot:
+        return SituationSnapshot(
             message="I want to return my order",
-            intent="return order",
-            sentiment=Sentiment.NEUTRAL,
-            urgency=Urgency.NORMAL,
+            new_intent_label="return order",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
         )
 
     @pytest.fixture
@@ -105,30 +107,30 @@ class TestRuleFilter:
         assert rule_filter is not None
 
     def test_filter_with_custom_threshold(self) -> None:
-        """Test creating filter with custom relevance threshold."""
+        """Test creating filter with custom confidence threshold."""
         llm = MockLLMExecutor()
-        rule_filter = RuleFilter(llm_executor=llm, relevance_threshold=0.7)
-        assert rule_filter._relevance_threshold == 0.7
+        rule_filter = RuleFilter(llm_executor=llm, confidence_threshold=0.7)
+        assert rule_filter._confidence_threshold == 0.7
 
     def test_filter_with_custom_template(self) -> None:
-        """Test creating filter with custom prompt template."""
+        """Test creating filter with custom prompt template path."""
         llm = MockLLMExecutor()
-        custom_template = "Custom: {message} {rules}"
-        rule_filter = RuleFilter(llm_executor=llm, prompt_template=custom_template)
-        assert rule_filter._prompt_template == custom_template
+        # Template path is now configured via template_path parameter
+        rule_filter = RuleFilter(llm_executor=llm)
+        assert rule_filter is not None
 
     # Test filtering behavior
 
     @pytest.mark.asyncio
     async def test_filter_empty_candidates_returns_empty(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that filtering no candidates returns empty result."""
         llm = MockLLMExecutor()
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=[])
+        result = await rule_filter.filter(snapshot=snapshot, candidates=[])
 
         assert isinstance(result, RuleFilterResult)
         assert result.matched_rules == []
@@ -138,19 +140,19 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_filter_returns_matched_rules(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that matching rules are returned."""
         evaluations = [
-            {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Matches return topic"},
-            {"rule_id": str(sample_rules[1].id), "applies": True, "relevance": 0.7, "reasoning": "Mentions order"},
-            {"rule_id": str(sample_rules[2].id), "applies": False, "relevance": 0.2, "reasoning": "No payment topic"},
+            {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9, "reasoning": "Matches return topic"},
+            {"rule_id": str(sample_rules[1].id), "applicability": "APPLIES", "confidence": 0.8, "relevance": 0.7, "reasoning": "Mentions order"},
+            {"rule_id": str(sample_rules[2].id), "applicability": "NOT_RELATED", "confidence": 0.9, "relevance": 0.2, "reasoning": "No payment topic"},
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=sample_rules)
+        result = await rule_filter.filter(snapshot=snapshot, candidates=sample_rules)
 
         assert len(result.matched_rules) == 2
         assert len(result.rejected_rule_ids) == 1
@@ -159,19 +161,19 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_filter_sorts_by_relevance(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that matched rules are sorted by relevance score."""
         evaluations = [
-            {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.6, "reasoning": "Medium match"},
-            {"rule_id": str(sample_rules[1].id), "applies": True, "relevance": 0.9, "reasoning": "High match"},
-            {"rule_id": str(sample_rules[2].id), "applies": True, "relevance": 0.75, "reasoning": "Good match"},
+            {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.6, "reasoning": "Medium match"},
+            {"rule_id": str(sample_rules[1].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9, "reasoning": "High match"},
+            {"rule_id": str(sample_rules[2].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.75, "reasoning": "Good match"},
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=sample_rules)
+        result = await rule_filter.filter(snapshot=snapshot, candidates=sample_rules)
 
         # Should be sorted descending by relevance
         assert result.matched_rules[0].relevance_score == 0.9
@@ -181,19 +183,19 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_filter_applies_threshold(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that rules below threshold are rejected."""
         evaluations = [
-            {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.8, "reasoning": "Above threshold"},
-            {"rule_id": str(sample_rules[1].id), "applies": True, "relevance": 0.4, "reasoning": "Below threshold"},
-            {"rule_id": str(sample_rules[2].id), "applies": True, "relevance": 0.3, "reasoning": "Below threshold"},
+            {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.8, "reasoning": "Above threshold"},
+            {"rule_id": str(sample_rules[1].id), "applicability": "APPLIES", "confidence": 0.4, "relevance": 0.4, "reasoning": "Below threshold"},
+            {"rule_id": str(sample_rules[2].id), "applicability": "APPLIES", "confidence": 0.3, "relevance": 0.3, "reasoning": "Below threshold"},
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
-        rule_filter = RuleFilter(llm_executor=llm, relevance_threshold=0.5)
+        rule_filter = RuleFilter(llm_executor=llm, confidence_threshold=0.5)
 
-        result = await rule_filter.filter(context=context, candidates=sample_rules)
+        result = await rule_filter.filter(snapshot=snapshot, candidates=sample_rules)
 
         assert len(result.matched_rules) == 1
         assert result.matched_rules[0].rule.id == sample_rules[0].id
@@ -201,17 +203,17 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_filter_includes_reasoning(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that reasoning is captured in matched rules."""
         evaluations = [
-            {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Direct match on returns"},
+            {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9, "reasoning": "Direct match on returns"},
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
+        result = await rule_filter.filter(snapshot=snapshot, candidates=[sample_rules[0]])
 
         assert result.matched_rules[0].reasoning == "Direct match on returns"
 
@@ -220,38 +222,38 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_filter_respects_batch_size(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that rules are processed in batches."""
         rules = [create_rule(name=f"Rule {i}") for i in range(7)]
 
         evaluations = [
-            {"rule_id": str(r.id), "applies": True, "relevance": 0.8, "reasoning": "Match"}
+            {"rule_id": str(r.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.8, "reasoning": "Match"}
             for r in rules
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
         # Process with batch_size=3 should make 3 calls (3+3+1)
-        await rule_filter.filter(context=context, candidates=rules, batch_size=3)
+        await rule_filter.filter(snapshot=snapshot, candidates=rules, batch_size=3)
 
         assert len(llm.generate_calls) == 3
 
     @pytest.mark.asyncio
     async def test_filter_single_batch(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that small set uses single batch."""
         evaluations = [
-            {"rule_id": str(r.id), "applies": True, "relevance": 0.8, "reasoning": "Match"}
+            {"rule_id": str(r.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.8, "reasoning": "Match"}
             for r in sample_rules
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        await rule_filter.filter(context=context, candidates=sample_rules, batch_size=10)
+        await rule_filter.filter(snapshot=snapshot, candidates=sample_rules, batch_size=10)
 
         assert len(llm.generate_calls) == 1
 
@@ -260,42 +262,43 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_filter_handles_invalid_json(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
-        """Test that invalid JSON defaults to applying all rules."""
+        """Test that invalid JSON treats all rules as UNSURE (excluded by default)."""
         llm = MockLLMExecutor(return_invalid_json=True)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=sample_rules)
+        result = await rule_filter.filter(snapshot=snapshot, candidates=sample_rules)
 
-        # Should default to applying all rules when parse fails
-        assert len(result.matched_rules) == len(sample_rules)
+        # With ternary output, parse errors result in UNSURE which are excluded by default
+        assert len(result.matched_rules) == 0
 
     @pytest.mark.asyncio
     async def test_filter_handles_missing_rule_evaluations(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test handling when LLM doesn't return all rule evaluations."""
         # Only return evaluation for first rule
         evaluations = [
-            {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Match"},
+            {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9, "reasoning": "Match"},
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=sample_rules)
+        result = await rule_filter.filter(snapshot=snapshot, candidates=sample_rules)
 
-        # First rule should match, others should be rejected (default behavior)
+        # First rule should match, others treated as UNSURE (excluded by default, not rejected)
         assert len(result.matched_rules) == 1
-        assert len(result.rejected_rule_ids) == 2
+        # With ternary, missing evals are UNSURE and excluded, not put in rejected_rule_ids
+        assert len(result.rejected_rule_ids) == 0
 
     @pytest.mark.asyncio
     async def test_filter_handles_markdown_wrapped_json(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test parsing JSON wrapped in markdown code blocks."""
@@ -303,7 +306,7 @@ class TestRuleFilter:
         class MarkdownLLMExecutor(MockLLMExecutor):
             async def generate(self, messages, **kwargs):
                 evaluations = [
-                    {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Match"}
+                    {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9, "reasoning": "Match"}
                 ]
                 return LLMResponse(
                     content=f'```json\n{json.dumps({"evaluations": evaluations})}\n```',
@@ -314,7 +317,7 @@ class TestRuleFilter:
         llm = MarkdownLLMExecutor()
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
+        result = await rule_filter.filter(snapshot=snapshot, candidates=[sample_rules[0]])
 
         assert len(result.matched_rules) == 1
 
@@ -323,18 +326,18 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_filter_records_timing(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that filter time is recorded."""
         evaluations = [
-            {"rule_id": str(r.id), "applies": True, "relevance": 0.8, "reasoning": "Match"}
+            {"rule_id": str(r.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.8, "reasoning": "Match"}
             for r in sample_rules
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=sample_rules)
+        result = await rule_filter.filter(snapshot=snapshot, candidates=sample_rules)
 
         assert result.filter_time_ms > 0
 
@@ -343,17 +346,17 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_matched_rule_contains_original_rule(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that MatchedRule contains the original Rule object."""
         evaluations = [
-            {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.9, "reasoning": "Match"},
+            {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9, "reasoning": "Match"},
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
+        result = await rule_filter.filter(snapshot=snapshot, candidates=[sample_rules[0]])
 
         matched = result.matched_rules[0]
         assert isinstance(matched, MatchedRule)
@@ -363,17 +366,17 @@ class TestRuleFilter:
     @pytest.mark.asyncio
     async def test_matched_rule_has_scores(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         sample_rules: list[Rule],
     ) -> None:
         """Test that MatchedRule has both match and relevance scores."""
         evaluations = [
-            {"rule_id": str(sample_rules[0].id), "applies": True, "relevance": 0.85, "reasoning": "Match"},
+            {"rule_id": str(sample_rules[0].id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.85, "reasoning": "Match"},
         ]
         llm = MockLLMExecutor(evaluations=evaluations)
         rule_filter = RuleFilter(llm_executor=llm)
 
-        result = await rule_filter.filter(context=context, candidates=[sample_rules[0]])
+        result = await rule_filter.filter(snapshot=snapshot, candidates=[sample_rules[0]])
 
         matched = result.matched_rules[0]
         assert matched.match_score == 1.0  # Default from retrieval

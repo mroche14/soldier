@@ -3,18 +3,12 @@
 Contains models for response generation with template support.
 """
 
-from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-
-class TemplateMode(str, Enum):
-    """How a template should be used in generation."""
-
-    EXCLUSIVE = "exclusive"  # Use exact template, skip LLM
-    SUGGEST = "suggest"  # Include in prompt, LLM can adapt
-    FALLBACK = "fallback"  # Use when enforcement fails
+from soldier.alignment.models.enums import TemplateResponseMode
+from soldier.alignment.models.outcome import OutcomeCategory
 
 
 class GenerationResult(BaseModel):
@@ -24,7 +18,7 @@ class GenerationResult(BaseModel):
 
     # Template info
     template_used: UUID | None = None
-    template_mode: TemplateMode | None = None
+    template_mode: TemplateResponseMode | None = None
 
     # LLM details
     model: str | None = None
@@ -35,4 +29,18 @@ class GenerationResult(BaseModel):
     # Debug
     prompt_preview: str | None = Field(
         default=None, description="First N chars of prompt for debugging"
+    )
+
+    # Phase 9 additions
+    llm_categories: list[OutcomeCategory] = Field(
+        default_factory=list,
+        description="Semantic categories output by LLM",
+    )
+    channel_formatted: bool = Field(
+        default=False,
+        description="Whether response was formatted for specific channel",
+    )
+    channel: str | None = Field(
+        default=None,
+        description="Target channel if formatted (whatsapp, email, etc.)",
     )

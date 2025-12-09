@@ -5,14 +5,18 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from soldier.alignment.context.models import (
-    Context,
     ExtractedEntity,
     ScenarioSignal,
     Sentiment,
     Turn,
     Urgency,
 )
+from soldier.alignment.context.situation_snapshot import (
+    CandidateVariableInfo,
+    SituationSnapshot,
+)
 from soldier.alignment.models import Rule, Scope
+from soldier.alignment.models.tool_binding import ToolBinding
 
 
 class RuleFactory:
@@ -37,6 +41,7 @@ class RuleFactory:
         is_hard_constraint: bool = False,
         attached_tool_ids: list[str] | None = None,
         attached_template_ids: list[UUID] | None = None,
+        tool_bindings: list[ToolBinding] | None = None,
         embedding: list[float] | None = None,
         embedding_model: str | None = None,
     ) -> Rule:
@@ -57,8 +62,9 @@ class RuleFactory:
             max_fires_per_session: Max times rule can fire
             cooldown_turns: Turns between re-fires
             is_hard_constraint: Whether this is a hard constraint
-            attached_tool_ids: Tool IDs to execute
+            attached_tool_ids: Tool IDs to execute (deprecated)
             attached_template_ids: Template IDs for responses
+            tool_bindings: Tool bindings with timing
             embedding: Precomputed embedding
             embedding_model: Model that generated embedding
 
@@ -82,6 +88,7 @@ class RuleFactory:
             is_hard_constraint=is_hard_constraint,
             attached_tool_ids=attached_tool_ids or [],
             attached_template_ids=attached_template_ids or [],
+            tool_bindings=tool_bindings or [],
             embedding=embedding,
             embedding_model=embedding_model,
         )
@@ -152,79 +159,79 @@ class RuleFactory:
         )
 
 
-class ContextFactory:
-    """Factory for creating Context instances for testing."""
+class SituationSnapshotFactory:
+    """Factory for creating SituationSnapshot instances for testing."""
 
     @staticmethod
     def create(
         *,
         message: str = "Hello, I need help with my order",
         embedding: list[float] | None = None,
-        timestamp: datetime | None = None,
-        intent: str | None = "get help",
-        entities: list[ExtractedEntity] | None = None,
-        sentiment: Sentiment | None = Sentiment.NEUTRAL,
-        topic: str | None = "support",
-        urgency: Urgency = Urgency.NORMAL,
+        new_intent_label: str | None = "get help",
+        canonical_intent_label: str | None = None,
+        intent_changed: bool = False,
+        topic_changed: bool = False,
+        tone: str = "neutral",
+        frustration_level: str | None = None,
         scenario_signal: ScenarioSignal | None = None,
         turn_count: int = 0,
-        recent_topics: list[str] | None = None,
-    ) -> Context:
-        """Create a Context with sensible defaults.
+        candidate_variables: dict[str, CandidateVariableInfo] | None = None,
+    ) -> SituationSnapshot:
+        """Create a SituationSnapshot with sensible defaults.
 
         Args:
             message: Original user message
             embedding: Vector representation
-            timestamp: Message timestamp
-            intent: Synthesized intent
-            entities: Extracted entities
-            sentiment: Detected sentiment
-            topic: Topic classification
-            urgency: Urgency level
+            new_intent_label: Newly detected intent
+            canonical_intent_label: Normalized intent label
+            intent_changed: Whether intent changed from previous turn
+            topic_changed: Whether topic changed from previous turn
+            tone: Detected tone (neutral, frustrated, etc.)
+            frustration_level: Level of frustration if any
             scenario_signal: Scenario navigation signal
             turn_count: Number of turns
-            recent_topics: Recent topics
+            candidate_variables: Extracted variable candidates
 
         Returns:
-            Configured Context instance
+            Configured SituationSnapshot instance
         """
-        return Context(
+        return SituationSnapshot(
             message=message,
             embedding=embedding,
-            timestamp=timestamp or datetime.utcnow(),
-            intent=intent,
-            entities=entities or [],
-            sentiment=sentiment,
-            topic=topic,
-            urgency=urgency,
+            new_intent_label=new_intent_label,
+            canonical_intent_label=canonical_intent_label,
+            intent_changed=intent_changed,
+            topic_changed=topic_changed,
+            tone=tone,
+            frustration_level=frustration_level,
             scenario_signal=scenario_signal,
             turn_count=turn_count,
-            recent_topics=recent_topics or [],
+            candidate_variables=candidate_variables or {},
         )
 
     @staticmethod
-    def create_with_entities(
+    def create_with_variables(
         message: str,
-        entities: dict[str, str],
+        variables: dict[str, str],
         **kwargs: Any,
-    ) -> Context:
-        """Create context with extracted entities.
+    ) -> SituationSnapshot:
+        """Create snapshot with extracted variables.
 
         Args:
             message: User message
-            entities: Dict of entity_type -> value
+            variables: Dict of variable_name -> value
             **kwargs: Additional args passed to create()
 
         Returns:
-            Context with entities
+            SituationSnapshot with variables
         """
-        entity_list = [
-            ExtractedEntity(type=etype, value=value)
-            for etype, value in entities.items()
-        ]
-        return ContextFactory.create(
+        variable_info = {
+            name: CandidateVariableInfo(value=value, scope="CASE")
+            for name, value in variables.items()
+        }
+        return SituationSnapshotFactory.create(
             message=message,
-            entities=entity_list,
+            candidate_variables=variable_info,
             **kwargs,
         )
 
@@ -232,20 +239,20 @@ class ContextFactory:
     def create_frustrated(
         message: str = "This is ridiculous, nothing works!",
         **kwargs: Any,
-    ) -> Context:
-        """Create context for a frustrated user.
+    ) -> SituationSnapshot:
+        """Create snapshot for a frustrated user.
 
         Args:
             message: Frustrated message
             **kwargs: Additional args passed to create()
 
         Returns:
-            Context with frustrated sentiment
+            SituationSnapshot with frustrated tone
         """
-        return ContextFactory.create(
+        return SituationSnapshotFactory.create(
             message=message,
-            sentiment=Sentiment.FRUSTRATED,
-            urgency=Urgency.HIGH,
+            tone="frustrated",
+            frustration_level="high",
             **kwargs,
         )
 

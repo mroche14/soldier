@@ -46,14 +46,14 @@ def audit_store() -> InMemoryAuditStore:
 
 
 @pytest.fixture
-def app(
+async def app(
     mock_settings: MagicMock,
     config_store: InMemoryAgentConfigStore,
     session_store: InMemorySessionStore,
     audit_store: InMemoryAuditStore,
 ) -> FastAPI:
     """Create test FastAPI app."""
-    reset_dependencies()
+    await reset_dependencies()
 
     app = FastAPI()
     app.include_router(router)

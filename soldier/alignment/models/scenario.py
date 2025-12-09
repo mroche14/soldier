@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from soldier.alignment.models.base import AgentScopedModel
+from soldier.alignment.models.tool_binding import ToolBinding
 
 
 class StepTransition(BaseModel):
@@ -35,7 +36,12 @@ class ScenarioStep(BaseModel):
     )
     template_ids: list[UUID] = Field(default_factory=list, description="Step-scoped templates")
     rule_ids: list[UUID] = Field(default_factory=list, description="Step-scoped rules")
-    tool_ids: list[str] = Field(default_factory=list, description="Available tools")
+    tool_ids: list[str] = Field(
+        default_factory=list, description="DEPRECATED: Available tools (use tool_bindings)"
+    )
+    tool_bindings: list[ToolBinding] = Field(
+        default_factory=list, description="Tool bindings with timing and dependencies"
+    )
     is_entry: bool = Field(default=False, description="Is entry point")
     is_terminal: bool = Field(default=False, description="Is exit point")
     can_skip: bool = Field(default=False, description="Allow jumping past")

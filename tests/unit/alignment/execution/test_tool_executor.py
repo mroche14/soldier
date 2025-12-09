@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from soldier.alignment.context.models import Context
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.alignment.execution.tool_executor import ToolExecutor
 from soldier.alignment.filtering.models import MatchedRule
 from soldier.alignment.models import Rule
@@ -17,13 +17,19 @@ def _matched_rule(rule: Rule) -> MatchedRule:
 
 @pytest.mark.asyncio
 async def test_tool_executor_runs_tools_and_returns_outputs() -> None:
-    async def sample_tool(context: Context, matched_rule: MatchedRule):
-        return {"echo": context.message, "rule": matched_rule.rule.name}
+    async def sample_tool(snapshot: SituationSnapshot, matched_rule: MatchedRule):
+        return {"echo": snapshot.message, "rule": matched_rule.rule.name}
 
     rule = RuleFactory.create(attached_tool_ids=["sample_tool"])
     executor = ToolExecutor({"sample_tool": sample_tool}, timeout_ms=1000)
 
-    results = await executor.execute([_matched_rule(rule)], Context(message="hi"))
+    snapshot = SituationSnapshot(
+        message="hi",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+    )
+    results = await executor.execute([_matched_rule(rule)], snapshot)
 
     assert len(results) == 1
     result = results[0]
@@ -33,14 +39,20 @@ async def test_tool_executor_runs_tools_and_returns_outputs() -> None:
 
 @pytest.mark.asyncio
 async def test_tool_executor_marks_timeout() -> None:
-    async def slow_tool(context: Context, matched_rule: MatchedRule):
+    async def slow_tool(snapshot: SituationSnapshot, matched_rule: MatchedRule):
         await asyncio.sleep(0.2)
         return {}
 
     rule = RuleFactory.create(attached_tool_ids=["slow_tool"])
     executor = ToolExecutor({"slow_tool": slow_tool}, timeout_ms=50)
 
-    results = await executor.execute([_matched_rule(rule)], Context(message="hi"))
+    snapshot = SituationSnapshot(
+        message="hi",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+    )
+    results = await executor.execute([_matched_rule(rule)], snapshot)
 
     assert results[0].success is False
     assert results[0].timeout is True
@@ -49,10 +61,10 @@ async def test_tool_executor_marks_timeout() -> None:
 
 @pytest.mark.asyncio
 async def test_tool_executor_fail_fast_stops_execution() -> None:
-    async def failing_tool(context: Context, matched_rule: MatchedRule):
+    async def failing_tool(snapshot: SituationSnapshot, matched_rule: MatchedRule):
         raise RuntimeError("boom")
 
-    async def should_not_run(context: Context, matched_rule: MatchedRule):
+    async def should_not_run(snapshot: SituationSnapshot, matched_rule: MatchedRule):
         return {"ok": True}
 
     rule = RuleFactory.create(attached_tool_ids=["failing_tool", "should_not_run"])
@@ -62,7 +74,13 @@ async def test_tool_executor_fail_fast_stops_execution() -> None:
         fail_fast=True,
     )
 
-    results = await executor.execute([_matched_rule(rule)], Context(message="test"))
+    snapshot = SituationSnapshot(
+        message="test",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+    )
+    results = await executor.execute([_matched_rule(rule)], snapshot)
 
     assert len(results) == 1
     assert results[0].success is False

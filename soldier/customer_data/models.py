@@ -4,16 +4,16 @@ Contains all Pydantic models for customer profiles.
 """
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from soldier.conversation.models.enums import Channel
-from soldier.profile.enums import (
+from soldier.customer_data.enums import (
     FallbackAction,
     ItemStatus,
-    ProfileFieldSource,
+    VariableSource,
     RequiredLevel,
     SourceType,
     ValidationMode,
@@ -42,7 +42,7 @@ class ChannelIdentity(BaseModel):
     )
 
 
-class ProfileField(BaseModel):
+class VariableEntry(BaseModel):
     """Single customer fact with lineage and status tracking.
 
     Represents a single piece of customer data with full
@@ -63,7 +63,7 @@ class ProfileField(BaseModel):
     value_type: str = Field(..., description="Type: string, date, number, etc.")
 
     # Provenance (original)
-    source: ProfileFieldSource = Field(..., description="How obtained")
+    source: VariableSource = Field(..., description="How obtained")
     source_session_id: UUID | None = Field(
         default=None, description="Source session"
     )
@@ -77,7 +77,7 @@ class ProfileField(BaseModel):
     # Lineage (NEW - from CCV)
     source_item_id: UUID | None = Field(
         default=None,
-        description="ID of ProfileField or ProfileAsset this was derived from",
+        description="ID of VariableEntry or ProfileAsset this was derived from",
     )
     source_item_type: SourceType | None = Field(
         default=None,
@@ -134,7 +134,13 @@ class ProfileField(BaseModel):
     # Schema reference (NEW)
     field_definition_id: UUID | None = Field(
         default=None,
-        description="Reference to ProfileFieldDefinition for validation",
+        description="Reference to CustomerDataField for validation",
+    )
+
+    # History tracking (from Focal Turn Pipeline)
+    history: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Value history: [{value, timestamp, source, confidence}, ...]",
     )
 
     @property
@@ -226,7 +232,7 @@ class ProfileAsset(BaseModel):
     # Analysis linkage (NEW)
     analysis_field_ids: list[UUID] = Field(
         default_factory=list,
-        description="ProfileField IDs derived from this asset (e.g., OCR)",
+        description="VariableEntry IDs derived from this asset (e.g., OCR)",
     )
 
     @property
@@ -260,7 +266,7 @@ class Consent(BaseModel):
     ip_address: str | None = Field(default=None, description="IP for audit")
 
 
-class CustomerProfile(BaseModel):
+class CustomerDataStore(BaseModel):
     """Persistent customer data.
 
     Contains all persistent information about a customer
@@ -277,7 +283,7 @@ class CustomerProfile(BaseModel):
     channel_identities: list[ChannelIdentity] = Field(
         default_factory=list, description="Channel mappings"
     )
-    fields: dict[str, ProfileField] = Field(
+    fields: dict[str, VariableEntry] = Field(
         default_factory=dict, description="Profile data"
     )
     assets: list[ProfileAsset] = Field(
@@ -305,7 +311,7 @@ class CustomerProfile(BaseModel):
         """Count of active fields."""
         return len(self.fields)
 
-    def get_derived_fields(self, source_item_id: UUID) -> list[ProfileField]:
+    def get_derived_fields(self, source_item_id: UUID) -> list[VariableEntry]:
         """Get all fields derived from a specific source."""
         return [
             f for f in self.fields.values()
@@ -313,7 +319,7 @@ class CustomerProfile(BaseModel):
         ]
 
 
-class ProfileFieldDefinition(BaseModel):
+class CustomerDataField(BaseModel):
     """Definition of a profile field that can be collected.
 
     Agent-scoped schema that defines:
@@ -335,7 +341,7 @@ class ProfileFieldDefinition(BaseModel):
         ...,
         pattern=r"^[a-z_][a-z0-9_]*$",
         max_length=50,
-        description="Field key (must match ProfileField.name)",
+        description="Field key (must match VariableEntry.name)",
     )
     display_name: str = Field(..., description="Human-readable name")
     description: str | None = Field(default=None, description="Field purpose")
@@ -402,6 +408,16 @@ class ProfileFieldDefinition(BaseModel):
         description="Max age before considered stale (None = never stale)",
     )
 
+    # Persistence and Scope (from Focal Turn Pipeline)
+    scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"] = Field(
+        default="IDENTITY",
+        description="Persistence scope: IDENTITY/BUSINESS persist always, CASE per-conversation, SESSION ephemeral",
+    )
+    persist: bool = Field(
+        default=True,
+        description="If False, field is runtime-only (never saved to database)",
+    )
+
     # Metadata
     created_at: datetime = Field(default_factory=utc_now, description="Creation time")
     updated_at: datetime = Field(default_factory=utc_now, description="Last update")
@@ -436,7 +452,7 @@ class ScenarioFieldRequirement(BaseModel):
     # Requirement
     field_name: str = Field(
         ...,
-        description="ProfileFieldDefinition.name that is required",
+        description="CustomerDataField.name that is required",
     )
     required_level: RequiredLevel = Field(
         default=RequiredLevel.HARD,

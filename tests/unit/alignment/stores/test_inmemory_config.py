@@ -328,3 +328,175 @@ class TestVariableOperations:
 
         not_found = await store.get_variable_by_name(tenant_id, agent_id, "nonexistent")
         assert not_found is None
+
+
+class TestGlossaryOperations:
+    """Tests for glossary CRUD operations (Phase 2)."""
+
+    @pytest.mark.asyncio
+    async def test_save_and_get_glossary_items(self, store, tenant_id, agent_id):
+        """Should save and retrieve glossary items."""
+        from soldier.alignment.models.glossary import GlossaryItem
+
+        item1 = GlossaryItem(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            term="SLA",
+            definition="Service Level Agreement",
+            enabled=True,
+        )
+        item2 = GlossaryItem(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            term="RMA",
+            definition="Return Merchandise Authorization",
+            enabled=True,
+        )
+
+        await store.save_glossary_item(item1)
+        await store.save_glossary_item(item2)
+
+        items = await store.get_glossary_items(tenant_id, agent_id)
+        assert len(items) == 2
+        terms = {item.term for item in items}
+        assert "SLA" in terms
+        assert "RMA" in terms
+
+    @pytest.mark.asyncio
+    async def test_get_glossary_items_tenant_isolation(self, store, tenant_id, agent_id):
+        """Should not return glossary items from other tenants."""
+        from soldier.alignment.models.glossary import GlossaryItem
+
+        item = GlossaryItem(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            term="API",
+            definition="Application Programming Interface",
+            enabled=True,
+        )
+        await store.save_glossary_item(item)
+
+        other_tenant = uuid4()
+        items = await store.get_glossary_items(other_tenant, agent_id)
+        assert len(items) == 0
+
+    @pytest.mark.asyncio
+    async def test_get_glossary_items_enabled_only(self, store, tenant_id, agent_id):
+        """Should filter by enabled flag."""
+        from soldier.alignment.models.glossary import GlossaryItem
+
+        enabled_item = GlossaryItem(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            term="Enabled",
+            definition="Enabled term",
+            enabled=True,
+        )
+        disabled_item = GlossaryItem(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            term="Disabled",
+            definition="Disabled term",
+            enabled=False,
+        )
+
+        await store.save_glossary_item(enabled_item)
+        await store.save_glossary_item(disabled_item)
+
+        enabled_items = await store.get_glossary_items(tenant_id, agent_id, enabled_only=True)
+        assert len(enabled_items) == 1
+        assert enabled_items[0].term == "Enabled"
+
+        all_items = await store.get_glossary_items(tenant_id, agent_id, enabled_only=False)
+        assert len(all_items) == 2
+
+
+class TestCustomerDataFieldOperations:
+    """Tests for customer data field CRUD operations (Phase 2)."""
+
+    @pytest.mark.asyncio
+    async def test_save_and_get_customer_data_fields(self, store, tenant_id, agent_id):
+        """Should save and retrieve customer data field definitions."""
+        from soldier.customer_data.models import CustomerDataField
+
+        field1 = CustomerDataField(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            name="customer_name",
+            display_name="Customer Name",
+            scope="IDENTITY",
+            value_type="string",
+            enabled=True,
+        )
+        field2 = CustomerDataField(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            name="order_number",
+            display_name="Order Number",
+            scope="CASE",
+            value_type="string",
+            enabled=True,
+        )
+
+        await store.save_customer_data_field(field1)
+        await store.save_customer_data_field(field2)
+
+        fields = await store.get_customer_data_fields(tenant_id, agent_id)
+        assert len(fields) == 2
+        names = {field.name for field in fields}
+        assert "customer_name" in names
+        assert "order_number" in names
+
+    @pytest.mark.asyncio
+    async def test_get_customer_data_fields_tenant_isolation(self, store, tenant_id, agent_id):
+        """Should not return fields from other tenants."""
+        from soldier.customer_data.models import CustomerDataField
+
+        field = CustomerDataField(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            name="email",
+            display_name="Email",
+            scope="IDENTITY",
+            value_type="string",
+            enabled=True,
+        )
+        await store.save_customer_data_field(field)
+
+        other_tenant = uuid4()
+        fields = await store.get_customer_data_fields(other_tenant, agent_id)
+        assert len(fields) == 0
+
+    @pytest.mark.asyncio
+    async def test_get_customer_data_fields_enabled_only(self, store, tenant_id, agent_id):
+        """Should filter by enabled flag."""
+        from soldier.customer_data.models import CustomerDataField
+
+        enabled_field = CustomerDataField(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            name="active_field",
+            display_name="Active Field",
+            scope="IDENTITY",
+            value_type="string",
+            enabled=True,
+        )
+        disabled_field = CustomerDataField(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            name="inactive_field",
+            display_name="Inactive Field",
+            scope="IDENTITY",
+            value_type="string",
+            enabled=False,
+        )
+
+        await store.save_customer_data_field(enabled_field)
+        await store.save_customer_data_field(disabled_field)
+
+        enabled_fields = await store.get_customer_data_fields(tenant_id, agent_id, enabled_only=True)
+        assert len(enabled_fields) == 1
+        assert enabled_fields[0].name == "active_field"
+
+        all_fields = await store.get_customer_data_fields(tenant_id, agent_id, enabled_only=False)
+        assert len(all_fields) == 2

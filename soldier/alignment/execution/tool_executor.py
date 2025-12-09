@@ -4,14 +4,14 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable
 
-from soldier.alignment.context.models import Context
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.alignment.execution.models import ToolResult
 from soldier.alignment.filtering.models import MatchedRule
 from soldier.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
-ToolCallable = Callable[[Context, MatchedRule], Awaitable[dict[str, object]]]
+ToolCallable = Callable[[SituationSnapshot, MatchedRule], Awaitable[dict[str, object]]]
 
 
 class ToolExecutor:
@@ -47,13 +47,13 @@ class ToolExecutor:
     async def execute(
         self,
         matched_rules: list[MatchedRule],
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> list[ToolResult]:
         """Execute all tools attached to matched rules.
 
         Args:
             matched_rules: Rules with attached tool IDs
-            context: User message context for tool input
+            snapshot: Situation snapshot for tool input
 
         Returns:
             List of ToolResult for each executed tool
@@ -78,7 +78,7 @@ class ToolExecutor:
                     continue
 
                 try:
-                    result = await self._run_with_timeout(tool, context, matched)
+                    result = await self._run_with_timeout(tool, snapshot, matched)
                     results.append(result)
                 except Exception as exc:  # noqa: BLE001
                     results.append(
@@ -98,7 +98,7 @@ class ToolExecutor:
     async def _run_with_timeout(
         self,
         tool: ToolCallable,
-        context: Context,
+        snapshot: SituationSnapshot,
         matched_rule: MatchedRule,
     ) -> ToolResult:
         """Execute a tool with timeout and timing."""
@@ -106,7 +106,7 @@ class ToolExecutor:
         try:
             async with self._semaphore:
                 outputs = await asyncio.wait_for(
-                    tool(context, matched_rule),
+                    tool(snapshot, matched_rule),
                     timeout=self._timeout_ms / 1000,
                 )
             elapsed_ms = (time.perf_counter() - start_time) * 1000

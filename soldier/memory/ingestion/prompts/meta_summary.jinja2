@@ -1,0 +1,24 @@
+{# Meta Summary Prompt Template #}
+{# Creates a higher-level summary from multiple window summaries #}
+
+Create a comprehensive summary by synthesizing these {{ summary_count }} conversation segment summaries.
+
+## Segment Summaries
+
+{% for summary in summaries %}
+### Segment {{ loop.index }} (Turns {{ summary.start_turn }}-{{ summary.end_turn }})
+{{ summary.content }}
+
+{% endfor %}
+
+## Meta Summary Guidelines
+
+- Maximum {{ max_tokens }} tokens
+- Identify overarching themes and patterns
+- Highlight key progression or changes over time
+- Note any unresolved issues or open questions
+- Maintain chronological coherence
+- Remove redundant information from segments
+
+## Comprehensive Summary
+

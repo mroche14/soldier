@@ -6,9 +6,9 @@ Attempts to resolve missing data without asking the customer:
 3. Extract from conversation history (LLM-based)
 
 Enhanced with:
-- Schema validation via ProfileFieldValidator
+- Schema validation via CustomerDataFieldValidator
 - Lineage tracking for extracted values
-- Collection prompts from ProfileFieldDefinition
+- Collection prompts from CustomerDataField
 """
 
 import json
@@ -16,15 +16,15 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from soldier.alignment.migration.models import FieldResolutionResult, ResolutionSource
+from soldier.customer_data.enums import SourceType
 from soldier.observability.logging import get_logger
-from soldier.profile.enums import SourceType
 from soldier.providers.llm import LLMMessage
 
 if TYPE_CHECKING:
     from soldier.conversation.models import Session
-    from soldier.profile.models import ProfileFieldDefinition
-    from soldier.profile.store import ProfileStore
-    from soldier.profile.validation import ProfileFieldValidator
+    from soldier.customer_data.models import CustomerDataField
+    from soldier.customer_data.store import CustomerDataStoreInterface
+    from soldier.customer_data.validation import CustomerDataFieldValidator
 
 logger = get_logger(__name__)
 
@@ -69,17 +69,17 @@ class MissingFieldResolver:
     3. Conversation extraction (LLM-based, lower confidence)
 
     Enhanced with:
-    - Schema validation via ProfileFieldValidator (T146)
-    - Collection prompts from ProfileFieldDefinition (T149)
+    - Schema validation via CustomerDataFieldValidator (T146)
+    - Collection prompts from CustomerDataField (T149)
     - Lineage tracking for extracted fields (T150)
     - Value validation before persistence (T151)
     """
 
     def __init__(
         self,
-        profile_store: "ProfileStore | None" = None,
+        profile_store: "CustomerDataStoreInterface | None" = None,
         llm_executor: Any = None,
-        field_validator: "ProfileFieldValidator | None" = None,
+        field_validator: "CustomerDataFieldValidator | None" = None,
     ) -> None:
         """Initialize the gap fill service.
 
@@ -92,7 +92,7 @@ class MissingFieldResolver:
         self._llm_executor = llm_executor
         self._field_validator = field_validator
         # Cache for field definitions during fill operations
-        self._field_definition_cache: dict[str, ProfileFieldDefinition] = {}
+        self._field_definition_cache: dict[str, CustomerDataField] = {}
 
     async def fill_gap(
         self,
@@ -106,7 +106,7 @@ class MissingFieldResolver:
         """Try to fill a missing field without asking the user.
 
         Enhanced with schema integration (T148, T149):
-        - Looks up ProfileFieldDefinition for field metadata
+        - Looks up CustomerDataField for field metadata
         - Uses collection_prompt from definition for better extraction
         - Tracks lineage (source_item_id, source_item_type)
         - Validates extracted values against schema
@@ -224,7 +224,7 @@ class MissingFieldResolver:
         field_name: str,
         tenant_id: UUID | None,
         agent_id: UUID | None,
-    ) -> "ProfileFieldDefinition | None":
+    ) -> "CustomerDataField | None":
         """Get field definition from cache or store.
 
         Args:
@@ -233,7 +233,7 @@ class MissingFieldResolver:
             agent_id: Agent identifier
 
         Returns:
-            ProfileFieldDefinition if found, None otherwise
+            CustomerDataField if found, None otherwise
         """
         # Check cache first
         cache_key = f"{tenant_id}:{agent_id}:{field_name}"
@@ -264,7 +264,7 @@ class MissingFieldResolver:
     async def _validate_result(
         self,
         result: FieldResolutionResult,
-        field_definition: "ProfileFieldDefinition",
+        field_definition: "CustomerDataField",
     ) -> list[str]:
         """Validate gap fill result against schema (T151).
 
@@ -282,15 +282,15 @@ class MissingFieldResolver:
             return []
 
         try:
-            # Create a temporary ProfileField for validation
-            from soldier.profile.enums import ProfileFieldSource
-            from soldier.profile.models import ProfileField
+            # Create a temporary VariableEntry for validation
+            from soldier.customer_data.enums import VariableSource
+            from soldier.customer_data.models import VariableEntry
 
-            temp_field = ProfileField(
+            temp_field = VariableEntry(
                 name=field_definition.name,
                 value=result.value,
                 value_type=field_definition.value_type,
-                source=ProfileFieldSource.EXTRACTED,
+                source=VariableSource.EXTRACTED,
             )
 
             errors = self._field_validator.validate_field(
@@ -330,7 +330,7 @@ class MissingFieldResolver:
             )
 
         try:
-            # Look up the profile field using ProfileStore interface
+            # Look up the profile field using CustomerDataStoreInterface interface
             customer_id = getattr(session, "customer_id", None)
             if customer_id is None:
                 return FieldResolutionResult(
@@ -347,7 +347,7 @@ class MissingFieldResolver:
             if profile and field_name in profile.fields:
                 field = profile.fields[field_name]
                 # Check if field is active (not expired, orphaned, or superseded)
-                from soldier.profile.enums import ItemStatus
+                from soldier.customer_data.enums import ItemStatus
                 if field.status == ItemStatus.ACTIVE:
                     return FieldResolutionResult(
                         field_name=field_name,
@@ -621,15 +621,15 @@ class MissingFieldResolver:
                 if profile is None:
                     continue
 
-                # Create ProfileField with lineage tracking (T150)
-                from soldier.profile.enums import ProfileFieldSource
-                from soldier.profile.models import ProfileField
+                # Create VariableEntry with lineage tracking (T150)
+                from soldier.customer_data.enums import VariableSource
+                from soldier.customer_data.models import VariableEntry
 
-                field = ProfileField(
+                field = VariableEntry(
                     name=result.field_name,
                     value=result.value,
                     value_type="string",  # Default, could be enhanced
-                    source=ProfileFieldSource.EXTRACTED,
+                    source=VariableSource.EXTRACTED,
                     source_session_id=session.session_id,
                     confidence=result.confidence,
                     requires_confirmation=result.needs_confirmation,
@@ -715,7 +715,7 @@ class MissingFieldResolver:
     ) -> dict[str, FieldResolutionResult]:
         """Fill missing fields required for a scenario entry/step.
 
-        Uses get_missing_fields() from ProfileStore to determine what fields
+        Uses get_missing_fields() from CustomerDataStoreInterface to determine what fields
         are needed based on ScenarioFieldRequirement bindings.
 
         Args:
@@ -746,7 +746,7 @@ class MissingFieldResolver:
             return {}
 
         try:
-            # Get the customer profile using ProfileStore interface
+            # Get the customer profile using CustomerDataStoreInterface interface
             profile = await self._profile_store.get_by_customer_id(
                 tenant_id=_tenant_id,
                 customer_id=_customer_id,
@@ -759,8 +759,8 @@ class MissingFieldResolver:
                     customer_id=str(_customer_id),
                 )
                 # No profile means all fields are missing - continue with empty profile
-                from soldier.profile.models import CustomerProfile
-                profile = CustomerProfile(
+                from soldier.customer_data.models import CustomerDataStore
+                profile = CustomerDataStore(
                     tenant_id=_tenant_id,
                     customer_id=_customer_id,
                 )

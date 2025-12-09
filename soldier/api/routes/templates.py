@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from soldier.alignment.models import Scope, Template, TemplateMode
+from soldier.alignment.models import Scope, Template, TemplateResponseMode
 from soldier.api.dependencies import AgentConfigStoreDep
 from soldier.api.exceptions import AgentNotFoundError, TemplateNotFoundError
 from soldier.api.middleware.auth import TenantContextDep
@@ -65,7 +65,7 @@ async def list_templates(
     config_store: AgentConfigStoreDep,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    mode: TemplateMode | None = Query(default=None, description="Filter by mode"),
+    mode: TemplateResponseMode | None = Query(default=None, description="Filter by mode"),
     scope: Scope | None = Query(default=None, description="Filter by scope"),
     sort_by: Literal["name", "created_at", "updated_at"] = Query(default="created_at"),
     sort_order: Literal["asc", "desc"] = Query(default="desc"),

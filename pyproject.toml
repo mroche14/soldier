@@ -46,6 +46,9 @@ dependencies = [
     "qdrant-client>=1.16.1",
     "alembic>=1.17.2",
     "hatchet-sdk>=1.21.3",
+    "rank-bm25>=0.2.2",
+    "simpleeval>=1.0.3",
+    "nest-asyncio>=1.6.0",
 ]
 
 [project.optional-dependencies]
@@ -108,6 +111,11 @@ testpaths = ["tests"]
 addopts = "-v --tb=short"
 filterwarnings = [
     "ignore::DeprecationWarning",
+]
+markers = [
+    "integration: marks tests as integration tests (require external services)",
+    "performance: marks tests as performance tests",
+    "slow: marks tests as slow running",
 ]
 
 [tool.ruff]

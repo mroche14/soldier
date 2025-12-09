@@ -76,7 +76,7 @@ async def test_enforcement_regenerates_and_cleans_response() -> None:
 
     # Create executors for each step
     extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral", "urgency": "normal"})
-    filter_resp = json.dumps({"evaluations": [{"rule_id": str(hard_rule.id), "applies": True, "relevance": 0.9}]})
+    filter_resp = json.dumps({"evaluations": [{"rule_id": str(hard_rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}]})
 
     context_executor = SequenceLLMExecutor([extraction_resp])
     filter_executor = SequenceLLMExecutor([filter_resp])
@@ -85,7 +85,10 @@ async def test_enforcement_regenerates_and_cleans_response() -> None:
 
     embedding_provider = StaticEmbeddingProvider([1.0, 0.0, 0.0])
     response_generator = ResponseGenerator(llm_executor=gen_executor)
-    enforcement_validator = EnforcementValidator(response_generator=response_generator)
+    enforcement_validator = EnforcementValidator(
+        response_generator=response_generator,
+        agent_config_store=store,
+    )
 
     engine = AlignmentEngine(
         config_store=store,

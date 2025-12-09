@@ -1,4 +1,4 @@
-"""ProfileStore abstract interface.
+"""CustomerDataStoreInterface abstract interface.
 
 Enhanced to support:
 - Status-aware queries
@@ -12,19 +12,19 @@ from typing import Any
 from uuid import UUID
 
 from soldier.conversation.models import Channel
-from soldier.profile.enums import ItemStatus
-from soldier.profile.models import (
+from soldier.customer_data.enums import ItemStatus
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
-    ProfileFieldDefinition,
+    VariableEntry,
+    CustomerDataField,
     ScenarioFieldRequirement,
 )
 
 
-class ProfileStore(ABC):
-    """Abstract interface for customer profile storage.
+class CustomerDataStoreInterface(ABC):
+    """Abstract interface for customer data storage.
 
     Enhanced to support:
     - Status-aware queries
@@ -44,7 +44,7 @@ class ProfileStore(ABC):
         customer_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by customer ID.
 
         Args:
@@ -53,7 +53,7 @@ class ProfileStore(ABC):
             include_history: If True, populate field_history and asset_history
 
         Returns:
-            CustomerProfile with active fields/assets, or None if not found
+            CustomerDataStore with active fields/assets, or None if not found
         """
         pass
 
@@ -64,7 +64,7 @@ class ProfileStore(ABC):
         profile_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by profile ID."""
         pass
 
@@ -76,7 +76,7 @@ class ProfileStore(ABC):
         channel_user_id: str,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by channel identity."""
         pass
 
@@ -86,12 +86,12 @@ class ProfileStore(ABC):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerProfile:
+    ) -> CustomerDataStore:
         """Get existing profile or create new one for channel identity."""
         pass
 
     @abstractmethod
-    async def save(self, profile: CustomerProfile) -> UUID:
+    async def save(self, profile: CustomerDataStore) -> UUID:
         """Save a profile (create or update)."""
         pass
 
@@ -109,7 +109,7 @@ class ProfileStore(ABC):
         self,
         tenant_id: UUID,
         profile_id: UUID,
-        field: ProfileField,
+        field: VariableEntry,
         *,
         supersede_existing: bool = True,
     ) -> UUID:
@@ -139,7 +139,7 @@ class ProfileStore(ABC):
         field_name: str,
         *,
         status: ItemStatus | None = ItemStatus.ACTIVE,
-    ) -> ProfileField | None:
+    ) -> VariableEntry | None:
         """Get a specific field by name.
 
         Args:
@@ -159,7 +159,7 @@ class ProfileStore(ABC):
         tenant_id: UUID,
         profile_id: UUID,
         field_name: str,
-    ) -> list[ProfileField]:
+    ) -> list[VariableEntry]:
         """Get all versions of a field (all statuses).
 
         Returns:
@@ -347,7 +347,7 @@ class ProfileStore(ABC):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[ProfileFieldDefinition]:
+    ) -> list[CustomerDataField]:
         """Get all field definitions for an agent."""
         pass
 
@@ -357,14 +357,14 @@ class ProfileStore(ABC):
         tenant_id: UUID,
         agent_id: UUID,
         field_name: str,
-    ) -> ProfileFieldDefinition | None:
+    ) -> CustomerDataField | None:
         """Get a specific field definition by name."""
         pass
 
     @abstractmethod
     async def save_field_definition(
         self,
-        definition: ProfileFieldDefinition,
+        definition: CustomerDataField,
     ) -> UUID:
         """Save a field definition."""
         pass
@@ -430,7 +430,7 @@ class ProfileStore(ABC):
     async def get_missing_fields(
         self,
         tenant_id: UUID,
-        profile: CustomerProfile,
+        profile: CustomerDataStore,
         scenario_id: UUID,
         *,
         step_id: UUID | None = None,

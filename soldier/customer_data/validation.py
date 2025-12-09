@@ -9,8 +9,8 @@ from datetime import datetime
 from typing import Any
 
 from soldier.observability.logging import get_logger
-from soldier.profile.enums import ValidationMode
-from soldier.profile.models import ProfileField, ProfileFieldDefinition
+from soldier.customer_data.enums import ValidationMode
+from soldier.customer_data.models import VariableEntry, CustomerDataField
 
 logger = get_logger(__name__)
 
@@ -27,7 +27,7 @@ class ValidationError:
         return f"ValidationError({self.field_name!r}, {self.error_type!r}, {self.message!r})"
 
 
-class ProfileFieldValidator:
+class CustomerDataFieldValidator:
     """Service for validating profile fields against schema definitions.
 
     Supports multiple validation modes:
@@ -49,8 +49,8 @@ class ProfileFieldValidator:
 
     def validate_field(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate a field against its definition.
 
@@ -95,8 +95,8 @@ class ProfileFieldValidator:
 
     def _validate_type(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate field value against expected type."""
         validator_name = self.TYPE_VALIDATORS.get(definition.value_type)
@@ -109,8 +109,8 @@ class ProfileFieldValidator:
 
     def _validate_string(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate string type."""
         if not isinstance(field.value, str):
@@ -125,8 +125,8 @@ class ProfileFieldValidator:
 
     def _validate_email(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate email format."""
         if not isinstance(field.value, str):
@@ -152,8 +152,8 @@ class ProfileFieldValidator:
 
     def _validate_phone(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate phone number format."""
         if not isinstance(field.value, str):
@@ -190,8 +190,8 @@ class ProfileFieldValidator:
 
     def _validate_date(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate date format (ISO 8601)."""
         if isinstance(field.value, datetime):
@@ -230,8 +230,8 @@ class ProfileFieldValidator:
 
     def _validate_number(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate number type."""
         if isinstance(field.value, bool):
@@ -264,8 +264,8 @@ class ProfileFieldValidator:
 
     def _validate_boolean(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate boolean type."""
         if isinstance(field.value, bool):
@@ -285,8 +285,8 @@ class ProfileFieldValidator:
 
     def _validate_json(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate JSON type."""
         if isinstance(field.value, (dict, list)):
@@ -315,8 +315,8 @@ class ProfileFieldValidator:
 
     def _validate_regex(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate field value against custom regex pattern."""
         if not definition.validation_regex:
@@ -354,8 +354,8 @@ class ProfileFieldValidator:
 
     def _validate_allowed_values(
         self,
-        field: ProfileField,
-        definition: ProfileFieldDefinition,
+        field: VariableEntry,
+        definition: CustomerDataField,
     ) -> list[ValidationError]:
         """Validate field value is in allowed values list."""
         if not definition.allowed_values:

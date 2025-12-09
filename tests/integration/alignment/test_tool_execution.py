@@ -78,7 +78,7 @@ async def test_tool_execution_flow_integration() -> None:
         {"intent": "order_status", "entities": [], "sentiment": "neutral", "urgency": "normal"}
     )
     filter_resp = json.dumps(
-        {"evaluations": [{"rule_id": str(rule.id), "applies": True, "relevance": 0.9}]}
+        {"evaluations": [{"rule_id": str(rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}]}
     )
 
     context_executor = SequenceLLMExecutor([extraction_resp])

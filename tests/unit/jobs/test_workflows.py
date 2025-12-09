@@ -14,13 +14,13 @@ from soldier.jobs.workflows import (
     ExpireFieldsInput,
     ExpireStaleFieldsWorkflow,
 )
-from soldier.profile.stores.inmemory import InMemoryProfileStore
+from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
 
 
 @pytest.fixture
 def profile_store():
     """Create an in-memory profile store."""
-    return InMemoryProfileStore()
+    return InMemoryCustomerDataStore()
 
 
 @pytest.fixture

@@ -1,24 +1,24 @@
-"""Tests for InMemoryProfileStore."""
+"""Tests for InMemoryCustomerDataStore."""
 
 from uuid import uuid4
 
 import pytest
 
 from soldier.conversation.models import Channel
-from soldier.profile.enums import ProfileFieldSource
-from soldier.profile.models import (
+from soldier.customer_data.enums import VariableSource
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
+    VariableEntry,
 )
-from soldier.profile.stores import InMemoryProfileStore
+from soldier.customer_data.stores import InMemoryCustomerDataStore
 
 
 @pytest.fixture
-def store() -> InMemoryProfileStore:
+def store() -> InMemoryCustomerDataStore:
     """Create a fresh store for each test."""
-    return InMemoryProfileStore()
+    return InMemoryCustomerDataStore()
 
 
 @pytest.fixture
@@ -27,14 +27,14 @@ def tenant_id():
 
 
 @pytest.fixture
-def sample_profile(tenant_id) -> CustomerProfile:
+def sample_profile(tenant_id) -> CustomerDataStore:
     """Create a sample customer profile."""
     identity = ChannelIdentity(
         channel=Channel.WEBCHAT,
         channel_user_id="user123",
         primary=True,
     )
-    return CustomerProfile(
+    return CustomerDataStore(
         tenant_id=tenant_id,
         channel_identities=[identity],
     )
@@ -129,11 +129,11 @@ class TestFieldOperations:
         """Should update a profile field and return field ID."""
         await store.save(sample_profile)
 
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="user@example.com",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         field_id = await store.update_field(tenant_id, sample_profile.id, field)
         assert field_id == field.id
@@ -145,11 +145,11 @@ class TestFieldOperations:
     @pytest.mark.asyncio
     async def test_update_field_nonexistent_profile(self, store, tenant_id):
         """Should raise ValueError for nonexistent profile."""
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         with pytest.raises(ValueError):
             await store.update_field(tenant_id, uuid4(), field)
@@ -216,13 +216,13 @@ class TestChannelLinking:
     @pytest.mark.asyncio
     async def test_link_channel_already_linked(self, store, tenant_id):
         """Should not link identity already linked to different profile."""
-        profile1 = CustomerProfile(
+        profile1 = CustomerDataStore(
             tenant_id=tenant_id,
             channel_identities=[
                 ChannelIdentity(channel=Channel.WEBCHAT, channel_user_id="shared_id")
             ],
         )
-        profile2 = CustomerProfile(
+        profile2 = CustomerDataStore(
             tenant_id=tenant_id,
             channel_identities=[
                 ChannelIdentity(channel=Channel.WHATSAPP, channel_user_id="other_id")
@@ -243,20 +243,20 @@ class TestProfileMerging:
     @pytest.mark.asyncio
     async def test_merge_profiles(self, store, tenant_id):
         """Should merge source profile into target."""
-        source = CustomerProfile(
+        source = CustomerDataStore(
             tenant_id=tenant_id,
             channel_identities=[
                 ChannelIdentity(channel=Channel.WEBCHAT, channel_user_id="source_web")
             ],
         )
-        source.fields["name"] = ProfileField(
+        source.fields["name"] = VariableEntry(
             name="name",
             value="John",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
 
-        target = CustomerProfile(
+        target = CustomerDataStore(
             tenant_id=tenant_id,
             channel_identities=[
                 ChannelIdentity(channel=Channel.WHATSAPP, channel_user_id="target_wa")
@@ -281,7 +281,7 @@ class TestProfileMerging:
     @pytest.mark.asyncio
     async def test_merge_profiles_nonexistent(self, store, tenant_id):
         """Should return False if source or target doesn't exist."""
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             tenant_id=tenant_id,
             channel_identities=[
                 ChannelIdentity(channel=Channel.WEBCHAT, channel_user_id="user")
@@ -304,11 +304,11 @@ class TestLineageOperations:
         """Should return single-item chain for root field."""
         await store.save(sample_profile)
 
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field)
 
@@ -321,11 +321,11 @@ class TestLineageOperations:
         """Should return empty lists when no items derived from source."""
         await store.save(sample_profile)
 
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field)
 
@@ -338,11 +338,11 @@ class TestLineageOperations:
         """Should return False when no dependents."""
         await store.save(sample_profile)
 
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field)
 
@@ -355,20 +355,20 @@ class TestLineageOperations:
         await store.save(sample_profile)
 
         # Add first field
-        field1 = ProfileField(
+        field1 = VariableEntry(
             name="email",
             value="old@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field1)
 
         # Add second field with same name
-        field2 = ProfileField(
+        field2 = VariableEntry(
             name="email",
             value="new@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
         await store.update_field(tenant_id, sample_profile.id, field2)
 
@@ -377,7 +377,7 @@ class TestLineageOperations:
         assert len(history) == 2
 
         # Current field should be the new one
-        from soldier.profile.enums import ItemStatus
+        from soldier.customer_data.enums import ItemStatus
         current = await store.get_field(tenant_id, sample_profile.id, "email")
         assert current.value == "new@example.com"
         assert current.status == ItemStatus.ACTIVE
@@ -389,11 +389,11 @@ class TestLineageOperations:
         await store.save(sample_profile)
 
         # Add a field that's already expired
-        field = ProfileField(
+        field = VariableEntry(
             name="temp_code",
             value="123456",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
             expires_at=datetime.now(UTC) - timedelta(hours=1),
         )
         await store.update_field(tenant_id, sample_profile.id, field)
@@ -403,7 +403,7 @@ class TestLineageOperations:
         assert count == 1
 
         # Verify field is now expired
-        from soldier.profile.enums import ItemStatus
+        from soldier.customer_data.enums import ItemStatus
         expired_field = await store.get_field(
             tenant_id, sample_profile.id, "temp_code", status=ItemStatus.EXPIRED
         )
@@ -417,10 +417,10 @@ class TestSchemaOperations:
     @pytest.mark.asyncio
     async def test_save_and_get_field_definition(self, store, tenant_id):
         """Should save and retrieve field definition."""
-        from soldier.profile.models import ProfileFieldDefinition
+        from soldier.customer_data.models import CustomerDataField
 
         agent_id = uuid4()
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -436,11 +436,11 @@ class TestSchemaOperations:
     @pytest.mark.asyncio
     async def test_get_field_definitions(self, store, tenant_id):
         """Should get all field definitions for agent."""
-        from soldier.profile.models import ProfileFieldDefinition
+        from soldier.customer_data.models import CustomerDataField
 
         agent_id = uuid4()
         for name in ["email", "phone", "name"]:
-            definition = ProfileFieldDefinition(
+            definition = CustomerDataField(
                 tenant_id=tenant_id,
                 agent_id=agent_id,
                 name=name,
@@ -455,7 +455,7 @@ class TestSchemaOperations:
     @pytest.mark.asyncio
     async def test_save_and_get_scenario_requirement(self, store, tenant_id):
         """Should save and retrieve scenario requirement."""
-        from soldier.profile.models import ScenarioFieldRequirement
+        from soldier.customer_data.models import ScenarioFieldRequirement
 
         agent_id = uuid4()
         scenario_id = uuid4()

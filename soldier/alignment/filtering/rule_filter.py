@@ -7,18 +7,22 @@ to the current user message and context.
 import json
 import time
 from pathlib import Path
-from typing import Any
 from uuid import UUID
 
-from soldier.alignment.context.models import Context, ScenarioSignal
-from soldier.alignment.filtering.models import MatchedRule, RuleFilterResult
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
+from soldier.alignment.filtering.models import (
+    MatchedRule,
+    RuleApplicability,
+    RuleEvaluation,
+    RuleFilterResult,
+)
 from soldier.alignment.models import Rule
 from soldier.observability.logging import get_logger
 from soldier.providers.llm import LLMExecutor, LLMMessage
 
 logger = get_logger(__name__)
-
-_PROMPT_TEMPLATE_PATH = Path(__file__).parent / "prompts" / "filter_rules.txt"
 
 
 class RuleFilter:
@@ -31,44 +35,39 @@ class RuleFilter:
     def __init__(
         self,
         llm_executor: LLMExecutor,
-        prompt_template: str | None = None,
-        relevance_threshold: float = 0.5,
+        confidence_threshold: float = 0.7,
+        unsure_policy: str = "exclude",
     ) -> None:
         """Initialize the rule filter.
 
         Args:
             llm_executor: Executor for LLM-based filtering
-            prompt_template: Optional custom prompt template
-            relevance_threshold: Minimum relevance score to consider a match
+            confidence_threshold: Minimum confidence for APPLIES
+            unsure_policy: How to handle UNSURE rules ("include", "exclude", "log_only")
         """
         self._llm_executor = llm_executor
-        self._relevance_threshold = relevance_threshold
+        self._confidence_threshold = confidence_threshold
+        self._unsure_policy = unsure_policy
 
-        if prompt_template:
-            self._prompt_template = prompt_template
-        elif _PROMPT_TEMPLATE_PATH.exists():
-            self._prompt_template = _PROMPT_TEMPLATE_PATH.read_text()
-        else:
-            self._prompt_template = self._default_prompt_template()
-
-    def _default_prompt_template(self) -> str:
-        """Return a minimal default prompt template."""
-        return """Evaluate if these rules apply to the message: {message}
-
-Rules: {rules}
-
-Respond with JSON: {"evaluations": [{"rule_id": "...", "applies": true, "relevance": 0.8, "reasoning": "..."}]}"""
+        template_dir = Path(__file__).parent / "prompts"
+        self._env = Environment(
+            loader=FileSystemLoader(template_dir),
+            autoescape=select_autoescape(),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+        self._template = self._env.get_template("filter_rules.jinja2")
 
     async def filter(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         candidates: list[Rule],
         batch_size: int = 5,
     ) -> RuleFilterResult:
         """Filter rules by relevance to the current context.
 
         Args:
-            context: Extracted context from user message
+            snapshot: Situation snapshot from user message
             candidates: Candidate rules to evaluate
             batch_size: Number of rules to evaluate per LLM call
 
@@ -93,27 +92,45 @@ Respond with JSON: {"evaluations": [{"rule_id": "...", "applies": true, "relevan
         # Process in batches
         matched_rules: list[MatchedRule] = []
         rejected_rule_ids: list[UUID] = []
-        scenario_signal: ScenarioSignal | None = None
+        unsure_rule_ids: list[UUID] = []
 
         for i in range(0, len(candidates), batch_size):
             batch = candidates[i : i + batch_size]
-            evaluations = await self._evaluate_batch(context, batch)
+            evaluations = await self._evaluate_batch(snapshot, batch)
 
             for rule, evaluation in zip(batch, evaluations):
-                if (
-                    evaluation.get("applies", False)
-                    and evaluation.get("relevance", 0) >= self._relevance_threshold
-                ):
+                applicability = evaluation.applicability
+                confidence = evaluation.confidence
+
+                if applicability == RuleApplicability.APPLIES and confidence >= self._confidence_threshold:
                     matched_rules.append(
                         MatchedRule(
                             rule=rule,
-                            match_score=1.0,  # From retrieval
-                            relevance_score=evaluation.get("relevance", 0.5),
-                            reasoning=evaluation.get("reasoning", ""),
+                            match_score=1.0,
+                            relevance_score=evaluation.relevance,
+                            reasoning=evaluation.reasoning,
                         )
                     )
-                else:
+                elif applicability == RuleApplicability.NOT_RELATED:
                     rejected_rule_ids.append(rule.id)
+                elif applicability == RuleApplicability.UNSURE:
+                    unsure_rule_ids.append(rule.id)
+                    if self._unsure_policy == "include":
+                        matched_rules.append(
+                            MatchedRule(
+                                rule=rule,
+                                match_score=1.0,
+                                relevance_score=evaluation.relevance,
+                                reasoning=f"UNSURE (included by policy): {evaluation.reasoning}",
+                            )
+                        )
+                    logger.info(
+                        "unsure_rule",
+                        rule_id=str(rule.id),
+                        policy=self._unsure_policy,
+                        confidence=confidence,
+                        reasoning=evaluation.reasoning,
+                    )
 
         # Sort matched rules by relevance
         matched_rules.sort(key=lambda m: m.relevance_score, reverse=True)
@@ -124,28 +141,26 @@ Respond with JSON: {"evaluations": [{"rule_id": "...", "applies": true, "relevan
             "rules_filtered",
             matched=len(matched_rules),
             rejected=len(rejected_rule_ids),
+            unsure=len(unsure_rule_ids),
+            unsure_policy=self._unsure_policy,
             elapsed_ms=elapsed_ms,
         )
 
         return RuleFilterResult(
             matched_rules=matched_rules,
             rejected_rule_ids=rejected_rule_ids,
-            scenario_signal=scenario_signal,
             filter_time_ms=elapsed_ms,
         )
 
     async def _evaluate_batch(
         self,
-        context: Context,
+        snapshot: SituationSnapshot,
         rules: list[Rule],
-    ) -> list[dict[str, Any]]:
-        """Evaluate a batch of rules against the context."""
-        rules_text = self._format_rules(rules)
-
-        prompt = self._prompt_template.format(
-            message=context.message,
-            intent=context.intent or "unknown",
-            rules=rules_text,
+    ) -> list[RuleEvaluation]:
+        """Evaluate a batch of rules against the snapshot."""
+        prompt = self._template.render(
+            snapshot=snapshot,
+            rules=rules,
         )
 
         response = await self._llm_executor.generate(
@@ -157,22 +172,11 @@ Respond with JSON: {"evaluations": [{"rule_id": "...", "applies": true, "relevan
         evaluations = self._parse_evaluations(response.content, rules)
         return evaluations
 
-    def _format_rules(self, rules: list[Rule]) -> str:
-        """Format rules for the prompt."""
-        lines = []
-        for rule in rules:
-            lines.append(f"- Rule ID: {rule.id}")
-            lines.append(f"  Name: {rule.name}")
-            lines.append(f"  Condition: {rule.condition_text}")
-            lines.append(f"  Action: {rule.action_text}")
-            lines.append("")
-        return "\n".join(lines)
-
     def _parse_evaluations(
         self,
         content: str,
         rules: list[Rule],
-    ) -> list[dict[str, Any]]:
+    ) -> list[RuleEvaluation]:
         """Parse LLM response into evaluations."""
         content = content.strip()
 
@@ -190,28 +194,62 @@ Respond with JSON: {"evaluations": [{"rule_id": "...", "applies": true, "relevan
 
         try:
             data = json.loads(content)
-            evaluations = data.get("evaluations", [])
+            eval_data = data.get("evaluations", [])
 
             # Map by rule_id
-            eval_map = {str(e.get("rule_id", "")): e for e in evaluations}
+            eval_map = {str(e.get("rule_id", "")): e for e in eval_data}
 
             # Return in same order as rules
             result = []
             for rule in rules:
                 if str(rule.id) in eval_map:
-                    result.append(eval_map[str(rule.id)])
-                else:
-                    # Default to not applying if not in response
+                    e = eval_map[str(rule.id)]
+                    applicability_str = e.get("applicability", "UNSURE")
+
+                    # Validate applicability value
+                    try:
+                        applicability = RuleApplicability(applicability_str)
+                    except ValueError:
+                        logger.warning(
+                            "invalid_applicability",
+                            rule_id=str(rule.id),
+                            value=applicability_str,
+                        )
+                        applicability = RuleApplicability.UNSURE
+
                     result.append(
-                        {"applies": False, "relevance": 0.0, "reasoning": "Not evaluated"}
+                        RuleEvaluation(
+                            rule_id=rule.id,
+                            applicability=applicability,
+                            confidence=e.get("confidence", 0.5),
+                            relevance=e.get("relevance", 0.5),
+                            reasoning=e.get("reasoning", ""),
+                        )
+                    )
+                else:
+                    # Default to UNSURE if not in response
+                    result.append(
+                        RuleEvaluation(
+                            rule_id=rule.id,
+                            applicability=RuleApplicability.UNSURE,
+                            confidence=0.0,
+                            relevance=0.0,
+                            reasoning="Not evaluated by LLM",
+                        )
                     )
 
             return result
 
         except json.JSONDecodeError:
             logger.warning("failed_to_parse_filter_response", content_preview=content[:100])
-            # Default to all rules applying with medium relevance
+            # Default to UNSURE on parse error
             return [
-                {"applies": True, "relevance": 0.6, "reasoning": "Parse error, defaulting to apply"}
-                for _ in rules
+                RuleEvaluation(
+                    rule_id=rule.id,
+                    applicability=RuleApplicability.UNSURE,
+                    confidence=0.0,
+                    relevance=0.5,
+                    reasoning="Parse error in LLM response",
+                )
+                for rule in rules
             ]

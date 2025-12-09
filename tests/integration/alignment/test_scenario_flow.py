@@ -92,7 +92,7 @@ async def test_scenario_start_flow() -> None:
         "scenario_signal": "start",
     })
     filter_resp = json.dumps({
-        "evaluations": [{"rule_id": str(rule.id), "applies": True, "relevance": 0.9}]
+        "evaluations": [{"rule_id": str(rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}]
     })
 
     context_executor = SequenceLLMExecutor([extraction_resp])

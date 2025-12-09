@@ -1,5 +1,6 @@
 """Integration tests for Redis-backed rate limiting."""
 
+import os
 import time
 from uuid import uuid4
 
@@ -18,7 +19,9 @@ def redis_client():
 
     Assumes Redis is running on localhost:6379.
     """
-    client = redis.Redis(host="localhost", port=6379, db=15, decode_responses=True)
+    # Use port 6381 to match docker-compose.yml mapping, fallback to 6379 for local Redis
+    port = int(os.environ.get("TEST_REDIS_PORT", "6379"))
+    client = redis.Redis(host="localhost", port=port, db=15, decode_responses=True)
     try:
         client.ping()
     except redis.ConnectionError:

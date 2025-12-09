@@ -1,4 +1,4 @@
-"""Unit tests for ProfileRequirementExtractor.
+"""Unit tests for CustomerDataRequirementExtractor.
 
 Tests T135-T138: Extraction hooks on Scenario/Rule create/update.
 """
@@ -9,7 +9,7 @@ from uuid import uuid4
 import pytest
 
 from soldier.alignment.models import Rule, Scenario
-from soldier.alignment.stores import ProfileRequirementExtractor
+from soldier.alignment.stores import CustomerDataRequirementExtractor
 
 
 @pytest.fixture
@@ -70,7 +70,7 @@ class TestScenarioExtractionHooks:
         sample_scenario,
     ):
         """T135: save_scenario triggers extraction workflow."""
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=mock_hatchet_client,
         )
@@ -95,7 +95,7 @@ class TestScenarioExtractionHooks:
         sample_scenario,
     ):
         """T136: update_scenario triggers extraction workflow."""
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=mock_hatchet_client,
         )
@@ -115,7 +115,7 @@ class TestScenarioExtractionHooks:
         sample_scenario,
     ):
         """Test save_scenario works without Hatchet client."""
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=None,  # No Hatchet
         )
@@ -134,7 +134,7 @@ class TestScenarioExtractionHooks:
         sample_scenario,
     ):
         """Test extraction can be disabled."""
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=mock_hatchet_client,
             extraction_enabled=False,
@@ -158,7 +158,7 @@ class TestScenarioExtractionHooks:
         """Test extraction failure doesn't block save."""
         mock_hatchet_client.admin.run_workflow.side_effect = Exception("Hatchet error")
 
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=mock_hatchet_client,
         )
@@ -182,7 +182,7 @@ class TestRuleExtractionHooks:
         sample_rule,
     ):
         """T137: save_rule triggers extraction workflow."""
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=mock_hatchet_client,
         )
@@ -207,7 +207,7 @@ class TestRuleExtractionHooks:
         sample_rule,
     ):
         """T138: update_rule triggers extraction workflow."""
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=mock_hatchet_client,
         )
@@ -227,7 +227,7 @@ class TestRuleExtractionHooks:
         sample_rule,
     ):
         """Test save_rule works without Hatchet client."""
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=None,
         )
@@ -247,7 +247,7 @@ class TestRuleExtractionHooks:
         """Test extraction failure doesn't block save."""
         mock_hatchet_client.admin.run_workflow.side_effect = Exception("Hatchet error")
 
-        wrapper = ProfileRequirementExtractor(
+        wrapper = CustomerDataRequirementExtractor(
             config_store=mock_config_store,
             hatchet_client=mock_hatchet_client,
         )
@@ -265,7 +265,7 @@ class TestPassThroughMethods:
     @pytest.mark.asyncio
     async def test_get_scenario_delegates(self, mock_config_store):
         """Test get_scenario delegates to underlying store."""
-        wrapper = ProfileRequirementExtractor(config_store=mock_config_store)
+        wrapper = CustomerDataRequirementExtractor(config_store=mock_config_store)
         tenant_id = uuid4()
         scenario_id = uuid4()
 
@@ -276,7 +276,7 @@ class TestPassThroughMethods:
     @pytest.mark.asyncio
     async def test_get_rule_delegates(self, mock_config_store):
         """Test get_rule delegates to underlying store."""
-        wrapper = ProfileRequirementExtractor(config_store=mock_config_store)
+        wrapper = CustomerDataRequirementExtractor(config_store=mock_config_store)
         tenant_id = uuid4()
         rule_id = uuid4()
 
@@ -287,7 +287,7 @@ class TestPassThroughMethods:
     @pytest.mark.asyncio
     async def test_delete_scenario_delegates(self, mock_config_store):
         """Test delete_scenario delegates to underlying store."""
-        wrapper = ProfileRequirementExtractor(config_store=mock_config_store)
+        wrapper = CustomerDataRequirementExtractor(config_store=mock_config_store)
         tenant_id = uuid4()
         scenario_id = uuid4()
 
@@ -301,7 +301,7 @@ class TestContentBuilding:
 
     def test_scenario_content_includes_name_and_description(self, sample_scenario):
         """Test scenario content text includes name and description."""
-        wrapper = ProfileRequirementExtractor(config_store=AsyncMock())
+        wrapper = CustomerDataRequirementExtractor(config_store=AsyncMock())
         content = wrapper._build_scenario_content(sample_scenario)
 
         assert sample_scenario.name in content
@@ -309,14 +309,14 @@ class TestContentBuilding:
 
     def test_scenario_content_includes_entry_condition(self, sample_scenario):
         """Test scenario content text includes entry condition."""
-        wrapper = ProfileRequirementExtractor(config_store=AsyncMock())
+        wrapper = CustomerDataRequirementExtractor(config_store=AsyncMock())
         content = wrapper._build_scenario_content(sample_scenario)
 
         assert sample_scenario.entry_condition_text in content
 
     def test_rule_content_includes_name_and_condition(self, sample_rule):
         """Test rule content text includes name and condition."""
-        wrapper = ProfileRequirementExtractor(config_store=AsyncMock())
+        wrapper = CustomerDataRequirementExtractor(config_store=AsyncMock())
         content = wrapper._build_rule_content(sample_rule)
 
         assert sample_rule.name in content

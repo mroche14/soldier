@@ -1,4 +1,4 @@
-"""In-memory implementation of ProfileStore."""
+"""In-memory implementation of CustomerDataStoreInterface."""
 
 from datetime import UTC, datetime
 from typing import Any
@@ -6,22 +6,22 @@ from uuid import UUID
 
 from soldier.conversation.models import Channel
 from soldier.observability.logging import get_logger
-from soldier.profile.enums import ItemStatus, RequiredLevel
-from soldier.profile.models import (
+from soldier.customer_data.enums import ItemStatus, RequiredLevel
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
-    ProfileFieldDefinition,
+    VariableEntry,
+    CustomerDataField,
     ScenarioFieldRequirement,
 )
-from soldier.profile.store import ProfileStore
+from soldier.customer_data.store import CustomerDataStoreInterface
 
 logger = get_logger(__name__)
 
 
-class InMemoryProfileStore(ProfileStore):
-    """In-memory implementation of ProfileStore for testing and development.
+class InMemoryCustomerDataStore(CustomerDataStoreInterface):
+    """In-memory implementation of CustomerDataStoreInterface for testing and development.
 
     Enhanced to support:
     - Status-aware queries
@@ -32,13 +32,13 @@ class InMemoryProfileStore(ProfileStore):
 
     def __init__(self) -> None:
         """Initialize empty storage."""
-        self._profiles: dict[UUID, CustomerProfile] = {}
-        # Field history storage: {profile_id: {field_name: [ProfileField, ...]}}
-        self._field_history: dict[UUID, dict[str, list[ProfileField]]] = {}
+        self._profiles: dict[UUID, CustomerDataStore] = {}
+        # Field history storage: {profile_id: {field_name: [VariableEntry, ...]}}
+        self._field_history: dict[UUID, dict[str, list[VariableEntry]]] = {}
         # Asset history storage: {profile_id: {asset_name: [ProfileAsset, ...]}}
         self._asset_history: dict[UUID, dict[str, list[ProfileAsset]]] = {}
         # Schema storage
-        self._field_definitions: dict[tuple[UUID, UUID, str], ProfileFieldDefinition] = {}
+        self._field_definitions: dict[tuple[UUID, UUID, str], CustomerDataField] = {}
         self._scenario_requirements: dict[UUID, ScenarioFieldRequirement] = {}
 
     # =========================================================================
@@ -51,7 +51,7 @@ class InMemoryProfileStore(ProfileStore):
         customer_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by customer ID."""
         for profile in self._profiles.values():
             if (
@@ -67,7 +67,7 @@ class InMemoryProfileStore(ProfileStore):
         profile_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by profile ID."""
         profile = self._profiles.get(profile_id)
         if profile and profile.tenant_id == tenant_id:
@@ -81,7 +81,7 @@ class InMemoryProfileStore(ProfileStore):
         channel_user_id: str,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by channel identity."""
         for profile in self._profiles.values():
             if profile.tenant_id != tenant_id:
@@ -99,7 +99,7 @@ class InMemoryProfileStore(ProfileStore):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerProfile:
+    ) -> CustomerDataStore:
         """Get existing profile or create new one for channel identity."""
         existing = await self.get_by_channel_identity(
             tenant_id, channel, channel_user_id
@@ -113,14 +113,14 @@ class InMemoryProfileStore(ProfileStore):
             channel_user_id=channel_user_id,
             primary=True,
         )
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             tenant_id=tenant_id,
             channel_identities=[identity],
         )
         await self.save(profile)
         return profile
 
-    async def save(self, profile: CustomerProfile) -> UUID:
+    async def save(self, profile: CustomerDataStore) -> UUID:
         """Save a profile."""
         profile.updated_at = datetime.now(UTC)
         self._profiles[profile.id] = profile
@@ -145,7 +145,7 @@ class InMemoryProfileStore(ProfileStore):
         self,
         tenant_id: UUID,
         profile_id: UUID,
-        field: ProfileField,
+        field: VariableEntry,
         *,
         supersede_existing: bool = True,
     ) -> UUID:
@@ -194,7 +194,7 @@ class InMemoryProfileStore(ProfileStore):
         field_name: str,
         *,
         status: ItemStatus | None = ItemStatus.ACTIVE,
-    ) -> ProfileField | None:
+    ) -> VariableEntry | None:
         """Get a specific field by name."""
         profile = await self.get_by_id(tenant_id, profile_id)
         if not profile:
@@ -220,7 +220,7 @@ class InMemoryProfileStore(ProfileStore):
         tenant_id: UUID,
         profile_id: UUID,
         field_name: str,
-    ) -> list[ProfileField]:
+    ) -> list[VariableEntry]:
         """Get all versions of a field."""
         profile = await self.get_by_id(tenant_id, profile_id)
         if not profile:
@@ -481,7 +481,7 @@ class InMemoryProfileStore(ProfileStore):
         tenant_id: UUID,
         item_id: UUID,
         item_type: str | None,
-    ) -> ProfileField | ProfileAsset | None:
+    ) -> VariableEntry | ProfileAsset | None:
         """Find a field or asset by ID across all profiles."""
         for profile in self._profiles.values():
             if profile.tenant_id != tenant_id:
@@ -627,7 +627,7 @@ class InMemoryProfileStore(ProfileStore):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[ProfileFieldDefinition]:
+    ) -> list[CustomerDataField]:
         """Get all field definitions for an agent."""
         result = []
         for key, definition in self._field_definitions.items():
@@ -641,13 +641,13 @@ class InMemoryProfileStore(ProfileStore):
         tenant_id: UUID,
         agent_id: UUID,
         field_name: str,
-    ) -> ProfileFieldDefinition | None:
+    ) -> CustomerDataField | None:
         """Get a specific field definition by name."""
         return self._field_definitions.get((tenant_id, agent_id, field_name))
 
     async def save_field_definition(
         self,
-        definition: ProfileFieldDefinition,
+        definition: CustomerDataField,
     ) -> UUID:
         """Save a field definition."""
         definition.updated_at = datetime.now(UTC)
@@ -722,7 +722,7 @@ class InMemoryProfileStore(ProfileStore):
     async def get_missing_fields(
         self,
         tenant_id: UUID,
-        profile: CustomerProfile,
+        profile: CustomerDataStore,
         scenario_id: UUID,
         *,
         step_id: UUID | None = None,

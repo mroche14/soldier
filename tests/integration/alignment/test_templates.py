@@ -8,7 +8,7 @@ import pytest
 
 from soldier.alignment.engine import AlignmentEngine
 from soldier.alignment.models import Scope
-from soldier.alignment.models.enums import TemplateMode
+from soldier.alignment.models.enums import TemplateResponseMode
 from soldier.alignment.models.template import Template
 from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.pipeline import PipelineConfig
@@ -69,7 +69,7 @@ async def test_exclusive_template_skips_generation() -> None:
         agent_id=agent_id,
         name="Exclusive template",
         text="Exact response.",
-        mode=TemplateMode.EXCLUSIVE,
+        mode=TemplateResponseMode.EXCLUSIVE,
         scope=Scope.GLOBAL,
     )
     await store.save_template(template)
@@ -86,7 +86,7 @@ async def test_exclusive_template_skips_generation() -> None:
     await store.save_rule(aligned_rule)
 
     extraction_resp = json.dumps({"intent": "test", "entities": [], "sentiment": "neutral", "urgency": "normal"})
-    filter_resp = json.dumps({"evaluations": [{"rule_id": str(aligned_rule.id), "applies": True, "relevance": 0.9}]})
+    filter_resp = json.dumps({"evaluations": [{"rule_id": str(aligned_rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}]})
 
     context_executor = SequenceLLMExecutor([extraction_resp])
     filter_executor = SequenceLLMExecutor([filter_resp])

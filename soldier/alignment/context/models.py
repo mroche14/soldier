@@ -35,6 +35,8 @@ class ScenarioSignal(str, Enum):
     START = "start"  # User wants to begin a process
     CONTINUE = "continue"  # Normal flow continuation
     EXIT = "exit"  # User wants to leave/cancel
+    PAUSE = "pause"  # User wants to temporarily pause
+    CANCEL = "cancel"  # User wants to abort/cancel
     UNKNOWN = "unknown"  # Unclear intent
 
 
@@ -82,3 +84,15 @@ class Context(BaseModel):
     # Conversation context
     turn_count: int = Field(default=0, ge=0, description="Number of turns in conversation")
     recent_topics: list[str] = Field(default_factory=list, description="Recent conversation topics")
+
+    # Canonical intent (P4.3 - decided from hybrid retrieval + LLM sensor)
+    canonical_intent_label: str | None = Field(
+        default=None,
+        description="Final canonical intent label after merging LLM sensor and hybrid retrieval",
+    )
+    canonical_intent_score: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score for canonical intent",
+    )

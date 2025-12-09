@@ -53,6 +53,39 @@ class StepVisit(BaseModel):
     )
 
 
+class ScenarioInstance(BaseModel):
+    """Active scenario instance in a session.
+
+    Tracks a single scenario's state within a multi-scenario session.
+    Multiple scenarios can be active simultaneously.
+    """
+
+    model_config = ConfigDict(frozen=False, validate_assignment=True)
+
+    scenario_id: UUID = Field(..., description="Scenario being tracked")
+    scenario_version: int = Field(..., description="Scenario version")
+    current_step_id: UUID = Field(..., description="Current step in scenario")
+    visited_steps: dict[UUID, int] = Field(
+        default_factory=dict, description="step_id -> visit_count"
+    )
+    started_at: datetime = Field(
+        default_factory=utc_now, description="When scenario started"
+    )
+    last_active_at: datetime = Field(
+        default_factory=utc_now, description="Last activity timestamp"
+    )
+    paused_at: datetime | None = Field(
+        default=None, description="When paused (if paused)"
+    )
+    variables: dict[str, Any] = Field(
+        default_factory=dict, description="Scenario-scoped variables"
+    )
+    status: str = Field(
+        default="active",
+        description="Status: active, paused, completed, cancelled"
+    )
+
+
 class Session(BaseModel):
     """Runtime conversation state.
 
@@ -71,14 +104,21 @@ class Session(BaseModel):
         default=None, description="Linked profile"
     )
     config_version: int = Field(..., description="Agent version in use")
+
+    # Multi-scenario support (Phase 6)
+    active_scenarios: list[ScenarioInstance] = Field(
+        default_factory=list, description="Currently active scenarios"
+    )
+
+    # Legacy single-scenario fields (deprecated - use active_scenarios)
     active_scenario_id: UUID | None = Field(
-        default=None, description="Current scenario"
+        default=None, description="Current scenario (deprecated)"
     )
     active_step_id: UUID | None = Field(
-        default=None, description="Current step"
+        default=None, description="Current step (deprecated)"
     )
     active_scenario_version: int | None = Field(
-        default=None, description="Scenario version"
+        default=None, description="Scenario version (deprecated)"
     )
     step_history: list[StepVisit] = Field(
         default_factory=list, description="Navigation history"

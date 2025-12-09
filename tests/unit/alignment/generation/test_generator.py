@@ -5,11 +5,13 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context, Sentiment, Turn, Urgency
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
+from soldier.alignment.context.models import Sentiment, Turn, Urgency
 from soldier.alignment.execution.models import ToolResult
 from soldier.alignment.filtering.models import MatchedRule
 from soldier.alignment.generation.generator import ResponseGenerator
-from soldier.alignment.generation.models import GenerationResult, TemplateMode
+from soldier.alignment.generation.models import GenerationResult
+from soldier.alignment.models.enums import TemplateResponseMode
 from soldier.alignment.generation.prompt_builder import PromptBuilder
 from soldier.alignment.models import Rule
 from soldier.alignment.models.template import Template
@@ -82,24 +84,17 @@ def create_template(
     template_id: str | None = None,
     name: str = "Test Template",
     text: str = "Hello {name}, how can I help?",
-    mode: TemplateMode = TemplateMode.SUGGEST,
+    mode: TemplateResponseMode = TemplateResponseMode.SUGGEST,
 ) -> Template:
     """Create a test template."""
-    from soldier.alignment.models.enums import TemplateMode as EnumTemplateMode
     tid = uuid4() if template_id is None else template_id
-    # Map from generation TemplateMode to model TemplateMode
-    mode_map = {
-        TemplateMode.EXCLUSIVE: EnumTemplateMode.EXCLUSIVE,
-        TemplateMode.SUGGEST: EnumTemplateMode.SUGGEST,
-        TemplateMode.FALLBACK: EnumTemplateMode.FALLBACK,
-    }
     return Template(
         id=tid,
         tenant_id=uuid4(),
         agent_id=uuid4(),
         name=name,
         text=text,
-        mode=mode_map.get(mode, EnumTemplateMode.SUGGEST),
+        mode=mode,
     )
 
 
@@ -115,12 +110,13 @@ class TestResponseGenerator:
         return ResponseGenerator(llm_executor=llm_executor)
 
     @pytest.fixture
-    def context(self) -> Context:
-        return Context(
+    def snapshot(self) -> SituationSnapshot:
+        return SituationSnapshot(
             message="I want to return my order",
-            intent="return order",
-            sentiment=Sentiment.NEUTRAL,
-            urgency=Urgency.NORMAL,
+            new_intent_label="return order",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
         )
 
     @pytest.fixture
@@ -171,12 +167,12 @@ class TestResponseGenerator:
     async def test_generate_returns_result(
         self,
         generator: ResponseGenerator,
-        context: Context,
+        snapshot: SituationSnapshot,
         matched_rules: list[MatchedRule],
     ) -> None:
         """Test that generate returns a GenerationResult."""
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=matched_rules,
         )
 
@@ -187,11 +183,11 @@ class TestResponseGenerator:
     async def test_generate_includes_model_info(
         self,
         generator: ResponseGenerator,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that result includes model information."""
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[],
         )
 
@@ -201,11 +197,11 @@ class TestResponseGenerator:
     async def test_generate_includes_token_usage(
         self,
         generator: ResponseGenerator,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that result includes token usage."""
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[],
         )
 
@@ -216,11 +212,11 @@ class TestResponseGenerator:
     async def test_generate_records_timing(
         self,
         generator: ResponseGenerator,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that generation time is recorded."""
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[],
         )
 
@@ -230,11 +226,11 @@ class TestResponseGenerator:
     async def test_generate_includes_prompt_preview(
         self,
         generator: ResponseGenerator,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that result includes prompt preview."""
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[],
         )
 
@@ -248,7 +244,7 @@ class TestResponseGenerator:
         self,
         generator: ResponseGenerator,
         llm_executor: MockLLMExecutor,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test generation includes history in messages."""
         history = [
@@ -257,7 +253,7 @@ class TestResponseGenerator:
         ]
 
         await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[],
             history=history,
         )
@@ -274,7 +270,7 @@ class TestResponseGenerator:
     async def test_generate_with_tool_results(
         self,
         generator: ResponseGenerator,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test generation includes tool results."""
         tool_results = [
@@ -288,7 +284,7 @@ class TestResponseGenerator:
         ]
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[],
             tool_results=tool_results,
         )
@@ -302,13 +298,13 @@ class TestResponseGenerator:
     async def test_generate_with_memory_context(
         self,
         generator: ResponseGenerator,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test generation includes memory context."""
         memory_context = "User previously ordered item #123."
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[],
             memory_context=memory_context,
         )
@@ -321,14 +317,14 @@ class TestResponseGenerator:
     async def test_generate_exclusive_template_skips_llm(
         self,
         llm_executor: MockLLMExecutor,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that EXCLUSIVE template mode skips LLM."""
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
             text="This is the exact template response.",
-            mode=TemplateMode.EXCLUSIVE,
+            mode=TemplateResponseMode.EXCLUSIVE,
         )
 
         matched_rule = create_matched_rule(
@@ -339,14 +335,14 @@ class TestResponseGenerator:
         generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[matched_rule],
             templates=[template],
         )
 
         # Should use template, not LLM
         assert result.response == "This is the exact template response."
-        assert result.template_mode == TemplateMode.EXCLUSIVE
+        assert result.template_mode == TemplateResponseMode.EXCLUSIVE
         assert str(result.template_used) == template_id
         # LLM should not have been called
         assert len(llm_executor.generate_calls) == 0
@@ -355,14 +351,14 @@ class TestResponseGenerator:
     async def test_generate_exclusive_template_resolves_variables(
         self,
         llm_executor: MockLLMExecutor,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that EXCLUSIVE template resolves variables."""
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
             text="Hello {customer_name}, your order {order_id} is ready.",
-            mode=TemplateMode.EXCLUSIVE,
+            mode=TemplateResponseMode.EXCLUSIVE,
         )
 
         matched_rule = create_matched_rule(template_ids=[template_id])
@@ -370,7 +366,7 @@ class TestResponseGenerator:
         generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[matched_rule],
             templates=[template],
             variables={"customer_name": "John", "order_id": "12345"},
@@ -382,14 +378,14 @@ class TestResponseGenerator:
     async def test_generate_suggest_template_uses_llm(
         self,
         llm_executor: MockLLMExecutor,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that SUGGEST template mode still uses LLM."""
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
             text="Suggested response template.",
-            mode=TemplateMode.SUGGEST,
+            mode=TemplateResponseMode.SUGGEST,
         )
 
         matched_rule = create_matched_rule(template_ids=[template_id])
@@ -397,7 +393,7 @@ class TestResponseGenerator:
         generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[matched_rule],
             templates=[template],
         )
@@ -411,14 +407,14 @@ class TestResponseGenerator:
     async def test_generate_fallback_template_uses_llm(
         self,
         llm_executor: MockLLMExecutor,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Fallback templates are deferred to enforcement, not generation."""
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
             text="Fallback response.",
-            mode=TemplateMode.FALLBACK,
+            mode=TemplateResponseMode.FALLBACK,
         )
 
         matched_rule = create_matched_rule(template_ids=[template_id])
@@ -426,7 +422,7 @@ class TestResponseGenerator:
         generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[matched_rule],
             templates=[template],
         )
@@ -439,7 +435,7 @@ class TestResponseGenerator:
     async def test_generate_no_matching_template(
         self,
         llm_executor: MockLLMExecutor,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test generation when rule has template ID but template not provided."""
         matched_rule = create_matched_rule(
@@ -449,7 +445,7 @@ class TestResponseGenerator:
         generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[matched_rule],
             templates=[],  # No templates provided
         )
@@ -464,7 +460,7 @@ class TestResponseGenerator:
     async def test_generate_first_exclusive_template_wins(
         self,
         llm_executor: MockLLMExecutor,
-        context: Context,
+        snapshot: SituationSnapshot,
     ) -> None:
         """Test that first exclusive template is used."""
         template1_id = str(uuid4())
@@ -473,12 +469,12 @@ class TestResponseGenerator:
         template1 = create_template(
             template_id=template1_id,
             text="First exclusive template.",
-            mode=TemplateMode.EXCLUSIVE,
+            mode=TemplateResponseMode.EXCLUSIVE,
         )
         template2 = create_template(
             template_id=template2_id,
             text="Second exclusive template.",
-            mode=TemplateMode.EXCLUSIVE,
+            mode=TemplateResponseMode.EXCLUSIVE,
         )
 
         rule1 = create_matched_rule(template_ids=[template1_id])
@@ -487,7 +483,7 @@ class TestResponseGenerator:
         generator = ResponseGenerator(llm_executor=llm_executor)
 
         result = await generator.generate(
-            context=context,
+            snapshot=snapshot,
             matched_rules=[rule1, rule2],
             templates=[template1, template2],
         )
@@ -518,7 +514,7 @@ class TestGenerationResult:
             completion_tokens=50,
             generation_time_ms=200.0,
             template_used=template_id,
-            template_mode=TemplateMode.EXCLUSIVE,
+            template_mode=TemplateResponseMode.EXCLUSIVE,
             prompt_preview="System: You are...",
         )
 
@@ -526,7 +522,7 @@ class TestGenerationResult:
         assert result.prompt_tokens == 100
         assert result.completion_tokens == 50
         assert result.template_used == template_id
-        assert result.template_mode == TemplateMode.EXCLUSIVE
+        assert result.template_mode == TemplateResponseMode.EXCLUSIVE
         assert result.prompt_preview == "System: You are..."
 
     def test_result_defaults(self) -> None:
@@ -544,20 +540,20 @@ class TestGenerationResult:
         assert result.prompt_preview is None
 
 
-class TestTemplateMode:
-    """Tests for TemplateMode enum."""
+class TestTemplateResponseMode:
+    """Tests for TemplateResponseMode enum."""
 
     def test_all_modes(self) -> None:
         """Test all template mode values."""
-        assert TemplateMode.EXCLUSIVE.value == "exclusive"
-        assert TemplateMode.SUGGEST.value == "suggest"
-        assert TemplateMode.FALLBACK.value == "fallback"
+        assert TemplateResponseMode.EXCLUSIVE.value == "EXCLUSIVE"
+        assert TemplateResponseMode.SUGGEST.value == "SUGGEST"
+        assert TemplateResponseMode.FALLBACK.value == "FALLBACK"
 
     def test_mode_comparison(self) -> None:
         """Test mode enum comparison."""
-        mode1 = TemplateMode.EXCLUSIVE
-        mode2 = TemplateMode.EXCLUSIVE
-        mode3 = TemplateMode.SUGGEST
+        mode1 = TemplateResponseMode.EXCLUSIVE
+        mode2 = TemplateResponseMode.EXCLUSIVE
+        mode3 = TemplateResponseMode.SUGGEST
 
         assert mode1 == mode2
         assert mode1 != mode3

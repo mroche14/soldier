@@ -1,17 +1,17 @@
-"""Tests for ProfileFieldValidator."""
+"""Tests for CustomerDataFieldValidator."""
 
 from uuid import uuid4
 
 import pytest
 
-from soldier.profile.enums import ProfileFieldSource, ValidationMode
-from soldier.profile.models import ProfileField, ProfileFieldDefinition
-from soldier.profile.validation import ProfileFieldValidator, ValidationError
+from soldier.customer_data.enums import VariableSource, ValidationMode
+from soldier.customer_data.models import VariableEntry, CustomerDataField
+from soldier.customer_data.validation import CustomerDataFieldValidator, ValidationError
 
 
 @pytest.fixture
 def validator():
-    return ProfileFieldValidator()
+    return CustomerDataFieldValidator()
 
 
 @pytest.fixture
@@ -29,13 +29,13 @@ class TestTypeValidation:
 
     def test_string_validation_valid(self, validator, tenant_id, agent_id):
         """Should accept valid string."""
-        field = ProfileField(
+        field = VariableEntry(
             name="name",
             value="John Doe",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="name",
@@ -48,13 +48,13 @@ class TestTypeValidation:
 
     def test_string_validation_invalid(self, validator, tenant_id, agent_id):
         """Should reject non-string for string type."""
-        field = ProfileField(
+        field = VariableEntry(
             name="name",
             value=123,
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="name",
@@ -68,13 +68,13 @@ class TestTypeValidation:
 
     def test_email_validation_valid(self, validator, tenant_id, agent_id):
         """Should accept valid email."""
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="test@example.com",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -87,13 +87,13 @@ class TestTypeValidation:
 
     def test_email_validation_invalid_format(self, validator, tenant_id, agent_id):
         """Should reject invalid email format."""
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="not-an-email",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -113,7 +113,7 @@ class TestTypeValidation:
             "5551234567",
             "+44 20 7123 4567",
         ]
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="phone",
@@ -122,24 +122,24 @@ class TestTypeValidation:
         )
 
         for phone in valid_phones:
-            field = ProfileField(
+            field = VariableEntry(
                 name="phone",
                 value=phone,
                 value_type="phone",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             )
             errors = validator.validate_field(field, definition)
             assert len(errors) == 0, f"Phone {phone} should be valid"
 
     def test_phone_validation_invalid(self, validator, tenant_id, agent_id):
         """Should reject invalid phone numbers."""
-        field = ProfileField(
+        field = VariableEntry(
             name="phone",
             value="abc",
             value_type="phone",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="phone",
@@ -153,13 +153,13 @@ class TestTypeValidation:
 
     def test_phone_validation_too_short(self, validator, tenant_id, agent_id):
         """Should reject phone numbers with too few digits."""
-        field = ProfileField(
+        field = VariableEntry(
             name="phone",
             value="123",
             value_type="phone",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="phone",
@@ -178,7 +178,7 @@ class TestTypeValidation:
             "2024-01-15T10:30:00",
             "2024-01-15T10:30:00Z",
         ]
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="dob",
@@ -187,24 +187,24 @@ class TestTypeValidation:
         )
 
         for date in valid_dates:
-            field = ProfileField(
+            field = VariableEntry(
                 name="dob",
                 value=date,
                 value_type="date",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             )
             errors = validator.validate_field(field, definition)
             assert len(errors) == 0, f"Date {date} should be valid"
 
     def test_date_validation_invalid(self, validator, tenant_id, agent_id):
         """Should reject invalid date format."""
-        field = ProfileField(
+        field = VariableEntry(
             name="dob",
             value="15/01/2024",
             value_type="date",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="dob",
@@ -219,7 +219,7 @@ class TestTypeValidation:
     def test_number_validation_valid(self, validator, tenant_id, agent_id):
         """Should accept valid numbers."""
         valid_numbers = [123, 45.67, "89", "12.34"]
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="age",
@@ -228,24 +228,24 @@ class TestTypeValidation:
         )
 
         for num in valid_numbers:
-            field = ProfileField(
+            field = VariableEntry(
                 name="age",
                 value=num,
                 value_type="number",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             )
             errors = validator.validate_field(field, definition)
             assert len(errors) == 0, f"Number {num} should be valid"
 
     def test_number_validation_rejects_boolean(self, validator, tenant_id, agent_id):
         """Should reject boolean for number type."""
-        field = ProfileField(
+        field = VariableEntry(
             name="age",
             value=True,
             value_type="number",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="age",
@@ -260,7 +260,7 @@ class TestTypeValidation:
     def test_boolean_validation_valid(self, validator, tenant_id, agent_id):
         """Should accept valid booleans."""
         valid_bools = [True, False, "true", "false", "yes", "no", "1", "0"]
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="consent",
@@ -269,11 +269,11 @@ class TestTypeValidation:
         )
 
         for val in valid_bools:
-            field = ProfileField(
+            field = VariableEntry(
                 name="consent",
                 value=val,
                 value_type="boolean",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             )
             errors = validator.validate_field(field, definition)
             assert len(errors) == 0, f"Boolean {val} should be valid"
@@ -286,7 +286,7 @@ class TestTypeValidation:
             '{"key": "value"}',
             "[1, 2, 3]",
         ]
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="metadata",
@@ -295,24 +295,24 @@ class TestTypeValidation:
         )
 
         for val in valid_json:
-            field = ProfileField(
+            field = VariableEntry(
                 name="metadata",
                 value=val,
                 value_type="json",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             )
             errors = validator.validate_field(field, definition)
             assert len(errors) == 0, f"JSON {val} should be valid"
 
     def test_json_validation_invalid_string(self, validator, tenant_id, agent_id):
         """Should reject invalid JSON string."""
-        field = ProfileField(
+        field = VariableEntry(
             name="metadata",
             value="{invalid json}",
             value_type="json",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="metadata",
@@ -330,13 +330,13 @@ class TestRegexValidation:
 
     def test_regex_validation_valid(self, validator, tenant_id, agent_id):
         """Should accept value matching regex."""
-        field = ProfileField(
+        field = VariableEntry(
             name="code",
             value="ABC-123",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="code",
@@ -350,13 +350,13 @@ class TestRegexValidation:
 
     def test_regex_validation_invalid(self, validator, tenant_id, agent_id):
         """Should reject value not matching regex."""
-        field = ProfileField(
+        field = VariableEntry(
             name="code",
             value="abc123",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="code",
@@ -371,13 +371,13 @@ class TestRegexValidation:
 
     def test_regex_validation_requires_string(self, validator, tenant_id, agent_id):
         """Should require string for regex validation."""
-        field = ProfileField(
+        field = VariableEntry(
             name="code",
             value=123,
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="code",
@@ -396,13 +396,13 @@ class TestAllowedValuesValidation:
 
     def test_allowed_values_valid(self, validator, tenant_id, agent_id):
         """Should accept value in allowed values list."""
-        field = ProfileField(
+        field = VariableEntry(
             name="status",
             value="active",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="status",
@@ -416,13 +416,13 @@ class TestAllowedValuesValidation:
 
     def test_allowed_values_invalid(self, validator, tenant_id, agent_id):
         """Should reject value not in allowed values list."""
-        field = ProfileField(
+        field = VariableEntry(
             name="status",
             value="unknown",
             value_type="string",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="status",
@@ -441,13 +441,13 @@ class TestValidationModes:
 
     def test_strict_mode_returns_errors(self, validator, tenant_id, agent_id):
         """Should return errors in strict mode."""
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="invalid",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -461,13 +461,13 @@ class TestValidationModes:
 
     def test_warn_mode_returns_errors(self, validator, tenant_id, agent_id):
         """Should return errors in warn mode (for logging)."""
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="invalid",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -481,13 +481,13 @@ class TestValidationModes:
 
     def test_disabled_mode_skips_validation(self, validator, tenant_id, agent_id):
         """Should skip validation in disabled mode."""
-        field = ProfileField(
+        field = VariableEntry(
             name="email",
             value="invalid",
             value_type="email",
-            source=ProfileFieldSource.USER_PROVIDED,
+            source=VariableSource.USER_PROVIDED,
         )
-        definition = ProfileFieldDefinition(
+        definition = CustomerDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",

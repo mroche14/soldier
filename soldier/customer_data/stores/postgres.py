@@ -1,4 +1,4 @@
-"""PostgreSQL implementation of ProfileStore.
+"""PostgreSQL implementation of CustomerDataStoreInterface.
 
 Enhanced with:
 - Status-aware queries
@@ -16,30 +16,30 @@ from soldier.conversation.models import Channel
 from soldier.db.errors import ConnectionError
 from soldier.db.pool import PostgresPool
 from soldier.observability.logging import get_logger
-from soldier.profile.enums import (
+from soldier.customer_data.enums import (
     FallbackAction,
     ItemStatus,
-    ProfileFieldSource,
+    VariableSource,
     RequiredLevel,
     SourceType,
     ValidationMode,
     VerificationLevel,
 )
-from soldier.profile.models import (
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
-    ProfileFieldDefinition,
+    VariableEntry,
+    CustomerDataField,
     ScenarioFieldRequirement,
 )
-from soldier.profile.store import ProfileStore
+from soldier.customer_data.store import CustomerDataStoreInterface
 
 logger = get_logger(__name__)
 
 
-class PostgresProfileStore(ProfileStore):
-    """PostgreSQL implementation of ProfileStore.
+class PostgresCustomerDataStore(CustomerDataStoreInterface):
+    """PostgreSQL implementation of CustomerDataStoreInterface.
 
     Enhanced with:
     - Status-aware queries
@@ -62,7 +62,7 @@ class PostgresProfileStore(ProfileStore):
         customer_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by customer ID."""
         try:
             async with self._pool.acquire() as conn:
@@ -92,7 +92,7 @@ class PostgresProfileStore(ProfileStore):
         profile_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by profile ID."""
         return await self.get_by_customer_id(tenant_id, profile_id, include_history=include_history)
 
@@ -103,7 +103,7 @@ class PostgresProfileStore(ProfileStore):
         channel_user_id: str,
         *,
         include_history: bool = False,
-    ) -> CustomerProfile | None:
+    ) -> CustomerDataStore | None:
         """Get profile by channel identity."""
         try:
             async with self._pool.acquire() as conn:
@@ -135,13 +135,13 @@ class PostgresProfileStore(ProfileStore):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerProfile:
+    ) -> CustomerDataStore:
         """Get existing profile or create new one for channel identity."""
         existing = await self.get_by_channel_identity(tenant_id, channel, channel_user_id)
         if existing:
             return existing
 
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             id=uuid4(),
             tenant_id=tenant_id,
             customer_id=uuid4(),
@@ -158,7 +158,7 @@ class PostgresProfileStore(ProfileStore):
         await self.save(profile)
         return profile
 
-    async def save(self, profile: CustomerProfile) -> UUID:
+    async def save(self, profile: CustomerDataStore) -> UUID:
         """Save a profile."""
         try:
             async with self._pool.acquire() as conn:
@@ -228,7 +228,7 @@ class PostgresProfileStore(ProfileStore):
         self,
         tenant_id: UUID,
         profile_id: UUID,
-        field: ProfileField,
+        field: VariableEntry,
         *,
         supersede_existing: bool = True,
     ) -> UUID:
@@ -297,7 +297,7 @@ class PostgresProfileStore(ProfileStore):
         field_name: str,
         *,
         status: ItemStatus | None = ItemStatus.ACTIVE,
-    ) -> ProfileField | None:
+    ) -> VariableEntry | None:
         """Get a specific field by name."""
         try:
             async with self._pool.acquire() as conn:
@@ -338,7 +338,7 @@ class PostgresProfileStore(ProfileStore):
         tenant_id: UUID,
         profile_id: UUID,
         field_name: str,
-    ) -> list[ProfileField]:
+    ) -> list[VariableEntry]:
         """Get all versions of a field."""
         try:
             async with self._pool.acquire() as conn:
@@ -879,7 +879,7 @@ class PostgresProfileStore(ProfileStore):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[ProfileFieldDefinition]:
+    ) -> list[CustomerDataField]:
         """Get all field definitions for an agent."""
         try:
             async with self._pool.acquire() as conn:
@@ -912,7 +912,7 @@ class PostgresProfileStore(ProfileStore):
         tenant_id: UUID,
         agent_id: UUID,
         field_name: str,
-    ) -> ProfileFieldDefinition | None:
+    ) -> CustomerDataField | None:
         """Get a specific field definition by name."""
         try:
             async with self._pool.acquire() as conn:
@@ -934,7 +934,7 @@ class PostgresProfileStore(ProfileStore):
 
     async def save_field_definition(
         self,
-        definition: ProfileFieldDefinition,
+        definition: CustomerDataField,
     ) -> UUID:
         """Save a field definition."""
         try:
@@ -1147,7 +1147,7 @@ class PostgresProfileStore(ProfileStore):
     async def get_missing_fields(
         self,
         tenant_id: UUID,
-        profile: CustomerProfile,
+        profile: CustomerDataStore,
         scenario_id: UUID,
         *,
         step_id: UUID | None = None,
@@ -1188,19 +1188,19 @@ class PostgresProfileStore(ProfileStore):
     # HELPER METHODS
     # =========================================================================
 
-    def _row_to_field(self, row) -> ProfileField:
-        """Convert database row to ProfileField."""
+    def _row_to_field(self, row) -> VariableEntry:
+        """Convert database row to VariableEntry."""
         source_map = {
-            "USER_PROVIDED": ProfileFieldSource.USER_PROVIDED,
-            "user_provided": ProfileFieldSource.USER_PROVIDED,
-            "EXTRACTED": ProfileFieldSource.LLM_EXTRACTED,
-            "llm_extracted": ProfileFieldSource.LLM_EXTRACTED,
-            "tool_result": ProfileFieldSource.TOOL_RESULT,
-            "document_extracted": ProfileFieldSource.DOCUMENT_EXTRACTED,
-            "human_entered": ProfileFieldSource.HUMAN_ENTERED,
-            "INFERRED": ProfileFieldSource.SYSTEM_INFERRED,
-            "system_inferred": ProfileFieldSource.SYSTEM_INFERRED,
-            "SYSTEM": ProfileFieldSource.SYSTEM_INFERRED,
+            "USER_PROVIDED": VariableSource.USER_PROVIDED,
+            "user_provided": VariableSource.USER_PROVIDED,
+            "EXTRACTED": VariableSource.LLM_EXTRACTED,
+            "llm_extracted": VariableSource.LLM_EXTRACTED,
+            "tool_result": VariableSource.TOOL_RESULT,
+            "document_extracted": VariableSource.DOCUMENT_EXTRACTED,
+            "human_entered": VariableSource.HUMAN_ENTERED,
+            "INFERRED": VariableSource.SYSTEM_INFERRED,
+            "system_inferred": VariableSource.SYSTEM_INFERRED,
+            "SYSTEM": VariableSource.SYSTEM_INFERRED,
         }
 
         status_map = {
@@ -1218,12 +1218,12 @@ class PostgresProfileStore(ProfileStore):
             "external": SourceType.EXTERNAL,
         }
 
-        return ProfileField(
+        return VariableEntry(
             id=row["id"],
             name=row["field_name"],
             value=row["field_value"],
             value_type="string",
-            source=source_map.get(row["source"], ProfileFieldSource.LLM_EXTRACTED),
+            source=source_map.get(row["source"], VariableSource.LLM_EXTRACTED),
             confidence=row.get("confidence", 1.0) or 1.0,
             verified=row.get("verified", False) or False,
             collected_at=row["valid_from"],
@@ -1282,15 +1282,15 @@ class PostgresProfileStore(ProfileStore):
             superseded_at=row.get("superseded_at"),
         )
 
-    def _row_to_field_definition(self, row) -> ProfileFieldDefinition:
-        """Convert database row to ProfileFieldDefinition."""
+    def _row_to_field_definition(self, row) -> CustomerDataField:
+        """Convert database row to CustomerDataField."""
         validation_mode_map = {
             "strict": ValidationMode.STRICT,
             "warn": ValidationMode.WARN,
             "disabled": ValidationMode.DISABLED,
         }
 
-        return ProfileFieldDefinition(
+        return CustomerDataField(
             id=row["id"],
             tenant_id=row["tenant_id"],
             agent_id=row["agent_id"],
@@ -1354,7 +1354,7 @@ class PostgresProfileStore(ProfileStore):
 
     async def _load_full_profile(
         self, conn, profile_row, include_history: bool = False
-    ) -> CustomerProfile:
+    ) -> CustomerDataStore:
         """Load full profile with all related data."""
         profile_id = profile_row["id"]
         tenant_id = profile_row["tenant_id"]
@@ -1409,7 +1409,7 @@ class PostgresProfileStore(ProfileStore):
         )
         assets = [self._row_to_asset(row) for row in asset_rows]
 
-        return CustomerProfile(
+        return CustomerDataStore(
             id=profile_id,
             tenant_id=tenant_id,
             customer_id=profile_id,

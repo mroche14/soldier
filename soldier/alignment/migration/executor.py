@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from soldier.alignment.models import Scenario
     from soldier.alignment.stores.agent_config_store import AgentConfigStore
     from soldier.conversation.store import SessionStore
-    from soldier.memory.profile import ProfileStore
+    from soldier.memory.profile import CustomerDataStoreInterface
 
 logger = get_logger(__name__)
 
@@ -48,7 +48,7 @@ class MigrationExecutor:
         config_store: "AgentConfigStore",
         session_store: "SessionStore",
         config: ScenarioMigrationConfig | None = None,
-        profile_store: "ProfileStore | None" = None,
+        profile_store: "CustomerDataStoreInterface | None" = None,
         llm_executor: Any = None,
     ) -> None:
         """Initialize the migration executor.

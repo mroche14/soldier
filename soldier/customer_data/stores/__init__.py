@@ -1,13 +1,13 @@
-"""Profile stores for customer profiles."""
+"""Customer data stores."""
 
-from soldier.profile.store import ProfileStore
-from soldier.profile.stores.cached import ProfileStoreCacheLayer
-from soldier.profile.stores.inmemory import InMemoryProfileStore
-from soldier.profile.stores.postgres import PostgresProfileStore
+from soldier.customer_data.store import CustomerDataStoreInterface
+from soldier.customer_data.stores.cached import CustomerDataStoreCacheLayer
+from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from soldier.customer_data.stores.postgres import PostgresCustomerDataStore
 
 __all__ = [
-    "ProfileStore",
-    "ProfileStoreCacheLayer",
-    "InMemoryProfileStore",
-    "PostgresProfileStore",
+    "CustomerDataStoreInterface",
+    "CustomerDataStoreCacheLayer",
+    "InMemoryCustomerDataStore",
+    "PostgresCustomerDataStore",
 ]

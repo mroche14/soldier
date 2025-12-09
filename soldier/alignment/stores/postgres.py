@@ -11,6 +11,7 @@ from uuid import UUID
 from soldier.alignment.migration.models import MigrationPlan, MigrationPlanStatus
 from soldier.alignment.models import (
     Agent,
+    Intent,
     Rule,
     Scenario,
     Scope,
@@ -1168,7 +1169,7 @@ class PostgresAgentConfigStore(AgentConfigStore):
 
     def _row_to_template(self, row) -> Template:
         """Convert database row to Template model."""
-        from soldier.alignment.models import TemplateMode
+        from soldier.alignment.models import TemplateResponseMode
 
         return Template(
             id=row["id"],
@@ -1176,7 +1177,7 @@ class PostgresAgentConfigStore(AgentConfigStore):
             agent_id=row["agent_id"],
             name=row["name"],
             content=row["content"],
-            mode=TemplateMode(row["mode"]),
+            mode=TemplateResponseMode(row["mode"]),
             scope=Scope(row["scope"]),
             scope_id=row["scope_id"],
             created_at=row["created_at"],
@@ -1285,3 +1286,145 @@ class PostgresAgentConfigStore(AgentConfigStore):
         if not clean:
             return None
         return [float(x) for x in clean.split(",")]
+
+    # Intent operations (Phase 4)
+    # TODO: Implement with proper SQL after database migration is created
+    async def get_intent(self, tenant_id: UUID, intent_id: UUID) -> Intent | None:
+        """Get an intent by ID.
+
+        TODO: Implement with intents table query after migration.
+        """
+        raise NotImplementedError(
+            "Intent operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
+        )
+
+    async def get_intents(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list[Intent]:
+        """Get all intents for an agent.
+
+        TODO: Implement with intents table query after migration.
+        """
+        raise NotImplementedError(
+            "Intent operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
+        )
+
+    async def save_intent(self, intent: Intent) -> UUID:
+        """Save an intent, returning its ID.
+
+        TODO: Implement with intents table INSERT/UPDATE after migration.
+        """
+        raise NotImplementedError(
+            "Intent operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
+        )
+
+    async def delete_intent(self, tenant_id: UUID, intent_id: UUID) -> bool:
+        """Soft-delete an intent.
+
+        TODO: Implement with intents table UPDATE after migration.
+        """
+        raise NotImplementedError(
+            "Intent operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
+        )
+
+    # Rule relationship operations
+    async def get_rule_relationships(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        rule_ids: list[UUID] | None = None,
+    ) -> list:
+        """Get rule relationships, optionally filtered by rule IDs.
+
+        TODO: Implement with rule_relationships table query after migration.
+        """
+        raise NotImplementedError(
+            "Rule relationship operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-05-rule-selection-checklist.md"
+        )
+
+    async def save_rule_relationship(self, tenant_id: UUID, relationship) -> None:
+        """Save a rule relationship.
+
+        TODO: Implement with rule_relationships table INSERT/UPDATE after migration.
+        """
+        raise NotImplementedError(
+            "Rule relationship operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-05-rule-selection-checklist.md"
+        )
+
+    async def delete_rule_relationship(self, tenant_id: UUID, relationship_id: UUID) -> None:
+        """Delete a rule relationship.
+
+        TODO: Implement with rule_relationships table DELETE after migration.
+        """
+        raise NotImplementedError(
+            "Rule relationship operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-05-rule-selection-checklist.md"
+        )
+
+    # Glossary operations (Phase 1)
+    async def get_glossary_items(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list:
+        """Get all glossary items for an agent.
+
+        TODO: Implement with glossary_items table query after migration.
+        """
+        from soldier.alignment.models.glossary import GlossaryItem
+
+        raise NotImplementedError(
+            "Glossary operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
+        )
+
+    async def save_glossary_item(self, item) -> UUID:
+        """Save a glossary item.
+
+        TODO: Implement with glossary_items table INSERT/UPDATE after migration.
+        """
+        raise NotImplementedError(
+            "Glossary operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
+        )
+
+    # Customer data field operations (Phase 1)
+    async def get_customer_data_fields(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list:
+        """Get all customer data field definitions for an agent.
+
+        TODO: Implement with customer_data_fields table query after migration.
+        """
+        from soldier.customer_data.models import CustomerDataField
+
+        raise NotImplementedError(
+            "Customer data field operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
+        )
+
+    async def save_customer_data_field(self, field) -> UUID:
+        """Save a customer data field definition.
+
+        TODO: Implement with customer_data_fields table INSERT/UPDATE after migration.
+        """
+        raise NotImplementedError(
+            "Customer data field operations require database migration. "
+            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
+        )

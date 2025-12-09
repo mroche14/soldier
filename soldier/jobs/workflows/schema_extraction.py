@@ -9,8 +9,8 @@ from typing import Any
 from uuid import UUID
 
 from soldier.observability.logging import get_logger
-from soldier.profile.extraction import ProfileItemSchemaExtractor
-from soldier.profile.store import ProfileStore
+from soldier.customer_data.extraction import CustomerDataSchemaExtractor
+from soldier.customer_data.store import CustomerDataStoreInterface
 
 logger = get_logger(__name__)
 
@@ -44,7 +44,7 @@ class ExtractSchemaRequirementsWorkflow:
     1. Analyzes scenario or rule text with LLM
     2. Extracts required profile fields
     3. Creates ScenarioFieldRequirement entries
-    4. Optionally creates ProfileFieldDefinition suggestions
+    4. Optionally creates CustomerDataField suggestions
 
     Non-blocking: Failures don't prevent the scenario/rule from being created.
     Idempotent: Re-running updates existing requirements.
@@ -54,8 +54,8 @@ class ExtractSchemaRequirementsWorkflow:
 
     def __init__(
         self,
-        extractor: ProfileItemSchemaExtractor,
-        profile_store: ProfileStore,
+        extractor: CustomerDataSchemaExtractor,
+        profile_store: CustomerDataStoreInterface,
     ) -> None:
         """Initialize workflow.
 
@@ -181,8 +181,8 @@ class ExtractSchemaRequirementsWorkflow:
 
 def register_workflow(
     hatchet: Any,
-    extractor: ProfileItemSchemaExtractor,
-    profile_store: ProfileStore,
+    extractor: CustomerDataSchemaExtractor,
+    profile_store: CustomerDataStoreInterface,
 ) -> Any:
     """Register the schema extraction workflow with Hatchet.
 

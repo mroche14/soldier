@@ -149,8 +149,87 @@ class ContextExtractionConfig(OpenRouterConfigMixin):
     )
 
 
+class SituationSensorConfig(OpenRouterConfigMixin):
+    """Situational sensor step configuration (Phase 2).
+
+    Replaces basic context extraction with schema-aware,
+    glossary-aware extraction that produces SituationSnapshot.
+    """
+
+    enabled: bool = Field(default=True, description="Enable this step")
+    model: str = Field(
+        default="openrouter/openai/gpt-oss-120b",
+        description="Full model identifier",
+    )
+    fallback_models: list[str] = Field(
+        default_factory=lambda: ["anthropic/claude-3-5-haiku-20241022"],
+        description="Fallback models if primary fails",
+    )
+    temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=2.0,
+        description="Temperature (0.0 for deterministic extraction)",
+    )
+    max_tokens: int = Field(
+        default=800,
+        gt=0,
+        description="Maximum tokens to generate",
+    )
+    history_turns: int = Field(
+        default=5,
+        ge=0,
+        description="Number of history turns to include",
+    )
+    include_glossary: bool = Field(
+        default=True,
+        description="Include domain glossary in prompt",
+    )
+    include_schema_mask: bool = Field(
+        default=True,
+        description="Include customer data schema mask in prompt",
+    )
+
+
+class HybridRetrievalConfig(BaseModel):
+    """Configuration for hybrid (vector + BM25) retrieval."""
+
+    enabled: bool = Field(default=False, description="Enable hybrid retrieval")
+    vector_weight: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Weight for embedding similarity (0-1)",
+    )
+    bm25_weight: float = Field(
+        default=0.3,
+        ge=0.0,
+        le=1.0,
+        description="Weight for BM25 lexical match (0-1)",
+    )
+    normalization: Literal["min_max", "z_score", "softmax"] = Field(
+        default="min_max",
+        description="Score normalization method",
+    )
+
+
+class RerankingConfig(BaseModel):
+    """Reranking step configuration."""
+
+    enabled: bool = Field(default=False, description="Enable this step")
+    rerank_provider: str = Field(
+        default="default",
+        description="Rerank provider name",
+    )
+    top_k: int = Field(
+        default=10,
+        gt=0,
+        description="Number of results after reranking",
+    )
+
+
 class RetrievalConfig(BaseModel):
-    """Retrieval step configuration."""
+    """Retrieval step configuration with per-object-type reranking and hybrid search."""
 
     enabled: bool = Field(default=True, description="Enable this step")
     embedding_provider: str = Field(
@@ -162,6 +241,8 @@ class RetrievalConfig(BaseModel):
         gt=0,
         description="Maximum candidates to retrieve",
     )
+
+    # Selection strategies per object type
     rule_selection: SelectionConfig = Field(
         default_factory=SelectionConfig,
         description="Rule selection strategy",
@@ -174,20 +255,45 @@ class RetrievalConfig(BaseModel):
         default_factory=SelectionConfig,
         description="Memory selection strategy",
     )
-
-
-class RerankingConfig(BaseModel):
-    """Reranking step configuration."""
-
-    enabled: bool = Field(default=True, description="Enable this step")
-    rerank_provider: str = Field(
-        default="default",
-        description="Rerank provider name",
+    intent_selection: SelectionConfig = Field(
+        default_factory=SelectionConfig,
+        description="Intent selection strategy",
     )
-    top_k: int = Field(
-        default=10,
-        gt=0,
-        description="Number of results after reranking",
+
+    # Optional reranking per object type
+    rule_reranking: RerankingConfig | None = Field(
+        default=None,
+        description="Optional reranking for rules",
+    )
+    scenario_reranking: RerankingConfig | None = Field(
+        default=None,
+        description="Optional reranking for scenarios",
+    )
+    memory_reranking: RerankingConfig | None = Field(
+        default=None,
+        description="Optional reranking for memory",
+    )
+    intent_reranking: RerankingConfig | None = Field(
+        default=None,
+        description="Optional reranking for intents",
+    )
+
+    # Hybrid retrieval per object type
+    rule_hybrid: HybridRetrievalConfig = Field(
+        default_factory=HybridRetrievalConfig,
+        description="Hybrid retrieval config for rules",
+    )
+    scenario_hybrid: HybridRetrievalConfig = Field(
+        default_factory=HybridRetrievalConfig,
+        description="Hybrid retrieval config for scenarios",
+    )
+    memory_hybrid: HybridRetrievalConfig = Field(
+        default_factory=HybridRetrievalConfig,
+        description="Hybrid retrieval config for memory",
+    )
+    intent_hybrid: HybridRetrievalConfig = Field(
+        default_factory=HybridRetrievalConfig,
+        description="Hybrid retrieval config for intents",
     )
 
 
@@ -207,6 +313,18 @@ class RuleFilteringConfig(OpenRouterConfigMixin):
         default=5,
         gt=0,
         description="Batch size for filtering",
+    )
+
+
+class RelationshipExpansionConfig(BaseModel):
+    """Relationship expansion configuration."""
+
+    enabled: bool = Field(default=True, description="Enable relationship expansion")
+    max_depth: int = Field(
+        default=2,
+        ge=1,
+        le=5,
+        description="Maximum relationship chain depth",
     )
 
 
@@ -233,8 +351,62 @@ class ScenarioFilteringConfig(OpenRouterConfigMixin):
     )
 
 
+class ScenarioOrchestrationConfig(BaseModel):
+    """Scenario orchestration configuration (Phase 6)."""
+
+    enabled: bool = Field(default=True, description="Enable scenario orchestration")
+    max_loop_count: int = Field(
+        default=3, ge=1, description="Maximum visits to a step before relocalization"
+    )
+    max_simultaneous_scenarios: int = Field(
+        default=5, ge=1, le=20, description="Maximum active scenarios per session"
+    )
+    block_on_missing_hard_fields: bool = Field(
+        default=True,
+        description="Block scenario entry when hard requirements are missing",
+    )
+    enable_step_skipping: bool = Field(
+        default=True, description="Enable automatic step skipping with available data"
+    )
+    enable_multi_scenario: bool = Field(
+        default=True, description="Allow multiple active scenarios"
+    )
+
+
+class CustomerDataUpdateConfig(BaseModel):
+    """Customer data update step configuration (Phase 3)."""
+
+    enabled: bool = Field(default=True, description="Enable this step")
+    validation_mode: Literal["strict", "warn", "disabled"] = Field(
+        default="strict",
+        description="Validation behavior: strict (reject invalid), warn (log only), disabled",
+    )
+    max_history_entries: int = Field(
+        default=10,
+        ge=0,
+        description="Maximum history entries per variable",
+    )
+
+
+class TurnContextConfig(BaseModel):
+    """Turn context loading configuration (Phase 1)."""
+
+    load_glossary: bool = Field(
+        default=True,
+        description="Load glossary items for the turn",
+    )
+    load_customer_data_schema: bool = Field(
+        default=True,
+        description="Load customer data schema for the turn",
+    )
+    enable_scenario_reconciliation: bool = Field(
+        default=True,
+        description="Enable scenario migration reconciliation",
+    )
+
+
 class ToolExecutionConfig(BaseModel):
-    """Tool execution step configuration."""
+    """Tool execution step configuration (Phase 7)."""
 
     enabled: bool = Field(default=True, description="Enable this step")
     timeout_ms: int = Field(
@@ -251,10 +423,48 @@ class ToolExecutionConfig(BaseModel):
         default=False,
         description="Stop on first tool failure",
     )
+    enable_before_step: bool = Field(
+        default=True,
+        description="Enable BEFORE_STEP tool execution",
+    )
+    enable_during_step: bool = Field(
+        default=True,
+        description="Enable DURING_STEP tool execution",
+    )
+    enable_after_step: bool = Field(
+        default=True,
+        description="Enable AFTER_STEP tool execution",
+    )
 
 
 # Keep LLMFilteringConfig as alias for backwards compatibility
 LLMFilteringConfig = RuleFilteringConfig
+
+
+class ResponsePlanningConfig(BaseModel):
+    """Response planning step configuration (Phase 8)."""
+
+    enabled: bool = Field(default=True, description="Enable this step")
+    prioritize_escalation: bool = Field(
+        default=True,
+        description="Escalation rules override all other types",
+    )
+    merge_templates: bool = Field(
+        default=True,
+        description="Combine templates from multiple scenarios",
+    )
+    extract_must_include: bool = Field(
+        default=True,
+        description="Extract must_include constraints from rules",
+    )
+    extract_must_avoid: bool = Field(
+        default=True,
+        description="Extract must_avoid constraints from rules",
+    )
+    sort_by_urgency: bool = Field(
+        default=True,
+        description="Sort contributions by urgency before scenario order",
+    )
 
 
 class GenerationConfig(OpenRouterConfigMixin):
@@ -294,6 +504,10 @@ class EnforcementConfig(BaseModel):
         default=2,
         ge=0,
         description="Max generation retries",
+    )
+    llm_judge_models: list[str] = Field(
+        default_factory=lambda: ["openrouter/anthropic/claude-3-haiku-20240307"],
+        description="Models for LLM-as-Judge subjective enforcement",
     )
 
 
@@ -438,9 +652,21 @@ class MemoryIngestionConfig(BaseModel):
 class PipelineConfig(BaseModel):
     """Configuration for the turn pipeline."""
 
+    turn_context: TurnContextConfig = Field(
+        default_factory=TurnContextConfig,
+        description="Turn context loading (Phase 1)",
+    )
     context_extraction: ContextExtractionConfig = Field(
         default_factory=ContextExtractionConfig,
         description="Context extraction step",
+    )
+    situation_sensor: SituationSensorConfig = Field(
+        default_factory=SituationSensorConfig,
+        description="Situational sensor step (Phase 2)",
+    )
+    customer_data_update: CustomerDataUpdateConfig = Field(
+        default_factory=CustomerDataUpdateConfig,
+        description="Customer data update step (Phase 3)",
     )
     retrieval: RetrievalConfig = Field(
         default_factory=RetrievalConfig,
@@ -454,13 +680,25 @@ class PipelineConfig(BaseModel):
         default_factory=RuleFilteringConfig,
         description="Rule filtering step",
     )
+    relationship_expansion: RelationshipExpansionConfig = Field(
+        default_factory=RelationshipExpansionConfig,
+        description="Relationship expansion configuration",
+    )
     scenario_filtering: ScenarioFilteringConfig = Field(
         default_factory=ScenarioFilteringConfig,
         description="Scenario filtering step",
     )
+    scenario_orchestration: ScenarioOrchestrationConfig = Field(
+        default_factory=ScenarioOrchestrationConfig,
+        description="Scenario orchestration step (Phase 6)",
+    )
     tool_execution: ToolExecutionConfig = Field(
         default_factory=ToolExecutionConfig,
         description="Tool execution step",
+    )
+    response_planning: ResponsePlanningConfig = Field(
+        default_factory=ResponsePlanningConfig,
+        description="Response planning step (Phase 8)",
     )
     generation: GenerationConfig = Field(
         default_factory=GenerationConfig,

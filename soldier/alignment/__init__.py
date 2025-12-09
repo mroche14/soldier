@@ -1,6 +1,11 @@
 """Alignment engine exports."""
 
-from soldier.alignment.context import Context, ContextExtractor, Turn
+from soldier.alignment.context import (
+    Context,  # Deprecated: use SituationSnapshot instead
+    SituationSensor,
+    SituationSnapshot,
+    Turn,
+)
 from soldier.alignment.enforcement import (
     ConstraintViolation,
     EnforcementResult,
@@ -37,8 +42,9 @@ __all__ = [
     "AlignmentResult",
     "PipelineStepTiming",
     # Context
-    "Context",
-    "ContextExtractor",
+    "Context",  # Deprecated: use SituationSnapshot instead
+    "SituationSensor",
+    "SituationSnapshot",
     "Turn",
     # Filtering
     "MatchedRule",

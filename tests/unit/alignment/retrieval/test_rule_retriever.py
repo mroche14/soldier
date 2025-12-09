@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Context
+from soldier.alignment.context.situation_snapshot import SituationSnapshot
 from soldier.alignment.models import Scope
 from soldier.alignment.retrieval.models import RuleSource
 from soldier.alignment.retrieval.reranker import RuleReranker
@@ -13,7 +13,7 @@ from soldier.alignment.stores import InMemoryAgentConfigStore
 from soldier.config.models.selection import SelectionConfig
 from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
 from soldier.providers.rerank.mock import MockRerankProvider
-from tests.factories.alignment import ContextFactory, RuleFactory
+from tests.factories.alignment import RuleFactory
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):
@@ -113,12 +113,18 @@ async def test_retrieve_returns_rules_across_scopes(
         selection_config=selection_config,
     )
 
-    context = ContextFactory.create(embedding=[1.0, 0.0, 0.0])
+    snapshot = SituationSnapshot(
+        message="test",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        embedding=[1.0, 0.0, 0.0],
+    )
 
     result = await retriever.retrieve(
         tenant_id=tenant_id,
         agent_id=agent_id,
-        context=context,
+        snapshot=snapshot,
         active_scenario_id=scenario_id,
         active_step_id=step_id,
     )
@@ -169,12 +175,19 @@ async def test_business_filters_exclude_fired_rules(
         selection_config=selection_config,
     )
 
-    context = Context(message="test", embedding=[1.0, 0.0, 0.0], turn_count=3)
+    snapshot = SituationSnapshot(
+        message="test",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        embedding=[1.0, 0.0, 0.0],
+        turn_count=3,
+    )
 
     result = await retriever.retrieve(
         tenant_id=tenant_id,
         agent_id=agent_id,
-        context=context,
+        snapshot=snapshot,
         fired_rule_counts={over_fired.id: 1},
         last_fired_turns={in_cooldown.id: 2},
     )
@@ -220,11 +233,17 @@ async def test_reranker_reorders_results(
         reranker=RuleReranker(rerank_provider, top_k=2),
     )
 
-    context = Context(message="How do returns work?", embedding=[0.5, 0.5, 0.0])
+    snapshot = SituationSnapshot(
+        message="How do returns work?",
+        intent_changed=False,
+        topic_changed=False,
+        tone="neutral",
+        embedding=[0.5, 0.5, 0.0],
+    )
     result = await retriever.retrieve(
         tenant_id=tenant_id,
         agent_id=agent_id,
-        context=context,
+        snapshot=snapshot,
     )
 
     assert result.rules[0].rule.name == "Return Policy"

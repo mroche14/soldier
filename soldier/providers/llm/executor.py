@@ -722,9 +722,16 @@ def create_executors_from_pipeline_config(
     """
     executors = {}
 
+    # Legacy context extraction (deprecated - use situation_sensor instead)
     if config.context_extraction.enabled:
         executors["context_extraction"] = create_executor_from_step_config(
             config.context_extraction, "context_extraction"
+        )
+
+    # Phase 2: Situational sensor (replaces context_extraction)
+    if config.situation_sensor.enabled:
+        executors["situation_sensor"] = create_executor_from_step_config(
+            config.situation_sensor, "situation_sensor"
         )
 
     if config.rule_filtering.enabled:

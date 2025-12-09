@@ -20,15 +20,15 @@ from uuid import uuid4
 import pytest
 
 from soldier.conversation.models.enums import Channel
-from soldier.profile.enums import ProfileFieldSource, SourceType, ValidationMode
-from soldier.profile.models import (
+from soldier.customer_data.enums import VariableSource, SourceType, ValidationMode
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
-    ProfileField,
-    ProfileFieldDefinition,
+    CustomerDataStore,
+    VariableEntry,
+    CustomerDataField,
 )
-from soldier.profile.stores.inmemory import InMemoryProfileStore
-from soldier.profile.validation import ProfileFieldValidator
+from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from soldier.customer_data.validation import CustomerDataFieldValidator
 
 
 def percentile(data: list[float], p: float) -> float:
@@ -45,19 +45,19 @@ def percentile(data: list[float], p: float) -> float:
 @pytest.fixture
 def profile_store():
     """Create an in-memory profile store."""
-    return InMemoryProfileStore()
+    return InMemoryCustomerDataStore()
 
 
 @pytest.fixture
 def field_validator():
     """Create a schema validation service."""
-    return ProfileFieldValidator()
+    return CustomerDataFieldValidator()
 
 
 @pytest.fixture
 def sample_profile():
     """Create a sample profile with fields."""
-    return CustomerProfile(
+    return CustomerDataStore(
         tenant_id=uuid4(),
         customer_id=uuid4(),
         channel_identities=[
@@ -67,17 +67,17 @@ def sample_profile():
             )
         ],
         fields={
-            "email": ProfileField(
+            "email": VariableEntry(
                 name="email",
                 value="test@example.com",
                 value_type="email",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             ),
-            "name": ProfileField(
+            "name": VariableEntry(
                 name="name",
                 value="Test User",
                 value_type="string",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             ),
         },
     )
@@ -86,7 +86,7 @@ def sample_profile():
 @pytest.fixture
 def email_definition():
     """Create an email field definition."""
-    return ProfileFieldDefinition(
+    return CustomerDataField(
         tenant_id=uuid4(),
         agent_id=uuid4(),
         name="email",
@@ -102,11 +102,11 @@ class TestProfileLoadPerformance:
     @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_nfr001_profile_load_warm_cache(
-        self, profile_store: InMemoryProfileStore, sample_profile: CustomerProfile
+        self, profile_store: InMemoryCustomerDataStore, sample_profile: CustomerDataStore
     ):
         """NFR-001: 1000 profile loads with warm cache < 10ms p99.
 
-        Note: InMemoryProfileStore acts as "warm cache" since it's all in memory.
+        Note: InMemoryCustomerDataStore acts as "warm cache" since it's all in memory.
         """
         # Save profile
         await profile_store.save(sample_profile)
@@ -135,7 +135,7 @@ class TestProfileLoadPerformance:
     @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_nfr002_profile_load_cold(
-        self, profile_store: InMemoryProfileStore, sample_profile: CustomerProfile
+        self, profile_store: InMemoryCustomerDataStore, sample_profile: CustomerDataStore
     ):
         """NFR-002: 1000 profile loads bypassing cache < 50ms p99.
 
@@ -146,7 +146,7 @@ class TestProfileLoadPerformance:
 
         for i in range(1000):
             # Create unique profile for each iteration
-            profile = CustomerProfile(
+            profile = CustomerDataStore(
                 tenant_id=sample_profile.tenant_id,
                 customer_id=uuid4(),
                 channel_identities=[
@@ -178,18 +178,18 @@ class TestFieldValidationPerformance:
     @pytest.mark.performance
     def test_nfr003_field_validation(
         self,
-        field_validator: ProfileFieldValidator,
-        email_definition: ProfileFieldDefinition,
+        field_validator: CustomerDataFieldValidator,
+        email_definition: CustomerDataField,
     ):
         """NFR-003: 10000 field validations < 5ms p99."""
         latencies = []
 
         for i in range(10000):
-            field = ProfileField(
+            field = VariableEntry(
                 name="email",
                 value=f"user{i}@example.com",
                 value_type="email",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             )
 
             start = time.perf_counter()
@@ -209,13 +209,13 @@ class TestDerivationChainPerformance:
     @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_nfr004_derivation_chain_traversal(
-        self, profile_store: InMemoryProfileStore
+        self, profile_store: InMemoryCustomerDataStore
     ):
         """NFR-004: 100 derivation chain traversals (depth 10) < 100ms p99."""
         tenant_id = uuid4()
 
         # Create a profile with a chain of 10 derived fields
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             tenant_id=tenant_id,
             customer_id=uuid4(),
             channel_identities=[
@@ -230,11 +230,11 @@ class TestDerivationChainPerformance:
         # Build chain: field_0 -> field_1 -> ... -> field_9
         prev_field_id = None
         for i in range(10):
-            field = ProfileField(
+            field = VariableEntry(
                 name=f"field_{i}",
                 value=f"value_{i}",
                 value_type="string",
-                source=ProfileFieldSource.EXTRACTED,
+                source=VariableSource.EXTRACTED,
                 source_item_id=prev_field_id,
                 source_item_type=SourceType.PROFILE_FIELD if prev_field_id else None,
             )
@@ -273,7 +273,7 @@ class TestSchemaExtractionPerformance:
         Note: This test uses a mock LLM to measure extraction overhead.
         Real LLM performance depends on provider latency.
         """
-        from soldier.profile.extraction import ProfileItemSchemaExtractor
+        from soldier.customer_data.extraction import CustomerDataSchemaExtractor
 
         # Create mock LLM that returns realistic response
         mock_llm = AsyncMock()
@@ -286,7 +286,7 @@ class TestSchemaExtractionPerformance:
         }
         '''
 
-        extractor = ProfileItemSchemaExtractor(llm_executor=mock_llm)
+        extractor = CustomerDataSchemaExtractor(llm_executor=mock_llm)
 
         content = """
         If the customer is over 18 years old and has verified their email,
@@ -316,13 +316,13 @@ class TestBulkOperationsPerformance:
 
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_bulk_profile_saves(self, profile_store: InMemoryProfileStore):
+    async def test_bulk_profile_saves(self, profile_store: InMemoryCustomerDataStore):
         """Test bulk profile save performance."""
         tenant_id = uuid4()
         latencies = []
 
         for i in range(100):
-            profile = CustomerProfile(
+            profile = CustomerDataStore(
                 tenant_id=tenant_id,
                 customer_id=uuid4(),
                 channel_identities=[
@@ -332,11 +332,11 @@ class TestBulkOperationsPerformance:
                     )
                 ],
                 fields={
-                    f"field_{j}": ProfileField(
+                    f"field_{j}": VariableEntry(
                         name=f"field_{j}",
                         value=f"value_{j}",
                         value_type="string",
-                        source=ProfileFieldSource.USER_PROVIDED,
+                        source=VariableSource.USER_PROVIDED,
                     )
                     for j in range(10)
                 },
@@ -355,11 +355,11 @@ class TestBulkOperationsPerformance:
     @pytest.mark.performance
     def test_bulk_validation(
         self,
-        field_validator: ProfileFieldValidator,
+        field_validator: CustomerDataFieldValidator,
     ):
         """Test bulk validation with multiple field types."""
         definitions = [
-            ProfileFieldDefinition(
+            CustomerDataField(
                 tenant_id=uuid4(),
                 agent_id=uuid4(),
                 name="email",
@@ -367,7 +367,7 @@ class TestBulkOperationsPerformance:
                 value_type="email",
                 validation_mode=ValidationMode.STRICT,
             ),
-            ProfileFieldDefinition(
+            CustomerDataField(
                 tenant_id=uuid4(),
                 agent_id=uuid4(),
                 name="phone",
@@ -375,7 +375,7 @@ class TestBulkOperationsPerformance:
                 value_type="phone",
                 validation_mode=ValidationMode.STRICT,
             ),
-            ProfileFieldDefinition(
+            CustomerDataField(
                 tenant_id=uuid4(),
                 agent_id=uuid4(),
                 name="age",
@@ -386,9 +386,9 @@ class TestBulkOperationsPerformance:
         ]
 
         fields = [
-            ProfileField(name="email", value="test@example.com", value_type="email", source=ProfileFieldSource.USER_PROVIDED),
-            ProfileField(name="phone", value="+1234567890", value_type="phone", source=ProfileFieldSource.USER_PROVIDED),
-            ProfileField(name="age", value=25, value_type="number", source=ProfileFieldSource.USER_PROVIDED),
+            VariableEntry(name="email", value="test@example.com", value_type="email", source=VariableSource.USER_PROVIDED),
+            VariableEntry(name="phone", value="+1234567890", value_type="phone", source=VariableSource.USER_PROVIDED),
+            VariableEntry(name="age", value=25, value_type="number", source=VariableSource.USER_PROVIDED),
         ]
 
         latencies = []

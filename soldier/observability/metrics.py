@@ -49,6 +49,25 @@ ERRORS = Counter(
     labelnames=["tenant_id", "agent_id", "error_type"],
 )
 
+# Customer data update metrics (Phase 3)
+CUSTOMER_DATA_UPDATES = Counter(
+    "soldier_customer_data_updates_total",
+    "Total customer data updates processed",
+    labelnames=["tenant_id", "scope", "is_update"],
+)
+
+CUSTOMER_DATA_VALIDATION_ERRORS = Counter(
+    "soldier_customer_data_validation_errors_total",
+    "Customer data validation errors",
+    labelnames=["tenant_id", "field_type"],
+)
+
+CUSTOMER_DATA_PERSISTENCE_MARKED = Counter(
+    "soldier_customer_data_persistence_marked_total",
+    "Updates marked for persistence",
+    labelnames=["tenant_id", "scope"],
+)
+
 # Pipeline step metrics
 PIPELINE_STEP_LATENCY = Histogram(
     "soldier_pipeline_step_latency_seconds",
@@ -184,6 +203,138 @@ WORKFLOW_LATENCY = Histogram(
     "Workflow execution latency in seconds",
     labelnames=["workflow_name"],
     buckets=(0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0),
+)
+
+# Retrieval metrics (Phase 4)
+RETRIEVAL_DURATION = Histogram(
+    "soldier_retrieval_duration_seconds",
+    "Retrieval duration per object type",
+    labelnames=["tenant_id", "object_type", "strategy"],
+    buckets=(0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5, 1.0),
+)
+
+HYBRID_RETRIEVAL_ENABLED = Gauge(
+    "soldier_hybrid_retrieval_enabled",
+    "Whether hybrid retrieval is enabled per object type",
+    labelnames=["object_type"],
+)
+
+BM25_SCORE_CONTRIBUTION = Histogram(
+    "soldier_bm25_score_contribution",
+    "BM25 score contribution to final hybrid scores",
+    labelnames=["object_type"],
+    buckets=(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
+)
+
+PARALLEL_RETRIEVAL_DURATION = Histogram(
+    "soldier_parallel_retrieval_duration_seconds",
+    "Total duration of parallel retrieval execution",
+    labelnames=["tenant_id", "num_tasks"],
+    buckets=(0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5),
+)
+
+# Phase 5: Rule Selection & Filtering metrics
+RULE_FILTER_EVALUATIONS = Counter(
+    "soldier_rule_filter_evaluations_total",
+    "Total rule evaluations by LLM",
+    labelnames=["tenant_id", "agent_id", "applicability"],
+)
+
+RULE_FILTER_UNSURE = Counter(
+    "soldier_rule_filter_unsure_total",
+    "Total UNSURE rule evaluations",
+    labelnames=["tenant_id", "agent_id", "policy"],
+)
+
+RELATIONSHIP_EXPANSION = Counter(
+    "soldier_relationship_expansion_total",
+    "Total relationship expansions",
+    labelnames=["tenant_id", "agent_id", "kind"],
+)
+
+RELATIONSHIP_EXPANSION_DEPTH = Histogram(
+    "soldier_relationship_expansion_depth",
+    "Relationship expansion depth",
+    labelnames=["tenant_id", "agent_id"],
+    buckets=[1, 2, 3, 4, 5],
+)
+
+RULE_EXCLUSIONS = Counter(
+    "soldier_rule_exclusions_total",
+    "Total rules excluded via relationships",
+    labelnames=["tenant_id", "agent_id"],
+)
+
+# Phase 6: Scenario Orchestration metrics
+SCENARIO_LIFECYCLE_DECISIONS = Counter(
+    "soldier_scenario_lifecycle_decisions_total",
+    "Lifecycle decisions by action",
+    labelnames=["action"],  # start, continue, pause, complete, cancel
+)
+
+SCENARIO_STEPS_SKIPPED = Counter(
+    "soldier_scenario_steps_skipped_total",
+    "Steps skipped via automatic relocation",
+    labelnames=["scenario_name"],
+)
+
+SCENARIO_CONTRIBUTIONS = Counter(
+    "soldier_scenario_contributions_total",
+    "Contribution types by scenario",
+    labelnames=["contribution_type"],  # ask, inform, confirm, action_hint
+)
+
+ACTIVE_SCENARIOS_PER_SESSION = Histogram(
+    "soldier_active_scenarios_per_session",
+    "Number of simultaneous active scenarios",
+    buckets=[0, 1, 2, 3, 5, 10],
+)
+
+# Phase 8: Response Planning metrics
+response_planning_duration = Histogram(
+    "soldier_response_planning_duration_seconds",
+    "Time spent in response planning phase",
+    labelnames=["tenant_id"],
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5),
+)
+
+response_type_counter = Counter(
+    "soldier_response_type_total",
+    "Count of response types generated",
+    labelnames=["type", "tenant_id"],
+)
+
+scenario_contributions_gauge = Histogram(
+    "soldier_scenario_contributions_count",
+    "Number of scenario contributions per turn",
+    labelnames=["tenant_id"],
+    buckets=(0, 1, 2, 3, 5, 10),
+)
+
+constraints_extracted_counter = Counter(
+    "soldier_response_constraints_extracted_total",
+    "Count of constraints extracted from rules",
+    labelnames=["constraint_type", "tenant_id"],
+)
+
+# Phase 11: Persistence metrics
+PERSISTENCE_DURATION = Histogram(
+    "soldier_persistence_duration_seconds",
+    "Time spent in parallel persistence operations",
+    labelnames=["operation"],  # session, customer_data, turn_record, parallel
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
+)
+
+PERSISTENCE_OPERATIONS = Counter(
+    "soldier_persistence_operations_total",
+    "Total persistence operations",
+    labelnames=["operation", "status"],  # session/audit/profile, success/failure
+)
+
+PERSISTENCE_PARALLEL_SAVINGS = Histogram(
+    "soldier_persistence_parallel_savings_seconds",
+    "Time saved by parallel persistence vs sequential",
+    buckets=(0.0, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.3, 0.5),
 )
 
 

@@ -84,7 +84,7 @@ async def test_alignment_engine_full_pipeline() -> None:
     })
     filter_response = json.dumps({
         "evaluations": [
-            {"rule_id": str(rule.id), "applies": True, "relevance": 0.9, "reasoning": "Matches return intent"}
+            {"rule_id": str(rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9, "reasoning": "Matches return intent"}
         ]
     })
     generation_response = "Here is the return policy."
