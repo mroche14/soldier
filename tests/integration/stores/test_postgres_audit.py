@@ -45,14 +45,18 @@ def sample_turn_record(tenant_id, agent_id):
 
 @pytest.fixture
 def sample_audit_event(tenant_id):
-    """Create a sample audit event for testing."""
+    """Create a sample audit event for testing.
+
+    Note: turn_id is None to avoid FK constraint issues.
+    Tests that need a turn_id should create a turn record first.
+    """
     return AuditEvent(
         id=uuid4(),
         tenant_id=tenant_id,
         event_type="rule_matched",
         event_data={"rule_id": str(uuid4()), "score": 0.95},
         session_id=uuid4(),
-        turn_id=uuid4(),
+        turn_id=None,
         timestamp=datetime.now(UTC),
     )
 
@@ -82,9 +86,12 @@ class TestPostgresAuditStoreTurnRecord:
         """Test saving turn record with tool calls."""
         session_id = uuid4()
         tool_call = ToolCall(
+            tool_id="tool_001",
             tool_name="get_weather",
-            arguments={"city": "New York"},
-            result={"temperature": 72, "condition": "sunny"},
+            input={"city": "New York"},
+            output={"temperature": 72, "condition": "sunny"},
+            success=True,
+            latency_ms=150,
         )
 
         turn = TurnRecord(

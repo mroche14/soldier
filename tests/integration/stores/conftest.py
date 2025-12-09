@@ -75,14 +75,16 @@ def postgres_dsn() -> str:
 @pytest.fixture(scope="session")
 def redis_url() -> str:
     """Get Redis URL for tests."""
-    return os.environ.get("TEST_REDIS_URL", "redis://localhost:6379/0")
+    # Default to 6381 to match docker-compose.yml configuration
+    return os.environ.get("TEST_REDIS_URL", "redis://localhost:6381/0")
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def postgres_pool(postgres_dsn: str) -> AsyncIterator[PostgresPool]:
     """Create PostgreSQL connection pool for tests.
 
     Skips tests if PostgreSQL is not available.
+    Uses function scope to avoid event loop issues across tests.
     """
     if not postgres_available():
         pytest.skip("PostgreSQL not available (run 'docker compose up -d postgres')")
@@ -100,11 +102,12 @@ async def postgres_pool(postgres_dsn: str) -> AsyncIterator[PostgresPool]:
     await pool.close()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def redis_client(redis_url: str) -> AsyncIterator[redis.Redis]:
     """Create Redis client for tests.
 
     Skips tests if Redis is not available.
+    Uses function scope to avoid event loop issues across tests.
     """
     if not redis_available():
         pytest.skip("Redis not available (run 'docker compose up -d redis')")
@@ -158,36 +161,59 @@ async def clean_postgres(postgres_pool: PostgresPool, tenant_id):
     Note: This is a basic cleanup. For production, use proper
     transaction rollback or database cleanup strategies.
     """
-    yield
-
-    # Clean up test data
-    tables = [
-        "audit_events",
-        "turn_records",
-        "profile_assets",
-        "profile_fields",
-        "channel_identities",
-        "customer_profiles",
-        "relationships",
-        "entities",
-        "episodes",
-        "migration_plans",
-        "scenario_archives",
-        "tool_activations",
-        "variables",
-        "templates",
-        "rules",
-        "scenarios",
-        "agents",
-    ]
-
+    # Clean up BEFORE the test to ensure fresh state
     async with postgres_pool.acquire() as conn:
-        for table in tables:
+        # Clean memory tables (use group_id, not tenant_id)
+        # These tables use group_id patterns like "tenant1:session1" or "tenant1"
+        memory_tables = ["relationships", "entities", "episodes"]
+        for table in memory_tables:
+            try:
+                # Delete all records for common test group_ids
+                await conn.execute(f"DELETE FROM {table}")  # noqa: S608
+            except Exception:
+                pass
+
+        # Clean tenant-scoped tables
+        tenant_tables = [
+            "audit_events",
+            "turn_records",
+            "profile_assets",
+            "profile_fields",
+            "channel_identities",
+            "customer_profiles",
+            "migration_plans",
+            "scenario_archives",
+            "tool_activations",
+            "variables",
+            "templates",
+            "rules",
+            "scenarios",
+            "agents",
+        ]
+        for table in tenant_tables:
             try:
                 await conn.execute(
                     f"DELETE FROM {table} WHERE tenant_id = $1",  # noqa: S608
                     tenant_id,
                 )
             except Exception:
-                # Table might not exist yet
+                pass
+
+    yield
+
+    # Clean up AFTER the test as well
+    async with postgres_pool.acquire() as conn:
+        for table in memory_tables:
+            try:
+                await conn.execute(f"DELETE FROM {table}")  # noqa: S608
+            except Exception:
+                pass
+
+        for table in tenant_tables:
+            try:
+                await conn.execute(
+                    f"DELETE FROM {table} WHERE tenant_id = $1",  # noqa: S608
+                    tenant_id,
+                )
+            except Exception:
                 pass

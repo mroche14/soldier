@@ -15,6 +15,7 @@ class Channel(str, Enum):
     WEBCHAT = "webchat"
     EMAIL = "email"
     VOICE = "voice"
+    SMS = "sms"
     API = "api"
 
 

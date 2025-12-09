@@ -1,4 +1,4 @@
-"""Integration tests for PostgresProfileStore.
+"""Integration tests for PostgresCustomerDataStore.
 
 Tests profile CRUD operations, channel identity management,
 and field updates against a real PostgreSQL database.
@@ -11,26 +11,26 @@ import pytest
 import pytest_asyncio
 
 from soldier.conversation.models import Channel
-from soldier.profile.enums import ProfileFieldSource, VerificationLevel
-from soldier.profile.models import (
+from soldier.customer_data.enums import VariableSource, VerificationLevel
+from soldier.customer_data.models import (
     ChannelIdentity,
-    CustomerProfile,
+    CustomerDataStore,
     ProfileAsset,
-    ProfileField,
+    VariableEntry,
 )
-from soldier.profile.stores.postgres import PostgresProfileStore
+from soldier.customer_data.stores.postgres import PostgresCustomerDataStore
 
 
 @pytest_asyncio.fixture
 async def profile_store(postgres_pool):
-    """Create PostgresProfileStore with test pool."""
-    return PostgresProfileStore(postgres_pool)
+    """Create PostgresCustomerDataStore with test pool."""
+    return PostgresCustomerDataStore(postgres_pool)
 
 
 @pytest.fixture
 def sample_profile(tenant_id):
     """Create a sample customer profile for testing."""
-    return CustomerProfile(
+    return CustomerDataStore(
         id=uuid4(),
         tenant_id=tenant_id,
         customer_id=uuid4(),
@@ -54,11 +54,11 @@ def sample_profile(tenant_id):
 @pytest.fixture
 def sample_profile_field():
     """Create a sample profile field for testing."""
-    return ProfileField(
+    return VariableEntry(
         name="first_name",
         value="John",
         value_type="string",
-        source=ProfileFieldSource.USER_PROVIDED,
+        source=VariableSource.USER_PROVIDED,
         confidence=1.0,
         verified=False,
         collected_at=datetime.now(UTC),
@@ -83,7 +83,7 @@ def sample_profile_asset():
 
 
 @pytest.mark.integration
-class TestPostgresProfileStoreCRUD:
+class TestPostgresCustomerDataStoreCRUD:
     """Test basic CRUD operations."""
 
     async def test_save_and_get_profile(
@@ -153,7 +153,7 @@ class TestPostgresProfileStoreCRUD:
 
 
 @pytest.mark.integration
-class TestPostgresProfileStoreFields:
+class TestPostgresCustomerDataStoreFields:
     """Test profile field operations."""
 
     async def test_update_field(
@@ -163,12 +163,12 @@ class TestPostgresProfileStoreFields:
         await profile_store.save(sample_profile)
 
         # Update field
-        updated = await profile_store.update_field(
+        field_id = await profile_store.update_field(
             sample_profile.tenant_id,
             sample_profile.id,
             sample_profile_field,
         )
-        assert updated is True
+        assert field_id is not None
 
         # Verify field was added
         retrieved = await profile_store.get_by_customer_id(
@@ -186,25 +186,25 @@ class TestPostgresProfileStoreFields:
 
         # Add multiple fields
         fields = [
-            ProfileField(
+            VariableEntry(
                 name="first_name",
                 value="John",
                 value_type="string",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
                 confidence=1.0,
             ),
-            ProfileField(
+            VariableEntry(
                 name="email",
                 value="john@example.com",
                 value_type="string",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
                 confidence=1.0,
             ),
-            ProfileField(
+            VariableEntry(
                 name="age",
                 value=30,
                 value_type="number",
-                source=ProfileFieldSource.LLM_EXTRACTED,
+                source=VariableSource.LLM_EXTRACTED,
                 confidence=0.85,
             ),
         ]
@@ -225,7 +225,7 @@ class TestPostgresProfileStoreFields:
 
 
 @pytest.mark.integration
-class TestPostgresProfileStoreAssets:
+class TestPostgresCustomerDataStoreAssets:
     """Test profile asset operations."""
 
     async def test_add_asset(
@@ -235,12 +235,12 @@ class TestPostgresProfileStoreAssets:
         await profile_store.save(sample_profile)
 
         # Add asset
-        added = await profile_store.add_asset(
+        asset_id = await profile_store.add_asset(
             sample_profile.tenant_id,
             sample_profile.id,
             sample_profile_asset,
         )
-        assert added is True
+        assert asset_id is not None
 
         # Verify asset was added
         retrieved = await profile_store.get_by_customer_id(
@@ -295,7 +295,7 @@ class TestPostgresProfileStoreAssets:
 
 
 @pytest.mark.integration
-class TestPostgresProfileStoreChannelIdentity:
+class TestPostgresCustomerDataStoreChannelIdentity:
     """Test channel identity operations."""
 
     async def test_link_channel(
@@ -365,7 +365,7 @@ class TestPostgresProfileStoreChannelIdentity:
 
 
 @pytest.mark.integration
-class TestPostgresProfileStoreMerge:
+class TestPostgresCustomerDataStoreMerge:
     """Test profile merge operations."""
 
     async def test_merge_profiles(
@@ -373,7 +373,7 @@ class TestPostgresProfileStoreMerge:
     ):
         """Test merging two profiles."""
         # Create source profile with some data
-        source_profile = CustomerProfile(
+        source_profile = CustomerDataStore(
             id=uuid4(),
             tenant_id=tenant_id,
             customer_id=uuid4(),
@@ -390,7 +390,7 @@ class TestPostgresProfileStoreMerge:
         )
 
         # Create target profile
-        target_profile = CustomerProfile(
+        target_profile = CustomerDataStore(
             id=uuid4(),
             tenant_id=tenant_id,
             customer_id=uuid4(),
@@ -403,7 +403,7 @@ class TestPostgresProfileStoreMerge:
                 )
             ],
             fields={},
-            verification_level=VerificationLevel.BASIC,
+            verification_level=VerificationLevel.EMAIL_VERIFIED,
         )
 
         await profile_store.save(source_profile)
@@ -413,11 +413,11 @@ class TestPostgresProfileStoreMerge:
         await profile_store.update_field(
             tenant_id,
             source_profile.id,
-            ProfileField(
+            VariableEntry(
                 name="phone",
                 value="+15551234567",
                 value_type="string",
-                source=ProfileFieldSource.USER_PROVIDED,
+                source=VariableSource.USER_PROVIDED,
             ),
         )
 
@@ -452,7 +452,7 @@ class TestPostgresProfileStoreMerge:
 
 
 @pytest.mark.integration
-class TestPostgresProfileStoreTenantIsolation:
+class TestPostgresCustomerDataStoreTenantIsolation:
     """Test tenant isolation."""
 
     async def test_tenant_isolation_profiles(
@@ -462,7 +462,7 @@ class TestPostgresProfileStoreTenantIsolation:
         tenant1 = uuid4()
         tenant2 = uuid4()
 
-        profile1 = CustomerProfile(
+        profile1 = CustomerDataStore(
             id=uuid4(),
             tenant_id=tenant1,
             channel_identities=[
@@ -474,7 +474,7 @@ class TestPostgresProfileStoreTenantIsolation:
                 )
             ],
         )
-        profile2 = CustomerProfile(
+        profile2 = CustomerDataStore(
             id=uuid4(),
             tenant_id=tenant2,
             channel_identities=[
@@ -511,7 +511,7 @@ class TestPostgresProfileStoreTenantIsolation:
         tenant1 = uuid4()
         tenant2 = uuid4()
 
-        profile = CustomerProfile(
+        profile = CustomerDataStore(
             id=uuid4(),
             tenant_id=tenant1,
             channel_identities=[
