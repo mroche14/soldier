@@ -4,9 +4,9 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.customer_data.enums import VariableSource, ValidationMode
-from soldier.customer_data.models import VariableEntry, CustomerDataField
-from soldier.customer_data.validation import CustomerDataFieldValidator, ValidationError
+from focal.customer_data.enums import VariableSource, ValidationMode
+from focal.customer_data.models import VariableEntry, CustomerDataField
+from focal.customer_data.validation import CustomerDataFieldValidator, ValidationError
 
 
 @pytest.fixture

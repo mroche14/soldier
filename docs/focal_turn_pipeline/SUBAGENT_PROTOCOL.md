@@ -29,10 +29,10 @@ Search for similar implementations before creating new code:
 ```bash
 # Search for related classes/functions
 mgrep "your feature name"
-grep -r "RelatedClassName" soldier/
+grep -r "RelatedClassName" focal/
 
 # Check if the mechanism already exists somewhere
-grep -r "def method_you_plan_to_add" soldier/
+grep -r "def method_you_plan_to_add" focal/
 ```
 
 ### 2. Modify, Don't Duplicate
@@ -155,7 +155,7 @@ import anthropic
 print(f"Processing {user_id}")  # WRONG!
 
 # CORRECT: structlog
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 logger = get_logger(__name__)
 logger.info("processing_user", user_id=str(user_id))
 
@@ -179,7 +179,7 @@ MAX_RETRIES = 3  # WRONG!
 
 ## Naming Corrections (CRITICAL)
 
-The existing `soldier/profile/` module IS the CustomerDataStore. Do NOT create duplicate models.
+The existing `focal/profile/` module IS the CustomerDataStore. Do NOT create duplicate models.
 
 ### Rename Map (from CHECKLIST_CORRECTIONS.md)
 
@@ -195,13 +195,13 @@ The existing `soldier/profile/` module IS the CustomerDataStore. Do NOT create d
 
 | Model | Location |
 |-------|----------|
-| `CustomerSchemaMask` | `soldier/alignment/context/customer_schema_mask.py` |
-| `CandidateVariableInfo` | `soldier/alignment/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `soldier/alignment/context/situational_snapshot.py` |
-| `GlossaryItem` | `soldier/alignment/models/glossary.py` |
-| `TurnContext` | `soldier/alignment/models/turn_context.py` |
-| `ResponsePlan` | `soldier/alignment/planning/models.py` |
-| `TurnOutcome` | `soldier/alignment/models/outcome.py` |
+| `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` |
+| `CandidateVariableInfo` | `focal/alignment/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `focal/alignment/context/situational_snapshot.py` |
+| `GlossaryItem` | `focal/alignment/models/glossary.py` |
+| `TurnContext` | `focal/alignment/models/turn_context.py` |
+| `ResponsePlan` | `focal/alignment/planning/models.py` |
+| `TurnOutcome` | `focal/alignment/models/outcome.py` |
 
 ---
 
@@ -210,7 +210,7 @@ The existing `soldier/profile/` module IS the CustomerDataStore. Do NOT create d
 ### Adding a New Model
 
 ```python
-# soldier/alignment/models/my_model.py
+# focal/alignment/models/my_model.py
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
@@ -233,7 +233,7 @@ class MyModel(BaseModel):
     updated_at: datetime
 
 # Export in __init__.py
-# soldier/alignment/models/__init__.py
+# focal/alignment/models/__init__.py
 from .my_model import MyModel
 ```
 
@@ -248,7 +248,7 @@ timeout_seconds = 30
 ```
 
 ```python
-# soldier/config/models/pipeline.py
+# focal/config/models/pipeline.py
 class MyFeatureConfig(BaseModel):
     """Configuration for my feature."""
     enabled: bool = True
@@ -264,7 +264,7 @@ class PipelineConfig(BaseModel):
 ### Adding Structured Logging
 
 ```python
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -284,17 +284,17 @@ logger.info(f"Completed processing {count} items in {elapsed}ms")  # WRONG!
 ### Adding Metrics
 
 ```python
-# soldier/observability/metrics.py
+# focal/observability/metrics.py
 from prometheus_client import Counter, Histogram
 
 my_operation_total = Counter(
-    "soldier_my_operation_total",
+    "focal_my_operation_total",
     "Total my operations",
     ["tenant_id", "status"],
 )
 
 my_operation_duration = Histogram(
-    "soldier_my_operation_duration_seconds",
+    "focal_my_operation_duration_seconds",
     "Duration of my operation",
     ["tenant_id"],
 )
@@ -303,7 +303,7 @@ my_operation_duration = Histogram(
 ### Adding a Store Interface
 
 ```python
-# soldier/alignment/stores/my_store.py
+# focal/alignment/stores/my_store.py
 from abc import ABC, abstractmethod
 
 class MyStore(ABC):
@@ -319,7 +319,7 @@ class MyStore(ABC):
         """Save item."""
         pass
 
-# soldier/alignment/stores/inmemory.py
+# focal/alignment/stores/inmemory.py
 class InMemoryMyStore(MyStore):
     """In-memory implementation for testing."""
 
@@ -336,7 +336,7 @@ class InMemoryMyStore(MyStore):
 ### Adding Jinja2 Templates
 
 ```jinja2
-{# soldier/alignment/context/prompts/my_task.jinja2 #}
+{# focal/alignment/context/prompts/my_task.jinja2 #}
 You are analyzing a customer conversation.
 
 {% if context %}
@@ -355,7 +355,7 @@ Respond with JSON:
 
 ```python
 # Loading templates
-from soldier.alignment.context.template_loader import TemplateLoader
+from focal.alignment.context.template_loader import TemplateLoader
 from pathlib import Path
 
 loader = TemplateLoader(Path(__file__).parent / "prompts")
@@ -418,12 +418,12 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before (in the checklist file)
 - [ ] **Create MyModel model**
-  - File: `soldier/alignment/models/my_model.py`
+  - File: `focal/alignment/models/my_model.py`
   - Action: Create new file
 
 # After (edit the checklist file to show)
 - [x] **Create MyModel model**
-  - File: `soldier/alignment/models/my_model.py`
+  - File: `focal/alignment/models/my_model.py`
   - Action: Created new file
   - **Implemented**: Created with fields `tenant_id`, `id`, `name`, `enabled`. Added export to `__init__.py`.
 ```
@@ -447,11 +447,11 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before
 - [ ] **Integrate with SituationalSnapshot**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
 
 # After
 - [ ] ⏸️ BLOCKED: SituationalSnapshot model not yet created (Phase 2 prerequisite)
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
 ```
 
 ### Adding Implementation Notes
@@ -471,8 +471,8 @@ Always add a brief note about:
 | Module | Required Coverage |
 |--------|-------------------|
 | Overall | 85% line, 80% branch |
-| `soldier/alignment/` | 85% minimum |
-| `soldier/memory/` | 85% minimum |
+| `focal/alignment/` | 85% minimum |
+| `focal/memory/` | 85% minimum |
 
 ### Running Tests
 
@@ -484,10 +484,10 @@ uv run pytest
 uv run pytest tests/unit/alignment/models/ -v
 
 # Run with coverage
-uv run pytest --cov=soldier/alignment --cov-report=term-missing
+uv run pytest --cov=focal/alignment --cov-report=term-missing
 
 # Run only your phase's tests
-uv run pytest tests/unit/alignment/context/ -v --cov=soldier/alignment/context
+uv run pytest tests/unit/alignment/context/ -v --cov=focal/alignment/context
 ```
 
 ### Test Patterns
@@ -495,7 +495,7 @@ uv run pytest tests/unit/alignment/context/ -v --cov=soldier/alignment/context
 ```python
 # tests/unit/alignment/models/test_my_model.py
 import pytest
-from soldier.alignment.models.my_model import MyModel
+from focal.alignment.models.my_model import MyModel
 
 class TestMyModel:
     """Test suite for MyModel."""
@@ -522,7 +522,7 @@ class TestMyModel:
 
 ```python
 # tests/factories.py
-from soldier.alignment.models.my_model import MyModel
+from focal.alignment.models.my_model import MyModel
 
 class MyModelFactory:
     @staticmethod
@@ -554,7 +554,7 @@ At the end of your work, provide this report:
 - **Coverage**: XX%
 
 ## Completed Items
-1. Created `MyModel` in `soldier/alignment/models/my_model.py`
+1. Created `MyModel` in `focal/alignment/models/my_model.py`
 2. Added config section `[pipeline.my_feature]` to `config/default.toml`
 3. Implemented `MyStore` interface and `InMemoryMyStore`
 4. ... (list all)
@@ -576,14 +576,14 @@ At the end of your work, provide this report:
 
 ## Files Created/Modified
 ### Created
-- `soldier/alignment/models/my_model.py`
-- `soldier/alignment/stores/my_store.py`
+- `focal/alignment/models/my_model.py`
+- `focal/alignment/stores/my_store.py`
 - `tests/unit/alignment/models/test_my_model.py`
 
 ### Modified
-- `soldier/alignment/models/__init__.py` (added export)
+- `focal/alignment/models/__init__.py` (added export)
 - `config/default.toml` (added section)
-- `soldier/config/models/pipeline.py` (added config model)
+- `focal/config/models/pipeline.py` (added config model)
 
 ## Notes for Next Phase
 - The `MyStore` interface is ready for Phase N+1 to use
@@ -598,22 +598,22 @@ At the end of your work, provide this report:
 
 ```python
 # Logging
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 logger = get_logger(__name__)
 
 # Metrics
-from soldier.observability.metrics import my_metric
+from focal.observability.metrics import my_metric
 
 # Models
-from soldier.alignment.models import MyModel
-from soldier.alignment.models.rule import Rule, MatchedRule
+from focal.alignment.models import MyModel
+from focal.alignment.models.rule import Rule, MatchedRule
 
 # Stores
-from soldier.alignment.stores.config_store import ConfigStore
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from focal.alignment.stores.config_store import ConfigStore
+from focal.alignment.stores.inmemory import InMemoryConfigStore
 
 # Config
-from soldier.config.loader import get_settings
+from focal.config.loader import get_settings
 settings = get_settings()
 
 # Pydantic
@@ -626,10 +626,10 @@ from datetime import datetime, UTC
 
 | Type | Location Pattern |
 |------|------------------|
-| Models | `soldier/alignment/models/{name}.py` |
-| Stores | `soldier/alignment/stores/{name}.py` |
-| Config Models | `soldier/config/models/{domain}.py` |
-| Templates | `soldier/alignment/{domain}/prompts/{name}.jinja2` |
+| Models | `focal/alignment/models/{name}.py` |
+| Stores | `focal/alignment/stores/{name}.py` |
+| Config Models | `focal/config/models/{domain}.py` |
+| Templates | `focal/alignment/{domain}/prompts/{name}.jinja2` |
 | Unit Tests | `tests/unit/alignment/{mirror_of_src}/test_{name}.py` |
 | Integration Tests | `tests/integration/alignment/test_{feature}.py` |
 
@@ -662,13 +662,13 @@ Before marking your phase complete:
 
 ```bash
 # Check for linting issues
-uv run ruff check soldier/alignment/
+uv run ruff check focal/alignment/
 
 # Auto-fix what can be fixed
-uv run ruff check --fix soldier/alignment/
+uv run ruff check --fix focal/alignment/
 
 # Format code
-uv run ruff format soldier/alignment/
+uv run ruff format focal/alignment/
 ```
 
 **All ruff errors MUST be fixed** before marking phase complete.
@@ -677,10 +677,10 @@ uv run ruff format soldier/alignment/
 
 ```bash
 # Run type checking on your changes
-uv run mypy soldier/alignment/ --ignore-missing-imports
+uv run mypy focal/alignment/ --ignore-missing-imports
 
 # Or check specific files you modified
-uv run mypy soldier/alignment/models/my_new_model.py
+uv run mypy focal/alignment/models/my_new_model.py
 ```
 
 **Target**: No new type errors introduced. Pre-existing errors are acceptable but don't add more.
@@ -691,9 +691,9 @@ Run this at the end of each phase:
 
 ```bash
 # Full quality check
-echo "=== RUFF CHECK ===" && uv run ruff check soldier/alignment/ && \
-echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check soldier/alignment/ && \
-echo "=== MYPY ===" && uv run mypy soldier/alignment/ --ignore-missing-imports && \
+echo "=== RUFF CHECK ===" && uv run ruff check focal/alignment/ && \
+echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check focal/alignment/ && \
+echo "=== MYPY ===" && uv run mypy focal/alignment/ --ignore-missing-imports && \
 echo "=== TESTS ===" && uv run pytest tests/unit/alignment/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from soldier.providers.rerank import JinaRerankProvider, MockRerankProvider, RerankResponse
+from focal.providers.rerank import JinaRerankProvider, MockRerankProvider, RerankResponse
 
 
 class TestMockRerankProvider:

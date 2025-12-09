@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.enums"></a>
+<a id="focal.alignment.models.enums"></a>
 
-# soldier.alignment.models.enums
+# focal.alignment.models.enums
 
 Enums for alignment domain.
 
-<a id="soldier.alignment.models.enums.Scope"></a>
+<a id="focal.alignment.models.enums.Scope"></a>
 
 ## Scope Objects
 
@@ -19,7 +19,7 @@ Determines when a rule or template is active:
 - SCENARIO: Only when the specified scenario is active
 - STEP: Only when in the specific step
 
-<a id="soldier.alignment.models.enums.TemplateMode"></a>
+<a id="focal.alignment.models.enums.TemplateMode"></a>
 
 ## TemplateMode Objects
 
@@ -33,7 +33,7 @@ How templates are used in response generation.
 - EXCLUSIVE: Use exactly, bypass LLM entirely
 - FALLBACK: Use if LLM fails or violates rules
 
-<a id="soldier.alignment.models.enums.VariableUpdatePolicy"></a>
+<a id="focal.alignment.models.enums.VariableUpdatePolicy"></a>
 
 ## VariableUpdatePolicy Objects
 

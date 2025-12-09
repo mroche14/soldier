@@ -221,7 +221,7 @@ def validate_scenario_graph(scenario: Scenario) -> list[str]:
 Extend existing `ErrorCode` enum with CRUD-specific codes.
 
 ### Rationale
-- Existing error handling in `soldier/api/models/errors.py`
+- Existing error handling in `focal/api/models/errors.py`
 - Need codes for: rule/scenario/template not found, validation failures, publish failures
 
 ### New Codes

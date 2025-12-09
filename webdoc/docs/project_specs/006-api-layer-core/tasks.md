@@ -15,7 +15,7 @@
 
 ## Path Conventions
 
-- **Source**: `soldier/api/` (existing structure)
+- **Source**: `focal/api/` (existing structure)
 - **Tests**: `tests/unit/api/`, `tests/integration/api/`
 
 ---
@@ -25,9 +25,9 @@
 **Purpose**: Project dependencies and basic API structure
 
 - [x] T001 Add FastAPI dependencies to pyproject.toml (fastapi, uvicorn, python-jose, sse-starlette, httpx)
-- [x] T002 [P] Create soldier/api/models/context.py with TenantContext, RateLimitResult, RequestContext models
-- [x] T003 [P] Create soldier/api/models/errors.py with ErrorCode enum and ErrorResponse, ErrorBody, ErrorDetail models
-- [x] T004 [P] Create soldier/api/exceptions.py with SoldierAPIError, AgentNotFoundError, SessionNotFoundError, RateLimitExceededError
+- [x] T002 [P] Create focal/api/models/context.py with TenantContext, RateLimitResult, RequestContext models
+- [x] T003 [P] Create focal/api/models/errors.py with ErrorCode enum and ErrorResponse, ErrorBody, ErrorDetail models
+- [x] T004 [P] Create focal/api/exceptions.py with FocalAPIError, AgentNotFoundError, SessionNotFoundError, RateLimitExceededError
 
 ---
 
@@ -37,13 +37,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T005 Implement FastAPI application factory in soldier/api/app.py with create_app() function
-- [x] T006 [P] Implement JWT authentication dependency in soldier/api/middleware/auth.py
-- [x] T007 [P] Implement request context binding middleware in soldier/api/middleware/context.py
-- [x] T008 [P] Create soldier/api/dependencies.py with dependency injection for stores and providers
-- [x] T009 Implement global exception handlers in soldier/api/app.py for all SoldierAPIError types
-- [x] T010 [P] Add OpenTelemetry FastAPI instrumentation in soldier/api/app.py
-- [x] T011 Create soldier/api/routes/__init__.py with router registration helper
+- [x] T005 Implement FastAPI application factory in focal/api/app.py with create_app() function
+- [x] T006 [P] Implement JWT authentication dependency in focal/api/middleware/auth.py
+- [x] T007 [P] Implement request context binding middleware in focal/api/middleware/context.py
+- [x] T008 [P] Create focal/api/dependencies.py with dependency injection for stores and providers
+- [x] T009 Implement global exception handlers in focal/api/app.py for all FocalAPIError types
+- [x] T010 [P] Add OpenTelemetry FastAPI instrumentation in focal/api/app.py
+- [x] T011 Create focal/api/routes/__init__.py with router registration helper
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -62,12 +62,12 @@
 
 ### Implementation for User Story 1
 
-- [x] T014 [P] [US1] Create soldier/api/models/chat.py with ChatRequest, ChatResponse, ScenarioState models
-- [x] T015 [US1] Implement POST /v1/chat endpoint in soldier/api/routes/chat.py
+- [x] T014 [P] [US1] Create focal/api/models/chat.py with ChatRequest, ChatResponse, ScenarioState models
+- [x] T015 [US1] Implement POST /v1/chat endpoint in focal/api/routes/chat.py
 - [x] T016 [US1] Add session creation/lookup logic in chat route (create if session_id not provided)
-- [x] T017 [US1] Map AlignmentResult to ChatResponse in soldier/api/routes/chat.py
-- [x] T018 [US1] Add idempotency support via Idempotency-Key header in soldier/api/middleware/idempotency.py
-- [x] T019 [US1] Register chat router in soldier/api/app.py
+- [x] T017 [US1] Map AlignmentResult to ChatResponse in focal/api/routes/chat.py
+- [x] T018 [US1] Add idempotency support via Idempotency-Key header in focal/api/middleware/idempotency.py
+- [x] T019 [US1] Register chat router in focal/api/app.py
 
 **Checkpoint**: POST /v1/chat should be fully functional and return structured responses
 
@@ -86,8 +86,8 @@
 
 ### Implementation for User Story 2
 
-- [x] T022 [P] [US2] Add TokenEvent, DoneEvent, ErrorEvent models to soldier/api/models/chat.py
-- [x] T023 [US2] Implement POST /v1/chat/stream endpoint in soldier/api/routes/chat.py using sse-starlette
+- [x] T022 [P] [US2] Add TokenEvent, DoneEvent, ErrorEvent models to focal/api/models/chat.py
+- [x] T023 [US2] Implement POST /v1/chat/stream endpoint in focal/api/routes/chat.py using sse-starlette
 - [x] T024 [US2] Create async generator for streaming AlignmentEngine responses
 - [x] T025 [US2] Handle client disconnection gracefully in stream endpoint
 - [x] T026 [US2] Add error event handling for streaming failures
@@ -108,11 +108,11 @@
 
 ### Implementation for User Story 3
 
-- [x] T028 [P] [US3] Create soldier/api/models/health.py with HealthResponse, ComponentHealth models
-- [x] T029 [US3] Implement GET /health endpoint in soldier/api/routes/health.py with component checks
-- [x] T030 [US3] Implement GET /metrics endpoint in soldier/api/routes/health.py exposing Prometheus metrics
+- [x] T028 [P] [US3] Create focal/api/models/health.py with HealthResponse, ComponentHealth models
+- [x] T029 [US3] Implement GET /health endpoint in focal/api/routes/health.py with component checks
+- [x] T030 [US3] Implement GET /metrics endpoint in focal/api/routes/health.py exposing Prometheus metrics
 - [x] T031 [US3] Add health checks for ConfigStore, SessionStore, AuditStore availability
-- [x] T032 [US3] Register health router in soldier/api/app.py
+- [x] T032 [US3] Register health router in focal/api/app.py
 
 **Checkpoint**: /health and /metrics endpoints should return appropriate responses
 
@@ -131,12 +131,12 @@
 
 ### Implementation for User Story 4
 
-- [x] T035 [P] [US4] Create soldier/api/models/session.py with SessionResponse, TurnResponse, TurnListResponse models
-- [x] T036 [US4] Implement GET /v1/sessions/{session_id} in soldier/api/routes/sessions.py
-- [x] T037 [US4] Implement DELETE /v1/sessions/{session_id} in soldier/api/routes/sessions.py
-- [x] T038 [US4] Implement GET /v1/sessions/{session_id}/turns with pagination in soldier/api/routes/sessions.py
+- [x] T035 [P] [US4] Create focal/api/models/session.py with SessionResponse, TurnResponse, TurnListResponse models
+- [x] T036 [US4] Implement GET /v1/sessions/{session_id} in focal/api/routes/sessions.py
+- [x] T037 [US4] Implement DELETE /v1/sessions/{session_id} in focal/api/routes/sessions.py
+- [x] T038 [US4] Implement GET /v1/sessions/{session_id}/turns with pagination in focal/api/routes/sessions.py
 - [x] T039 [US4] Map Session model to SessionResponse, TurnRecord to TurnResponse
-- [x] T040 [US4] Register sessions router in soldier/api/app.py
+- [x] T040 [US4] Register sessions router in focal/api/app.py
 
 **Checkpoint**: Session management endpoints should be fully functional
 
@@ -155,11 +155,11 @@
 
 ### Implementation for User Story 5
 
-- [x] T043 [US5] Implement SlidingWindowRateLimiter in soldier/api/middleware/rate_limit.py
+- [x] T043 [US5] Implement SlidingWindowRateLimiter in focal/api/middleware/rate_limit.py
 - [x] T044 [US5] Add Redis-backed rate limit storage with in-memory fallback
 - [x] T045 [US5] Implement tier-based limits (Free: 60/min, Pro: 600/min, Enterprise: custom)
 - [x] T046 [US5] Add X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset response headers
-- [x] T047 [US5] Integrate rate limiting middleware in soldier/api/app.py
+- [x] T047 [US5] Integrate rate limiting middleware in focal/api/app.py
 - [x] T048 [US5] Handle RateLimitExceededError with 429 response and retry-after header
 
 **Checkpoint**: Rate limiting should enforce per-tenant limits with appropriate headers
@@ -173,9 +173,9 @@
 - [x] T049 [P] Create tests/integration/api/test_chat_flow.py with full end-to-end chat flow test
 - [x] T050 [P] Create tests/unit/api/test_context.py to verify context binding (tenant_id, trace_id in logs)
 - [x] T051 [P] Create tests/unit/api/test_tracing.py to verify OpenTelemetry trace propagation
-- [x] T052 [P] Update soldier/api/models/__init__.py to export all models
-- [x] T053 [P] Update soldier/api/routes/__init__.py to export all routers
-- [x] T054 [P] Update soldier/api/middleware/__init__.py to export all middleware
+- [x] T052 [P] Update focal/api/models/__init__.py to export all models
+- [x] T053 [P] Update focal/api/routes/__init__.py to export all routers
+- [x] T054 [P] Update focal/api/middleware/__init__.py to export all middleware
 - [x] T055 Run quickstart.md validation - verify all documented commands work
 - [x] T056 Validate OpenAPI spec matches implementation at /docs endpoint
 
@@ -227,7 +227,7 @@ Task: "Create tests/unit/api/test_chat_models.py with ChatRequest, ChatResponse 
 Task: "Create tests/unit/api/test_chat.py with mock AlignmentEngine response tests"
 
 # Then launch model creation:
-Task: "Create soldier/api/models/chat.py with ChatRequest, ChatResponse, ScenarioState models"
+Task: "Create focal/api/models/chat.py with ChatRequest, ChatResponse, ScenarioState models"
 ```
 
 ---
@@ -269,4 +269,4 @@ With multiple developers after Foundational phase:
 - Each user story should be independently completable and testable
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
-- Existing stub files in soldier/api/ should be replaced with implementations
+- Existing stub files in focal/api/ should be replaced with implementations

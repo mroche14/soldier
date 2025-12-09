@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.templates"></a>
+<a id="focal.api.routes.templates"></a>
 
-# soldier.api.routes.templates
+# focal.api.routes.templates
 
 Template management endpoints.
 
-<a id="soldier.api.routes.templates.list_templates"></a>
+<a id="focal.api.routes.templates.list_templates"></a>
 
 #### list\_templates
 
@@ -27,7 +27,7 @@ async def list_templates(
 
 List templates for an agent.
 
-<a id="soldier.api.routes.templates.create_template"></a>
+<a id="focal.api.routes.templates.create_template"></a>
 
 #### create\_template
 
@@ -40,7 +40,7 @@ async def create_template(agent_id: UUID, request: TemplateCreate,
 
 Create a new template.
 
-<a id="soldier.api.routes.templates.get_template"></a>
+<a id="focal.api.routes.templates.get_template"></a>
 
 #### get\_template
 
@@ -53,7 +53,7 @@ async def get_template(agent_id: UUID, template_id: UUID,
 
 Get a template by ID.
 
-<a id="soldier.api.routes.templates.update_template"></a>
+<a id="focal.api.routes.templates.update_template"></a>
 
 #### update\_template
 
@@ -67,7 +67,7 @@ async def update_template(agent_id: UUID, template_id: UUID,
 
 Update a template.
 
-<a id="soldier.api.routes.templates.delete_template"></a>
+<a id="focal.api.routes.templates.delete_template"></a>
 
 #### delete\_template
 
@@ -80,7 +80,7 @@ async def delete_template(agent_id: UUID, template_id: UUID,
 
 Delete a template (soft delete).
 
-<a id="soldier.api.routes.templates.preview_template"></a>
+<a id="focal.api.routes.templates.preview_template"></a>
 
 #### preview\_template
 

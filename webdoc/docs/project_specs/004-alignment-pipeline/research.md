@@ -64,9 +64,9 @@ class ContextExtractor:
         ...
 ```
 
-**Prompt Template Location**: `soldier/alignment/context/prompts/extract_intent.txt`
+**Prompt Template Location**: `focal/alignment/context/prompts/extract_intent.txt`
 
-**Output Model** (already partially defined in `soldier/alignment/models/context.py`):
+**Output Model** (already partially defined in `focal/alignment/models/context.py`):
 - `user_intent: str` - Synthesized intent
 - `entities: list[str]` - Extracted entities
 - `sentiment: str | None` - Detected sentiment

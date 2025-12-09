@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.agent"></a>
+<a id="focal.alignment.models.agent"></a>
 
-# soldier.alignment.models.agent
+# focal.alignment.models.agent
 
 Agent model for conversational AI configuration.
 
-<a id="soldier.alignment.models.agent.AgentSettings"></a>
+<a id="focal.alignment.models.agent.AgentSettings"></a>
 
 ## AgentSettings Objects
 
@@ -17,7 +17,7 @@ Embedded settings for an agent's LLM configuration.
 Controls the LLM provider and generation parameters for
 the agent's responses.
 
-<a id="soldier.alignment.models.agent.Agent"></a>
+<a id="focal.alignment.models.agent.Agent"></a>
 
 ## Agent Objects
 
@@ -31,7 +31,7 @@ An agent represents a complete conversational AI configuration,
 including its rules, scenarios, templates, and variables.
 All other configuration entities are scoped to an agent.
 
-<a id="soldier.alignment.models.agent.Agent.create"></a>
+<a id="focal.alignment.models.agent.Agent.create"></a>
 
 #### create
 

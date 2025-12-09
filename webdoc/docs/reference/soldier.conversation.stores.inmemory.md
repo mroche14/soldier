@@ -1,10 +1,10 @@
-<a id="soldier.conversation.stores.inmemory"></a>
+<a id="focal.conversation.stores.inmemory"></a>
 
-# soldier.conversation.stores.inmemory
+# focal.conversation.stores.inmemory
 
 In-memory implementation of SessionStore.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore"></a>
 
 ## InMemorySessionStore Objects
 
@@ -17,7 +17,7 @@ In-memory implementation of SessionStore for testing and development.
 Uses simple dict storage with linear scan for queries.
 Not suitable for production use.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.__init__"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -27,7 +27,7 @@ def __init__() -> None
 
 Initialize empty storage.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.get"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.get"></a>
 
 #### get
 
@@ -37,7 +37,7 @@ async def get(session_id: UUID) -> Session | None
 
 Get a session by ID.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.save"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.save"></a>
 
 #### save
 
@@ -47,7 +47,7 @@ async def save(session: Session) -> UUID
 
 Save a session, returning its ID.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.delete"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.delete"></a>
 
 #### delete
 
@@ -57,7 +57,7 @@ async def delete(session_id: UUID) -> bool
 
 Delete a session.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.get_by_channel"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.get_by_channel"></a>
 
 #### get\_by\_channel
 
@@ -68,7 +68,7 @@ async def get_by_channel(tenant_id: UUID, channel: Channel,
 
 Get session by channel identity.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.list_by_agent"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.list_by_agent"></a>
 
 #### list\_by\_agent
 
@@ -82,7 +82,7 @@ async def list_by_agent(tenant_id: UUID,
 
 List sessions for an agent with optional status filter.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.list_by_customer"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.list_by_customer"></a>
 
 #### list\_by\_customer
 
@@ -95,7 +95,7 @@ async def list_by_customer(tenant_id: UUID,
 
 List sessions for a customer profile.
 
-<a id="soldier.conversation.stores.inmemory.InMemorySessionStore.find_sessions_by_step_hash"></a>
+<a id="focal.conversation.stores.inmemory.InMemorySessionStore.find_sessions_by_step_hash"></a>
 
 #### find\_sessions\_by\_step\_hash
 

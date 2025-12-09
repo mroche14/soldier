@@ -1,12 +1,12 @@
-<a id="soldier.config.models.migration"></a>
+<a id="focal.config.models.migration"></a>
 
-# soldier.config.models.migration
+# focal.config.models.migration
 
 Migration configuration models.
 
 Defines configuration for scenario migration behavior loaded from TOML.
 
-<a id="soldier.config.models.migration.DeploymentConfig"></a>
+<a id="focal.config.models.migration.DeploymentConfig"></a>
 
 ## DeploymentConfig Objects
 
@@ -16,7 +16,7 @@ class DeploymentConfig(BaseModel)
 
 Deployment phase configuration.
 
-<a id="soldier.config.models.migration.GapFillConfig"></a>
+<a id="focal.config.models.migration.GapFillConfig"></a>
 
 ## GapFillConfig Objects
 
@@ -26,7 +26,7 @@ class GapFillConfig(BaseModel)
 
 Gap fill configuration.
 
-<a id="soldier.config.models.migration.ReRoutingConfig"></a>
+<a id="focal.config.models.migration.ReRoutingConfig"></a>
 
 ## ReRoutingConfig Objects
 
@@ -36,7 +36,7 @@ class ReRoutingConfig(BaseModel)
 
 Re-routing configuration.
 
-<a id="soldier.config.models.migration.CheckpointConfig"></a>
+<a id="focal.config.models.migration.CheckpointConfig"></a>
 
 ## CheckpointConfig Objects
 
@@ -46,7 +46,7 @@ class CheckpointConfig(BaseModel)
 
 Checkpoint handling configuration.
 
-<a id="soldier.config.models.migration.RetentionConfig"></a>
+<a id="focal.config.models.migration.RetentionConfig"></a>
 
 ## RetentionConfig Objects
 
@@ -56,7 +56,7 @@ class RetentionConfig(BaseModel)
 
 Retention configuration.
 
-<a id="soldier.config.models.migration.MigrationLoggingConfig"></a>
+<a id="focal.config.models.migration.MigrationLoggingConfig"></a>
 
 ## MigrationLoggingConfig Objects
 
@@ -66,7 +66,7 @@ class MigrationLoggingConfig(BaseModel)
 
 Migration logging configuration.
 
-<a id="soldier.config.models.migration.ScenarioMigrationConfig"></a>
+<a id="focal.config.models.migration.ScenarioMigrationConfig"></a>
 
 ## ScenarioMigrationConfig Objects
 

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement the foundational abstraction layer for Soldier including:
+Implement the foundational abstraction layer for Focal including:
 - **Phase 2**: Observability foundation (structlog logging, Prometheus metrics, OpenTelemetry tracing)
 - **Phase 3**: Domain models (all Pydantic models for core entities)
 - **Phase 4**: Store interfaces & in-memory implementations (ConfigStore, MemoryStore, SessionStore, AuditStore, ProfileStore)
@@ -33,7 +33,7 @@ No constitution violations detected. The project constitution is a template awai
 
 | Gate | Status | Notes |
 |------|--------|-------|
-| Library-First | PASS | All code organized as soldier/ package |
+| Library-First | PASS | All code organized as focal/ package |
 | Interface-First | PASS | ABCs before implementations |
 | Test-First | PASS | TDD approach mandated |
 | No Hardcoded Values | PASS | Configuration via TOML + Pydantic |
@@ -57,7 +57,7 @@ specs/003-core-abstractions/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── observability/           # Phase 2: Logging, tracing, metrics
 │   ├── __init__.py
 │   ├── logging.py           # structlog setup, PII redaction
@@ -165,7 +165,7 @@ tests/
 └── conftest.py              # Shared fixtures
 ```
 
-**Structure Decision**: Single Python package with domain-aligned modules following existing `soldier/` structure. Tests mirror source structure.
+**Structure Decision**: Single Python package with domain-aligned modules following existing `focal/` structure. Tests mirror source structure.
 
 ## Complexity Tracking
 

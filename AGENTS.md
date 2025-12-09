@@ -1,8 +1,8 @@
-# Soldier Development Guidelines
+# Focal Development Guidelines
 
 ## Project Overview
 
-Soldier is a **production-grade cognitive engine** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture designed for horizontal scaling.
+Focal is a **production-grade cognitive engine** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture designed for horizontal scaling.
 
 **Core problem it solves**: Building reliable conversational agents without stuffing everything into prompts (unpredictable at scale) or defining behavior in code (no hot-reload, no horizontal scaling).
 
@@ -143,14 +143,14 @@ All AI capabilities are accessed through abstract interfaces:
 config/default.toml      → Base defaults (committed)
 config/{env}.toml        → Environment overrides (committed)
 .env                     → Secrets (gitignored, never committed)
-SOLDIER_* env vars       → Runtime overrides
+FOCAL_* env vars       → Runtime overrides
 ```
 
 **Configuration Loading Order** (later overrides earlier):
 1. Pydantic model defaults
 2. `config/default.toml`
-3. `config/{SOLDIER_ENV}.toml` (development, staging, production)
-4. Environment variables (`SOLDIER_*`)
+3. `config/{FOCAL_ENV}.toml` (development, staging, production)
+4. Environment variables (`FOCAL_*`)
 
 **Implications**:
 - No magic numbers in code
@@ -165,7 +165,7 @@ SOLDIER_* env vars       → Runtime overrides
 **Secret Resolution Order**:
 1. Secret Manager (production) - AWS Secrets Manager, HashiCorp Vault
 2. Standard env vars - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc.
-3. Soldier-prefixed env vars - `SOLDIER_PIPELINE__GENERATION__MODELS`
+3. Focal-prefixed env vars - `FOCAL_PIPELINE__GENERATION__MODELS`
 4. `.env` file (development only, gitignored)
 
 **Common Provider Env Vars**:
@@ -318,7 +318,7 @@ class AlignmentEngine:
 
 ### Async Everything
 
-Soldier is async-first. All I/O operations are async:
+Focal is async-first. All I/O operations are async:
 
 ```python
 # Good
@@ -365,7 +365,7 @@ uv run python script.py
 uv run pytest
 
 # Run the application
-uv run soldier
+uv run focal
 ```
 
 ### Import Rules
@@ -381,14 +381,14 @@ except ImportError:
 
 # BAD - Same problem with conditional behavior
 try:
-    from soldier.memory.stores.neo4j import Neo4jMemoryStore
+    from focal.memory.stores.neo4j import Neo4jMemoryStore
     HAS_NEO4J = True
 except ImportError:
     HAS_NEO4J = False
 
 # GOOD - Let it crash immediately with clear error
 import anthropic
-from soldier.memory.stores.neo4j import Neo4jMemoryStore
+from focal.memory.stores.neo4j import Neo4jMemoryStore
 ```
 
 **Why**: Missing dependencies should crash immediately at import time with a clear `ModuleNotFoundError`, not fail unpredictably later when the code tries to use the missing module.
@@ -410,12 +410,12 @@ Answer: In the folder named after X.
 
 | Looking for... | Location |
 |----------------|----------|
-| Rule matching logic | `soldier/alignment/retrieval/` |
-| Memory storage | `soldier/memory/stores/` |
-| Session management | `soldier/conversation/` |
-| API endpoints | `soldier/api/routes/` |
-| Configuration models | `soldier/config/models/` |
-| Logging setup | `soldier/observability/` |
+| Rule matching logic | `focal/alignment/retrieval/` |
+| Memory storage | `focal/memory/stores/` |
+| Session management | `focal/conversation/` |
+| API endpoints | `focal/api/routes/` |
+| Configuration models | `focal/config/models/` |
+| Logging setup | `focal/observability/` |
 
 ### No Duplication
 
@@ -460,7 +460,7 @@ class PostgresNewStore(NewStore):
 All logging uses `structlog` with JSON output. Every log entry includes context:
 
 ```python
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 
 logger = get_logger(__name__)
 

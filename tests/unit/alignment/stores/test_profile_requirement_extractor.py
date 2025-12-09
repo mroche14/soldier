@@ -8,8 +8,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.models import Rule, Scenario
-from soldier.alignment.stores import CustomerDataRequirementExtractor
+from focal.alignment.models import Rule, Scenario
+from focal.alignment.stores import CustomerDataRequirementExtractor
 
 
 @pytest.fixture

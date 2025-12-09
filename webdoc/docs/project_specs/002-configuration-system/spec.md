@@ -3,13 +3,13 @@
 **Feature Branch**: `002-configuration-system`
 **Created**: 2025-11-28
 **Status**: Draft
-**Input**: Build the configuration loading system with Pydantic validation for the Soldier cognitive engine.
+**Input**: Build the configuration loading system with Pydantic validation for the Focal cognitive engine.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Load Configuration at Startup (Priority: P1)
 
-As a developer deploying Soldier, I need the application to automatically load configuration from TOML files so that I can customize behavior without modifying code.
+As a developer deploying Focal, I need the application to automatically load configuration from TOML files so that I can customize behavior without modifying code.
 
 **Why this priority**: This is the foundational capability - without configuration loading, no other configuration features work. Every deployment needs this.
 
@@ -29,12 +29,12 @@ As a DevOps engineer, I need to override base configuration per environment (dev
 
 **Why this priority**: Critical for any real deployment - you cannot run the same configuration in dev and production.
 
-**Independent Test**: Can be tested by setting `SOLDIER_ENV=staging` and verifying that `config/staging.toml` values override `config/default.toml`.
+**Independent Test**: Can be tested by setting `FOCAL_ENV=staging` and verifying that `config/staging.toml` values override `config/default.toml`.
 
 **Acceptance Scenarios**:
 
-1. **Given** `SOLDIER_ENV=production` and both `default.toml` and `production.toml` exist, **When** the application loads configuration, **Then** values from `production.toml` override those in `default.toml`.
-2. **Given** `SOLDIER_ENV=staging` but `staging.toml` does not exist, **When** the application loads configuration, **Then** it uses only `default.toml` values without error.
+1. **Given** `FOCAL_ENV=production` and both `default.toml` and `production.toml` exist, **When** the application loads configuration, **Then** values from `production.toml` override those in `default.toml`.
+2. **Given** `FOCAL_ENV=staging` but `staging.toml` does not exist, **When** the application loads configuration, **Then** it uses only `default.toml` values without error.
 3. **Given** nested configuration in both files (e.g., `[api.rate_limit]`), **When** configuration is merged, **Then** only the specific nested keys in the environment file are overridden, not the entire section.
 
 ---
@@ -45,13 +45,13 @@ As an operator, I need to override specific configuration values via environment
 
 **Why this priority**: Essential for container deployments and CI/CD pipelines where file modification is impractical.
 
-**Independent Test**: Can be tested by setting `SOLDIER_API__PORT=9000` and verifying the port setting is overridden.
+**Independent Test**: Can be tested by setting `FOCAL_API__PORT=9000` and verifying the port setting is overridden.
 
 **Acceptance Scenarios**:
 
-1. **Given** `SOLDIER_DEBUG=true` is set, **When** configuration loads, **Then** the `debug` setting is `True` regardless of TOML values.
-2. **Given** `SOLDIER_API__PORT=9000` is set, **When** configuration loads, **Then** `settings.api.port` equals `9000`.
-3. **Given** a TOML file sets `api.port = 8000` and `SOLDIER_API__PORT=9000` is set, **When** configuration loads, **Then** the environment variable wins (port is 9000).
+1. **Given** `FOCAL_DEBUG=true` is set, **When** configuration loads, **Then** the `debug` setting is `True` regardless of TOML values.
+2. **Given** `FOCAL_API__PORT=9000` is set, **When** configuration loads, **Then** `settings.api.port` equals `9000`.
+3. **Given** a TOML file sets `api.port = 8000` and `FOCAL_API__PORT=9000` is set, **When** configuration loads, **Then** the environment variable wins (port is 9000).
 
 ---
 
@@ -73,7 +73,7 @@ As a developer, I need invalid configuration to be rejected at startup with clea
 
 ### User Story 5 - Access Configuration in Code (Priority: P2)
 
-As a developer writing Soldier code, I need a simple, type-safe way to access configuration values so that I can use settings throughout the codebase.
+As a developer writing Focal code, I need a simple, type-safe way to access configuration values so that I can use settings throughout the codebase.
 
 **Why this priority**: This is how all other code will interact with configuration - it must be ergonomic and safe.
 
@@ -90,25 +90,25 @@ As a developer writing Soldier code, I need a simple, type-safe way to access co
 ### Edge Cases
 
 - What happens when TOML contains unknown keys not defined in Pydantic models? (Should be ignored, not cause errors)
-- What happens when environment variable format is wrong (e.g., `SOLDIER_API_PORT` instead of `SOLDIER_API__PORT`)? (Should be ignored)
+- What happens when environment variable format is wrong (e.g., `FOCAL_API_PORT` instead of `FOCAL_API__PORT`)? (Should be ignored)
 - What happens when configuration directory doesn't exist? (Should use defaults only)
-- What happens when `SOLDIER_CONFIG_DIR` points to a non-existent path? (Should fail with clear error)
+- What happens when `FOCAL_CONFIG_DIR` points to a non-existent path? (Should fail with clear error)
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 - **FR-001**: System MUST load configuration from `config/default.toml` as the base configuration.
-- **FR-002**: System MUST merge environment-specific TOML files (`config/{SOLDIER_ENV}.toml`) on top of defaults.
-- **FR-003**: System MUST support environment variable overrides with `SOLDIER_` prefix and `__` as nested delimiter.
+- **FR-002**: System MUST merge environment-specific TOML files (`config/{FOCAL_ENV}.toml`) on top of defaults.
+- **FR-003**: System MUST support environment variable overrides with `FOCAL_` prefix and `__` as nested delimiter.
 - **FR-004**: System MUST validate all configuration values using Pydantic models at load time.
 - **FR-005**: System MUST provide a `get_settings()` function that returns a cached, singleton Settings instance.
 - **FR-006**: System MUST fail immediately with descriptive errors when configuration is invalid.
 - **FR-007**: System MUST ignore unknown keys in TOML files (forward compatibility).
 - **FR-008**: System MUST perform deep merging of nested configuration sections.
 - **FR-009**: System MUST provide typed Pydantic models for all configuration sections: API, Pipeline, Providers, Storage, Selection Strategies, and Observability.
-- **FR-010**: System MUST support `SOLDIER_ENV` environment variable to select environment (default: "development").
-- **FR-011**: System MUST support `SOLDIER_CONFIG_DIR` environment variable to override config directory location.
+- **FR-010**: System MUST support `FOCAL_ENV` environment variable to select environment (default: "development").
+- **FR-011**: System MUST support `FOCAL_CONFIG_DIR` environment variable to override config directory location.
 
 ### Key Entities
 

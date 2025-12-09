@@ -7,17 +7,17 @@
 
 ## 1. Customer Data Naming Consolidation
 
-The existing `soldier/profile/` module **IS** the CustomerDataStore implementation. It needs renaming and field additions, NOT parallel schemas.
+The existing `focal/profile/` module **IS** the CustomerDataStore implementation. It needs renaming and field additions, NOT parallel schemas.
 
 ### Canonical Name Mapping
 
 | Old Name (profile/) | New Name (CustomerData) | Location | Action |
 |---------------------|------------------------|----------|--------|
-| `ProfileFieldDefinition` | `CustomerDataField` | `soldier/profile/models.py` | **RENAME** + add `scope`, `persist` |
-| `ProfileField` | `VariableEntry` | `soldier/profile/models.py` | **RENAME** + add `history` |
-| `CustomerProfile` | `CustomerDataStore` | `soldier/profile/models.py` | **RENAME** |
-| `ProfileStore` | `CustomerDataStore` (interface) | `soldier/profile/store.py` | **RENAME** |
-| `ProfileFieldSource` | `VariableSource` | `soldier/profile/enums.py` | **RENAME** |
+| `ProfileFieldDefinition` | `CustomerDataField` | `focal/profile/models.py` | **RENAME** + add `scope`, `persist` |
+| `ProfileField` | `VariableEntry` | `focal/profile/models.py` | **RENAME** + add `history` |
+| `CustomerProfile` | `CustomerDataStore` | `focal/profile/models.py` | **RENAME** |
+| `ProfileStore` | `CustomerDataStore` (interface) | `focal/profile/store.py` | **RENAME** |
+| `ProfileFieldSource` | `VariableSource` | `focal/profile/enums.py` | **RENAME** |
 
 ### Fields to ADD to Existing Models
 
@@ -61,11 +61,11 @@ These models ARE new and should be created:
 
 | Model | Location | Phase |
 |-------|----------|-------|
-| `CustomerSchemaMask` | `soldier/alignment/context/customer_schema_mask.py` | P2 |
-| `CandidateVariableInfo` | `soldier/alignment/context/situational_snapshot.py` | P2 |
-| `SituationalSnapshot` | `soldier/alignment/context/situational_snapshot.py` | P2 |
-| `GlossaryItem` | `soldier/alignment/models/glossary.py` | P1 |
-| `TurnContext` | `soldier/alignment/models/turn_context.py` | P1 |
+| `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` | P2 |
+| `CandidateVariableInfo` | `focal/alignment/context/situational_snapshot.py` | P2 |
+| `SituationalSnapshot` | `focal/alignment/context/situational_snapshot.py` | P2 |
+| `GlossaryItem` | `focal/alignment/models/glossary.py` | P1 |
+| `TurnContext` | `focal/alignment/models/turn_context.py` | P1 |
 
 ---
 
@@ -78,28 +78,28 @@ Gap analysis identified these hardcoded prompts NOT addressed in any checklist:
 **Add to Phase 11 or create new "Memory Ingestion Templates" section:**
 
 - [ ] **Create entity_extraction.jinja2 template**
-  - File: `soldier/memory/ingestion/prompts/entity_extraction.jinja2`
+  - File: `focal/memory/ingestion/prompts/entity_extraction.jinja2`
   - Action: Extract 192-line inline prompt from `entity_extractor.py:45-237`
   - Details: Move hardcoded prompt to Jinja2 template
 
 - [ ] **Create TemplateLoader for entity extraction**
-  - File: `soldier/memory/ingestion/entity_extractor.py`
+  - File: `focal/memory/ingestion/entity_extractor.py`
   - Action: Modify to use Jinja2 loader instead of inline string
 
 ### Summarization (memory/ingestion/summarizer.py)
 
 - [ ] **Create window_summary.jinja2 template**
-  - File: `soldier/memory/ingestion/prompts/window_summary.jinja2`
+  - File: `focal/memory/ingestion/prompts/window_summary.jinja2`
   - Action: Extract inline prompt
 
 - [ ] **Create meta_summary.jinja2 template**
-  - File: `soldier/memory/ingestion/prompts/meta_summary.jinja2`
+  - File: `focal/memory/ingestion/prompts/meta_summary.jinja2`
   - Action: Extract inline prompt
 
 ### Scenario Filter
 
 - [ ] **Create scenario_filter.jinja2 template**
-  - File: `soldier/alignment/filtering/prompts/scenario_filter.jinja2`
+  - File: `focal/alignment/filtering/prompts/scenario_filter.jinja2`
   - Action: Currently `.txt` unused - implement LLM-based scenario filtering
   - Note: Gap analysis says "Deterministic only" - need to add LLM path
 
@@ -139,36 +139,36 @@ All checklists must use these paths:
 
 | Model | Canonical Path |
 |-------|---------------|
-| `CustomerDataField` | `soldier/profile/models.py` (renamed from ProfileFieldDefinition) |
-| `VariableEntry` | `soldier/profile/models.py` (renamed from ProfileField) |
-| `CustomerDataStore` | `soldier/profile/models.py` (renamed from CustomerProfile) |
-| `CustomerSchemaMask` | `soldier/alignment/context/customer_schema_mask.py` |
-| `CandidateVariableInfo` | `soldier/alignment/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `soldier/alignment/context/situational_snapshot.py` |
-| `GlossaryItem` | `soldier/alignment/models/glossary.py` |
-| `TurnContext` | `soldier/alignment/models/turn_context.py` |
-| `ResponsePlan` | `soldier/alignment/planning/models.py` |
-| `TurnOutcome` | `soldier/alignment/models/outcome.py` |
+| `CustomerDataField` | `focal/profile/models.py` (renamed from ProfileFieldDefinition) |
+| `VariableEntry` | `focal/profile/models.py` (renamed from ProfileField) |
+| `CustomerDataStore` | `focal/profile/models.py` (renamed from CustomerProfile) |
+| `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` |
+| `CandidateVariableInfo` | `focal/alignment/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `focal/alignment/context/situational_snapshot.py` |
+| `GlossaryItem` | `focal/alignment/models/glossary.py` |
+| `TurnContext` | `focal/alignment/models/turn_context.py` |
+| `ResponsePlan` | `focal/alignment/planning/models.py` |
+| `TurnOutcome` | `focal/alignment/models/outcome.py` |
 
 ### Templates
 
 | Template | Canonical Path |
 |----------|---------------|
-| Situational Sensor | `soldier/alignment/context/prompts/situational_sensor.jinja2` |
-| Rule Filter | `soldier/alignment/filtering/prompts/rule_filter.jinja2` |
-| Scenario Filter | `soldier/alignment/filtering/prompts/scenario_filter.jinja2` |
-| Generation | `soldier/alignment/generation/prompts/generation.jinja2` |
-| Enforcement | `soldier/alignment/enforcement/prompts/llm_judge.jinja2` |
-| Entity Extraction | `soldier/memory/ingestion/prompts/entity_extraction.jinja2` |
-| Summarization | `soldier/memory/ingestion/prompts/summarization.jinja2` |
+| Situational Sensor | `focal/alignment/context/prompts/situational_sensor.jinja2` |
+| Rule Filter | `focal/alignment/filtering/prompts/rule_filter.jinja2` |
+| Scenario Filter | `focal/alignment/filtering/prompts/scenario_filter.jinja2` |
+| Generation | `focal/alignment/generation/prompts/generation.jinja2` |
+| Enforcement | `focal/alignment/enforcement/prompts/llm_judge.jinja2` |
+| Entity Extraction | `focal/memory/ingestion/prompts/entity_extraction.jinja2` |
+| Summarization | `focal/memory/ingestion/prompts/summarization.jinja2` |
 
 ### Stores
 
 | Store | Canonical Path |
 |-------|---------------|
-| CustomerDataStore (interface) | `soldier/profile/store.py` (renamed from ProfileStore) |
-| InMemoryCustomerDataStore | `soldier/profile/stores/inmemory.py` |
-| PostgresCustomerDataStore | `soldier/profile/stores/postgres.py` |
+| CustomerDataStore (interface) | `focal/profile/store.py` (renamed from ProfileStore) |
+| InMemoryCustomerDataStore | `focal/profile/stores/inmemory.py` |
+| PostgresCustomerDataStore | `focal/profile/stores/postgres.py` |
 
 ---
 
@@ -240,7 +240,7 @@ All models must use these field names:
 ## 7. Implementation Order (Revised)
 
 1. **Rename Profile → CustomerData** (foundation)
-   - Rename classes in `soldier/profile/models.py`
+   - Rename classes in `focal/profile/models.py`
    - Add `scope`, `persist`, `history` fields
    - Update all imports across codebase
 
@@ -268,7 +268,7 @@ All models must use these field names:
 
 Before implementing, verify:
 
-- [ ] All model definitions reference `soldier/profile/models.py` (renamed)
+- [ ] All model definitions reference `focal/profile/models.py` (renamed)
 - [ ] All field names use canonical naming (`name`, `tenant_id`, `customer_id`)
 - [ ] All ID fields are `UUID`, not `str`
 - [ ] No duplicate model definitions across phases

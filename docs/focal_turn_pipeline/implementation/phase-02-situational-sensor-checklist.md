@@ -43,22 +43,22 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Prerequisites from Phase 1 (Already Complete)
 
 - [x] **CustomerDataField** (renamed from ProfileFieldDefinition)
-  - File: `soldier/profile/models.py`
+  - File: `focal/profile/models.py`
   - Fields: `name`, `scope`, `persist`, `value_type`, etc.
   - Note: Use `name` field (not `key`) per existing convention
 
 - [x] **VariableEntry** (renamed from ProfileField)
-  - File: `soldier/profile/models.py`
+  - File: `focal/profile/models.py`
   - Fields: `name`, `value`, `history`, `confidence`, etc.
 
 - [x] **CustomerDataStore** (renamed from CustomerProfile)
-  - File: `soldier/profile/models.py`
+  - File: `focal/profile/models.py`
   - Contains: `fields: dict[str, VariableEntry]`
 
 ### New Models for Phase 2 (Create These)
 
 - [x] **Create CustomerSchemaMask model**
-  - File: `soldier/alignment/context/customer_schema_mask.py`
+  - File: `focal/alignment/context/customer_schema_mask.py`
   - Action: Created (already existed from Phase 1)
   - **Implemented**: Model exists with `CustomerSchemaMaskEntry` and `CustomerSchemaMask`
   - Models:
@@ -90,14 +90,14 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
     ```
 
 - [x] **GlossaryItem** (from Phase 1)
-  - File: `soldier/alignment/models/glossary.py`
+  - File: `focal/alignment/models/glossary.py`
   - Note: Already exists from Phase 1
   - **Implemented**: Model exists with all required fields
 
 ### Situational Sensor Output Models
 
 - [x] **Create CandidateVariableInfo model**
-  - File: `soldier/alignment/context/situational_snapshot.py`
+  - File: `focal/alignment/context/situational_snapshot.py`
   - Action: Created new file
   - Model: `CandidateVariableInfo`
   - **Implemented**: Created with `value`, `scope`, `is_update` fields
@@ -110,7 +110,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Details: Extracted variable from user message with scoping metadata
 
 - [x] **Create SituationalSnapshot model**
-  - File: `soldier/alignment/context/situational_snapshot.py`
+  - File: `focal/alignment/context/situational_snapshot.py`
   - Action: Added to same file
   - Model: `SituationalSnapshot`
   - **Implemented**: Created with all fields from spec including `candidate_variables`
@@ -141,13 +141,13 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Update Existing Models
 
 - [x] **Update __init__.py exports**
-  - File: `soldier/alignment/models/__init__.py`
+  - File: `focal/alignment/models/__init__.py`
   - Action: Not needed (models are in customer_data/, not alignment/models/)
-  - Details: `CustomerDataField`, `VariableEntry`, `CustomerDataStore` are in `soldier/customer_data/models.py`
-  - **Implemented**: `CustomerSchemaMask` and `CustomerSchemaMaskEntry` exported from `soldier/alignment/context/__init__.py`
+  - Details: `CustomerDataField`, `VariableEntry`, `CustomerDataStore` are in `focal/customer_data/models.py`
+  - **Implemented**: `CustomerSchemaMask` and `CustomerSchemaMaskEntry` exported from `focal/alignment/context/__init__.py`
 
 - [x] **Update context __init__.py exports**
-  - File: `soldier/alignment/context/__init__.py`
+  - File: `focal/alignment/context/__init__.py`
   - Action: Modified
   - Details: Added exports for `SituationalSnapshot`, `CandidateVariableInfo`
   - **Implemented**: Both models exported in `__all__`
@@ -183,7 +183,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Pydantic Configuration Models
 
 - [x] **Create SituationalSensorConfig model**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Modified existing file
   - **Implemented**: Created `SituationalSensorConfig` class extending `OpenRouterConfigMixin`
   - Model:
@@ -205,7 +205,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Details: Pydantic model for type-safe configuration access
 
 - [x] **Update PipelineConfig to include situational_sensor**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Modified
   - Details: Added `situational_sensor: SituationalSensorConfig` field to `PipelineConfig`
   - **Implemented**: Field added with `default_factory=SituationalSensorConfig`
@@ -217,7 +217,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Template Loader
 
 - [x] **Create Jinja2 template loader utility**
-  - File: `soldier/alignment/context/template_loader.py`
+  - File: `focal/alignment/context/template_loader.py`
   - Action: Created new file
   - Class: `TemplateLoader`
   - **Implemented**: Created with Jinja2 Environment configuration (trim_blocks, lstrip_blocks enabled)
@@ -245,7 +245,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Situational Sensor Prompt Template
 
 - [x] **Create situational_sensor.jinja2 template**
-  - File: `soldier/alignment/context/prompts/situational_sensor.jinja2`
+  - File: `focal/alignment/context/prompts/situational_sensor.jinja2`
   - Action: Created new file
   - **Implemented**: Full Jinja2 template with schema mask, glossary, conversation history, and JSON response format
   - Template structure:
@@ -315,7 +315,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Core Sensor Class
 
 - [x] **Create SituationalSensor class**
-  - File: `soldier/alignment/context/situational_sensor.py`
+  - File: `focal/alignment/context/situational_sensor.py`
   - Action: Created new file
   - Class: `SituationalSensor`
   - **Implemented**: Created with all methods from spec (P2.1-P2.6), uses TemplateLoader for Jinja2 rendering
@@ -334,42 +334,42 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### P2.1: Build CustomerSchemaMask
 
 - [x] **Implement _build_schema_mask method**
-  - File: `soldier/alignment/context/situational_sensor.py`
+  - File: `focal/alignment/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Creates CustomerSchemaMaskEntry for each field, checks existence in CustomerDataStore.fields
 
 ### P2.2: Build Glossary View
 
 - [x] **Implement _build_glossary_view method**
-  - File: `soldier/alignment/context/situational_sensor.py`
+  - File: `focal/alignment/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Simply returns glossary dict (filtering already done by caller)
 
 ### P2.3: Build Conversation Window
 
 - [x] **Implement _build_conversation_window method**
-  - File: `soldier/alignment/context/situational_sensor.py`
+  - File: `focal/alignment/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Extracts last K turns using config.history_turns, handles K=0 case
 
 ### P2.4: Call Sensor LLM
 
 - [x] **Implement _call_sensor_llm method**
-  - File: `soldier/alignment/context/situational_sensor.py`
+  - File: `focal/alignment/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Renders Jinja2 template, calls LLMExecutor, extracts JSON from response (handles markdown code blocks)
 
 ### P2.5: Parse Snapshot
 
 - [x] **Implement _parse_snapshot method**
-  - File: `soldier/alignment/context/situational_sensor.py`
+  - File: `focal/alignment/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Parses LLM JSON into SituationalSnapshot, handles nested candidate_variables, provides defaults for optional fields
 
 ### P2.6: Validate Language
 
 - [x] **Implement _validate_language method**
-  - File: `soldier/alignment/context/situational_sensor.py`
+  - File: `focal/alignment/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Validates ISO 639-1 format (2-letter alphabetic), defaults to "en" if invalid
 
@@ -380,7 +380,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Update Engine to Use Situational Sensor
 
 - [x] **Replace ContextExtractor with SituationalSensor**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modified
   - Changes:
     - Updated imports to include `SituationalSensor` and `SituationalSnapshot`
@@ -392,7 +392,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Details: Sensor runs when enabled, loads customer data/glossary/schema, calls sense()
 
 - [x] **Update AlignmentResult model**
-  - File: `soldier/alignment/result.py`
+  - File: `focal/alignment/result.py`
   - Action: Modified
   - Changes:
     - Added import for `SituationalSnapshot`
@@ -403,7 +403,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Load CustomerDataStore and Glossary in Phase 1
 
 - [x] **Add CustomerDataStore loading to engine**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modified in `_extract_context()` method
   - Logic:
     - Loads CustomerDataStore using `_customer_data_loader.load()` for customer
@@ -419,7 +419,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### ConfigStore Extensions
 
 - [x] **Add GlossaryItem CRUD to ConfigStore interface**
-  - File: `soldier/alignment/stores/agent_config_store.py`
+  - File: `focal/alignment/stores/agent_config_store.py`
   - Action: Already exists (Phase 1)
   - Methods:
     - `async get_glossary_items(tenant_id: UUID, agent_id: UUID, *, enabled_only: bool = True) -> list[GlossaryItem]`
@@ -427,7 +427,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Details: Interface already has glossary methods from Phase 1
 
 - [x] **Add CustomerDataField CRUD to ConfigStore interface**
-  - File: `soldier/alignment/stores/agent_config_store.py`
+  - File: `focal/alignment/stores/agent_config_store.py`
   - Action: Already exists (Phase 1)
   - Methods:
     - `async get_customer_data_fields(tenant_id: UUID, agent_id: UUID, *, enabled_only: bool = True) -> list[CustomerDataField]`
@@ -437,19 +437,19 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### InMemory Implementations
 
 - [x] **Implement glossary methods in InMemoryConfigStore**
-  - File: `soldier/alignment/stores/inmemory.py`
+  - File: `focal/alignment/stores/inmemory.py`
   - Action: Already implemented (Phase 1)
   - Details: Lines 427-446, uses `_glossary_items` dict keyed by UUID
 
 - [x] **Implement customer_data_field methods in InMemoryConfigStore**
-  - File: `soldier/alignment/stores/inmemory.py`
+  - File: `focal/alignment/stores/inmemory.py`
   - Action: Already implemented (Phase 1)
   - Details: Lines 448-467, uses `_customer_data_fields` dict keyed by UUID
 
 ### ProfileStore Extensions
 
 - [x] **Add CustomerDataStore methods to ProfileStore interface**
-  - File: `soldier/customer_data/store.py`
+  - File: `focal/customer_data/store.py`
   - Action: Already exists (uses get_by_customer_id)
   - Methods:
     - `async get_by_customer_id(tenant_id: UUID, customer_id: UUID, *, include_history: bool = False) -> CustomerDataStore | None`
@@ -457,7 +457,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Details: ProfileStore already manages CustomerDataStore (renamed from CustomerProfile in Phase 1)
 
 - [x] **Implement in InMemoryProfileStore**
-  - File: `soldier/customer_data/stores/inmemory.py`
+  - File: `focal/customer_data/stores/inmemory.py`
   - Action: Already implemented (Phase 1)
   - Details: Lines 48-127, fully functional CRUD for CustomerDataStore
 
@@ -470,7 +470,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 - [x] **Test CustomerDataField, VariableEntry, CustomerDataStore**
   - File: `tests/unit/customer_data/test_models.py`
   - Action: Already tested (Phase 1)
-  - **Note**: These models exist in `soldier/customer_data/models.py` with existing comprehensive tests
+  - **Note**: These models exist in `focal/customer_data/models.py` with existing comprehensive tests
 
 - [x] **Test CustomerSchemaMask models**
   - File: `tests/unit/alignment/context/test_customer_schema_mask.py`

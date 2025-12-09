@@ -1,10 +1,10 @@
-<a id="soldier.providers.embedding.mock"></a>
+<a id="focal.providers.embedding.mock"></a>
 
-# soldier.providers.embedding.mock
+# focal.providers.embedding.mock
 
 Mock embedding provider for testing.
 
-<a id="soldier.providers.embedding.mock.MockEmbeddingProvider"></a>
+<a id="focal.providers.embedding.mock.MockEmbeddingProvider"></a>
 
 ## MockEmbeddingProvider Objects
 
@@ -17,7 +17,7 @@ Mock embedding provider for testing.
 Generates deterministic embeddings based on text content
 without making actual API calls.
 
-<a id="soldier.providers.embedding.mock.MockEmbeddingProvider.__init__"></a>
+<a id="focal.providers.embedding.mock.MockEmbeddingProvider.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -32,7 +32,7 @@ Initialize mock provider.
 - `dimensions` - Embedding vector dimensions
 - `default_model` - Model name to report
 
-<a id="soldier.providers.embedding.mock.MockEmbeddingProvider.provider_name"></a>
+<a id="focal.providers.embedding.mock.MockEmbeddingProvider.provider_name"></a>
 
 #### provider\_name
 
@@ -43,7 +43,7 @@ def provider_name() -> str
 
 Return the provider name.
 
-<a id="soldier.providers.embedding.mock.MockEmbeddingProvider.dimensions"></a>
+<a id="focal.providers.embedding.mock.MockEmbeddingProvider.dimensions"></a>
 
 #### dimensions
 
@@ -54,7 +54,7 @@ def dimensions() -> int
 
 Return embedding dimensions.
 
-<a id="soldier.providers.embedding.mock.MockEmbeddingProvider.call_history"></a>
+<a id="focal.providers.embedding.mock.MockEmbeddingProvider.call_history"></a>
 
 #### call\_history
 
@@ -65,7 +65,7 @@ def call_history() -> list[dict[str, Any]]
 
 Return history of calls for testing assertions.
 
-<a id="soldier.providers.embedding.mock.MockEmbeddingProvider.clear_history"></a>
+<a id="focal.providers.embedding.mock.MockEmbeddingProvider.clear_history"></a>
 
 #### clear\_history
 
@@ -75,7 +75,7 @@ def clear_history() -> None
 
 Clear call history.
 
-<a id="soldier.providers.embedding.mock.MockEmbeddingProvider.embed"></a>
+<a id="focal.providers.embedding.mock.MockEmbeddingProvider.embed"></a>
 
 #### embed
 

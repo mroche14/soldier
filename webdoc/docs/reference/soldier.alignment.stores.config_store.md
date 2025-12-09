@@ -1,10 +1,10 @@
-<a id="soldier.alignment.stores.config_store"></a>
+<a id="focal.alignment.stores.config_store"></a>
 
-# soldier.alignment.stores.config\_store
+# focal.alignment.stores.config\_store
 
 ConfigStore abstract interface.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore"></a>
 
 ## ConfigStore Objects
 
@@ -17,7 +17,7 @@ Abstract interface for configuration storage.
 Manages rules, scenarios, templates, variables, and agent
 configuration with support for vector search and scoping.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_rule"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_rule"></a>
 
 #### get\_rule
 
@@ -28,7 +28,7 @@ async def get_rule(tenant_id: UUID, rule_id: UUID) -> Rule | None
 
 Get a rule by ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_rules"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_rules"></a>
 
 #### get\_rules
 
@@ -44,7 +44,7 @@ async def get_rules(tenant_id: UUID,
 
 Get rules for an agent with optional filtering.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.save_rule"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.save_rule"></a>
 
 #### save\_rule
 
@@ -55,7 +55,7 @@ async def save_rule(rule: Rule) -> UUID
 
 Save a rule, returning its ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.delete_rule"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.delete_rule"></a>
 
 #### delete\_rule
 
@@ -66,7 +66,7 @@ async def delete_rule(tenant_id: UUID, rule_id: UUID) -> bool
 
 Soft-delete a rule by setting deleted_at.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.vector_search_rules"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.vector_search_rules"></a>
 
 #### vector\_search\_rules
 
@@ -83,7 +83,7 @@ async def vector_search_rules(
 
 Search rules by vector similarity, returning (rule, score) pairs.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_scenario"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_scenario"></a>
 
 #### get\_scenario
 
@@ -94,7 +94,7 @@ async def get_scenario(tenant_id: UUID, scenario_id: UUID) -> Scenario | None
 
 Get a scenario by ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_scenarios"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_scenarios"></a>
 
 #### get\_scenarios
 
@@ -108,7 +108,7 @@ async def get_scenarios(tenant_id: UUID,
 
 Get scenarios for an agent.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.save_scenario"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.save_scenario"></a>
 
 #### save\_scenario
 
@@ -119,7 +119,7 @@ async def save_scenario(scenario: Scenario) -> UUID
 
 Save a scenario, returning its ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.delete_scenario"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.delete_scenario"></a>
 
 #### delete\_scenario
 
@@ -130,7 +130,7 @@ async def delete_scenario(tenant_id: UUID, scenario_id: UUID) -> bool
 
 Soft-delete a scenario.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_template"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_template"></a>
 
 #### get\_template
 
@@ -141,7 +141,7 @@ async def get_template(tenant_id: UUID, template_id: UUID) -> Template | None
 
 Get a template by ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_templates"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_templates"></a>
 
 #### get\_templates
 
@@ -156,7 +156,7 @@ async def get_templates(tenant_id: UUID,
 
 Get templates for an agent with optional filtering.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.save_template"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.save_template"></a>
 
 #### save\_template
 
@@ -167,7 +167,7 @@ async def save_template(template: Template) -> UUID
 
 Save a template, returning its ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.delete_template"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.delete_template"></a>
 
 #### delete\_template
 
@@ -178,7 +178,7 @@ async def delete_template(tenant_id: UUID, template_id: UUID) -> bool
 
 Soft-delete a template.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_variable"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_variable"></a>
 
 #### get\_variable
 
@@ -189,7 +189,7 @@ async def get_variable(tenant_id: UUID, variable_id: UUID) -> Variable | None
 
 Get a variable by ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_variables"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_variables"></a>
 
 #### get\_variables
 
@@ -200,7 +200,7 @@ async def get_variables(tenant_id: UUID, agent_id: UUID) -> list[Variable]
 
 Get variables for an agent.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_variable_by_name"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_variable_by_name"></a>
 
 #### get\_variable\_by\_name
 
@@ -212,7 +212,7 @@ async def get_variable_by_name(tenant_id: UUID, agent_id: UUID,
 
 Get a variable by name.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.save_variable"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.save_variable"></a>
 
 #### save\_variable
 
@@ -223,7 +223,7 @@ async def save_variable(variable: Variable) -> UUID
 
 Save a variable, returning its ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.delete_variable"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.delete_variable"></a>
 
 #### delete\_variable
 
@@ -234,7 +234,7 @@ async def delete_variable(tenant_id: UUID, variable_id: UUID) -> bool
 
 Soft-delete a variable.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_agent"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_agent"></a>
 
 #### get\_agent
 
@@ -245,7 +245,7 @@ async def get_agent(tenant_id: UUID, agent_id: UUID) -> Agent | None
 
 Get an agent by ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_agents"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_agents"></a>
 
 #### get\_agents
 
@@ -264,7 +264,7 @@ Get agents for a tenant with pagination.
 
   Tuple of (agents list, total count)
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.save_agent"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.save_agent"></a>
 
 #### save\_agent
 
@@ -275,7 +275,7 @@ async def save_agent(agent: Agent) -> UUID
 
 Save an agent, returning its ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.delete_agent"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.delete_agent"></a>
 
 #### delete\_agent
 
@@ -286,7 +286,7 @@ async def delete_agent(tenant_id: UUID, agent_id: UUID) -> bool
 
 Soft-delete an agent.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_tool_activation"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_tool_activation"></a>
 
 #### get\_tool\_activation
 
@@ -298,7 +298,7 @@ async def get_tool_activation(tenant_id: UUID, agent_id: UUID,
 
 Get a tool activation by agent and tool ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_tool_activations"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_tool_activations"></a>
 
 #### get\_tool\_activations
 
@@ -310,7 +310,7 @@ async def get_tool_activations(tenant_id: UUID,
 
 Get all tool activations for an agent.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.save_tool_activation"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.save_tool_activation"></a>
 
 #### save\_tool\_activation
 
@@ -321,7 +321,7 @@ async def save_tool_activation(activation: ToolActivation) -> UUID
 
 Save a tool activation, returning its ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.delete_tool_activation"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.delete_tool_activation"></a>
 
 #### delete\_tool\_activation
 
@@ -333,7 +333,7 @@ async def delete_tool_activation(tenant_id: UUID, agent_id: UUID,
 
 Delete a tool activation.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_migration_plan"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_migration_plan"></a>
 
 #### get\_migration\_plan
 
@@ -345,7 +345,7 @@ async def get_migration_plan(tenant_id: UUID,
 
 Get migration plan by ID.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_migration_plan_for_versions"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_migration_plan_for_versions"></a>
 
 #### get\_migration\_plan\_for\_versions
 
@@ -358,7 +358,7 @@ async def get_migration_plan_for_versions(
 
 Get migration plan for specific version transition.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.save_migration_plan"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.save_migration_plan"></a>
 
 #### save\_migration\_plan
 
@@ -369,7 +369,7 @@ async def save_migration_plan(plan: MigrationPlan) -> UUID
 
 Save or update migration plan.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.list_migration_plans"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.list_migration_plans"></a>
 
 #### list\_migration\_plans
 
@@ -383,7 +383,7 @@ async def list_migration_plans(tenant_id: UUID,
 
 List migration plans for scenario.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.delete_migration_plan"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.delete_migration_plan"></a>
 
 #### delete\_migration\_plan
 
@@ -394,7 +394,7 @@ async def delete_migration_plan(tenant_id: UUID, plan_id: UUID) -> bool
 
 Delete a migration plan.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.archive_scenario_version"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.archive_scenario_version"></a>
 
 #### archive\_scenario\_version
 
@@ -406,7 +406,7 @@ async def archive_scenario_version(tenant_id: UUID,
 
 Archive scenario version before update.
 
-<a id="soldier.alignment.stores.config_store.ConfigStore.get_archived_scenario"></a>
+<a id="focal.alignment.stores.config_store.ConfigStore.get_archived_scenario"></a>
 
 #### get\_archived\_scenario
 

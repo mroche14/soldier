@@ -5,12 +5,12 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.config.models.selection import SelectionConfig
-from soldier.memory.models.episode import Episode
-from soldier.memory.retrieval.retriever import MemoryRetriever
-from soldier.memory.stores.inmemory import InMemoryMemoryStore
-from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.config.models.selection import SelectionConfig
+from focal.memory.models.episode import Episode
+from focal.memory.retrieval.retriever import MemoryRetriever
+from focal.memory.stores.inmemory import InMemoryMemoryStore
+from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):

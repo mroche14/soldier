@@ -1,10 +1,10 @@
-<a id="soldier.utils.vector"></a>
+<a id="focal.utils.vector"></a>
 
-# soldier.utils.vector
+# focal.utils.vector
 
 Vector utility functions.
 
-<a id="soldier.utils.vector.cosine_similarity"></a>
+<a id="focal.utils.vector.cosine_similarity"></a>
 
 #### cosine\_similarity
 

@@ -17,16 +17,16 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 import pytest
 
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.config.models.pipeline import PipelineConfig
-from soldier.conversation.models import Session, SessionStatus, Channel
-from soldier.conversation.stores.inmemory import InMemorySessionStore
-from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
-from soldier.observability.logging import setup_logging, get_logger
-from soldier.providers.embedding.mock import MockEmbeddingProvider
-from soldier.providers.llm import create_executor
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.config.models.pipeline import PipelineConfig
+from focal.conversation.models import Session, SessionStatus, Channel
+from focal.conversation.stores.inmemory import InMemorySessionStore
+from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from focal.observability.logging import setup_logging, get_logger
+from focal.providers.embedding.mock import MockEmbeddingProvider
+from focal.providers.llm import create_executor
 
 # Configure logging for test visibility
 setup_logging(level="DEBUG")
@@ -488,7 +488,7 @@ class TestAlignmentEngineWithRealLLM:
             },
         })
 
-        from soldier.providers.llm import create_executors_from_pipeline_config
+        from focal.providers.llm import create_executors_from_pipeline_config
         executors = create_executors_from_pipeline_config(pipeline_config)
 
         engine = AlignmentEngine(

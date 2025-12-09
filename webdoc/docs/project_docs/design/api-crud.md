@@ -1,8 +1,8 @@
 # API Design: CRUD Operations
 
-Soldier exposes full CRUD operations for all configuration entities. This enables non-developers to modify agent behavior via UI without code changes or restarts.
+Focal exposes full CRUD operations for all configuration entities. This enables non-developers to modify agent behavior via UI without code changes or restarts.
 
-> **Deployment Mode Note:** These CRUD endpoints are available in **standalone mode** where Soldier is the source of truth for configuration. In **External Platform integration mode**, configuration is read-only (loaded from Redis bundles published by the Control Plane). See [deployment modes](../architecture/overview.md#deployment-modes) for details.
+> **Deployment Mode Note:** These CRUD endpoints are available in **standalone mode** where Focal is the source of truth for configuration. In **External Platform integration mode**, configuration is read-only (loaded from Redis bundles published by the Control Plane). See [deployment modes](../architecture/overview.md#deployment-modes) for details.
 
 ## Design Principles
 
@@ -31,7 +31,7 @@ JWT Claims:
 ## Base URL
 
 ```
-https://soldier.example.com/v1
+https://focal.example.com/v1
 ```
 
 ## Common Patterns
@@ -643,7 +643,7 @@ Response: 200 OK
 
 ## Tools
 
-Tools define side-effect actions. Tool definitions are read-only in Soldier (managed by ToolHub), but activation per agent is configurable.
+Tools define side-effect actions. Tool definitions are read-only in Focal (managed by ToolHub), but activation per agent is configurable.
 
 ### List Available Tools
 

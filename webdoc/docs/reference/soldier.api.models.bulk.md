@@ -1,10 +1,10 @@
-<a id="soldier.api.models.bulk"></a>
+<a id="focal.api.models.bulk"></a>
 
-# soldier.api.models.bulk
+# focal.api.models.bulk
 
 Bulk operation models for batch CRUD operations.
 
-<a id="soldier.api.models.bulk.BulkOperation"></a>
+<a id="focal.api.models.bulk.BulkOperation"></a>
 
 ## BulkOperation Objects
 
@@ -17,7 +17,7 @@ Single operation in a bulk request.
 Represents one create, update, or delete operation to be
 executed as part of a bulk request.
 
-<a id="soldier.api.models.bulk.BulkRequest"></a>
+<a id="focal.api.models.bulk.BulkRequest"></a>
 
 ## BulkRequest Objects
 
@@ -41,7 +41,7 @@ does not prevent others from executing.
   ]
   }
 
-<a id="soldier.api.models.bulk.BulkResult"></a>
+<a id="focal.api.models.bulk.BulkResult"></a>
 
 ## BulkResult Objects
 
@@ -53,7 +53,7 @@ Result of a single bulk operation.
 
 Reports success or failure for each operation in the batch.
 
-<a id="soldier.api.models.bulk.BulkResponse"></a>
+<a id="focal.api.models.bulk.BulkResponse"></a>
 
 ## BulkResponse Objects
 

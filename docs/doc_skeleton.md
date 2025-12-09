@@ -4,7 +4,7 @@ This document provides a summary of all the documentation files in the `docs` di
 
 ---
 
-### `/home/marvin/Projects/soldier/docs/design/scenario-update-methods.md`
+### `/home/marvin/Projects/focal/docs/design/scenario-update-methods.md`
 
 This document tackles the problem of updating scenarios (conversation flows) while users are in the middle of them. The key solution is to pre-compute a "Migration Plan" whenever a scenario is updated. This plan defines exactly how to handle users at each step of the old scenario, specifying actions like continuing, collecting new data, or "teleporting" them to a different part of the flow. This approach is performant, reviewable by operators, and auditable. The document details the data models for migration plans, the workflow for generating and applying them, and how the system handles "gap fills" by trying to find required information from conversation history before asking the user. It also covers edge cases like very old sessions and provides a "Composite Migration" strategy to prevent a bad user experience when multiple updates happen in a row.
 
@@ -12,7 +12,7 @@ This document tackles the problem of updating scenarios (conversation flows) whi
 
 ### `docs/design/domain-model.md`
 
-This document defines the core data structures (the "domain model") for the Soldier application using Pydantic. It outlines the main entities, which are categorized into Configuration, Memory, and Session State.
+This document defines the core data structures (the "domain model") for the Focal application using Pydantic. It outlines the main entities, which are categorized into Configuration, Memory, and Session State.
 
 *   **Configuration Entities:** These define the agent's behavior and include `Agent`, `Scenario`, `Rule`, `Template`, and `Variable`. They are versioned and cached.
 *   **Memory Entities:** These represent the agent's knowledge and include `Episode` (a single unit of memory), `Entity` (a named thing), and `Relationship` (a connection between entities). These are stored in a graph-like structure.
@@ -44,7 +44,7 @@ The document also provides details on the configuration of each step, including 
 
 ### `docs/design/enhanced-enforcement.md`
 
-This document describes enhancements to Soldier's enforcement pipeline, extending the existing rule-based system with deterministic expression evaluation, LLM-as-Judge for subjective rules, and optional grounding/relevance verification. It is grounded in and reconciled with the existing Rule model and EnforcementValidator.
+This document describes enhancements to Focal's enforcement pipeline, extending the existing rule-based system with deterministic expression evaluation, LLM-as-Judge for subjective rules, and optional grounding/relevance verification. It is grounded in and reconciled with the existing Rule model and EnforcementValidator.
 
 Key concepts and enhancements:
 
@@ -70,7 +70,7 @@ The configuration uses TOML with boolean flags to enable/disable each capability
 
 ### `docs/architecture/alignment-engine.md`
 
-This document describes the "Alignment Engine," the core component of Soldier that ensures agent behavior follows predefined policies. It's a text-based pipeline that processes user messages through a series of steps to ensure predictable and controlled responses.
+This document describes the "Alignment Engine," the core component of Focal that ensures agent behavior follows predefined policies. It's a text-based pipeline that processes user messages through a series of steps to ensure predictable and controlled responses.
 
 The pipeline includes:
 *   **Input/Output Processing:** Handles multimodal data (audio, images) by converting it to text for the engine and back again for the response.
@@ -104,11 +104,11 @@ Key aspects of the Customer Profile include:
 
 ### `docs/architecture/overview.md`
 
-This document provides a high-level overview of the Soldier system's architecture. Soldier is designed as an **API-first, multi-tenant cognitive engine** with a focus on horizontal scalability and pluggability.
+This document provides a high-level overview of the Focal system's architecture. Focal is designed as an **API-first, multi-tenant cognitive engine** with a focus on horizontal scalability and pluggability.
 
 Key architectural points include:
 *   **Design Principles:** The system is built to be API-first, stateless (no in-memory state), and multi-tenant. Every component, from AI models to storage backends, is designed to be pluggable.
-*   **Deployment Modes:** It supports two modes: **Standalone**, where Soldier is the source of truth for configuration, and **External Platform Integration**, where it consumes configuration from an external control plane.
+*   **Deployment Modes:** It supports two modes: **Standalone**, where Focal is the source of truth for configuration, and **External Platform Integration**, where it consumes configuration from an external control plane.
 *   **Core Components:**
     *   **API Layer:** Handles external communication, authentication, and validation.
     *   **Alignment Engine:** The central processing pipeline that ensures agent behavior follows defined rules and scenarios.
@@ -122,7 +122,7 @@ Key architectural points include:
 
 ### `docs/design/api-crud.md`
 
-This document details the RESTful API for performing CRUD (Create, Read, Update, Delete) operations on Soldier's core configuration entities. These endpoints are primarily for "standalone mode," where Soldier manages its own configuration.
+This document details the RESTful API for performing CRUD (Create, Read, Update, Delete) operations on Focal's core configuration entities. These endpoints are primarily for "standalone mode," where Focal manages its own configuration.
 
 Key features of the API include:
 *   **Standard RESTful Design:** Uses standard HTTP verbs and resource-based URLs (e.g., `/v1/agents`, `/v1/rules`).
@@ -138,7 +138,7 @@ Key features of the API include:
 
 ### `docs/architecture/configuration-toml.md`
 
-This document provides a set of example TOML configuration files that demonstrate how the Soldier application is configured for different environments. It showcases the hierarchical and override-based nature of the configuration system.
+This document provides a set of example TOML configuration files that demonstrate how the Focal application is configured for different environments. It showcases the hierarchical and override-based nature of the configuration system.
 
 *   **`default.toml`:** This file contains the base configuration with sensible defaults for all settings, including API settings, provider configurations, and the full turn pipeline (from input processing to output processing). It defines fallback chains for AI models for each step of the pipeline.
 *   **`development.toml`:** This file overrides the default settings for a local development environment. It enables debug mode, disables rate limiting, uses in-memory storage for speed, and selects cheaper, faster AI models for generation.
@@ -170,7 +170,7 @@ This decoupled design allows for pluggable backends. For example, `MemoryStore` 
 
 ### `docs/architecture/configuration-models.md`
 
-This document defines the Pydantic models that represent Soldier's configuration structure. These models are used to validate the TOML configuration files and provide a typed interface to the settings throughout the application.
+This document defines the Pydantic models that represent Focal's configuration structure. These models are used to validate the TOML configuration files and provide a typed interface to the settings throughout the application.
 
 The key configuration models defined are:
 
@@ -185,9 +185,9 @@ The key configuration models defined are:
 
 ### `docs/architecture/folder-structure.md`
 
-This document outlines the folder structure of the Soldier codebase, which is organized by conceptual domains rather than technical layers.
+This document outlines the folder structure of the Focal codebase, which is organized by conceptual domains rather than technical layers.
 
-The main directories within the `soldier/` package are:
+The main directories within the `focal/` package are:
 
 *   **`alignment/`**: The "brain" of the agent, containing the logic for the entire turn pipeline, from context extraction to response generation and enforcement. It's further subdivided by pipeline stage.
 *   **`memory/`**: Manages the agent's long-term memory, including the `MemoryStore` interface and its various database implementations (e.g., Neo4j, PostgreSQL).
@@ -203,7 +203,7 @@ The document emphasizes the philosophy of "code follows concepts" and provides a
 
 ### `docs/architecture/configuration.md`
 
-This file acts as a hub, directing to more specific documents about Soldier's configuration architecture. It links to pages covering:
+This file acts as a hub, directing to more specific documents about Focal's configuration architecture. It links to pages covering:
 *   An overview of configuration and loading.
 *   The Pydantic models used for validation.
 *   Examples of TOML configuration files.
@@ -214,12 +214,12 @@ This file acts as a hub, directing to more specific documents about Soldier's co
 
 ### `docs/architecture/configuration-overview.md`
 
-This document provides an overview of Soldier's configuration architecture, which is built on TOML files and validated by Pydantic models. The core philosophy is to keep configuration out of the code.
+This document provides an overview of Focal's configuration architecture, which is built on TOML files and validated by Pydantic models. The core philosophy is to keep configuration out of the code.
 
 Key aspects of the architecture are:
 
-*   **Folder Structure:** Configuration is split between `config/` for TOML files and `soldier/config/` for the Python code that loads and models the configuration. Secrets are handled separately in a `.env` file at the project root.
-*   **Loading Mechanism:** The system uses a hierarchical loading mechanism. It starts with `default.toml`, overrides it with an environment-specific file (e.g., `development.toml`), and finally applies any environment variables (prefixed with `SOLDIER_`). This provides a clear and flexible way to manage settings across different environments.
+*   **Folder Structure:** Configuration is split between `config/` for TOML files and `focal/config/` for the Python code that loads and models the configuration. Secrets are handled separately in a `.env` file at the project root.
+*   **Loading Mechanism:** The system uses a hierarchical loading mechanism. It starts with `default.toml`, overrides it with an environment-specific file (e.g., `development.toml`), and finally applies any environment variables (prefixed with `FOCAL_`). This provides a clear and flexible way to manage settings across different environments.
 *   **`Settings` Class:** A central Pydantic `Settings` class serves as the root of the configuration structure. It composes other Pydantic models for different parts of the system (API, pipeline, storage, etc.) and provides a single, type-safe entry point for accessing all configuration values.
 *   **Best Practice:** The document reinforces the principle of separating configuration from code and managing secrets securely outside of version control.
 
@@ -227,7 +227,7 @@ Key aspects of the architecture are:
 
 ### `docs/architecture/configuration-usage-validation.md`
 
-This document provides guidance on how to use, validate, and manage the configuration within the Soldier application code.
+This document provides guidance on how to use, validate, and manage the configuration within the Focal application code.
 
 Key points include:
 
@@ -245,14 +245,14 @@ Key points include:
 
 ### `docs/architecture/configuration-secrets.md`
 
-This document details the architecture for managing secrets like API keys and database credentials within the Soldier application, emphasizing that **secrets should never be committed to configuration files**.
+This document details the architecture for managing secrets like API keys and database credentials within the Focal application, emphasizing that **secrets should never be committed to configuration files**.
 
 The key principles and mechanisms are:
 
 *   **Secret Resolution Order:** Secrets are resolved in a specific order of precedence:
     1.  A dedicated secret manager (like AWS Secrets Manager or HashiCorp Vault) in production.
     2.  Standard environment variables (e.g., `ANTHROPIC_API_KEY`).
-    3.  Soldier-prefixed environment variables (e.g., `SOLDIER_PIPELINE__GENERATION__MODELS`).
+    3.  Focal-prefixed environment variables (e.g., `FOCAL_PIPELINE__GENERATION__MODELS`).
     4.  A local `.env` file for development (which is gitignored).
 
 *   **Development Workflow:** For local development, a `.env` file at the project root is used to store secrets. An `.env.example` file is committed as a template for other developers.
@@ -267,20 +267,20 @@ The key principles and mechanisms are:
 
 ### `docs/architecture/api-layer.md`
 
-This document describes the API Layer of the Soldier application, which is the primary entry point for all external interactions. Soldier is positioned as a message processing engine that receives requests from upstream services.
+This document describes the API Layer of the Focal application, which is the primary entry point for all external interactions. Focal is positioned as a message processing engine that receives requests from upstream services.
 
 Key aspects of the API layer include:
 
-*   **Multiple Interfaces:** Soldier supports several API interfaces to cater to different use cases:
+*   **Multiple Interfaces:** Focal supports several API interfaces to cater to different use cases:
     *   **REST API (FastAPI):** The primary interface for web applications, offering standard CRUD endpoints, chat processing (including streaming via SSE), and session management.
     *   **gRPC API:** A high-performance interface for service-to-service communication, offering unary, server-streaming, and bi-directional streaming methods.
-    *   **MCP (Model Context Protocol) Server:** Allows LLMs (like Claude or Copilot) to use Soldier as a tool provider, exposing its capabilities through a standardized tool schema.
+    *   **MCP (Model Context Protocol) Server:** Allows LLMs (like Claude or Copilot) to use Focal as a tool provider, exposing its capabilities through a standardized tool schema.
 
 *   **Request/Response Structure:** The document defines the JSON structure for chat requests and responses, which include essential context like `tenant_id`, `agent_id`, and `session_id`.
 
 *   **Idempotency:** The API supports idempotency for safe retries on mutating endpoints (like creating rules or processing messages) via an `Idempotency-Key` header.
 
-*   **Async Operations:** For long-running operations, the API supports webhook callbacks, where Soldier can post the final result to a specified URL.
+*   **Async Operations:** For long-running operations, the API supports webhook callbacks, where Focal can post the final result to a specified URL.
 
 *   **Rate Limiting and Error Handling:** The API includes per-tenant rate limiting and provides standardized error responses with clear error codes.
 
@@ -290,16 +290,16 @@ Key aspects of the API layer include:
 
 ### `docs/architecture/kernel-agent-integration.md`
 
-This document explains how Soldier integrates into the broader External Platform architecture, positioning itself as the core **Cognitive Layer**. It is designed to replace the previous `legacy-adapter` and `legacy-server` components.
+This document explains how Focal integrates into the broader External Platform architecture, positioning itself as the core **Cognitive Layer**. It is designed to replace the previous `legacy-adapter` and `legacy-server` components.
 
 Key points of the integration are:
 
-*   **Role in Architecture:** Soldier acts as the "brain," receiving messages from the `Message-Router` and processing them through its turn pipeline. It sits between the channel/routing layers and the tool execution layer.
-*   **Configuration Source:** In this integration mode, Soldier is not the source of truth for configuration. Instead, it consumes configuration "bundles" (for agents, rules, scenarios, etc.) that are compiled by a `Publisher` service and stored in Redis.
-*   **Hot-Reloading:** Soldier's `Config Watcher` subscribes to a Redis pub/sub channel (`cfg-updated`). When a new configuration is published, the watcher loads the new bundle from Redis into its cache, allowing for configuration updates without a service restart.
-*   **Data Flow:** The document details the flow of inbound messages from the `Channel-Gateway` to Soldier and the flow of configuration updates from the `Control Plane` to Soldier via the Publisher and Redis.
+*   **Role in Architecture:** Focal acts as the "brain," receiving messages from the `Message-Router` and processing them through its turn pipeline. It sits between the channel/routing layers and the tool execution layer.
+*   **Configuration Source:** In this integration mode, Focal is not the source of truth for configuration. Instead, it consumes configuration "bundles" (for agents, rules, scenarios, etc.) that are compiled by a `Publisher` service and stored in Redis.
+*   **Hot-Reloading:** Focal's `Config Watcher` subscribes to a Redis pub/sub channel (`cfg-updated`). When a new configuration is published, the watcher loads the new bundle from Redis into its cache, allowing for configuration updates without a service restart.
+*   **Data Flow:** The document details the flow of inbound messages from the `Channel-Gateway` to Focal and the flow of configuration updates from the `Control Plane` to Focal via the Publisher and Redis.
 *   **Tenant Isolation:** Tenant isolation is maintained at every layer, from Redis key prefixes to `tenant_id` columns in the databases.
-*   **Migration Path:** A phased migration path is outlined, starting with deploying Soldier in a shadow mode alongside the old system, followed by a gradual cutover, and finally the complete removal of the legacy components.
+*   **Migration Path:** A phased migration path is outlined, starting with deploying Focal in a shadow mode alongside the old system, followed by a gradual cutover, and finally the complete removal of the legacy components.
 *   **Key Differences:** The document concludes by highlighting the major architectural improvements over the previous system (legacy framework), such as being stateless, supporting hot-reloading, native multi-tenancy, and having a more advanced rule and memory system.
 
 ---
@@ -322,14 +322,14 @@ The document also details how these strategies are configured in the TOML files 
 
 ### `docs/architecture/memory-layer.md`
 
-This document details Soldier's Memory Layer, which provides agents with long-term context and factual grounding. The core of this layer is a **temporal knowledge graph**.
+This document details Focal's Memory Layer, which provides agents with long-term context and factual grounding. The core of this layer is a **temporal knowledge graph**.
 
 Key concepts include:
 
 *   **Episodes, Entities, and Relationships:** The memory is built from `Episodes` (atomic units of experience like a user message). From these, `Entities` (named things) and `Relationships` (connections between them) are extracted to form the knowledge graph.
 *   **Temporal Modeling:** All data in the graph is "bi-temporal," tracking both when a fact became true (`valid_from`/`valid_to`) and when it was recorded (`recorded_at`). This allows for point-in-time queries and handling of contradictions without deleting data.
 *   **`MemoryStore` Interface:** The memory layer is accessed through a `MemoryStore` interface, allowing for different pluggable backends like Neo4j, PostgreSQL with pgvector, or MongoDB.
-*   **Hybrid Retrieval:** To find relevant context, Soldier uses a hybrid retrieval strategy that combines three methods:
+*   **Hybrid Retrieval:** To find relevant context, Focal uses a hybrid retrieval strategy that combines three methods:
     1.  **Semantic Vector Search:** For finding conceptually similar information.
     2.  **Keyword/BM25 Search:** For precise matching of exact terms.
     3.  **Graph Traversal:** For expanding context by following relationships from known-relevant entities.
@@ -340,17 +340,17 @@ Key concepts include:
 
 ### `docs/vision.md`
 
-This document lays out the vision for Soldier, positioning it as a **production-grade cognitive engine** designed to overcome the limitations of existing conversational AI frameworks.
+This document lays out the vision for Focal, positioning it as a **production-grade cognitive engine** designed to overcome the limitations of existing conversational AI frameworks.
 
 The core problems it aims to solve are:
 1.  **The "Prompt Trap":** Relying solely on large system prompts, which becomes unmanageable and unpredictable at scale.
 2.  **The "Code Trap":** Requiring developers to define agent behavior in code (like the previous legacy framework system), which prevents hot-reloading, horizontal scaling, and non-developer access.
 
-Soldier's solution is an **API-first, multi-tenant, and fully persistent architecture**. Its key principles include having zero in-memory state, hot-reloading for all configurations, and native multi-tenancy.
+Focal's solution is an **API-first, multi-tenant, and fully persistent architecture**. Its key principles include having zero in-memory state, hot-reloading for all configurations, and native multi-tenancy.
 
-The document highlights the key components Soldier provides, such as API-driven **Scenarios** and **Rules**, an advanced **Memory** system (a feature the previous system lacked), and a post-generation **Enforcement** step to validate responses against hard constraints.
+The document highlights the key components Focal provides, such as API-driven **Scenarios** and **Rules**, an advanced **Memory** system (a feature the previous system lacked), and a post-generation **Enforcement** step to validate responses against hard constraints.
 
-It also clarifies Soldier's role within the broader External Platform ecosystem as the **cognitive layer**, replacing the legacy legacy framework components. The vision is not to build another general-purpose LLM framework but a specialized, scalable, and observable engine for building reliable conversational agents.
+It also clarifies Focal's role within the broader External Platform ecosystem as the **cognitive layer**, replacing the legacy legacy framework components. The vision is not to build another general-purpose LLM framework but a specialized, scalable, and observable engine for building reliable conversational agents.
 
 ---
 
@@ -373,7 +373,7 @@ This approach provides a balance of semantic relevance and keyword precision, wh
 
 ### `docs/architecture/observability.md`
 
-This document defines Soldier's logging, tracing, and metrics strategy, designed to integrate seamlessly into the External Platform (kernel_agent) observability stack.
+This document defines Focal's logging, tracing, and metrics strategy, designed to integrate seamlessly into the External Platform (kernel_agent) observability stack.
 
 Key aspects include:
 
@@ -384,7 +384,7 @@ Key aspects include:
 
 *   **Audit vs. Operational Separation:** Domain events (turn records, rule fires, scenario transitions) are persisted in the `AuditStore` for compliance and long-term analysis. Operational debugging data (provider errors, latency, fallbacks) goes to ephemeral logs.
 
-*   **kernel_agent Integration:** Soldier reuses the `libs/observability` tracing setup from kernel_agent and is configured via the same environment variables (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`, `LOG_LEVEL`).
+*   **kernel_agent Integration:** Focal reuses the `libs/observability` tracing setup from kernel_agent and is configured via the same environment variables (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`, `LOG_LEVEL`).
 
 *   **Privacy:** The document emphasizes never logging secrets or raw PII at INFO level, using `SecretStr` in Pydantic models, and auto-redacting sensitive patterns (email, SSN).
 
@@ -394,7 +394,7 @@ Key aspects include:
 
 ### `docs/focal_turn_pipeline/README.md`
 
-This document specifies the **Focal Turn Pipeline**, the redesigned 11-phase turn processing pipeline for Soldier. It consolidates earlier fragmented designs into a single, cohesive specification.
+This document specifies the **Focal Turn Pipeline**, the redesigned 11-phase turn processing pipeline for Focal. It consolidates earlier fragmented designs into a single, cohesive specification.
 
 Key aspects include:
 
@@ -451,7 +451,7 @@ Pattern for configuring LLM tasks in the pipeline, including Jinja2 template usa
 
 ### `docs/development/testing-strategy.md`
 
-This document defines Soldier's overall testing approach, covering the test pyramid, CI/CD pipeline, coverage requirements, and environment configurations.
+This document defines Focal's overall testing approach, covering the test pyramid, CI/CD pipeline, coverage requirements, and environment configurations.
 
 Key aspects include:
 
@@ -467,7 +467,7 @@ Key aspects include:
 
 ### `docs/development/unit-testing.md`
 
-This document provides concrete guidance for writing unit tests in the Soldier codebase, including naming conventions, patterns, fixture composition, and templates for testing different component types.
+This document provides concrete guidance for writing unit tests in the Focal codebase, including naming conventions, patterns, fixture composition, and templates for testing different component types.
 
 Key aspects include:
 

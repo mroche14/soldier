@@ -1,4 +1,4 @@
-# Soldier Local Development Stack
+# Focal Local Development Stack
 # Usage: docker-compose up -d
 
 services:
@@ -6,15 +6,15 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: soldier
-      POSTGRES_PASSWORD: soldier
-      POSTGRES_DB: soldier
+      POSTGRES_USER: focal
+      POSTGRES_PASSWORD: focal
+      POSTGRES_DB: focal
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U soldier"]
+      test: ["CMD-SHELL", "pg_isready -U focal"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,7 +51,7 @@ services:
   hatchet-engine:
     image: ghcr.io/hatchet-dev/hatchet/hatchet-engine:latest
     environment:
-      DATABASE_URL: postgresql://soldier:soldier@postgres:5432/soldier
+      DATABASE_URL: postgresql://focal:focal@postgres:5432/focal
       SERVER_PORT: "7077"
       SERVER_GRPC_PORT: "7078"
       SERVER_GRPC_BROADCAST_ADDRESS: "hatchet-engine:7078"
@@ -71,7 +71,7 @@ services:
   hatchet-api:
     image: ghcr.io/hatchet-dev/hatchet/hatchet-api:latest
     environment:
-      DATABASE_URL: postgresql://soldier:soldier@postgres:5432/soldier
+      DATABASE_URL: postgresql://focal:focal@postgres:5432/focal
       SERVER_PORT: "8080"
       HATCHET_ENGINE_URL: "http://hatchet-engine:7077"
     ports:

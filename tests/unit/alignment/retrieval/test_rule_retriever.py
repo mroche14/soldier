@@ -4,15 +4,15 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.models import Scope
-from soldier.alignment.retrieval.models import RuleSource
-from soldier.alignment.retrieval.reranker import RuleReranker
-from soldier.alignment.retrieval.rule_retriever import RuleRetriever
-from soldier.alignment.stores import InMemoryAgentConfigStore
-from soldier.config.models.selection import SelectionConfig
-from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.rerank.mock import MockRerankProvider
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.models import Scope
+from focal.alignment.retrieval.models import RuleSource
+from focal.alignment.retrieval.reranker import RuleReranker
+from focal.alignment.retrieval.rule_retriever import RuleRetriever
+from focal.alignment.stores import InMemoryAgentConfigStore
+from focal.config.models.selection import SelectionConfig
+from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from focal.providers.rerank.mock import MockRerankProvider
 from tests.factories.alignment import RuleFactory
 
 

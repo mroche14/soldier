@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: Scenario Migration API
-  description: API for managing scenario migrations in Soldier
+  description: API for managing scenario migrations in Focal
   version: 1.0.0
   contact:
-    name: Soldier Team
+    name: Focal Team
 
 servers:
   - url: /api/v1

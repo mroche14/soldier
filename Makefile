@@ -1,4 +1,4 @@
-# Soldier Development Makefile
+# Focal Development Makefile
 
 .PHONY: install install-dev test lint format typecheck all clean docker-up docker-down
 
@@ -19,7 +19,7 @@ test:
 
 # Run tests with coverage
 test-cov:
-	uv run pytest --cov=soldier --cov-report=term-missing --cov-report=html
+	uv run pytest --cov=focal --cov-report=term-missing --cov-report=html
 
 # Run specific test file
 test-file:
@@ -27,23 +27,23 @@ test-file:
 
 # Lint with ruff
 lint:
-	uv run ruff check soldier/ tests/
+	uv run ruff check focal/ tests/
 
 # Fix lint issues
 lint-fix:
-	uv run ruff check soldier/ tests/ --fix
+	uv run ruff check focal/ tests/ --fix
 
 # Format with ruff
 format:
-	uv run ruff format soldier/ tests/
+	uv run ruff format focal/ tests/
 
 # Check formatting without changes
 format-check:
-	uv run ruff format soldier/ tests/ --check
+	uv run ruff format focal/ tests/ --check
 
 # Type check with mypy
 typecheck:
-	uv run mypy soldier/
+	uv run mypy focal/
 
 # Clean build artifacts
 clean:
@@ -69,9 +69,9 @@ docker-logs:
 
 # Run the application locally
 run:
-	uv run python -m soldier.api
+	uv run python -m focal.api
 
 # Generate test coverage report
 coverage:
-	uv run pytest --cov=soldier --cov-report=html
+	uv run pytest --cov=focal --cov-report=html
 	@echo "Coverage report: htmlcov/index.html"

@@ -4,19 +4,19 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from soldier.alignment.context.models import (
+from focal.alignment.context.models import (
     ExtractedEntity,
     ScenarioSignal,
     Sentiment,
     Turn,
     Urgency,
 )
-from soldier.alignment.context.situation_snapshot import (
+from focal.alignment.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from soldier.alignment.models import Rule, Scope
-from soldier.alignment.models.tool_binding import ToolBinding
+from focal.alignment.models import Rule, Scope
+from focal.alignment.models.tool_binding import ToolBinding
 
 
 class RuleFactory:

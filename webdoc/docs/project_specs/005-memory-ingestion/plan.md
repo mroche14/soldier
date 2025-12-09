@@ -27,7 +27,7 @@ Implement the Memory Ingestion System to automatically capture conversation turn
 - sentence-transformers - Local embedding generation
 - fuzzywuzzy - Fuzzy string matching for deduplication
 - rq (optional) - Redis task queue for production
-- All existing Soldier dependencies (LLMProvider, EmbeddingProvider, MemoryStore)
+- All existing Focal dependencies (LLMProvider, EmbeddingProvider, MemoryStore)
 
 **Storage**: MemoryStore interface (InMemory for dev, PostgreSQL/Neo4j/MongoDB for production)
 **Testing**: pytest, existing test infrastructure (unit, integration, e2e)
@@ -92,7 +92,7 @@ specs/005-memory-ingestion/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── memory/
 │   ├── __init__.py
 │   ├── models/                 # (existing)
@@ -132,7 +132,7 @@ tests/
         └── test_ingestion_flow.py  # (NEW)
 ```
 
-**Structure Decision**: Single project with new `soldier/memory/ingestion/` module. Builds on existing memory infrastructure without modifying existing code. All new functionality is opt-in via configuration.
+**Structure Decision**: Single project with new `focal/memory/ingestion/` module. Builds on existing memory infrastructure without modifying existing code. All new functionality is opt-in via configuration.
 
 ---
 
@@ -411,7 +411,7 @@ retry_backoff_seconds = 5
 - structlog - Structured logging
 - opentelemetry - Tracing
 - prometheus-client - Metrics
-- All existing Soldier provider interfaces
+- All existing Focal provider interfaces
 
 **Installation**:
 ```bash

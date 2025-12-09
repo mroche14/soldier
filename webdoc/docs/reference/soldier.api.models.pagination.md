@@ -1,10 +1,10 @@
-<a id="soldier.api.models.pagination"></a>
+<a id="focal.api.models.pagination"></a>
 
-# soldier.api.models.pagination
+# focal.api.models.pagination
 
 Pagination models for list endpoints.
 
-<a id="soldier.api.models.pagination.PaginationParams"></a>
+<a id="focal.api.models.pagination.PaginationParams"></a>
 
 ## PaginationParams Objects
 
@@ -14,7 +14,7 @@ class PaginationParams(BaseModel)
 
 Pagination parameters for list requests.
 
-<a id="soldier.api.models.pagination.PaginatedResponse"></a>
+<a id="focal.api.models.pagination.PaginatedResponse"></a>
 
 ## PaginatedResponse Objects
 
@@ -34,13 +34,13 @@ Paginated response wrapper for list endpoints.
 - `"has_more"` - true
   }
 
-<a id="soldier.api.models.pagination.PaginatedResponse.items"></a>
+<a id="focal.api.models.pagination.PaginatedResponse.items"></a>
 
 #### items
 
 List of items for this page.
 
-<a id="soldier.api.models.pagination.PaginatedResponse.create"></a>
+<a id="focal.api.models.pagination.PaginatedResponse.create"></a>
 
 #### create
 

@@ -6,14 +6,14 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.enforcement import EnforcementValidator, FallbackHandler
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.generation.generator import ResponseGenerator
-from soldier.alignment.models import Rule, Scope
-from soldier.alignment.stores import InMemoryAgentConfigStore
-from soldier.config.models.pipeline import PipelineConfig
-from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from focal.alignment.enforcement import EnforcementValidator, FallbackHandler
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.generation.generator import ResponseGenerator
+from focal.alignment.models import Rule, Scope
+from focal.alignment.stores import InMemoryAgentConfigStore
+from focal.config.models.pipeline import PipelineConfig
+from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class SequenceLLMExecutor(LLMExecutor):

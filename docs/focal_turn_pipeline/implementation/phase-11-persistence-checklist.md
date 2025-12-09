@@ -27,7 +27,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 1.1 Convert Sequential to Parallel
 
 - [ ] **Refactor AlignmentEngine persistence to use asyncio.gather**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - Current code (lines ~446-460):
     ```python
@@ -77,7 +77,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
   - Details: Run all persistence operations in parallel. Use `return_exceptions=True` to avoid one failure blocking others.
 
 - [ ] **Add error handling for parallel persistence failures**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Add
   - Details: Check for exceptions in gather results, log failures separately
     ```python
@@ -95,23 +95,23 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 1.2 Add Persistence Timing Metrics
 
 - [ ] **Track parallel persistence duration**
-  - File: `soldier/observability/metrics.py`
+  - File: `focal/observability/metrics.py`
   - Action: Add
   - Details: Add histogram for parallel persistence timing
     ```python
     PERSISTENCE_DURATION = Histogram(
-        "soldier_persistence_duration_seconds",
+        "focal_persistence_duration_seconds",
         "Time spent in parallel persistence operations",
         ["operation"],  # session, customer_data, turn_record
     )
     ```
 
 - [ ] **Update engine to record persistence metrics**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - Details: Wrap persistence in timing context
     ```python
-    from soldier.observability.metrics import PERSISTENCE_DURATION
+    from focal.observability.metrics import PERSISTENCE_DURATION
 
     with PERSISTENCE_DURATION.labels(operation="parallel").time():
         results = await asyncio.gather(*persistence_tasks, return_exceptions=True)
@@ -124,7 +124,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 2.1 Implement Scope-Based Persistence
 
 - [ ] **Create _persist_customer_data method**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Add
   - Details: Filter and persist only non-SESSION scoped fields
     ```python
@@ -203,14 +203,14 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Add CustomerDataUpdate model**
-  - File: `soldier/alignment/models/customer_data.py`
+  - File: `focal/alignment/models/customer_data.py`
   - Action: Create
   - Details: Lightweight model for Phase 3 → Phase 11 handoff
     ```python
     """Customer data update models for Phase 3."""
 
     from pydantic import BaseModel, Field
-    from soldier.profile.models import ProfileFieldDefinition
+    from focal.profile.models import ProfileFieldDefinition
 
     class CustomerDataUpdate(BaseModel):
         """Lightweight update record from Phase 3.
@@ -233,7 +233,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 2.2 Session-End Cleanup
 
 - [ ] **Add session cleanup for SESSION-scoped variables**
-  - File: `soldier/conversation/store.py`
+  - File: `focal/conversation/store.py`
   - Action: Modify interface
   - Details: Add cleanup method to SessionStore interface
     ```python
@@ -254,7 +254,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Implement cleanup in InMemorySessionStore**
-  - File: `soldier/conversation/stores/inmemory.py`
+  - File: `focal/conversation/stores/inmemory.py`
   - Action: Add
   - Details: Clear SESSION-scoped variables from session.variables dict
     ```python
@@ -277,12 +277,12 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Implement cleanup in RedisSessionStore**
-  - File: `soldier/conversation/stores/redis.py`
+  - File: `focal/conversation/stores/redis.py`
   - Action: Add
   - Details: Same cleanup logic for Redis backend
 
 - [ ] **Call cleanup on session end**
-  - File: `soldier/api/routes/sessions.py`
+  - File: `focal/api/routes/sessions.py`
   - Action: Modify
   - Details: Add cleanup call in DELETE endpoint
     ```python
@@ -304,7 +304,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 3.1 Integrate Task Queue
 
 - [ ] **Add memory ingestion task to engine**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - Details: Fire-and-forget memory ingestion after response sent
     ```python
@@ -327,7 +327,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Add TaskQueue to AlignmentEngine constructor**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - Details: Add optional task_queue parameter
     ```python
@@ -355,7 +355,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Update MemoryIngestionConfig model**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Modify
   - Details: Add background flag
     ```python
@@ -371,7 +371,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 > These must be migrated to Jinja2 templates following the project's LLM Task Configuration Pattern.
 
 - [ ] **Create entity_extraction.jinja2 template**
-  - File: `soldier/memory/ingestion/prompts/entity_extraction.jinja2`
+  - File: `focal/memory/ingestion/prompts/entity_extraction.jinja2`
   - Action: Create new file
   - Details: Extract the 192-line inline prompt from `entity_extractor.py:45-237`
     ```jinja2
@@ -396,7 +396,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Refactor EntityExtractor to use Jinja2 template**
-  - File: `soldier/memory/ingestion/entity_extractor.py`
+  - File: `focal/memory/ingestion/entity_extractor.py`
   - Action: Modify
   - Details: Replace hardcoded prompt with template loader
     ```python
@@ -418,7 +418,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Create window_summary.jinja2 template**
-  - File: `soldier/memory/ingestion/prompts/window_summary.jinja2`
+  - File: `focal/memory/ingestion/prompts/window_summary.jinja2`
   - Action: Create new file
   - Details: Extract inline summarization prompt from `summarizer.py`
     ```jinja2
@@ -437,7 +437,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Create meta_summary.jinja2 template**
-  - File: `soldier/memory/ingestion/prompts/meta_summary.jinja2`
+  - File: `focal/memory/ingestion/prompts/meta_summary.jinja2`
   - Action: Create new file
   - Details: Template for summarizing multiple window summaries
     ```jinja2
@@ -454,7 +454,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Refactor Summarizer to use Jinja2 templates**
-  - File: `soldier/memory/ingestion/summarizer.py`
+  - File: `focal/memory/ingestion/summarizer.py`
   - Action: Modify
   - Details: Replace inline prompts with template loading
     ```python
@@ -470,7 +470,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Create prompts directory and __init__.py**
-  - File: `soldier/memory/ingestion/prompts/__init__.py`
+  - File: `focal/memory/ingestion/prompts/__init__.py`
   - Action: Create directory and init file
 
 - [ ] **Add unit tests for template loading**
@@ -491,16 +491,16 @@ Phase 11 handles the final persistence and audit trail creation after response g
 > This phase only adds the outcome field to TurnRecord for persistence.
 
 **Prerequisites from Phase 9** (must be complete first):
-- [x] `OutcomeCategory` model - `soldier/alignment/models/outcome.py`
-- [x] `TurnOutcome` model - `soldier/alignment/models/outcome.py`
-- [x] `build_turn_outcome()` helper - `soldier/alignment/generation/resolution.py`
+- [x] `OutcomeCategory` model - `focal/alignment/models/outcome.py`
+- [x] `TurnOutcome` model - `focal/alignment/models/outcome.py`
+- [x] `build_turn_outcome()` helper - `focal/alignment/generation/resolution.py`
 
 - [ ] **Add outcome field to TurnRecord**
-  - File: `soldier/audit/models/turn_record.py`
+  - File: `focal/audit/models/turn_record.py`
   - Action: Modify
   - Details: Add TurnOutcome field
     ```python
-    from soldier.alignment.models.outcome import TurnOutcome
+    from focal.alignment.models.outcome import TurnOutcome
 
     class TurnRecord(BaseModel):
         # ... existing fields ...
@@ -515,7 +515,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 4.2 Add Phase Decisions to TurnRecord
 
 - [ ] **Add phase decision fields to TurnRecord**
-  - File: `soldier/audit/models/turn_record.py`
+  - File: `focal/audit/models/turn_record.py`
   - Action: Modify
   - Details: Track all major pipeline decisions
     ```python
@@ -556,7 +556,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 4.3 Populate Outcome in Engine
 
 - [ ] **Compute TurnOutcome in AlignmentEngine**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Add method
   - Details: Determine resolution and categories from pipeline state
     ```python
@@ -632,7 +632,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Call _compute_turn_outcome in process_turn**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - Details: Compute outcome before persistence
     ```python
@@ -649,7 +649,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Update _persist_turn_record to include outcome**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - Details: Add outcome to TurnRecord
     ```python
@@ -958,7 +958,7 @@ This phase requires:
     ```
 
 - [ ] **Add PersistenceConfig model**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Add
   - Details: Persistence configuration model
     ```python
@@ -986,18 +986,18 @@ This phase requires:
 ### 9.1 Add Persistence Metrics
 
 - [ ] **Add persistence operation counters**
-  - File: `soldier/observability/metrics.py`
+  - File: `focal/observability/metrics.py`
   - Action: Add
   - Details: Track persistence operations and failures
     ```python
     PERSISTENCE_OPERATIONS = Counter(
-        "soldier_persistence_operations_total",
+        "focal_persistence_operations_total",
         "Total persistence operations",
         ["operation", "status"],  # session/audit/profile, success/failure
     )
 
     PERSISTENCE_PARALLEL_SAVINGS = Histogram(
-        "soldier_persistence_parallel_savings_seconds",
+        "focal_persistence_parallel_savings_seconds",
         "Time saved by parallel persistence vs sequential",
     )
     ```
@@ -1005,7 +1005,7 @@ This phase requires:
 ### 9.2 Add Structured Logging
 
 - [ ] **Log persistence timing details**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Add
   - Details: Log parallel persistence metrics
     ```python

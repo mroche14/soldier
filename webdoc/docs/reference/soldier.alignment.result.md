@@ -1,12 +1,12 @@
-<a id="soldier.alignment.result"></a>
+<a id="focal.alignment.result"></a>
 
-# soldier.alignment.result
+# focal.alignment.result
 
 Pipeline result models for alignment engine.
 
 Contains the main AlignmentResult and timing models.
 
-<a id="soldier.alignment.result.PipelineStepTiming"></a>
+<a id="focal.alignment.result.PipelineStepTiming"></a>
 
 ## PipelineStepTiming Objects
 
@@ -16,7 +16,7 @@ class PipelineStepTiming(BaseModel)
 
 Timing information for a single pipeline step.
 
-<a id="soldier.alignment.result.AlignmentResult"></a>
+<a id="focal.alignment.result.AlignmentResult"></a>
 
 ## AlignmentResult Objects
 

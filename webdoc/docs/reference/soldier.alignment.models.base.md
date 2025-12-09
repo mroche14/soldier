@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.base"></a>
+<a id="focal.alignment.models.base"></a>
 
-# soldier.alignment.models.base
+# focal.alignment.models.base
 
 Base models for alignment domain entities.
 
-<a id="soldier.alignment.models.base.utc_now"></a>
+<a id="focal.alignment.models.base.utc_now"></a>
 
 #### utc\_now
 
@@ -14,7 +14,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.alignment.models.base.TenantScopedModel"></a>
+<a id="focal.alignment.models.base.TenantScopedModel"></a>
 
 ## TenantScopedModel Objects
 
@@ -30,7 +30,7 @@ multi-tenant isolation. This base class provides:
 - created_at/updated_at: Automatic timestamps
 - deleted_at: Soft delete marker
 
-<a id="soldier.alignment.models.base.TenantScopedModel.is_deleted"></a>
+<a id="focal.alignment.models.base.TenantScopedModel.is_deleted"></a>
 
 #### is\_deleted
 
@@ -41,7 +41,7 @@ def is_deleted() -> bool
 
 Check if entity is soft-deleted.
 
-<a id="soldier.alignment.models.base.TenantScopedModel.touch"></a>
+<a id="focal.alignment.models.base.TenantScopedModel.touch"></a>
 
 #### touch
 
@@ -51,7 +51,7 @@ def touch() -> None
 
 Update the updated_at timestamp to current time.
 
-<a id="soldier.alignment.models.base.TenantScopedModel.soft_delete"></a>
+<a id="focal.alignment.models.base.TenantScopedModel.soft_delete"></a>
 
 #### soft\_delete
 
@@ -61,7 +61,7 @@ def soft_delete() -> None
 
 Mark entity as soft-deleted.
 
-<a id="soldier.alignment.models.base.AgentScopedModel"></a>
+<a id="focal.alignment.models.base.AgentScopedModel"></a>
 
 ## AgentScopedModel Objects
 

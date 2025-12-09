@@ -14,7 +14,7 @@ Implement RESTful CRUD endpoints for managing agent configuration entities (Agen
 **Storage**: ConfigStore interface with InMemoryConfigStore (Phase 4), existing embedding providers (Phase 5)
 **Testing**: pytest with pytest-asyncio, httpx for API testing (existing)
 **Target Platform**: Linux server (containerized)
-**Project Type**: Single Python package (soldier/)
+**Project Type**: Single Python package (focal/)
 **Performance Goals**: 500ms p95 for CRUD operations, 100 concurrent requests (from SC-001, SC-002)
 **Constraints**: <500ms for sync operations, async embedding computation, zero cross-tenant leakage
 **Scale/Scope**: Multi-tenant, 100 rules per agent typical, 50 rules per bulk operation
@@ -40,7 +40,7 @@ specs/001-api-crud/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── api/
 │   ├── routes/
 │   │   ├── agents.py        # NEW: Agent CRUD endpoints
@@ -76,4 +76,4 @@ tests/
         └── test_crud_flow.py    # NEW: Full CRUD integration tests
 ```
 
-**Structure Decision**: Extends existing `soldier/api/routes/` structure with new route modules per entity type. API models go in `soldier/api/models/` following existing patterns. Services layer added for cross-cutting concerns (embedding computation, publish orchestration).
+**Structure Decision**: Extends existing `focal/api/routes/` structure with new route modules per entity type. API models go in `focal/api/models/` following existing patterns. Services layer added for cross-cutting concerns (embedding computation, publish orchestration).

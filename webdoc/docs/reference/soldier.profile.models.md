@@ -1,12 +1,12 @@
-<a id="soldier.profile.models"></a>
+<a id="focal.profile.models"></a>
 
-# soldier.profile.models
+# focal.profile.models
 
 Profile domain models.
 
 Contains all Pydantic models for customer profiles.
 
-<a id="soldier.profile.models.utc_now"></a>
+<a id="focal.profile.models.utc_now"></a>
 
 #### utc\_now
 
@@ -16,7 +16,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.profile.models.ChannelIdentity"></a>
+<a id="focal.profile.models.ChannelIdentity"></a>
 
 ## ChannelIdentity Objects
 
@@ -26,7 +26,7 @@ class ChannelIdentity(BaseModel)
 
 Customer identity on a channel.
 
-<a id="soldier.profile.models.ProfileField"></a>
+<a id="focal.profile.models.ProfileField"></a>
 
 ## ProfileField Objects
 
@@ -39,7 +39,7 @@ Single customer fact.
 Represents a single piece of customer data with full
 provenance and verification tracking.
 
-<a id="soldier.profile.models.ProfileAsset"></a>
+<a id="focal.profile.models.ProfileAsset"></a>
 
 ## ProfileAsset Objects
 
@@ -49,7 +49,7 @@ class ProfileAsset(BaseModel)
 
 Document attached to profile.
 
-<a id="soldier.profile.models.Consent"></a>
+<a id="focal.profile.models.Consent"></a>
 
 ## Consent Objects
 
@@ -59,7 +59,7 @@ class Consent(BaseModel)
 
 Customer consent record.
 
-<a id="soldier.profile.models.CustomerProfile"></a>
+<a id="focal.profile.models.CustomerProfile"></a>
 
 ## CustomerProfile Objects
 

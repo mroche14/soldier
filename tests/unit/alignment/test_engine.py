@@ -5,14 +5,14 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Turn
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.models import Rule
-from soldier.alignment.result import AlignmentResult, PipelineStepTiming
-from soldier.alignment.stores import AgentConfigStore
-from soldier.config.models.pipeline import PipelineConfig
-from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from focal.alignment.context.models import Turn
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.models import Rule
+from focal.alignment.result import AlignmentResult, PipelineStepTiming
+from focal.alignment.stores import AgentConfigStore
+from focal.config.models.pipeline import PipelineConfig
+from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

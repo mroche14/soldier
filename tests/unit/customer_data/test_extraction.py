@@ -8,12 +8,12 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.customer_data.extraction import (
+from focal.customer_data.extraction import (
     ExtractionResult,
     FieldDefinitionSuggestion,
     CustomerDataSchemaExtractor,
 )
-from soldier.customer_data.enums import RequiredLevel
+from focal.customer_data.enums import RequiredLevel
 
 
 @pytest.fixture

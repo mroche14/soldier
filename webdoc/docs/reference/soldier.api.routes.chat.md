@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.chat"></a>
+<a id="focal.api.routes.chat"></a>
 
-# soldier.api.routes.chat
+# focal.api.routes.chat
 
 Chat endpoints for message processing.
 
-<a id="soldier.api.routes.chat.process_message"></a>
+<a id="focal.api.routes.chat.process_message"></a>
 
 #### process\_message
 
@@ -46,7 +46,7 @@ returning the agent's response along with metadata about the turn.
 - `AgentNotFoundError` - If agent_id doesn't exist
 - `SessionNotFoundError` - If session_id provided but not found
 
-<a id="soldier.api.routes.chat.process_message_stream"></a>
+<a id="focal.api.routes.chat.process_message_stream"></a>
 
 #### process\_message\_stream
 

@@ -2,7 +2,7 @@
 
 import pytest
 
-from soldier.alignment.execution.variable_resolver import VariableResolver
+from focal.alignment.execution.variable_resolver import VariableResolver
 
 
 @pytest.fixture
@@ -39,10 +39,10 @@ def test_resolve_rejects_invalid_template_type(resolver: VariableResolver, inval
 async def test_resolve_from_profile_only(resolver: VariableResolver) -> None:
     """Test resolving variables from customer profile only."""
     from uuid import uuid4
-    from soldier.customer_data.models import CustomerDataStore, VariableEntry
-    from soldier.customer_data.enums import ItemStatus, VariableSource
-    from soldier.conversation.models.session import Session
-    from soldier.conversation.models.enums import Channel
+    from focal.customer_data.models import CustomerDataStore, VariableEntry
+    from focal.customer_data.enums import ItemStatus, VariableSource
+    from focal.conversation.models.session import Session
+    from focal.conversation.models.enums import Channel
 
     profile = CustomerDataStore(
         customer_id=uuid4(),
@@ -74,9 +74,9 @@ async def test_resolve_from_profile_only(resolver: VariableResolver) -> None:
 async def test_resolve_from_session_only(resolver: VariableResolver) -> None:
     """Test resolving variables from session only."""
     from uuid import uuid4
-    from soldier.customer_data.models import CustomerDataStore
-    from soldier.conversation.models.session import Session
-    from soldier.conversation.models.enums import Channel
+    from focal.customer_data.models import CustomerDataStore
+    from focal.conversation.models.session import Session
+    from focal.conversation.models.enums import Channel
 
     profile = CustomerDataStore(
         customer_id=uuid4(),
@@ -105,10 +105,10 @@ async def test_resolve_from_session_only(resolver: VariableResolver) -> None:
 async def test_resolve_from_both_profile_priority(resolver: VariableResolver) -> None:
     """Test that profile takes priority over session when both have the same variable."""
     from uuid import uuid4
-    from soldier.customer_data.models import CustomerDataStore, VariableEntry
-    from soldier.customer_data.enums import ItemStatus, VariableSource
-    from soldier.conversation.models.session import Session
-    from soldier.conversation.models.enums import Channel
+    from focal.customer_data.models import CustomerDataStore, VariableEntry
+    from focal.customer_data.enums import ItemStatus, VariableSource
+    from focal.conversation.models.session import Session
+    from focal.conversation.models.enums import Channel
 
     profile = CustomerDataStore(
         customer_id=uuid4(),
@@ -141,10 +141,10 @@ async def test_resolve_from_both_profile_priority(resolver: VariableResolver) ->
 async def test_partial_resolution_some_missing(resolver: VariableResolver) -> None:
     """Test partial resolution where some variables are missing."""
     from uuid import uuid4
-    from soldier.customer_data.models import CustomerDataStore, VariableEntry
-    from soldier.customer_data.enums import ItemStatus, VariableSource
-    from soldier.conversation.models.session import Session
-    from soldier.conversation.models.enums import Channel
+    from focal.customer_data.models import CustomerDataStore, VariableEntry
+    from focal.customer_data.enums import ItemStatus, VariableSource
+    from focal.conversation.models.session import Session
+    from focal.conversation.models.enums import Channel
 
     profile = CustomerDataStore(
         customer_id=uuid4(),
@@ -175,9 +175,9 @@ async def test_partial_resolution_some_missing(resolver: VariableResolver) -> No
 async def test_all_missing(resolver: VariableResolver) -> None:
     """Test when all variables are missing."""
     from uuid import uuid4
-    from soldier.customer_data.models import CustomerDataStore
-    from soldier.conversation.models.session import Session
-    from soldier.conversation.models.enums import Channel
+    from focal.customer_data.models import CustomerDataStore
+    from focal.conversation.models.session import Session
+    from focal.conversation.models.enums import Channel
 
     profile = CustomerDataStore(
         customer_id=uuid4(),
@@ -206,10 +206,10 @@ async def test_all_missing(resolver: VariableResolver) -> None:
 async def test_all_resolved(resolver: VariableResolver) -> None:
     """Test when all variables are resolved."""
     from uuid import uuid4
-    from soldier.customer_data.models import CustomerDataStore, VariableEntry
-    from soldier.customer_data.enums import ItemStatus, VariableSource
-    from soldier.conversation.models.session import Session
-    from soldier.conversation.models.enums import Channel
+    from focal.customer_data.models import CustomerDataStore, VariableEntry
+    from focal.customer_data.enums import ItemStatus, VariableSource
+    from focal.conversation.models.session import Session
+    from focal.conversation.models.enums import Channel
 
     profile = CustomerDataStore(
         customer_id=uuid4(),
@@ -241,10 +241,10 @@ async def test_all_resolved(resolver: VariableResolver) -> None:
 async def test_inactive_profile_fields_ignored(resolver: VariableResolver) -> None:
     """Test that inactive profile fields are ignored."""
     from uuid import uuid4
-    from soldier.customer_data.models import CustomerDataStore, VariableEntry
-    from soldier.customer_data.enums import ItemStatus, VariableSource
-    from soldier.conversation.models.session import Session
-    from soldier.conversation.models.enums import Channel
+    from focal.customer_data.models import CustomerDataStore, VariableEntry
+    from focal.customer_data.enums import ItemStatus, VariableSource
+    from focal.conversation.models.session import Session
+    from focal.conversation.models.enums import Channel
 
     profile = CustomerDataStore(
         customer_id=uuid4(),

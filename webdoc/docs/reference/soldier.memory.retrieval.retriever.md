@@ -1,10 +1,10 @@
-<a id="soldier.memory.retrieval.retriever"></a>
+<a id="focal.memory.retrieval.retriever"></a>
 
-# soldier.memory.retrieval.retriever
+# focal.memory.retrieval.retriever
 
 Memory retrieval with selection strategies.
 
-<a id="soldier.memory.retrieval.retriever.MemoryRetriever"></a>
+<a id="focal.memory.retrieval.retriever.MemoryRetriever"></a>
 
 ## MemoryRetriever Objects
 
@@ -14,7 +14,7 @@ class MemoryRetriever()
 
 Retrieve relevant memory episodes using embeddings and selection.
 
-<a id="soldier.memory.retrieval.retriever.MemoryRetriever.retrieve"></a>
+<a id="focal.memory.retrieval.retriever.MemoryRetriever.retrieve"></a>
 
 #### retrieve
 

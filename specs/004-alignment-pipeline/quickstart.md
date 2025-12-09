@@ -18,15 +18,15 @@ uv sync
 
 ```python
 from uuid import uuid4
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
-from soldier.conversation.stores.inmemory import InMemorySessionStore
-from soldier.conversation.models import Channel, Session
-from soldier.audit.stores.inmemory import InMemoryAuditStore
-from soldier.memory.stores.inmemory import InMemoryMemoryStore
-from soldier.providers.llm.mock import MockLLMProvider
-from soldier.providers.embedding.mock import MockEmbeddingProvider
-from soldier.config.models.pipeline import PipelineConfig
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.stores.inmemory import InMemoryConfigStore
+from focal.conversation.stores.inmemory import InMemorySessionStore
+from focal.conversation.models import Channel, Session
+from focal.audit.stores.inmemory import InMemoryAuditStore
+from focal.memory.stores.inmemory import InMemoryMemoryStore
+from focal.providers.llm.mock import MockLLMProvider
+from focal.providers.embedding.mock import MockEmbeddingProvider
+from focal.config.models.pipeline import PipelineConfig
 
 # Create stores (use in-memory for development)
 config_store = InMemoryConfigStore()
@@ -85,7 +85,7 @@ print(f"Audit record: {turn_record.user_message} -> {turn_record.agent_response}
 ### 2. Using Selection Strategies
 
 ```python
-from soldier.alignment.retrieval.selection import (
+from focal.alignment.retrieval.selection import (
     AdaptiveKSelectionStrategy,
     EntropySelectionStrategy,
     ScoredItem,
@@ -110,8 +110,8 @@ print(f"Strategy: {result.method}")
 ### 3. Context Extraction
 
 ```python
-from soldier.alignment.context.extractor import ContextExtractor
-from soldier.alignment.context.models import Turn
+from focal.alignment.context.extractor import ContextExtractor
+from focal.alignment.context.models import Turn
 
 extractor = ContextExtractor(
     llm_provider=llm_provider,
@@ -185,8 +185,8 @@ max_regenerations = 1
 ### 5. Working with Rules
 
 ```python
-from soldier.alignment.models import Rule
-from soldier.alignment.models.enums import Scope, TemplateMode
+from focal.alignment.models import Rule
+from focal.alignment.models.enums import Scope, TemplateMode
 
 # Create a rule
 rule = Rule(
@@ -278,7 +278,7 @@ for timing in result.pipeline_timings:
 
 ```python
 import pytest
-from soldier.alignment.retrieval.selection import (
+from focal.alignment.retrieval.selection import (
     SelectionStrategyContract,
     ElbowSelectionStrategy,
     AdaptiveKSelectionStrategy,

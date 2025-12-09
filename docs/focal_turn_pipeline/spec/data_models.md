@@ -223,7 +223,7 @@ class SituationalSnapshot(BaseModel):
 
 ### 3.5 Object Selection Pipeline
 
-Every retrievable object type in Soldier goes through a **unified selection pipeline** after initial vector/hybrid retrieval. This pipeline is configurable per object type and consists of two stages:
+Every retrievable object type in Focal goes through a **unified selection pipeline** after initial vector/hybrid retrieval. This pipeline is configurable per object type and consists of two stages:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐

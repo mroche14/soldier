@@ -1,4 +1,4 @@
-# Soldier: Vision
+# Focal: Vision
 
 ## Problem
 
@@ -19,7 +19,7 @@ Many frameworks require **code to define agent behavior**:
 
 ## Solution
 
-Soldier is a **production-grade cognitive engine** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture.
+Focal is a **production-grade cognitive engine** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture.
 
 ### Core Principles
 
@@ -32,7 +32,7 @@ Soldier is a **production-grade cognitive engine** for conversational AI. It rep
 | **Cache with TTL** | Per-tenant, per-channel, per-session cache policies. No stale data. |
 | **Full auditability** | Every decision logged: why rules matched, what memory was retrieved, what was enforced. |
 
-### What Soldier Provides
+### What Focal Provides
 
 1. **Scenarios**
    - Multi-step conversational flows

@@ -40,7 +40,7 @@ timeout_ms = 5000
 Prompt templates are stored as Jinja2 files in a structured directory:
 
 ```
-soldier/alignment/
+focal/alignment/
 ├── situational/
 │   └── prompts/
 │       └── situational_sensor.jinja2

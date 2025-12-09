@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from soldier.conversation.models import (
+from focal.conversation.models import (
     Channel,
     Session,
     SessionStatus,

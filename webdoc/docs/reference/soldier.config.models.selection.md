@@ -1,10 +1,10 @@
-<a id="soldier.config.models.selection"></a>
+<a id="focal.config.models.selection"></a>
 
-# soldier.config.models.selection
+# focal.config.models.selection
 
 Selection strategy configuration models.
 
-<a id="soldier.config.models.selection.SelectionConfig"></a>
+<a id="focal.config.models.selection.SelectionConfig"></a>
 
 ## SelectionConfig Objects
 
@@ -14,7 +14,7 @@ class SelectionConfig(BaseModel)
 
 Configuration for a selection strategy.
 
-<a id="soldier.config.models.selection.SelectionStrategiesConfig"></a>
+<a id="focal.config.models.selection.SelectionStrategiesConfig"></a>
 
 ## SelectionStrategiesConfig Objects
 

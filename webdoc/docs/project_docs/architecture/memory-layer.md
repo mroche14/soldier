@@ -1,6 +1,6 @@
 # Memory Layer
 
-The memory layer gives Soldier agents long-term context and factual grounding. It combines a **temporal knowledge graph** with **hybrid retrieval** to provide both precise facts and semantic recall.
+The memory layer gives Focal agents long-term context and factual grounding. It combines a **temporal knowledge graph** with **hybrid retrieval** to provide both precise facts and semantic recall.
 
 ## Core Concepts
 
@@ -16,13 +16,13 @@ An **Episode** is the atomic unit of memory—a single piece of experience:
 Each Episode contains:
 - Raw text or structured data
 - Timestamp (when it occurred)
-- Ingestion timestamp (when Soldier learned it)
+- Ingestion timestamp (when Focal learned it)
 - Source metadata
 - `group_id` for tenant/session isolation
 
 ### Entities and Relationships
 
-When an Episode is ingested, Soldier extracts:
+When an Episode is ingested, Focal extracts:
 
 - **Entities**: Named things (people, products, orders, concepts)
 - **Relationships**: Connections between entities (ordered, owns, related_to)
@@ -43,7 +43,7 @@ All nodes and edges carry **bi-temporal attributes**:
 |-----------|---------|
 | `valid_from` | When the fact became true in the real world |
 | `valid_to` | When the fact stopped being true (null if still valid) |
-| `recorded_at` | When Soldier learned this fact |
+| `recorded_at` | When Focal learned this fact |
 
 This enables:
 - **Point-in-time queries**: "What did we know about this customer last Tuesday?"
@@ -119,7 +119,7 @@ class MemoryStore(ABC):
 
 ## Hybrid Retrieval
 
-Soldier combines three search strategies to find relevant context:
+Focal combines three search strategies to find relevant context:
 
 ### 1. Semantic Vector Search
 
@@ -234,7 +234,7 @@ Episodes integrate incrementally—no batch reprocessing:
 
 ## Summarization
 
-For long conversations, Soldier compresses older turns:
+For long conversations, Focal compresses older turns:
 
 - After N turns (configurable), generate summary Episode
 - Summary linked to conversation/user node

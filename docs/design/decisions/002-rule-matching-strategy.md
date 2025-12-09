@@ -6,7 +6,7 @@
 
 ## Context
 
-Soldier's alignment engine must match user messages to relevant Rules quickly and accurately. With potentially hundreds of Rules per tenant, we need an efficient matching strategy that:
+Focal's alignment engine must match user messages to relevant Rules quickly and accurately. With potentially hundreds of Rules per tenant, we need an efficient matching strategy that:
 
 1. Handles natural language conditions (no exact keyword matching)
 2. Returns results in < 50ms

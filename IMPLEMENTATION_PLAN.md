@@ -1,6 +1,6 @@
-# Soldier Implementation Plan
+# Focal Implementation Plan
 
-A comprehensive, phased implementation plan for building the Soldier cognitive engine from the ground up.
+A comprehensive, phased implementation plan for building the Focal cognitive engine from the ground up.
 
 ---
 
@@ -12,9 +12,9 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 
 - [x] Create top-level structure:
   ```
-  soldier/
+  focal/
   ├── config/                  # TOML configuration files
-  ├── soldier/                 # Main Python package
+  ├── focal/                 # Main Python package
   ├── tests/                   # Test suite
   ├── docs/                    # Documentation (exists)
   └── deploy/                  # Kubernetes, Docker
@@ -27,19 +27,19 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
   - [x] `config/production.toml` - Production environment
   - [x] `config/test.toml` - Test environment
 
-- [x] Create `soldier/` package structure:
-  - [x] `soldier/__init__.py`
-  - [x] `soldier/alignment/` - The brain
-  - [x] `soldier/memory/` - Long-term memory
-  - [x] `soldier/conversation/` - Live state
-  - [x] `soldier/audit/` - What happened
-  - [x] `soldier/observability/` - Logging, tracing, metrics
-  - [x] `soldier/providers/` - External services
-  - [x] `soldier/api/` - HTTP/gRPC interfaces
-  - [x] `soldier/config/` - Configuration loading
-  - [x] `soldier/profile/` - Customer profiles
+- [x] Create `focal/` package structure:
+  - [x] `focal/__init__.py`
+  - [x] `focal/alignment/` - The brain
+  - [x] `focal/memory/` - Long-term memory
+  - [x] `focal/conversation/` - Live state
+  - [x] `focal/audit/` - What happened
+  - [x] `focal/observability/` - Logging, tracing, metrics
+  - [x] `focal/providers/` - External services
+  - [x] `focal/api/` - HTTP/gRPC interfaces
+  - [x] `focal/config/` - Configuration loading
+  - [x] `focal/profile/` - Customer profiles
 
-- [x] Create `tests/` structure mirroring `soldier/`:
+- [x] Create `tests/` structure mirroring `focal/`:
   - [x] `tests/unit/`
   - [x] `tests/integration/`
   - [x] `tests/e2e/`
@@ -62,49 +62,49 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/configuration-overview.md`, `docs/architecture/folder-structure.md` (config section)
 
 ### 1.1 Configuration Loader
-- [x] `soldier/config/__init__.py`
-- [x] `soldier/config/loader.py` - TOML loader with environment resolution
+- [x] `focal/config/__init__.py`
+- [x] `focal/config/loader.py` - TOML loader with environment resolution
   - [x] Load TOML files by environment
   - [x] Resolve `${ENV_VAR}` placeholders
   - [x] Merge defaults → environment → env vars
-- [x] `soldier/config/settings.py` - Root Settings class
+- [x] `focal/config/settings.py` - Root Settings class
   - [x] `get_settings()` singleton function
   - [x] Environment-aware loading
 
 ### 1.2 Configuration Models (Pydantic)
 > Reference: `docs/architecture/configuration-overview.md`
 
-- [x] `soldier/config/models/__init__.py`
-- [x] `soldier/config/models/api.py` - APIConfig
+- [x] `focal/config/models/__init__.py`
+- [x] `focal/config/models/api.py` - APIConfig
   - [x] Host, port, CORS settings
   - [x] Rate limit configuration
-- [x] `soldier/config/models/storage.py` - Storage backend configs
+- [x] `focal/config/models/storage.py` - Storage backend configs
   - [x] ConfigStoreConfig
   - [x] MemoryStoreConfig
   - [x] SessionStoreConfig
   - [x] AuditStoreConfig
-- [x] `soldier/config/models/providers.py` - Provider configs
+- [x] `focal/config/models/providers.py` - Provider configs
   - [x] LLMProviderConfig
   - [x] EmbeddingProviderConfig
   - [x] RerankProviderConfig
-- [x] `soldier/config/models/pipeline.py` - Pipeline step configs
+- [x] `focal/config/models/pipeline.py` - Pipeline step configs
   - [x] ContextExtractionConfig
   - [x] RetrievalConfig
   - [x] RerankingConfig
   - [x] LLMFilteringConfig
   - [x] GenerationConfig
   - [x] EnforcementConfig
-- [x] `soldier/config/models/selection.py` - Selection strategy configs
+- [x] `focal/config/models/selection.py` - Selection strategy configs
   - [x] ElbowSelectionConfig
   - [x] AdaptiveKSelectionConfig
   - [x] EntropySelectionConfig
   - [x] ClusterSelectionConfig
   - [x] FixedKSelectionConfig
-- [x] `soldier/config/models/observability.py` - Observability configs
+- [x] `focal/config/models/observability.py` - Observability configs
   - [x] LoggingConfig
   - [x] TracingConfig
   - [x] MetricsConfig
-- [x] `soldier/config/models/agent.py` - Per-agent overrides
+- [x] `focal/config/models/agent.py` - Per-agent overrides
 
 ### 1.3 Default Configuration
 - [x] Write `config/default.toml` with all sections
@@ -123,8 +123,8 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/observability.md`
 
 ### 2.1 Logging
-- [x] `soldier/observability/__init__.py`
-- [x] `soldier/observability/logging.py`
+- [x] `focal/observability/__init__.py`
+- [x] `focal/observability/logging.py`
   - [x] `setup_logging()` - Configure structlog
   - [x] `get_logger()` - Get bound logger
   - [x] JSON formatter for production
@@ -132,19 +132,19 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
   - [x] PII redaction processor
 
 ### 2.2 Tracing
-- [x] `soldier/observability/tracing.py`
+- [x] `focal/observability/tracing.py`
   - [x] `setup_tracing()` - Configure OpenTelemetry
   - [x] OTLP exporter configuration
   - [x] Span helpers for pipeline steps
 
 ### 2.3 Metrics
-- [x] `soldier/observability/metrics.py`
+- [x] `focal/observability/metrics.py`
   - [x] Prometheus counters: requests, LLM calls, rule fires
   - [x] Histograms: latency per step, tokens used
   - [x] Gauges: active sessions
 
 ### 2.4 Middleware
-- [x] `soldier/observability/middleware.py`
+- [x] `focal/observability/middleware.py`
   - [ ] Request context binding
   - [ ] tenant_id, agent_id, session_id extraction
   - [ ] Trace ID propagation
@@ -162,23 +162,23 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 ### 3.1 Alignment Models
 > Reference: `docs/architecture/alignment-engine.md`
 
-- [x] `soldier/alignment/models/__init__.py`
-- [x] `soldier/alignment/models/rule.py`
+- [x] `focal/alignment/models/__init__.py`
+- [x] `focal/alignment/models/rule.py`
   - [x] Rule (condition, action, scope, priority)
   - [x] MatchedRule (with scores)
   - [x] RuleScope enum
-- [x] `soldier/alignment/models/scenario.py`
+- [x] `focal/alignment/models/scenario.py`
   - [x] Scenario
   - [x] ScenarioStep
   - [x] StepTransition
   - [x] ScenarioFilterResult
-- [x] `soldier/alignment/models/template.py`
+- [x] `focal/alignment/models/template.py`
   - [x] Template
   - [x] TemplateMode enum (SUGGEST, EXCLUSIVE, FALLBACK)
-- [x] `soldier/alignment/models/variable.py`
+- [x] `focal/alignment/models/variable.py`
   - [x] Variable
   - [x] VariableUpdatePolicy enum
-- [x] `soldier/alignment/models/context.py`
+- [x] `focal/alignment/models/context.py`
   - [x] Context
   - [x] UserIntent
   - [x] ExtractedEntities
@@ -186,35 +186,35 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 ### 3.2 Memory Models
 > Reference: `docs/architecture/memory-layer.md`
 
-- [x] `soldier/memory/models/__init__.py`
-- [x] `soldier/memory/models/episode.py`
+- [x] `focal/memory/models/__init__.py`
+- [x] `focal/memory/models/episode.py`
   - [x] Episode (atomic memory unit)
   - [x] Bi-temporal attributes (valid_from, valid_to, recorded_at)
-- [x] `soldier/memory/models/entity.py`
+- [x] `focal/memory/models/entity.py`
   - [x] Entity (named thing in knowledge graph)
-- [x] `soldier/memory/models/relationship.py`
+- [x] `focal/memory/models/relationship.py`
   - [x] Relationship (edge between entities)
 
 ### 3.3 Conversation Models
-- [x] `soldier/conversation/models/__init__.py`
-- [x] `soldier/conversation/models/session.py`
+- [x] `focal/conversation/models/__init__.py`
+- [x] `focal/conversation/models/session.py`
   - [x] Session (active conversation state)
   - [x] Link to CustomerProfile
-- [x] `soldier/conversation/models/turn.py`
+- [x] `focal/conversation/models/turn.py`
   - [x] Turn (single exchange)
 
 ### 3.4 Audit Models
-- [x] `soldier/audit/models/__init__.py`
-- [x] `soldier/audit/models/turn_record.py`
+- [x] `focal/audit/models/__init__.py`
+- [x] `focal/audit/models/turn_record.py`
   - [x] TurnRecord (full turn with metadata)
-- [x] `soldier/audit/models/event.py`
+- [x] `focal/audit/models/event.py`
   - [x] AuditEvent (tool calls, errors)
 
 ### 3.5 Profile Models
 > Reference: `docs/design/customer-profile.md`
 
-- [x] `soldier/profile/__init__.py`
-- [x] `soldier/profile/models.py`
+- [x] `focal/profile/__init__.py`
+- [x] `focal/profile/models.py`
   - [x] CustomerProfile
   - [x] ChannelIdentity
   - [x] ProfileField
@@ -237,49 +237,49 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/decisions/001-storage-choice.md`
 
 ### 4.1 ConfigStore
-- [x] `soldier/alignment/stores/__init__.py`
-- [x] `soldier/alignment/stores/config_store.py` - Interface (ABC)
+- [x] `focal/alignment/stores/__init__.py`
+- [x] `focal/alignment/stores/config_store.py` - Interface (ABC)
   - [x] `get_rules()`, `get_rule()`, `save_rule()`, `delete_rule()`
   - [x] `vector_search_rules()`
   - [x] `get_scenarios()`, `get_scenario()`, `save_scenario()`
   - [x] `get_templates()`, `save_template()`
   - [x] `get_variables()`
   - [x] `get_agent()`, `save_agent()`
-- [x] `soldier/alignment/stores/inmemory.py` - InMemoryConfigStore
+- [x] `focal/alignment/stores/inmemory.py` - InMemoryConfigStore
 
 ### 4.2 MemoryStore
-- [x] `soldier/memory/store.py` - Interface (ABC)
+- [x] `focal/memory/store.py` - Interface (ABC)
   - [x] `add_episode()`, `get_episode()`
   - [x] `vector_search_episodes()`, `text_search_episodes()`
   - [x] `add_entity()`, `get_entities()`
   - [x] `add_relationship()`, `traverse_from_entities()`
   - [x] `delete_by_group()`
-- [x] `soldier/memory/stores/__init__.py`
-- [x] `soldier/memory/stores/inmemory.py` - InMemoryMemoryStore
+- [x] `focal/memory/stores/__init__.py`
+- [x] `focal/memory/stores/inmemory.py` - InMemoryMemoryStore
 
 ### 4.3 SessionStore
-- [x] `soldier/conversation/store.py` - Interface (ABC)
+- [x] `focal/conversation/store.py` - Interface (ABC)
   - [x] `get()`, `save()`, `delete()`
   - [x] `list_by_agent()`
-- [x] `soldier/conversation/stores/__init__.py`
-- [x] `soldier/conversation/stores/inmemory.py` - InMemorySessionStore
+- [x] `focal/conversation/stores/__init__.py`
+- [x] `focal/conversation/stores/inmemory.py` - InMemorySessionStore
 
 ### 4.4 AuditStore
-- [x] `soldier/audit/store.py` - Interface (ABC)
+- [x] `focal/audit/store.py` - Interface (ABC)
   - [x] `save_turn()`, `get_turn()`
   - [x] `list_turns_by_session()`, `list_turns_by_tenant()`
   - [x] `save_event()`
-- [x] `soldier/audit/stores/__init__.py`
-- [x] `soldier/audit/stores/inmemory.py` - InMemoryAuditStore
+- [x] `focal/audit/stores/__init__.py`
+- [x] `focal/audit/stores/inmemory.py` - InMemoryAuditStore
 
 ### 4.5 ProfileStore
-- [x] `soldier/profile/store.py` - Interface (ABC)
+- [x] `focal/profile/store.py` - Interface (ABC)
   - [x] `get_by_customer_id()`, `get_by_channel_identity()`
   - [x] `get_or_create()`
   - [x] `update_field()`, `add_asset()`
   - [x] `merge_profiles()`, `link_channel()`
-- [x] `soldier/profile/stores/__init__.py`
-- [x] `soldier/profile/stores/inmemory.py` - InMemoryProfileStore
+- [x] `focal/profile/stores/__init__.py`
+- [x] `focal/profile/stores/inmemory.py` - InMemoryProfileStore
 
 ### 4.6 Tests
 - [x] `tests/unit/alignment/stores/test_inmemory_config.py`
@@ -295,32 +295,32 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/decisions/001-storage-choice.md` (Provider section)
 
 ### 5.1 LLM Provider
-- [x] `soldier/providers/__init__.py`
-- [x] `soldier/providers/llm/__init__.py`
-- [x] `soldier/providers/llm/base.py` - LLMProvider interface
+- [x] `focal/providers/__init__.py`
+- [x] `focal/providers/llm/__init__.py`
+- [x] `focal/providers/llm/base.py` - LLMProvider interface
   - [x] `generate()` - Text completion
   - [x] `generate_structured()` - Structured output
   - [x] LLMResponse model
   - [x] TokenUsage model
-- [x] `soldier/providers/llm/mock.py` - MockLLMProvider
+- [x] `focal/providers/llm/mock.py` - MockLLMProvider
 
 ### 5.2 Embedding Provider
-- [x] `soldier/providers/embedding/__init__.py`
-- [x] `soldier/providers/embedding/base.py` - EmbeddingProvider interface
+- [x] `focal/providers/embedding/__init__.py`
+- [x] `focal/providers/embedding/base.py` - EmbeddingProvider interface
   - [x] `dimensions` property
   - [x] `embed()` - Single text
   - [x] `embed_batch()` - Batch embedding
-- [x] `soldier/providers/embedding/mock.py` - MockEmbeddingProvider
+- [x] `focal/providers/embedding/mock.py` - MockEmbeddingProvider
 
 ### 5.3 Rerank Provider
-- [x] `soldier/providers/rerank/__init__.py`
-- [x] `soldier/providers/rerank/base.py` - RerankProvider interface
+- [x] `focal/providers/rerank/__init__.py`
+- [x] `focal/providers/rerank/base.py` - RerankProvider interface
   - [x] `rerank()` - Rerank documents
   - [x] RerankResult model
-- [x] `soldier/providers/rerank/mock.py` - MockRerankProvider
+- [x] `focal/providers/rerank/mock.py` - MockRerankProvider
 
 ### 5.4 Provider Factory
-- [x] `soldier/providers/factory.py`
+- [x] `focal/providers/factory.py`
   - [x] `create_llm_provider(config)`
   - [x] `create_embedding_provider(config)`
   - [x] `create_rerank_provider(config)`
@@ -337,8 +337,8 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/selection-strategies.md`
 
 ### 6.1 Selection Interface & Models
-- [x] `soldier/alignment/retrieval/__init__.py`
-- [x] `soldier/alignment/retrieval/selection.py`
+- [x] `focal/alignment/retrieval/__init__.py`
+- [x] `focal/alignment/retrieval/selection.py`
   - [x] SelectionStrategy interface (ABC)
   - [x] ScoredItem generic model
   - [x] SelectionResult model
@@ -363,16 +363,16 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/alignment-engine.md`, `docs/design/turn-pipeline.md`
 
 ### 7.1 Context Extractor
-- [x] `soldier/alignment/context/__init__.py`
-- [x] `soldier/alignment/context/extractor.py`
+- [x] `focal/alignment/context/__init__.py`
+- [x] `focal/alignment/context/extractor.py`
   - [x] ContextExtractor interface
   - [x] LLMContextExtractor implementation
   - [ ] RuleBasedContextExtractor (simple patterns)
-- [x] `soldier/alignment/context/models.py`
+- [x] `focal/alignment/context/models.py`
   - [x] Context model
   - [x] UserIntent model
   - [x] ExtractedEntities model
-- [x] `soldier/alignment/context/prompts/`
+- [x] `focal/alignment/context/prompts/`
   - [x] `extract_intent.txt` - Intent extraction prompt
 
 ### 7.2 Tests
@@ -385,7 +385,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/decisions/002-rule-matching-strategy.md`
 
 ### 8.1 Rule Retrieval
-- [x] `soldier/alignment/retrieval/rule_retriever.py`
+- [x] `focal/alignment/retrieval/rule_retriever.py`
   - [x] RuleRetriever class
   - [x] Vector similarity search
   - [ ] BM25 hybrid search
@@ -393,19 +393,19 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
   - [x] Selection strategy application
 
 ### 8.2 Scenario Retrieval
-- [x] `soldier/alignment/retrieval/scenario_retriever.py`
+- [x] `focal/alignment/retrieval/scenario_retriever.py`
   - [x] ScenarioRetriever class
   - [x] Entry condition matching
   - [x] Active scenario continuation
 
 ### 8.3 Memory Retrieval
-- [x] `soldier/memory/retrieval/__init__.py`
-- [x] `soldier/memory/retrieval/retriever.py`
+- [x] `focal/memory/retrieval/__init__.py`
+- [x] `focal/memory/retrieval/retriever.py`
   - [x] MemoryRetriever class
   - [ ] Hybrid retrieval (vector + BM25 + graph)
 
 ### 8.4 Reranker
-- [x] `soldier/alignment/retrieval/reranker.py`
+- [x] `focal/alignment/retrieval/reranker.py`
   - [x] ResultReranker class
   - [x] Provider-agnostic reranking
 
@@ -421,19 +421,19 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/alignment-engine.md`
 
 ### 9.1 Rule Filter
-- [x] `soldier/alignment/filtering/__init__.py`
-- [x] `soldier/alignment/filtering/rule_filter.py`
+- [x] `focal/alignment/filtering/__init__.py`
+- [x] `focal/alignment/filtering/rule_filter.py`
   - [x] RuleFilter class
   - [x] LLM-based condition evaluation
   - [x] Batch filtering for efficiency
-- [x] `soldier/alignment/filtering/prompts/filter_rules.txt`
+- [x] `focal/alignment/filtering/prompts/filter_rules.txt`
 
 ### 9.2 Scenario Filter
-- [x] `soldier/alignment/filtering/scenario_filter.py`
+- [x] `focal/alignment/filtering/scenario_filter.py`
   - [x] ScenarioFilter class
   - [x] Start/continue/exit decisions
   - [x] Step transition evaluation
-- [x] `soldier/alignment/filtering/prompts/evaluate_scenario.txt`
+- [x] `focal/alignment/filtering/prompts/evaluate_scenario.txt`
 
 ### 9.3 Tests
 - [x] `tests/unit/alignment/filtering/test_rule_filter.py`
@@ -446,34 +446,34 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/turn-pipeline.md`
 
 ### 10.1 Tool Execution
-- [x] `soldier/alignment/execution/__init__.py`
-- [x] `soldier/alignment/execution/tool_executor.py`
+- [x] `focal/alignment/execution/__init__.py`
+- [x] `focal/alignment/execution/tool_executor.py`
   - [x] ToolExecutor class
   - [x] Execute tools from matched rules
   - [x] Timeout handling
   - [x] Result aggregation
-- [x] `soldier/alignment/execution/variable_resolver.py`
+- [x] `focal/alignment/execution/variable_resolver.py`
   - [x] VariableResolver class
   - [x] Resolve variables from profile/session
 
 ### 10.2 Response Generation
-- [x] `soldier/alignment/generation/__init__.py`
-- [x] `soldier/alignment/generation/prompt_builder.py`
+- [x] `focal/alignment/generation/__init__.py`
+- [x] `focal/alignment/generation/prompt_builder.py`
   - [x] PromptBuilder class
   - [x] Assemble system prompt with rules, memory, context
-- [x] `soldier/alignment/generation/generator.py`
+- [x] `focal/alignment/generation/generator.py`
   - [x] ResponseGenerator class
   - [x] LLM-based response generation
   - [x] Template interpolation
-- [x] `soldier/alignment/generation/prompts/system_prompt.txt`
+- [x] `focal/alignment/generation/prompts/system_prompt.txt`
 
 ### 10.3 Enforcement
-- [x] `soldier/alignment/enforcement/__init__.py`
-- [x] `soldier/alignment/enforcement/validator.py`
+- [x] `focal/alignment/enforcement/__init__.py`
+- [x] `focal/alignment/enforcement/validator.py`
   - [x] EnforcementValidator class
   - [x] Check response against hard constraints
   - [ ] Self-critique (optional)
-- [x] `soldier/alignment/enforcement/fallback.py`
+- [x] `focal/alignment/enforcement/fallback.py`
   - [x] FallbackHandler class
   - [x] Template fallback logic
 
@@ -489,13 +489,13 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/alignment-engine.md`
 
 ### 11.1 Alignment Engine
-- [x] `soldier/alignment/__init__.py`
-- [x] `soldier/alignment/engine.py`
+- [x] `focal/alignment/__init__.py`
+- [x] `focal/alignment/engine.py`
   - [x] AlignmentEngine class
   - [x] `process_turn()` - Full pipeline orchestration
   - [x] Step timing and logging
   - [x] Error handling and fallbacks
-- [x] `soldier/alignment/result.py`
+- [x] `focal/alignment/result.py`
   - [x] AlignmentResult model
   - [x] TurnMetadata model
 
@@ -516,33 +516,33 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/memory-layer.md`
 
 ### 12.1 Memory Ingestion
-- [x] `soldier/memory/ingestion/__init__.py`
-- [x] `soldier/memory/ingestion/ingestor.py`
+- [x] `focal/memory/ingestion/__init__.py`
+- [x] `focal/memory/ingestion/ingestor.py`
   - [x] MemoryIngestor class
   - [x] Episode creation from turns
   - [x] Embedding generation with fallback
   - [x] Async task queuing
-- [x] `soldier/memory/ingestion/entity_extractor.py`
+- [x] `focal/memory/ingestion/entity_extractor.py`
   - [x] EntityExtractor class
   - [x] LLM-based entity extraction
   - [x] EntityDeduplicator class (4-stage pipeline)
   - [x] Temporal relationship updates
-- [x] `soldier/memory/ingestion/summarizer.py`
+- [x] `focal/memory/ingestion/summarizer.py`
   - [x] ConversationSummarizer class
   - [x] Hierarchical summarization (window + meta)
-- [x] `soldier/memory/ingestion/models.py`
+- [x] `focal/memory/ingestion/models.py`
   - [x] Structured output models (ExtractedEntity, ExtractedRelationship)
-- [x] `soldier/memory/ingestion/errors.py`
+- [x] `focal/memory/ingestion/errors.py`
   - [x] Error classes (IngestionError, ExtractionError, SummarizationError)
-- [x] `soldier/memory/ingestion/queue.py`
+- [x] `focal/memory/ingestion/queue.py`
   - [x] TaskQueue interface
   - [x] InMemoryTaskQueue implementation
   - [x] RedisTaskQueue implementation
-- [x] `soldier/memory/ingestion/tasks.py`
+- [x] `focal/memory/ingestion/tasks.py`
   - [x] Background task handlers
-- [x] `soldier/config/models/pipeline.py`
+- [x] `focal/config/models/pipeline.py`
   - [x] MemoryIngestionConfig and related config models
-- [x] `soldier/providers/embedding/sentence_transformers.py`
+- [x] `focal/providers/embedding/sentence_transformers.py`
   - [x] SentenceTransformersProvider implementation
 - [x] `config/default.toml`
   - [x] Memory ingestion configuration section
@@ -560,40 +560,40 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/api-layer.md`, `docs/design/api-crud.md`
 
 ### 13.1 FastAPI Application
-- [x] `soldier/api/__init__.py`
-- [x] `soldier/api/app.py` - FastAPI app factory
+- [x] `focal/api/__init__.py`
+- [x] `focal/api/app.py` - FastAPI app factory
   - [x] Middleware setup
   - [x] Route registration
   - [x] Exception handlers
 
 ### 13.2 API Models
-- [x] `soldier/api/models/__init__.py`
-- [x] `soldier/api/models/chat.py`
+- [x] `focal/api/models/__init__.py`
+- [x] `focal/api/models/chat.py`
   - [x] ChatRequest
   - [x] ChatResponse
-- [x] `soldier/api/models/errors.py`
+- [x] `focal/api/models/errors.py`
   - [x] ErrorResponse
   - [x] Error codes enum
 
 ### 13.3 Core Routes
-- [x] `soldier/api/routes/__init__.py`
-- [x] `soldier/api/routes/chat.py`
+- [x] `focal/api/routes/__init__.py`
+- [x] `focal/api/routes/chat.py`
   - [x] `POST /v1/chat` - Process message
   - [x] `POST /v1/chat/stream` - SSE streaming
-- [x] `soldier/api/routes/sessions.py`
+- [x] `focal/api/routes/sessions.py`
   - [x] `GET /v1/sessions/{id}` - Get session
   - [x] `DELETE /v1/sessions/{id}` - End session
   - [x] `GET /v1/sessions/{id}/turns` - Session history
-- [x] `soldier/api/routes/health.py`
+- [x] `focal/api/routes/health.py`
   - [x] `GET /health` - Health check
   - [x] `GET /metrics` - Prometheus metrics
 
 ### 13.4 Middleware
-- [x] `soldier/api/middleware/__init__.py`
-- [x] `soldier/api/middleware/auth.py`
+- [x] `focal/api/middleware/__init__.py`
+- [x] `focal/api/middleware/auth.py`
   - [x] JWT validation
   - [x] Tenant extraction
-- [x] `soldier/api/middleware/rate_limit.py`
+- [x] `focal/api/middleware/rate_limit.py`
   - [x] Per-tenant rate limiting
 
 ### 13.5 Tests
@@ -608,7 +608,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/api-crud.md`, `specs/001-api-crud/`
 
 ### 14.1 Agent Routes
-- [x] `soldier/api/routes/agents.py`
+- [x] `focal/api/routes/agents.py`
   - [x] `GET /v1/agents` - List agents
   - [x] `GET /v1/agents/{id}` - Get agent
   - [x] `POST /v1/agents` - Create agent
@@ -616,7 +616,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
   - [x] `DELETE /v1/agents/{id}` - Delete agent
 
 ### 14.2 Rules Routes
-- [x] `soldier/api/routes/rules.py`
+- [x] `focal/api/routes/rules.py`
   - [x] `GET /v1/agents/{id}/rules` - List rules
   - [x] `GET /v1/agents/{id}/rules/{rule_id}` - Get rule
   - [x] `POST /v1/agents/{id}/rules` - Create rule
@@ -625,25 +625,25 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
   - [x] `POST /v1/agents/{id}/rules/bulk` - Bulk operations
 
 ### 14.3 Scenarios Routes
-- [x] `soldier/api/routes/scenarios.py`
+- [x] `focal/api/routes/scenarios.py`
   - [x] Scenario CRUD
   - [x] Step CRUD
 
 ### 14.4 Templates Routes
-- [x] `soldier/api/routes/templates.py`
+- [x] `focal/api/routes/templates.py`
   - [x] Template CRUD
   - [x] `POST /preview` - Template preview
 
 ### 14.5 Variables Routes
-- [x] `soldier/api/routes/variables.py`
+- [x] `focal/api/routes/variables.py`
   - [x] Variable CRUD with resolver tool references
 
 ### 14.6 Tools Routes
-- [x] `soldier/api/routes/tools.py`
+- [x] `focal/api/routes/tools.py`
   - [x] Tool activation/deactivation with policy overrides
 
 ### 14.7 Publish Routes
-- [x] `soldier/api/routes/publish.py`
+- [x] `focal/api/routes/publish.py`
   - [x] Publish status and initiation
   - [x] Rollback to previous version
 
@@ -660,29 +660,29 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/design/scenario-update-methods.md`, `specs/008-scenario-migration/`
 
 ### 15.1 Migration Plan Generation (User Story 1) ✅
-- [x] `soldier/alignment/migration/__init__.py`
-- [x] `soldier/alignment/migration/models.py`
+- [x] `focal/alignment/migration/__init__.py`
+- [x] `focal/alignment/migration/models.py`
   - [x] MigrationPlan, MigrationPlanStatus, MigrationScenario
   - [x] TransformationMap, AnchorTransformation
   - [x] UpstreamChanges, DownstreamChanges, InsertedNode, DeletedNode
   - [x] MigrationSummary, MigrationWarning, FieldCollectionInfo
   - [x] AnchorMigrationPolicy, ScopeFilter
-- [x] `soldier/alignment/migration/diff.py`
+- [x] `focal/alignment/migration/diff.py`
   - [x] `compute_node_content_hash()` - SHA-256 anchor identification
   - [x] `find_anchor_nodes()` - Content hash matching between versions
   - [x] `compute_upstream_changes()` - Reverse BFS analysis
   - [x] `compute_downstream_changes()` - Forward BFS analysis
   - [x] `determine_migration_scenario()` - clean_graft/gap_fill/re_route
   - [x] `compute_transformation_map()` - Complete diff between versions
-- [x] `soldier/alignment/migration/planner.py`
+- [x] `focal/alignment/migration/planner.py`
   - [x] MigrationPlanner - generate_plan(), approve_plan(), reject_plan()
   - [x] MigrationDeployer - deploy(), get_deployment_status()
-- [x] `soldier/api/routes/migrations.py` - Full migration API
-- [x] `soldier/config/models/migration.py` - Migration configuration
+- [x] `focal/api/routes/migrations.py` - Full migration API
+- [x] `focal/config/models/migration.py` - Migration configuration
 - [x] Store extensions (ConfigStore, SessionStore) for migration
 
 ### 15.2 Migration Application (User Story 2) ✅
-- [x] `soldier/alignment/migration/executor.py`
+- [x] `focal/alignment/migration/executor.py`
   - [x] MigrationExecutor class with reconcile() method
   - [x] `_execute_clean_graft()` - Silent teleport to V2 anchor
   - [x] `_execute_gap_fill()` - Collect fields or teleport
@@ -701,7 +701,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 - [x] `checkpoint_warning` field in ReconciliationResult
 
 ### 15.4 Multi-Version Gaps (User Story 5) ✅
-- [x] `soldier/alignment/migration/composite.py`
+- [x] `focal/alignment/migration/composite.py`
   - [x] CompositeMapper class
   - [x] `get_plan_chain()` - Load V1→V2→...→Vn plans
   - [x] `accumulate_requirements()` - Collect all fields across chain
@@ -709,7 +709,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
   - [x] `execute_composite_migration()` - Net effect computation
 
 ### 15.5 Gap Fill (User Story 6) ✅
-- [x] `soldier/alignment/migration/gap_fill.py`
+- [x] `focal/alignment/migration/gap_fill.py`
   - [x] GapFillService class
   - [x] `try_profile_fill()` - Check customer profile
   - [x] `try_session_fill()` - Check session variables
@@ -719,7 +719,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 - [x] Integration into `_execute_gap_fill()` in executor
 
 ### 15.6 Polish ✅
-- [x] Migration metrics in `soldier/observability/metrics.py`
+- [x] Migration metrics in `focal/observability/metrics.py`
 - [x] Plan retention cleanup (`cleanup_old_plans()`)
 - [x] CLAUDE.md migration module documentation
 
@@ -740,13 +740,13 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 ### 16.1 PostgreSQL Stores
 > Reference: `docs/design/decisions/001-storage-choice.md`
 
-- [x] `soldier/alignment/stores/postgres.py` - PostgresConfigStore
-- [x] `soldier/memory/stores/postgres.py` - PostgresMemoryStore (pgvector)
-- [x] `soldier/audit/stores/postgres.py` - PostgresAuditStore
-- [x] `soldier/profile/stores/postgres.py` - PostgresProfileStore
+- [x] `focal/alignment/stores/postgres.py` - PostgresConfigStore
+- [x] `focal/memory/stores/postgres.py` - PostgresMemoryStore (pgvector)
+- [x] `focal/audit/stores/postgres.py` - PostgresAuditStore
+- [x] `focal/profile/stores/postgres.py` - PostgresProfileStore
 
 ### 16.2 Redis Session Store
-- [x] `soldier/conversation/stores/redis.py` - RedisSessionStore
+- [x] `focal/conversation/stores/redis.py` - RedisSessionStore
   - [x] Two-tier (cache + persistent)
   - [x] TTL management
 
@@ -772,19 +772,19 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 **Goal**: Implement real AI provider integrations
 
 ### 17.1 LLM Providers
-- [x] `soldier/providers/llm/anthropic.py` - AnthropicProvider
-- [x] `soldier/providers/llm/openai.py` - OpenAIProvider
-- [x] `soldier/providers/llm/bedrock.py` - BedrockProvider (optional)
-- [x] `soldier/providers/llm/ollama.py` - OllamaProvider (optional)
+- [x] `focal/providers/llm/anthropic.py` - AnthropicProvider
+- [x] `focal/providers/llm/openai.py` - OpenAIProvider
+- [x] `focal/providers/llm/bedrock.py` - BedrockProvider (optional)
+- [x] `focal/providers/llm/ollama.py` - OllamaProvider (optional)
 
 ### 17.2 Embedding Providers
-- [x] `soldier/providers/embedding/openai.py` - OpenAIEmbeddings
-- [x] `soldier/providers/embedding/cohere.py` - CohereEmbeddings
-- [x] `soldier/providers/embedding/sentence_transformers.py` - Local
+- [x] `focal/providers/embedding/openai.py` - OpenAIEmbeddings
+- [x] `focal/providers/embedding/cohere.py` - CohereEmbeddings
+- [x] `focal/providers/embedding/sentence_transformers.py` - Local
 
 ### 17.3 Rerank Providers
-- [x] `soldier/providers/rerank/cohere.py` - CohereRerank
-- [x] `soldier/providers/rerank/cross_encoder.py` - Local CrossEncoder
+- [x] `focal/providers/rerank/cohere.py` - CohereRerank
+- [x] `focal/providers/rerank/cross_encoder.py` - Local CrossEncoder
 
 ### 17.4 Integration Tests
 - [x] `tests/integration/providers/test_anthropic.py`
@@ -797,7 +797,7 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `specs/010-customer-context-vault/spec.md`
 
 ### 17.5.1 Model Enhancements ✅
-- [x] Add `ItemStatus` enum (active, superseded, expired, orphaned) to `soldier/profile/enums.py`
+- [x] Add `ItemStatus` enum (active, superseded, expired, orphaned) to `focal/profile/enums.py`
 - [x] Add `SourceType` enum (profile_field, profile_asset, session, tool, external)
 - [x] Add `RequiredLevel` enum (hard, soft)
 - [x] Add `FallbackAction` enum (ask, skip, block, extract)
@@ -829,15 +829,15 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 - [x] Update `PostgresProfileStore` with all new methods
 
 ### 17.5.4 Redis Caching Layer ✅
-- [x] Create `soldier/profile/stores/cached.py` - `ProfileStoreCacheLayer` wrapper
+- [x] Create `focal/profile/stores/cached.py` - `ProfileStoreCacheLayer` wrapper
 - [x] Implement two-tier caching (Redis + PostgreSQL)
 - [x] Cache invalidation on mutations
 - [x] Fallback logic for Redis failures
-- [x] Add `ProfileStoreConfig` to `soldier/config/models/storage.py`
+- [x] Add `ProfileStoreConfig` to `focal/config/models/storage.py`
 - [x] Update `config/default.toml` with `[profile]` section
 
 ### 17.5.5 Schema Validation Service ✅
-- [x] Create `soldier/profile/validation.py` - `ProfileFieldValidator`
+- [x] Create `focal/profile/validation.py` - `ProfileFieldValidator`
 - [x] Type validators for: string, number, boolean, date, email, phone, json
 - [x] Regex and allowed values validation
 - [x] Validation mode support (strict, warn, disabled)
@@ -881,15 +881,15 @@ A comprehensive, phased implementation plan for building the Soldier cognitive e
 > Reference: `docs/architecture/api-layer.md` (gRPC section)
 
 ### 18.1 Proto Definitions
-- [ ] `soldier/api/grpc/protos/soldier.proto`
+- [ ] `focal/api/grpc/protos/focal.proto`
   - [ ] ChatService
   - [ ] MemoryService
   - [ ] ConfigService
 
 ### 18.2 gRPC Server
-- [ ] `soldier/api/grpc/__init__.py`
-- [ ] `soldier/api/grpc/server.py`
-- [ ] `soldier/api/grpc/servicers/chat.py`
+- [ ] `focal/api/grpc/__init__.py`
+- [ ] `focal/api/grpc/server.py`
+- [ ] `focal/api/grpc/servicers/chat.py`
 
 ### 18.3 Generated Code
 - [ ] Proto compilation setup

@@ -1,13 +1,13 @@
-<a id="soldier.alignment.migration.planner"></a>
+<a id="focal.alignment.migration.planner"></a>
 
-# soldier.alignment.migration.planner
+# focal.alignment.migration.planner
 
 Migration planner and deployer for scenario version transitions.
 
 Implements MigrationPlanner for plan generation and MigrationDeployer
 for session marking during deployment.
 
-<a id="soldier.alignment.migration.planner.MigrationPlanner"></a>
+<a id="focal.alignment.migration.planner.MigrationPlanner"></a>
 
 ## MigrationPlanner Objects
 
@@ -17,7 +17,7 @@ class MigrationPlanner()
 
 Generates migration plans for scenario version transitions.
 
-<a id="soldier.alignment.migration.planner.MigrationPlanner.__init__"></a>
+<a id="focal.alignment.migration.planner.MigrationPlanner.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -35,7 +35,7 @@ Initialize planner.
 - `session_store` - Store for session queries (affected count)
 - `config` - Migration configuration
 
-<a id="soldier.alignment.migration.planner.MigrationPlanner.generate_plan"></a>
+<a id="focal.alignment.migration.planner.MigrationPlanner.generate_plan"></a>
 
 #### generate\_plan
 
@@ -65,7 +65,7 @@ Generate a migration plan for a scenario update.
 
 - `ValueError` - If current scenario not found or versions invalid
 
-<a id="soldier.alignment.migration.planner.MigrationPlanner.approve_plan"></a>
+<a id="focal.alignment.migration.planner.MigrationPlanner.approve_plan"></a>
 
 #### approve\_plan
 
@@ -93,7 +93,7 @@ Approve a migration plan for deployment.
 
 - `ValueError` - If plan not found or not in PENDING status
 
-<a id="soldier.alignment.migration.planner.MigrationPlanner.reject_plan"></a>
+<a id="focal.alignment.migration.planner.MigrationPlanner.reject_plan"></a>
 
 #### reject\_plan
 
@@ -123,7 +123,7 @@ Reject a migration plan.
 
 - `ValueError` - If plan not found or not in PENDING status
 
-<a id="soldier.alignment.migration.planner.MigrationPlanner.update_policies"></a>
+<a id="focal.alignment.migration.planner.MigrationPlanner.update_policies"></a>
 
 #### update\_policies
 
@@ -151,7 +151,7 @@ Update per-anchor policies for a migration plan.
 
 - `ValueError` - If plan not found or not in PENDING status
 
-<a id="soldier.alignment.migration.planner.MigrationDeployer"></a>
+<a id="focal.alignment.migration.planner.MigrationDeployer"></a>
 
 ## MigrationDeployer Objects
 
@@ -161,7 +161,7 @@ class MigrationDeployer()
 
 Deploys migration plans by marking eligible sessions.
 
-<a id="soldier.alignment.migration.planner.MigrationDeployer.__init__"></a>
+<a id="focal.alignment.migration.planner.MigrationDeployer.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -179,7 +179,7 @@ Initialize deployer.
 - `session_store` - Store for session marking
 - `config` - Migration configuration
 
-<a id="soldier.alignment.migration.planner.MigrationDeployer.deploy"></a>
+<a id="focal.alignment.migration.planner.MigrationDeployer.deploy"></a>
 
 #### deploy
 
@@ -207,7 +207,7 @@ Actual migration happens at JIT when customer returns.
 
 - `ValueError` - If plan not found or not in APPROVED status
 
-<a id="soldier.alignment.migration.planner.MigrationDeployer.get_deployment_status"></a>
+<a id="focal.alignment.migration.planner.MigrationDeployer.get_deployment_status"></a>
 
 #### get\_deployment\_status
 
@@ -233,7 +233,7 @@ Get deployment status for a migration plan.
 
 - `ValueError` - If plan not found
 
-<a id="soldier.alignment.migration.planner.MigrationDeployer.cleanup_old_plans"></a>
+<a id="focal.alignment.migration.planner.MigrationDeployer.cleanup_old_plans"></a>
 
 #### cleanup\_old\_plans
 

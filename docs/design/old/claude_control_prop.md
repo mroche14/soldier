@@ -4,7 +4,7 @@
 **Status**: Proposal for Review
 **Sources**: `state_machine.md`, `state_machine_2.md`, `enhanced-enforcement.md`
 
-This document synthesizes three design proposals into a unified architecture for rule processing, scenario navigation, and enforcement in Soldier.
+This document synthesizes three design proposals into a unified architecture for rule processing, scenario navigation, and enforcement in Focal.
 
 ---
 
@@ -22,7 +22,7 @@ This document identifies **8 key design decisions**, presents options for each, 
 
 ---
 
-## Current Soldier Architecture (Baseline)
+## Current Focal Architecture (Baseline)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -81,7 +81,7 @@ Legend: ⬤⬤⬤ = Critical, ⬤⬤◯ = Important, ⬤◯◯ = Minor
 - Context Extraction = "What do we know?" (fills CustomerProfile)
 - Intent Detection = "Where do we go?" (navigates Scenario Graph)
 
-**Current Soldier**: `ContextExtractor` does both (embedding + optional LLM intent).
+**Current Focal**: `ContextExtractor` does both (embedding + optional LLM intent).
 
 #### Options
 
@@ -137,7 +137,7 @@ class Context(BaseModel):
 }
 ```
 
-**Current Soldier**: Flat rules with scope-based filtering.
+**Current Focal**: Flat rules with scope-based filtering.
 
 #### Options
 
@@ -150,7 +150,7 @@ class Context(BaseModel):
 #### Recommendation: **Option A (Keep Flat) for Now**
 
 **Rationale**:
-1. Soldier already has scope hierarchy (GLOBAL → SCENARIO → STEP) which provides structure
+1. Focal already has scope hierarchy (GLOBAL → SCENARIO → STEP) which provides structure
 2. "Entails" can be handled by attached_tool_ids (rule triggers tool which triggers effect)
 3. "Definitions" are better handled by the CustomerProfile schema
 4. Adding relationships is a major schema change with migration complexity
@@ -176,7 +176,7 @@ class Context(BaseModel):
 1. Extract context → 2. Check missing variables → 3. Call tools to fill → 4. Re-extract → 5. If still missing, ask user
 ```
 
-**Current Soldier**: Linear flow where tools execute once from matched rules.
+**Current Focal**: Linear flow where tools execute once from matched rules.
 
 #### Options
 
@@ -188,7 +188,7 @@ class Context(BaseModel):
 
 #### Recommendation: **Option C (Extend Gap-Fill Service)**
 
-Soldier already has `MissingFieldResolver` for scenario migrations. Extend it:
+Focal already has `MissingFieldResolver` for scenario migrations. Extend it:
 
 ```python
 class VariableResolver:
@@ -245,7 +245,7 @@ class VariableResolver:
 
 **Constraint**: state_machine.md proposes an "Ambiguity Trap" - if the user's message is vague, exit immediately rather than guess.
 
-**Current Soldier**: No explicit ambiguity handling.
+**Current Focal**: No explicit ambiguity handling.
 
 #### Options
 
@@ -301,7 +301,7 @@ if context.is_ambiguous:
 
 **Constraint**: state_machine_2 proposes "stickiness" - bias heavily toward current scenario transitions over global intents to prevent ping-ponging.
 
-**Current Soldier**: ScenarioFilter evaluates candidates but doesn't have explicit stickiness.
+**Current Focal**: ScenarioFilter evaluates candidates but doesn't have explicit stickiness.
 
 #### Options
 
@@ -374,7 +374,7 @@ async def evaluate(self, ..., active_scenario_id: UUID | None):
 1. Few-shot classification (better than zero-shot)
 2. Business observability (intent heatmaps)
 
-**Current Soldier**: No explicit intent registry. Intents are implicit in rule condition_text.
+**Current Focal**: No explicit intent registry. Intents are implicit in rule condition_text.
 
 #### Options
 
@@ -742,11 +742,11 @@ async def get_rules_to_enforce(
 
 **Constraint**: state_machine.md proposes "DEFINITION" nodes (e.g., "What is a Premium User?") that get expanded into context so the LLM understands terms.
 
-**Current Soldier**: No explicit definition nodes. Terms are implicit in rule condition_text/action_text.
+**Current Focal**: No explicit definition nodes. Terms are implicit in rule condition_text/action_text.
 
 **Recommendation**: Use **CustomerProfile Field Definitions** instead.
 
-Soldier already has `ProfileFieldDefinition` in the profile system:
+Focal already has `ProfileFieldDefinition` in the profile system:
 
 ```python
 class ProfileFieldDefinition(BaseModel):
@@ -785,7 +785,7 @@ The `description` and `extraction_hints` serve as definitions. When building the
 **Recommendation**: **Out of scope for runtime engine, but valuable for tooling.**
 
 This is a design-time tool, not runtime. Consider as future work:
-- A CLI or UI wizard that uses LLM to generate Soldier configuration
+- A CLI or UI wizard that uses LLM to generate Focal configuration
 - Validates rules for conflicts before deployment
 - Auto-suggests ProfileFieldDefinitions based on rule expressions
 
@@ -858,7 +858,7 @@ async def evaluate(self, ...):
 
 **Constraint**: When new fields are added to CustomerProfile schema, how do we version?
 
-**Current Soldier**: ProfileFieldDefinition exists but no explicit versioning.
+**Current Focal**: ProfileFieldDefinition exists but no explicit versioning.
 
 **Recommendation**: Add `schema_version` to agent configuration.
 

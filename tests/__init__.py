@@ -1,1 +1,1 @@
-"""Soldier test suite."""
+"""Focal test suite."""

@@ -62,7 +62,7 @@ specs/010-customer-context-vault/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── profile/
 │   ├── __init__.py
 │   ├── models.py            # ProfileField, ProfileAsset, ProfileFieldDefinition, etc.
@@ -116,7 +116,7 @@ tests/
     └── test_profile_performance.py
 ```
 
-**Structure Decision**: Single backend project following existing Soldier folder structure. ProfileStore is a domain-aligned store alongside ConfigStore, MemoryStore, SessionStore, and AuditStore.
+**Structure Decision**: Single backend project following existing Focal folder structure. ProfileStore is a domain-aligned store alongside ConfigStore, MemoryStore, SessionStore, and AuditStore.
 
 ---
 
@@ -469,28 +469,28 @@ class ProfileItemSchemaExtractor:
 ### New Files
 ```
 # Models & Enums
-soldier/profile/enums.py (additions: ItemStatus, SourceType)
+focal/profile/enums.py (additions: ItemStatus, SourceType)
 
 # Services
-soldier/profile/validation.py
-soldier/profile/extraction.py (ProfileItemSchemaExtractor)
+focal/profile/validation.py
+focal/profile/extraction.py (ProfileItemSchemaExtractor)
 
 # Stores
-soldier/profile/stores/cached.py
+focal/profile/stores/cached.py
 
 # Background Jobs (Hatchet)
-soldier/jobs/__init__.py
-soldier/jobs/client.py (Hatchet client wrapper)
-soldier/jobs/workflows/__init__.py
-soldier/jobs/workflows/profile_expiry.py
-soldier/jobs/workflows/orphan_detection.py
-soldier/jobs/workflows/schema_extraction.py
+focal/jobs/__init__.py
+focal/jobs/client.py (Hatchet client wrapper)
+focal/jobs/workflows/__init__.py
+focal/jobs/workflows/profile_expiry.py
+focal/jobs/workflows/orphan_detection.py
+focal/jobs/workflows/schema_extraction.py
 
 # Database Migrations
-soldier/db/migrations/versions/006_profile_fields_enhancement.py
-soldier/db/migrations/versions/007_profile_assets_enhancement.py
-soldier/db/migrations/versions/008_profile_field_definitions.py
-soldier/db/migrations/versions/009_scenario_field_requirements.py
+focal/db/migrations/versions/006_profile_fields_enhancement.py
+focal/db/migrations/versions/007_profile_assets_enhancement.py
+focal/db/migrations/versions/008_profile_field_definitions.py
+focal/db/migrations/versions/009_scenario_field_requirements.py
 
 # Tests
 tests/unit/profile/test_validation.py
@@ -506,16 +506,16 @@ tests/performance/test_profile_performance.py
 
 ### Modified Files
 ```
-soldier/profile/models.py
-soldier/profile/store.py
-soldier/profile/stores/inmemory.py
-soldier/profile/stores/postgres.py
-soldier/profile/__init__.py
-soldier/alignment/migration/gap_fill.py
-soldier/alignment/engine.py
-soldier/config/models/storage.py
-soldier/config/models/jobs.py (new Hatchet config)
-soldier/observability/metrics.py
+focal/profile/models.py
+focal/profile/store.py
+focal/profile/stores/inmemory.py
+focal/profile/stores/postgres.py
+focal/profile/__init__.py
+focal/alignment/migration/gap_fill.py
+focal/alignment/engine.py
+focal/config/models/storage.py
+focal/config/models/jobs.py (new Hatchet config)
+focal/observability/metrics.py
 config/default.toml
 docs/design/customer-profile.md
 IMPLEMENTATION_PLAN.md

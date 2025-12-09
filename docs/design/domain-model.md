@@ -1,6 +1,6 @@
 # Domain Model
 
-Python models for Soldier's core entities using Pydantic. All models are designed for multi-tenancy and cache-friendly serialization.
+Python models for Focal's core entities using Pydantic. All models are designed for multi-tenancy and cache-friendly serialization.
 
 ## Design Principles
 

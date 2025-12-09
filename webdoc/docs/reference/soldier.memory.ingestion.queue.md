@@ -1,10 +1,10 @@
-<a id="soldier.memory.ingestion.queue"></a>
+<a id="focal.memory.ingestion.queue"></a>
 
-# soldier.memory.ingestion.queue
+# focal.memory.ingestion.queue
 
 Task queue implementations for async memory ingestion.
 
-<a id="soldier.memory.ingestion.queue.TaskQueue"></a>
+<a id="focal.memory.ingestion.queue.TaskQueue"></a>
 
 ## TaskQueue Objects
 
@@ -14,7 +14,7 @@ class TaskQueue(ABC)
 
 Abstract interface for task queue implementations.
 
-<a id="soldier.memory.ingestion.queue.TaskQueue.enqueue"></a>
+<a id="focal.memory.ingestion.queue.TaskQueue.enqueue"></a>
 
 #### enqueue
 
@@ -35,7 +35,7 @@ Enqueue a task.
 
   Job ID
 
-<a id="soldier.memory.ingestion.queue.TaskQueue.register"></a>
+<a id="focal.memory.ingestion.queue.TaskQueue.register"></a>
 
 #### register
 
@@ -51,7 +51,7 @@ Register a task handler.
 - `job_type` - Type of job this handler processes
 - `handler` - Async callable to process the job
 
-<a id="soldier.memory.ingestion.queue.InMemoryTaskQueue"></a>
+<a id="focal.memory.ingestion.queue.InMemoryTaskQueue"></a>
 
 ## InMemoryTaskQueue Objects
 
@@ -61,7 +61,7 @@ class InMemoryTaskQueue(TaskQueue)
 
 In-memory task queue for development and testing.
 
-<a id="soldier.memory.ingestion.queue.InMemoryTaskQueue.__init__"></a>
+<a id="focal.memory.ingestion.queue.InMemoryTaskQueue.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -71,7 +71,7 @@ def __init__() -> None
 
 Initialize in-memory task queue.
 
-<a id="soldier.memory.ingestion.queue.InMemoryTaskQueue.register"></a>
+<a id="focal.memory.ingestion.queue.InMemoryTaskQueue.register"></a>
 
 #### register
 
@@ -86,7 +86,7 @@ Register a task handler.
 - `job_type` - Type of job this handler processes
 - `handler` - Async callable to process the job
 
-<a id="soldier.memory.ingestion.queue.InMemoryTaskQueue.enqueue"></a>
+<a id="focal.memory.ingestion.queue.InMemoryTaskQueue.enqueue"></a>
 
 #### enqueue
 
@@ -106,7 +106,7 @@ Enqueue a task.
 
   Job ID
 
-<a id="soldier.memory.ingestion.queue.RedisTaskQueue"></a>
+<a id="focal.memory.ingestion.queue.RedisTaskQueue"></a>
 
 ## RedisTaskQueue Objects
 
@@ -116,7 +116,7 @@ class RedisTaskQueue(TaskQueue)
 
 Redis-based task queue for production (optional).
 
-<a id="soldier.memory.ingestion.queue.RedisTaskQueue.__init__"></a>
+<a id="focal.memory.ingestion.queue.RedisTaskQueue.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -130,7 +130,7 @@ Initialize Redis task queue.
 
 - `redis_url` - Redis connection URL
 
-<a id="soldier.memory.ingestion.queue.RedisTaskQueue.register"></a>
+<a id="focal.memory.ingestion.queue.RedisTaskQueue.register"></a>
 
 #### register
 
@@ -145,7 +145,7 @@ Register a task handler.
 - `job_type` - Type of job this handler processes
 - `handler` - Async callable to process the job
 
-<a id="soldier.memory.ingestion.queue.RedisTaskQueue.enqueue"></a>
+<a id="focal.memory.ingestion.queue.RedisTaskQueue.enqueue"></a>
 
 #### enqueue
 

@@ -7,7 +7,7 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace import SpanKind, StatusCode
 
-from soldier.observability.tracing import (
+from focal.observability.tracing import (
     TracingContext,
     create_span,
     extract_context,
@@ -179,13 +179,13 @@ class TestTracingContext:
         with tracing_context.turn_span("turn-123", "Hello world") as span:
             assert span.is_recording()
             # Attributes should be set
-            assert span.name == "soldier.turn"
+            assert span.name == "focal.turn"
 
     def test_pipeline_step_span(self, tracing_context):
         """Should create pipeline step span."""
         with tracing_context.pipeline_step_span("context_extraction", "turn-123") as span:
             assert span.is_recording()
-            assert span.name == "soldier.pipeline.context_extraction"
+            assert span.name == "focal.pipeline.context_extraction"
 
     def test_llm_call_span(self, tracing_context):
         """Should create LLM call span."""
@@ -195,7 +195,7 @@ class TestTracingContext:
             purpose="generation",
         ) as span:
             assert span.is_recording()
-            assert span.name == "soldier.llm.generation"
+            assert span.name == "focal.llm.generation"
             assert span.kind == SpanKind.CLIENT
 
 

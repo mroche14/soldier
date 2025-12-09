@@ -1,15 +1,15 @@
 openapi: 3.1.0
 info:
-  title: Soldier API
+  title: Focal API
   description: |
-    Soldier is a production-grade cognitive engine for conversational AI.
+    Focal is a production-grade cognitive engine for conversational AI.
     This API provides message processing, session management, and health monitoring.
   version: 1.0.0
   contact:
-    name: Soldier Team
+    name: Focal Team
 
 servers:
-  - url: https://soldier.example.com
+  - url: https://focal.example.com
     description: Production server
   - url: http://localhost:8000
     description: Local development

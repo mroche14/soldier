@@ -1,10 +1,10 @@
-<a id="soldier.api.services.embedding"></a>
+<a id="focal.api.services.embedding"></a>
 
-# soldier.api.services.embedding
+# focal.api.services.embedding
 
 Async embedding service for rule embedding computation.
 
-<a id="soldier.api.services.embedding.EmbeddingService"></a>
+<a id="focal.api.services.embedding.EmbeddingService"></a>
 
 ## EmbeddingService Objects
 
@@ -17,7 +17,7 @@ Service for async embedding computation.
 Handles background computation of embeddings for rules
 without blocking API responses.
 
-<a id="soldier.api.services.embedding.EmbeddingService.__init__"></a>
+<a id="focal.api.services.embedding.EmbeddingService.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -35,7 +35,7 @@ Initialize embedding service.
 - `embedding_provider` - Provider for computing embeddings
 - `max_retries` - Maximum retry attempts on failure
 
-<a id="soldier.api.services.embedding.EmbeddingService.compute_rule_embedding"></a>
+<a id="focal.api.services.embedding.EmbeddingService.compute_rule_embedding"></a>
 
 #### compute\_rule\_embedding
 
@@ -58,7 +58,7 @@ It fetches the rule, computes embedding, and saves the updated rule.
 
   True if embedding was successfully computed and saved
 
-<a id="soldier.api.services.embedding.EmbeddingService.compute_rule_embeddings_batch"></a>
+<a id="focal.api.services.embedding.EmbeddingService.compute_rule_embeddings_batch"></a>
 
 #### compute\_rule\_embeddings\_batch
 
@@ -79,7 +79,7 @@ Compute embeddings for multiple rules.
 
   Dict mapping rule_id to success status
 
-<a id="soldier.api.services.embedding.schedule_embedding_computation"></a>
+<a id="focal.api.services.embedding.schedule_embedding_computation"></a>
 
 #### schedule\_embedding\_computation
 

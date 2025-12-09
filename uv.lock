@@ -935,6 +935,148 @@ wheels = [
 ]
 
 [[package]]
+name = "focal"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "agno" },
+    { name = "alembic" },
+    { name = "anthropic" },
+    { name = "asyncpg" },
+    { name = "fastapi" },
+    { name = "hatchet-sdk" },
+    { name = "httpx" },
+    { name = "nest-asyncio" },
+    { name = "numpy" },
+    { name = "openai" },
+    { name = "opentelemetry-exporter-otlp" },
+    { name = "opentelemetry-instrumentation-fastapi" },
+    { name = "opentelemetry-sdk" },
+    { name = "prometheus-client" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-jose" },
+    { name = "python-levenshtein" },
+    { name = "qdrant-client" },
+    { name = "rank-bm25" },
+    { name = "redis" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "simpleeval" },
+    { name = "sse-starlette" },
+    { name = "structlog" },
+    { name = "tiktoken" },
+    { name = "uvicorn" },
+]
+
+[package.optional-dependencies]
+api = [
+    { name = "redis" },
+]
+dev = [
+    { name = "mkdocs" },
+    { name = "mkdocs-material" },
+    { name = "mypy" },
+    { name = "pydoc-markdown" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+embeddings = [
+    { name = "sentence-transformers" },
+]
+migrations = [
+    { name = "alembic" },
+    { name = "asyncpg" },
+]
+postgres = [
+    { name = "asyncpg" },
+    { name = "pgvector" },
+]
+queue = [
+    { name = "redis" },
+    { name = "rq" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ipykernel" },
+    { name = "jupyter" },
+    { name = "mypy" },
+    { name = "nest-asyncio" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "python-dotenv" },
+    { name = "ruff" },
+    { name = "types-python-jose" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agno", specifier = ">=2.3.4" },
+    { name = "alembic", specifier = ">=1.17.2" },
+    { name = "alembic", marker = "extra == 'migrations'" },
+    { name = "anthropic", specifier = ">=0.67.0" },
+    { name = "asyncpg", specifier = ">=0.31.0" },
+    { name = "asyncpg", marker = "extra == 'migrations'" },
+    { name = "asyncpg", marker = "extra == 'postgres'" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "hatchet-sdk", specifier = ">=1.21.3" },
+    { name = "httpx", specifier = ">=0.28" },
+    { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.0" },
+    { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.5.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
+    { name = "nest-asyncio", specifier = ">=1.6.0" },
+    { name = "numpy", specifier = ">=2.3.5" },
+    { name = "openai", specifier = ">=2.8.1" },
+    { name = "opentelemetry-exporter-otlp", specifier = ">=1.20" },
+    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
+    { name = "opentelemetry-sdk", specifier = ">=1.20" },
+    { name = "pgvector", marker = "extra == 'postgres'" },
+    { name = "prometheus-client", specifier = ">=0.20" },
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "pydantic-settings", specifier = ">=2.0" },
+    { name = "pydoc-markdown", marker = "extra == 'dev'", specifier = ">=4.8.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
+    { name = "python-jose", specifier = ">=3.3" },
+    { name = "python-levenshtein", specifier = ">=0.27.0" },
+    { name = "qdrant-client", specifier = ">=1.16.1" },
+    { name = "rank-bm25", specifier = ">=0.2.2" },
+    { name = "redis", specifier = ">=7.1.0" },
+    { name = "redis", marker = "extra == 'api'", specifier = ">=6.0.0" },
+    { name = "redis", marker = "extra == 'queue'", specifier = ">=6.0.0" },
+    { name = "rq", marker = "extra == 'queue'", specifier = ">=2.6.1" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
+    { name = "scikit-learn", specifier = ">=1.7.2" },
+    { name = "scipy", specifier = ">=1.16.3" },
+    { name = "sentence-transformers", marker = "extra == 'embeddings'", specifier = ">=5.1.2" },
+    { name = "simpleeval", specifier = ">=1.0.3" },
+    { name = "sse-starlette", specifier = ">=2.0" },
+    { name = "structlog", specifier = ">=24.0" },
+    { name = "tiktoken", specifier = ">=0.12.0" },
+    { name = "uvicorn", specifier = ">=0.34" },
+]
+provides-extras = ["dev", "embeddings", "queue", "api", "postgres", "migrations"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ipykernel", specifier = ">=7.1.0" },
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "mypy", specifier = ">=1.10" },
+    { name = "nest-asyncio", specifier = ">=1.6.0" },
+    { name = "pytest", specifier = ">=8.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23" },
+    { name = "pytest-cov", specifier = ">=4.0" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "ruff", specifier = ">=0.4" },
+    { name = "types-python-jose", specifier = ">=3.5.0.20250531" },
+]
+
+[[package]]
 name = "fqdn"
 version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4406,148 +4548,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc", size = 20372, upload-time = "2024-02-25T23:20:04.057Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2", size = 10235, upload-time = "2024-02-25T23:20:01.196Z" },
-]
-
-[[package]]
-name = "soldier"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "agno" },
-    { name = "alembic" },
-    { name = "anthropic" },
-    { name = "asyncpg" },
-    { name = "fastapi" },
-    { name = "hatchet-sdk" },
-    { name = "httpx" },
-    { name = "nest-asyncio" },
-    { name = "numpy" },
-    { name = "openai" },
-    { name = "opentelemetry-exporter-otlp" },
-    { name = "opentelemetry-instrumentation-fastapi" },
-    { name = "opentelemetry-sdk" },
-    { name = "prometheus-client" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "python-jose" },
-    { name = "python-levenshtein" },
-    { name = "qdrant-client" },
-    { name = "rank-bm25" },
-    { name = "redis" },
-    { name = "scikit-learn" },
-    { name = "scipy" },
-    { name = "simpleeval" },
-    { name = "sse-starlette" },
-    { name = "structlog" },
-    { name = "tiktoken" },
-    { name = "uvicorn" },
-]
-
-[package.optional-dependencies]
-api = [
-    { name = "redis" },
-]
-dev = [
-    { name = "mkdocs" },
-    { name = "mkdocs-material" },
-    { name = "mypy" },
-    { name = "pydoc-markdown" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-]
-embeddings = [
-    { name = "sentence-transformers" },
-]
-migrations = [
-    { name = "alembic" },
-    { name = "asyncpg" },
-]
-postgres = [
-    { name = "asyncpg" },
-    { name = "pgvector" },
-]
-queue = [
-    { name = "redis" },
-    { name = "rq" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "ipykernel" },
-    { name = "jupyter" },
-    { name = "mypy" },
-    { name = "nest-asyncio" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "python-dotenv" },
-    { name = "ruff" },
-    { name = "types-python-jose" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "agno", specifier = ">=2.3.4" },
-    { name = "alembic", specifier = ">=1.17.2" },
-    { name = "alembic", marker = "extra == 'migrations'" },
-    { name = "anthropic", specifier = ">=0.67.0" },
-    { name = "asyncpg", specifier = ">=0.31.0" },
-    { name = "asyncpg", marker = "extra == 'migrations'" },
-    { name = "asyncpg", marker = "extra == 'postgres'" },
-    { name = "fastapi", specifier = ">=0.115" },
-    { name = "hatchet-sdk", specifier = ">=1.21.3" },
-    { name = "httpx", specifier = ">=0.28" },
-    { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.0" },
-    { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.5.0" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
-    { name = "nest-asyncio", specifier = ">=1.6.0" },
-    { name = "numpy", specifier = ">=2.3.5" },
-    { name = "openai", specifier = ">=2.8.1" },
-    { name = "opentelemetry-exporter-otlp", specifier = ">=1.20" },
-    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.20" },
-    { name = "pgvector", marker = "extra == 'postgres'" },
-    { name = "prometheus-client", specifier = ">=0.20" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pydantic-settings", specifier = ">=2.0" },
-    { name = "pydoc-markdown", marker = "extra == 'dev'", specifier = ">=4.8.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
-    { name = "python-jose", specifier = ">=3.3" },
-    { name = "python-levenshtein", specifier = ">=0.27.0" },
-    { name = "qdrant-client", specifier = ">=1.16.1" },
-    { name = "rank-bm25", specifier = ">=0.2.2" },
-    { name = "redis", specifier = ">=7.1.0" },
-    { name = "redis", marker = "extra == 'api'", specifier = ">=6.0.0" },
-    { name = "redis", marker = "extra == 'queue'", specifier = ">=6.0.0" },
-    { name = "rq", marker = "extra == 'queue'", specifier = ">=2.6.1" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
-    { name = "scikit-learn", specifier = ">=1.7.2" },
-    { name = "scipy", specifier = ">=1.16.3" },
-    { name = "sentence-transformers", marker = "extra == 'embeddings'", specifier = ">=5.1.2" },
-    { name = "simpleeval", specifier = ">=1.0.3" },
-    { name = "sse-starlette", specifier = ">=2.0" },
-    { name = "structlog", specifier = ">=24.0" },
-    { name = "tiktoken", specifier = ">=0.12.0" },
-    { name = "uvicorn", specifier = ">=0.34" },
-]
-provides-extras = ["dev", "embeddings", "queue", "api", "postgres", "migrations"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "ipykernel", specifier = ">=7.1.0" },
-    { name = "jupyter", specifier = ">=1.1.1" },
-    { name = "mypy", specifier = ">=1.10" },
-    { name = "nest-asyncio", specifier = ">=1.6.0" },
-    { name = "pytest", specifier = ">=8.0" },
-    { name = "pytest-asyncio", specifier = ">=0.23" },
-    { name = "pytest-cov", specifier = ">=4.0" },
-    { name = "python-dotenv", specifier = ">=1.2.1" },
-    { name = "ruff", specifier = ">=0.4" },
-    { name = "types-python-jose", specifier = ">=3.5.0.20250531" },
 ]
 
 [[package]]

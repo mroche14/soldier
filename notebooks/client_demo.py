@@ -1,7 +1,7 @@
 # %% [markdown]
-# # Soldier Client Demo
+# # Focal Client Demo
 #
-# This notebook demonstrates how to use the Soldier API client to:
+# This notebook demonstrates how to use the Focal API client to:
 # 1. Create an agent
 # 2. Add behavior rules
 # 3. Chat with the agent
@@ -11,7 +11,7 @@
 #
 # First, make sure the API server is running:
 # ```bash
-# set -a && source .env && set +a && uv run uvicorn soldier.api.app:app --host 0.0.0.0 --port 8000
+# set -a && source .env && set +a && uv run uvicorn focal.api.app:app --host 0.0.0.0 --port 8000
 # ```
 
 # %%
@@ -23,12 +23,12 @@ from uuid import uuid4
 from dotenv import load_dotenv
 load_dotenv()
 
-from soldier.client import SoldierClient
+from focal.client import FocalClient
 
 # %% [markdown]
 # ## Create a Client
 #
-# Use `SoldierClient.dev()` for local development - it generates a JWT token automatically.
+# Use `FocalClient.dev()` for local development - it generates a JWT token automatically.
 
 # %%
 # Create a tenant ID (in production, this comes from your auth system)
@@ -36,7 +36,7 @@ TENANT_ID = uuid4()
 print(f"Tenant ID: {TENANT_ID}")
 
 # Create the client
-client = SoldierClient.dev(tenant_id=TENANT_ID)
+client = FocalClient.dev(tenant_id=TENANT_ID)
 
 # %% [markdown]
 # ## Helper function for async calls in Jupyter
@@ -67,7 +67,7 @@ print(f"Version: {health.version}")
 # %%
 agent = run(client.create_agent(
     name="Demo Assistant",
-    description="A helpful assistant for testing the Soldier API"
+    description="A helpful assistant for testing the Focal API"
 ))
 
 print(f"Created agent: {agent.name}")
@@ -152,7 +152,7 @@ print("✓ Client closed")
 #
 # ```python
 # # Create client
-# client = SoldierClient.dev(tenant_id=uuid4())
+# client = FocalClient.dev(tenant_id=uuid4())
 #
 # # Agents
 # agent = await client.create_agent(name="My Agent")

@@ -1,4 +1,4 @@
-# Soldier Production Configuration
+# Focal Production Configuration
 # Overrides for production environment
 
 debug = false

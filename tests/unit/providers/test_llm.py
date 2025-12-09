@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel
 
-from soldier.providers.llm import (
+from focal.providers.llm import (
     AuthenticationError,
     ContentFilterError,
     LLMMessage,

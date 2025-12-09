@@ -1,13 +1,13 @@
-<a id="soldier.alignment.context.models"></a>
+<a id="focal.alignment.context.models"></a>
 
-# soldier.alignment.context.models
+# focal.alignment.context.models
 
 Context models for alignment pipeline.
 
 Contains enriched context models for understanding user messages,
 including intent, entities, sentiment, and scenario navigation hints.
 
-<a id="soldier.alignment.context.models.Sentiment"></a>
+<a id="focal.alignment.context.models.Sentiment"></a>
 
 ## Sentiment Objects
 
@@ -17,7 +17,7 @@ class Sentiment(str, Enum)
 
 Detected sentiment of the user message.
 
-<a id="soldier.alignment.context.models.Urgency"></a>
+<a id="focal.alignment.context.models.Urgency"></a>
 
 ## Urgency Objects
 
@@ -27,7 +27,7 @@ class Urgency(str, Enum)
 
 Urgency level detected from the message.
 
-<a id="soldier.alignment.context.models.ScenarioSignal"></a>
+<a id="focal.alignment.context.models.ScenarioSignal"></a>
 
 ## ScenarioSignal Objects
 
@@ -37,31 +37,31 @@ class ScenarioSignal(str, Enum)
 
 Signal about scenario navigation intent.
 
-<a id="soldier.alignment.context.models.ScenarioSignal.START"></a>
+<a id="focal.alignment.context.models.ScenarioSignal.START"></a>
 
 #### START
 
 User wants to begin a process
 
-<a id="soldier.alignment.context.models.ScenarioSignal.CONTINUE"></a>
+<a id="focal.alignment.context.models.ScenarioSignal.CONTINUE"></a>
 
 #### CONTINUE
 
 Normal flow continuation
 
-<a id="soldier.alignment.context.models.ScenarioSignal.EXIT"></a>
+<a id="focal.alignment.context.models.ScenarioSignal.EXIT"></a>
 
 #### EXIT
 
 User wants to leave/cancel
 
-<a id="soldier.alignment.context.models.ScenarioSignal.UNKNOWN"></a>
+<a id="focal.alignment.context.models.ScenarioSignal.UNKNOWN"></a>
 
 #### UNKNOWN
 
 Unclear intent
 
-<a id="soldier.alignment.context.models.ExtractedEntity"></a>
+<a id="focal.alignment.context.models.ExtractedEntity"></a>
 
 ## ExtractedEntity Objects
 
@@ -71,7 +71,7 @@ class ExtractedEntity(BaseModel)
 
 An entity extracted from the message.
 
-<a id="soldier.alignment.context.models.Turn"></a>
+<a id="focal.alignment.context.models.Turn"></a>
 
 ## Turn Objects
 
@@ -81,7 +81,7 @@ class Turn(BaseModel)
 
 A single turn in the conversation history.
 
-<a id="soldier.alignment.context.models.Context"></a>
+<a id="focal.alignment.context.models.Context"></a>
 
 ## Context Objects
 

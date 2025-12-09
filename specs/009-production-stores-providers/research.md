@@ -37,8 +37,8 @@ PERSIST_KEY = "session:persist:{session_id}"  # TTL: 7days, String (JSON)
 **Decision**: Single Alembic configuration with modular migration scripts per store domain
 
 **Rationale**:
-- One `alembic.ini` at `soldier/db/alembic.ini`
-- Migration versions in `soldier/db/migrations/versions/`
+- One `alembic.ini` at `focal/db/alembic.ini`
+- Migration versions in `focal/db/migrations/versions/`
 - Each migration file prefixed by domain: `001_config_store_`, `002_memory_store_`, etc.
 - Use `op.create_table()` with explicit schema names for clarity
 - Include both upgrade and downgrade paths for all migrations

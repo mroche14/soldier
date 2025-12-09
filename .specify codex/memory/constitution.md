@@ -1,4 +1,4 @@
-# Project Constitution: Soldier
+# Project Constitution: Focal
 
 This document contains the hard rules the AI agent must follow. It is the absolute source of truth for all development. The AI cannot override these rules.
 
@@ -56,7 +56,7 @@ This document contains the hard rules the AI agent must follow. It is the absolu
 - **Test Pyramid**: Adhere to the 80% Unit, 15% Integration, 5% E2E test ratio.
 - **Code Coverage**:
     - Overall coverage must be at or above **85% line coverage** and **80% branch coverage**.
-    - Core modules (`soldier/alignment`, `soldier/memory`) require a minimum of **85% line coverage**.
+    - Core modules (`focal/alignment`, `focal/memory`) require a minimum of **85% line coverage**.
     - CI will fail any pull request that does not meet these coverage standards.
 - **Unit Tests**:
     - Must be isolated and not perform any network or database I/O.
@@ -72,15 +72,15 @@ This document contains the hard rules the AI agent must follow. It is the absolu
 ## 6. Folder Structure
 
 - **Code Follows Concepts**: The folder structure must follow the domain concepts.
-    - `soldier/alignment/`: The core cognitive pipeline.
-    - `soldier/memory/`: The memory store and related logic.
-    - `soldier/conversation/`: The session store and related logic.
-    - `soldier/audit/`: The audit store and related logic.
-    - `soldier/providers/`: Interfaces and implementations for all external services.
-    - `soldier/config/`: Pydantic models for configuration.
-    - `soldier/api/`: API routes, request/response models, and middleware.
-    - `soldier/observability/`: Logging, tracing, and metrics setup.
-- **Test Structure Mirrors Application**: The `tests/unit/` and `tests/integration/` directories must mirror the structure of the `soldier/` directory.
+    - `focal/alignment/`: The core cognitive pipeline.
+    - `focal/memory/`: The memory store and related logic.
+    - `focal/conversation/`: The session store and related logic.
+    - `focal/audit/`: The audit store and related logic.
+    - `focal/providers/`: Interfaces and implementations for all external services.
+    - `focal/config/`: Pydantic models for configuration.
+    - `focal/api/`: API routes, request/response models, and middleware.
+    - `focal/observability/`: Logging, tracing, and metrics setup.
+- **Test Structure Mirrors Application**: The `tests/unit/` and `tests/integration/` directories must mirror the structure of the `focal/` directory.
 
 ## 7. Observability
 

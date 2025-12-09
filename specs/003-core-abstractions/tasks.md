@@ -15,7 +15,7 @@
 
 ## Path Conventions
 
-- **Source**: `soldier/` package at repository root
+- **Source**: `focal/` package at repository root
 - **Tests**: `tests/unit/` and `tests/integration/` at repository root
 - Paths match structure defined in plan.md
 
@@ -28,7 +28,7 @@
 - [x] T001 Add observability dependencies (structlog, prometheus_client) to pyproject.toml
 - [x] T002 Add OpenTelemetry dependencies (opentelemetry-sdk, opentelemetry-exporter-otlp) to pyproject.toml
 - [x] T003 Add pytest-asyncio dependency for async tests to pyproject.toml
-- [x] T004 [P] Create soldier/observability/__init__.py package file
+- [x] T004 [P] Create focal/observability/__init__.py package file
 - [x] T005 [P] Create tests/unit/observability/__init__.py package file
 - [x] T006 [P] Create tests/unit/providers/__init__.py package file
 
@@ -40,13 +40,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T007 Define TenantScopedModel and AgentScopedModel base classes in soldier/alignment/models/base.py
-- [x] T008 Define Scope enum (GLOBAL, SCENARIO, STEP) in soldier/alignment/models/enums.py
-- [x] T009 [P] Define Channel enum (WHATSAPP, SLACK, WEBCHAT, EMAIL, VOICE, API) in soldier/conversation/models/enums.py
-- [x] T010 [P] Define SessionStatus enum (ACTIVE, IDLE, PROCESSING, INTERRUPTED, CLOSED) in soldier/conversation/models/enums.py
-- [x] T011 [P] Define ProfileFieldSource enum in soldier/profile/enums.py
-- [x] T012 [P] Define VerificationLevel enum in soldier/profile/enums.py
-- [x] T013 Create shared vector similarity helper function in soldier/utils/vector.py (cosine_similarity)
+- [x] T007 Define TenantScopedModel and AgentScopedModel base classes in focal/alignment/models/base.py
+- [x] T008 Define Scope enum (GLOBAL, SCENARIO, STEP) in focal/alignment/models/enums.py
+- [x] T009 [P] Define Channel enum (WHATSAPP, SLACK, WEBCHAT, EMAIL, VOICE, API) in focal/conversation/models/enums.py
+- [x] T010 [P] Define SessionStatus enum (ACTIVE, IDLE, PROCESSING, INTERRUPTED, CLOSED) in focal/conversation/models/enums.py
+- [x] T011 [P] Define ProfileFieldSource enum in focal/profile/enums.py
+- [x] T012 [P] Define VerificationLevel enum in focal/profile/enums.py
+- [x] T013 Create shared vector similarity helper function in focal/utils/vector.py (cosine_similarity)
 - [x] T014 [P] Create tests for base models in tests/unit/alignment/test_base_models.py
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
@@ -68,11 +68,11 @@
 
 ### Implementation for User Story 1
 
-- [x] T019 [US1] Implement setup_logging() function with format selection in soldier/observability/logging.py
-- [x] T020 [US1] Implement get_logger() function returning bound logger in soldier/observability/logging.py
-- [x] T021 [US1] Implement PII redaction processor with regex patterns in soldier/observability/logging.py
-- [x] T022 [US1] Implement context binding via structlog.contextvars in soldier/observability/logging.py
-- [x] T023 [US1] Export logging functions from soldier/observability/__init__.py
+- [x] T019 [US1] Implement setup_logging() function with format selection in focal/observability/logging.py
+- [x] T020 [US1] Implement get_logger() function returning bound logger in focal/observability/logging.py
+- [x] T021 [US1] Implement PII redaction processor with regex patterns in focal/observability/logging.py
+- [x] T022 [US1] Implement context binding via structlog.contextvars in focal/observability/logging.py
+- [x] T023 [US1] Export logging functions from focal/observability/__init__.py
 
 **Checkpoint**: Structured logging with context and PII redaction is functional
 
@@ -93,14 +93,14 @@
 
 ### Implementation for User Story 2
 
-- [x] T028 [US2] Define REQUEST_COUNT counter with labels in soldier/observability/metrics.py
-- [x] T029 [US2] Define REQUEST_LATENCY histogram with buckets in soldier/observability/metrics.py
-- [x] T030 [US2] Define LLM_TOKENS counter with direction label in soldier/observability/metrics.py
-- [x] T031 [US2] Define RULES_MATCHED histogram in soldier/observability/metrics.py
-- [x] T032 [US2] Define ACTIVE_SESSIONS gauge in soldier/observability/metrics.py
-- [x] T033 [US2] Define ERRORS counter with error_type label in soldier/observability/metrics.py
-- [x] T034 [US2] Implement setup_metrics() initialization function in soldier/observability/metrics.py
-- [x] T035 [US2] Export metrics functions from soldier/observability/__init__.py
+- [x] T028 [US2] Define REQUEST_COUNT counter with labels in focal/observability/metrics.py
+- [x] T029 [US2] Define REQUEST_LATENCY histogram with buckets in focal/observability/metrics.py
+- [x] T030 [US2] Define LLM_TOKENS counter with direction label in focal/observability/metrics.py
+- [x] T031 [US2] Define RULES_MATCHED histogram in focal/observability/metrics.py
+- [x] T032 [US2] Define ACTIVE_SESSIONS gauge in focal/observability/metrics.py
+- [x] T033 [US2] Define ERRORS counter with error_type label in focal/observability/metrics.py
+- [x] T034 [US2] Implement setup_metrics() initialization function in focal/observability/metrics.py
+- [x] T035 [US2] Export metrics functions from focal/observability/__init__.py
 
 **Checkpoint**: Prometheus metrics available for request monitoring
 
@@ -124,44 +124,44 @@
 
 ### Implementation for User Story 3 - Alignment Domain
 
-- [x] T043 [P] [US3] Implement Rule model with validation (priority -100 to 100) in soldier/alignment/models/rule.py
-- [x] T044 [P] [US3] Implement MatchedRule model in soldier/alignment/models/rule.py
-- [x] T045 [P] [US3] Implement Scenario model with version tracking in soldier/alignment/models/scenario.py
-- [x] T046 [P] [US3] Implement ScenarioStep model with transitions in soldier/alignment/models/scenario.py
-- [x] T047 [P] [US3] Implement StepTransition model in soldier/alignment/models/scenario.py
-- [x] T048 [P] [US3] Implement Template model with TemplateMode enum in soldier/alignment/models/template.py
-- [x] T049 [P] [US3] Implement Variable model with VariableUpdatePolicy enum in soldier/alignment/models/variable.py
-- [x] T050 [P] [US3] Implement Context, UserIntent, ExtractedEntities in soldier/alignment/models/context.py
-- [x] T051 [US3] Export all alignment models from soldier/alignment/models/__init__.py
+- [x] T043 [P] [US3] Implement Rule model with validation (priority -100 to 100) in focal/alignment/models/rule.py
+- [x] T044 [P] [US3] Implement MatchedRule model in focal/alignment/models/rule.py
+- [x] T045 [P] [US3] Implement Scenario model with version tracking in focal/alignment/models/scenario.py
+- [x] T046 [P] [US3] Implement ScenarioStep model with transitions in focal/alignment/models/scenario.py
+- [x] T047 [P] [US3] Implement StepTransition model in focal/alignment/models/scenario.py
+- [x] T048 [P] [US3] Implement Template model with TemplateMode enum in focal/alignment/models/template.py
+- [x] T049 [P] [US3] Implement Variable model with VariableUpdatePolicy enum in focal/alignment/models/variable.py
+- [x] T050 [P] [US3] Implement Context, UserIntent, ExtractedEntities in focal/alignment/models/context.py
+- [x] T051 [US3] Export all alignment models from focal/alignment/models/__init__.py
 
 ### Implementation for User Story 3 - Memory Domain
 
-- [x] T052 [P] [US3] Implement Episode model with bi-temporal fields in soldier/memory/models/episode.py
-- [x] T053 [P] [US3] Implement Entity model with temporal validity in soldier/memory/models/entity.py
-- [x] T054 [P] [US3] Implement Relationship model in soldier/memory/models/relationship.py
-- [x] T055 [US3] Export all memory models from soldier/memory/models/__init__.py
+- [x] T052 [P] [US3] Implement Episode model with bi-temporal fields in focal/memory/models/episode.py
+- [x] T053 [P] [US3] Implement Entity model with temporal validity in focal/memory/models/entity.py
+- [x] T054 [P] [US3] Implement Relationship model in focal/memory/models/relationship.py
+- [x] T055 [US3] Export all memory models from focal/memory/models/__init__.py
 
 ### Implementation for User Story 3 - Conversation Domain
 
-- [x] T056 [P] [US3] Implement Session model with scenario tracking in soldier/conversation/models/session.py
-- [x] T057 [P] [US3] Implement StepVisit model in soldier/conversation/models/session.py
-- [x] T058 [P] [US3] Implement Turn model with tool calls in soldier/conversation/models/turn.py
-- [x] T059 [P] [US3] Implement ToolCall model in soldier/conversation/models/turn.py
-- [x] T060 [US3] Export all conversation models from soldier/conversation/models/__init__.py
+- [x] T056 [P] [US3] Implement Session model with scenario tracking in focal/conversation/models/session.py
+- [x] T057 [P] [US3] Implement StepVisit model in focal/conversation/models/session.py
+- [x] T058 [P] [US3] Implement Turn model with tool calls in focal/conversation/models/turn.py
+- [x] T059 [P] [US3] Implement ToolCall model in focal/conversation/models/turn.py
+- [x] T060 [US3] Export all conversation models from focal/conversation/models/__init__.py
 
 ### Implementation for User Story 3 - Audit Domain
 
-- [x] T061 [P] [US3] Implement TurnRecord model in soldier/audit/models/turn_record.py
-- [x] T062 [P] [US3] Implement AuditEvent model in soldier/audit/models/event.py
-- [x] T063 [US3] Export all audit models from soldier/audit/models/__init__.py
+- [x] T061 [P] [US3] Implement TurnRecord model in focal/audit/models/turn_record.py
+- [x] T062 [P] [US3] Implement AuditEvent model in focal/audit/models/event.py
+- [x] T063 [US3] Export all audit models from focal/audit/models/__init__.py
 
 ### Implementation for User Story 3 - Profile Domain
 
-- [x] T064 [P] [US3] Implement CustomerProfile model in soldier/profile/models.py
-- [x] T065 [P] [US3] Implement ProfileField model with provenance in soldier/profile/models.py
-- [x] T066 [P] [US3] Implement ChannelIdentity model in soldier/profile/models.py
-- [x] T067 [P] [US3] Implement ProfileAsset model in soldier/profile/models.py
-- [x] T068 [P] [US3] Implement Consent model in soldier/profile/models.py
+- [x] T064 [P] [US3] Implement CustomerProfile model in focal/profile/models.py
+- [x] T065 [P] [US3] Implement ProfileField model with provenance in focal/profile/models.py
+- [x] T066 [P] [US3] Implement ChannelIdentity model in focal/profile/models.py
+- [x] T067 [P] [US3] Implement ProfileAsset model in focal/profile/models.py
+- [x] T068 [P] [US3] Implement Consent model in focal/profile/models.py
 
 **Checkpoint**: All domain models defined with full validation
 
@@ -182,14 +182,14 @@
 
 ### Implementation for User Story 4
 
-- [x] T073 [US4] Define ConfigStore ABC with all abstract methods in soldier/alignment/stores/config_store.py
-- [x] T074 [US4] Implement InMemoryConfigStore rule methods (get_rules, get_rule, save_rule, delete_rule) in soldier/alignment/stores/inmemory.py
-- [x] T075 [US4] Implement vector_search_rules with cosine similarity in soldier/alignment/stores/inmemory.py
-- [x] T076 [US4] Implement InMemoryConfigStore scenario methods in soldier/alignment/stores/inmemory.py
-- [x] T077 [US4] Implement InMemoryConfigStore template methods in soldier/alignment/stores/inmemory.py
-- [x] T078 [US4] Implement InMemoryConfigStore variable methods in soldier/alignment/stores/inmemory.py
-- [x] T079 [US4] Implement InMemoryConfigStore agent methods in soldier/alignment/stores/inmemory.py
-- [x] T080 [US4] Export store classes from soldier/alignment/stores/__init__.py
+- [x] T073 [US4] Define ConfigStore ABC with all abstract methods in focal/alignment/stores/config_store.py
+- [x] T074 [US4] Implement InMemoryConfigStore rule methods (get_rules, get_rule, save_rule, delete_rule) in focal/alignment/stores/inmemory.py
+- [x] T075 [US4] Implement vector_search_rules with cosine similarity in focal/alignment/stores/inmemory.py
+- [x] T076 [US4] Implement InMemoryConfigStore scenario methods in focal/alignment/stores/inmemory.py
+- [x] T077 [US4] Implement InMemoryConfigStore template methods in focal/alignment/stores/inmemory.py
+- [x] T078 [US4] Implement InMemoryConfigStore variable methods in focal/alignment/stores/inmemory.py
+- [x] T079 [US4] Implement InMemoryConfigStore agent methods in focal/alignment/stores/inmemory.py
+- [x] T080 [US4] Export store classes from focal/alignment/stores/__init__.py
 
 **Checkpoint**: ConfigStore functional with in-memory backend
 
@@ -210,15 +210,15 @@
 
 ### Implementation for User Story 5
 
-- [x] T085 [US5] Define MemoryStore ABC with all abstract methods in soldier/memory/store.py
-- [x] T086 [US5] Implement InMemoryMemoryStore episode methods in soldier/memory/stores/inmemory.py
-- [x] T087 [US5] Implement vector_search_episodes with cosine similarity in soldier/memory/stores/inmemory.py
-- [x] T088 [US5] Implement text_search_episodes with substring matching in soldier/memory/stores/inmemory.py
-- [x] T089 [US5] Implement entity methods (add_entity, get_entity, get_entities) in soldier/memory/stores/inmemory.py
-- [x] T090 [US5] Implement relationship methods in soldier/memory/stores/inmemory.py
-- [x] T091 [US5] Implement traverse_from_entities with BFS traversal in soldier/memory/stores/inmemory.py
-- [x] T092 [US5] Implement delete_by_group cleanup in soldier/memory/stores/inmemory.py
-- [x] T093 [US5] Export store classes from soldier/memory/stores/__init__.py
+- [x] T085 [US5] Define MemoryStore ABC with all abstract methods in focal/memory/store.py
+- [x] T086 [US5] Implement InMemoryMemoryStore episode methods in focal/memory/stores/inmemory.py
+- [x] T087 [US5] Implement vector_search_episodes with cosine similarity in focal/memory/stores/inmemory.py
+- [x] T088 [US5] Implement text_search_episodes with substring matching in focal/memory/stores/inmemory.py
+- [x] T089 [US5] Implement entity methods (add_entity, get_entity, get_entities) in focal/memory/stores/inmemory.py
+- [x] T090 [US5] Implement relationship methods in focal/memory/stores/inmemory.py
+- [x] T091 [US5] Implement traverse_from_entities with BFS traversal in focal/memory/stores/inmemory.py
+- [x] T092 [US5] Implement delete_by_group cleanup in focal/memory/stores/inmemory.py
+- [x] T093 [US5] Export store classes from focal/memory/stores/__init__.py
 
 **Checkpoint**: MemoryStore functional with graph traversal
 
@@ -239,12 +239,12 @@
 
 ### Implementation for User Story 6
 
-- [x] T098 [US6] Define SessionStore ABC with all abstract methods in soldier/conversation/store.py
-- [x] T099 [US6] Implement InMemorySessionStore get/save/delete methods in soldier/conversation/stores/inmemory.py
-- [x] T100 [US6] Implement get_by_channel lookup in soldier/conversation/stores/inmemory.py
-- [x] T101 [US6] Implement list_by_agent with filtering in soldier/conversation/stores/inmemory.py
-- [x] T102 [US6] Implement list_by_customer lookup in soldier/conversation/stores/inmemory.py
-- [x] T103 [US6] Export store classes from soldier/conversation/stores/__init__.py
+- [x] T098 [US6] Define SessionStore ABC with all abstract methods in focal/conversation/store.py
+- [x] T099 [US6] Implement InMemorySessionStore get/save/delete methods in focal/conversation/stores/inmemory.py
+- [x] T100 [US6] Implement get_by_channel lookup in focal/conversation/stores/inmemory.py
+- [x] T101 [US6] Implement list_by_agent with filtering in focal/conversation/stores/inmemory.py
+- [x] T102 [US6] Implement list_by_customer lookup in focal/conversation/stores/inmemory.py
+- [x] T103 [US6] Export store classes from focal/conversation/stores/__init__.py
 
 **Checkpoint**: SessionStore functional with channel lookup
 
@@ -265,12 +265,12 @@
 
 ### Implementation for User Story 7
 
-- [x] T108 [US7] Define AuditStore ABC with all abstract methods in soldier/audit/store.py
-- [x] T109 [US7] Implement InMemoryAuditStore turn methods in soldier/audit/stores/inmemory.py
-- [x] T110 [US7] Implement list_turns_by_session with pagination in soldier/audit/stores/inmemory.py
-- [x] T111 [US7] Implement list_turns_by_tenant with time filtering in soldier/audit/stores/inmemory.py
-- [x] T112 [US7] Implement event methods in soldier/audit/stores/inmemory.py
-- [x] T113 [US7] Export store classes from soldier/audit/stores/__init__.py
+- [x] T108 [US7] Define AuditStore ABC with all abstract methods in focal/audit/store.py
+- [x] T109 [US7] Implement InMemoryAuditStore turn methods in focal/audit/stores/inmemory.py
+- [x] T110 [US7] Implement list_turns_by_session with pagination in focal/audit/stores/inmemory.py
+- [x] T111 [US7] Implement list_turns_by_tenant with time filtering in focal/audit/stores/inmemory.py
+- [x] T112 [US7] Implement event methods in focal/audit/stores/inmemory.py
+- [x] T113 [US7] Export store classes from focal/audit/stores/__init__.py
 
 **Checkpoint**: AuditStore functional with time-series queries
 
@@ -291,14 +291,14 @@
 
 ### Implementation for User Story 8
 
-- [x] T118 [US8] Define ProfileStore ABC with all abstract methods in soldier/profile/store.py
-- [x] T119 [US8] Implement InMemoryProfileStore get methods in soldier/profile/stores/inmemory.py
-- [x] T120 [US8] Implement get_or_create with channel lookup in soldier/profile/stores/inmemory.py
-- [x] T121 [US8] Implement update_field with provenance tracking in soldier/profile/stores/inmemory.py
-- [x] T122 [US8] Implement add_asset method in soldier/profile/stores/inmemory.py
-- [x] T123 [US8] Implement link_channel method in soldier/profile/stores/inmemory.py
-- [x] T124 [US8] Implement merge_profiles method in soldier/profile/stores/inmemory.py
-- [x] T125 [US8] Export store classes from soldier/profile/stores/__init__.py
+- [x] T118 [US8] Define ProfileStore ABC with all abstract methods in focal/profile/store.py
+- [x] T119 [US8] Implement InMemoryProfileStore get methods in focal/profile/stores/inmemory.py
+- [x] T120 [US8] Implement get_or_create with channel lookup in focal/profile/stores/inmemory.py
+- [x] T121 [US8] Implement update_field with provenance tracking in focal/profile/stores/inmemory.py
+- [x] T122 [US8] Implement add_asset method in focal/profile/stores/inmemory.py
+- [x] T123 [US8] Implement link_channel method in focal/profile/stores/inmemory.py
+- [x] T124 [US8] Implement merge_profiles method in focal/profile/stores/inmemory.py
+- [x] T125 [US8] Export store classes from focal/profile/stores/__init__.py
 
 **Checkpoint**: ProfileStore functional with channel identity management
 
@@ -319,13 +319,13 @@
 
 ### Implementation for User Story 9
 
-- [x] T130 [US9] Define LLMProvider ABC in soldier/providers/llm/base.py
-- [x] T131 [US9] Define LLMResponse and TokenUsage models in soldier/providers/llm/base.py
-- [x] T132 [US9] Implement MockLLMProvider with default_response in soldier/providers/llm/mock.py
-- [x] T133 [US9] Implement generate() with token usage simulation in soldier/providers/llm/mock.py
-- [x] T134 [US9] Implement generate_structured() with schema validation in soldier/providers/llm/mock.py
-- [x] T135 [US9] Add call_history tracking to MockLLMProvider in soldier/providers/llm/mock.py
-- [x] T136 [US9] Export LLM provider classes from soldier/providers/llm/__init__.py
+- [x] T130 [US9] Define LLMProvider ABC in focal/providers/llm/base.py
+- [x] T131 [US9] Define LLMResponse and TokenUsage models in focal/providers/llm/base.py
+- [x] T132 [US9] Implement MockLLMProvider with default_response in focal/providers/llm/mock.py
+- [x] T133 [US9] Implement generate() with token usage simulation in focal/providers/llm/mock.py
+- [x] T134 [US9] Implement generate_structured() with schema validation in focal/providers/llm/mock.py
+- [x] T135 [US9] Add call_history tracking to MockLLMProvider in focal/providers/llm/mock.py
+- [x] T136 [US9] Export LLM provider classes from focal/providers/llm/__init__.py
 
 **Checkpoint**: LLMProvider functional with mock implementation
 
@@ -346,11 +346,11 @@
 
 ### Implementation for User Story 10
 
-- [x] T141 [US10] Define EmbeddingProvider ABC with dimensions property in soldier/providers/embedding/base.py
-- [x] T142 [US10] Implement MockEmbeddingProvider with configurable dimensions in soldier/providers/embedding/mock.py
-- [x] T143 [US10] Implement deterministic embed() based on text hash in soldier/providers/embedding/mock.py
-- [x] T144 [US10] Implement embed_batch() for efficient batch processing in soldier/providers/embedding/mock.py
-- [x] T145 [US10] Export embedding provider classes from soldier/providers/embedding/__init__.py
+- [x] T141 [US10] Define EmbeddingProvider ABC with dimensions property in focal/providers/embedding/base.py
+- [x] T142 [US10] Implement MockEmbeddingProvider with configurable dimensions in focal/providers/embedding/mock.py
+- [x] T143 [US10] Implement deterministic embed() based on text hash in focal/providers/embedding/mock.py
+- [x] T144 [US10] Implement embed_batch() for efficient batch processing in focal/providers/embedding/mock.py
+- [x] T145 [US10] Export embedding provider classes from focal/providers/embedding/__init__.py
 
 **Checkpoint**: EmbeddingProvider functional with deterministic mock
 
@@ -370,11 +370,11 @@
 
 ### Implementation for User Story 11
 
-- [x] T149 [US11] Define RerankProvider ABC in soldier/providers/rerank/base.py
-- [x] T150 [US11] Define RerankResult model in soldier/providers/rerank/base.py
-- [x] T151 [US11] Implement MockRerankProvider with score strategies in soldier/providers/rerank/mock.py
-- [x] T152 [US11] Implement rerank() with position-based scoring in soldier/providers/rerank/mock.py
-- [x] T153 [US11] Export rerank provider classes from soldier/providers/rerank/__init__.py
+- [x] T149 [US11] Define RerankProvider ABC in focal/providers/rerank/base.py
+- [x] T150 [US11] Define RerankResult model in focal/providers/rerank/base.py
+- [x] T151 [US11] Implement MockRerankProvider with score strategies in focal/providers/rerank/mock.py
+- [x] T152 [US11] Implement rerank() with position-based scoring in focal/providers/rerank/mock.py
+- [x] T153 [US11] Export rerank provider classes from focal/providers/rerank/__init__.py
 
 **Checkpoint**: RerankProvider functional with mock
 
@@ -395,12 +395,12 @@
 
 ### Implementation for User Story 12
 
-- [x] T158 [US12] Implement setup_tracing() with OTLP exporter and W3C traceparent context extraction in soldier/observability/tracing.py
-- [x] T159 [US12] Implement get_tracer() function in soldier/observability/tracing.py
-- [x] T160 [US12] Implement span() context manager in soldier/observability/tracing.py
-- [x] T161 [US12] Implement add_span_attributes() helper in soldier/observability/tracing.py
-- [x] T162 [US12] Define standard span attributes (ATTR_TENANT_ID, etc.) in soldier/observability/tracing.py
-- [x] T163 [US12] Export tracing functions from soldier/observability/__init__.py
+- [x] T158 [US12] Implement setup_tracing() with OTLP exporter and W3C traceparent context extraction in focal/observability/tracing.py
+- [x] T159 [US12] Implement get_tracer() function in focal/observability/tracing.py
+- [x] T160 [US12] Implement span() context manager in focal/observability/tracing.py
+- [x] T161 [US12] Implement add_span_attributes() helper in focal/observability/tracing.py
+- [x] T162 [US12] Define standard span attributes (ATTR_TENANT_ID, etc.) in focal/observability/tracing.py
+- [x] T163 [US12] Export tracing functions from focal/observability/__init__.py
 
 **Checkpoint**: OpenTelemetry tracing functional
 
@@ -410,15 +410,15 @@
 
 **Purpose**: Provider factory, middleware, and integration tests
 
-- [x] T164 [P] Implement create_llm_provider() factory in soldier/providers/factory.py
-- [x] T165 [P] Implement create_embedding_provider() factory in soldier/providers/factory.py
-- [x] T166 [P] Implement create_rerank_provider() factory in soldier/providers/factory.py
-- [x] T167 [P] Define provider config models in soldier/providers/factory.py
+- [x] T164 [P] Implement create_llm_provider() factory in focal/providers/factory.py
+- [x] T165 [P] Implement create_embedding_provider() factory in focal/providers/factory.py
+- [x] T166 [P] Implement create_rerank_provider() factory in focal/providers/factory.py
+- [x] T167 [P] Define provider config models in focal/providers/factory.py
 - [x] T168 [P] Create tests for provider factory in tests/unit/providers/test_factory.py
-- [x] T169 Implement observability_middleware with context binding in soldier/observability/middleware.py
+- [x] T169 Implement observability_middleware with context binding in focal/observability/middleware.py
 - [x] T170 [P] Create tests for middleware in tests/unit/observability/test_middleware.py
 - [x] T171 Create integration test for all stores contract in tests/integration/test_stores_contract.py
-- [x] T172 Export all providers from soldier/providers/__init__.py
+- [x] T172 Export all providers from focal/providers/__init__.py
 - [x] T173 Run full test suite and verify 85% coverage
 - [x] T174 Validate quickstart.md examples work correctly
 
@@ -478,10 +478,10 @@ Task: "Create tests for Session/Turn models in tests/unit/conversation/test_mode
 Task: "Create tests for CustomerProfile models in tests/unit/profile/test_models.py"
 
 # Then launch all model implementations in parallel:
-Task: "Implement Rule model in soldier/alignment/models/rule.py"
-Task: "Implement Episode model in soldier/memory/models/episode.py"
-Task: "Implement Session model in soldier/conversation/models/session.py"
-Task: "Implement CustomerProfile model in soldier/profile/models.py"
+Task: "Implement Rule model in focal/alignment/models/rule.py"
+Task: "Implement Episode model in focal/memory/models/episode.py"
+Task: "Implement Session model in focal/conversation/models/session.py"
+Task: "Implement CustomerProfile model in focal/profile/models.py"
 ```
 
 ---
@@ -490,11 +490,11 @@ Task: "Implement CustomerProfile model in soldier/profile/models.py"
 
 ```bash
 # Launch all store implementations in parallel:
-Task: "Implement InMemoryConfigStore in soldier/alignment/stores/inmemory.py"
-Task: "Implement InMemoryMemoryStore in soldier/memory/stores/inmemory.py"
-Task: "Implement InMemorySessionStore in soldier/conversation/stores/inmemory.py"
-Task: "Implement InMemoryAuditStore in soldier/audit/stores/inmemory.py"
-Task: "Implement InMemoryProfileStore in soldier/profile/stores/inmemory.py"
+Task: "Implement InMemoryConfigStore in focal/alignment/stores/inmemory.py"
+Task: "Implement InMemoryMemoryStore in focal/memory/stores/inmemory.py"
+Task: "Implement InMemorySessionStore in focal/conversation/stores/inmemory.py"
+Task: "Implement InMemoryAuditStore in focal/audit/stores/inmemory.py"
+Task: "Implement InMemoryProfileStore in focal/profile/stores/inmemory.py"
 ```
 
 ---
@@ -539,4 +539,4 @@ Task: "Implement InMemoryProfileStore in soldier/profile/stores/inmemory.py"
 - Each store has its own contract test file for reuse with production implementations
 - Mock providers track call history for test assertions
 - All async methods use pytest-asyncio
-- Run `uv run pytest --cov=soldier --cov-report=term-missing` to verify coverage
+- Run `uv run pytest --cov=focal --cov-report=term-missing` to verify coverage

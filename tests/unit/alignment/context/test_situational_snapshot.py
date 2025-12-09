@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from soldier.alignment.context.situation_snapshot import (
+from focal.alignment.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )

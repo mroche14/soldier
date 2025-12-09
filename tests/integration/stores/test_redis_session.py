@@ -10,9 +10,9 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from soldier.config.models.storage import RedisSessionConfig
-from soldier.conversation.models import Channel, Session
-from soldier.conversation.stores.redis import RedisSessionStore
+from focal.config.models.storage import RedisSessionConfig
+from focal.conversation.models import Channel, Session
+from focal.conversation.stores.redis import RedisSessionStore
 
 
 @pytest_asyncio.fixture

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the strategy for managing embedding models across different object types (Rules, Episodes, Intents, Scenarios) in Soldier, ensuring consistency between configuration, vector stores, and query-time operations.
+This document describes the strategy for managing embedding models across different object types (Rules, Episodes, Intents, Scenarios) in Focal, ensuring consistency between configuration, vector stores, and query-time operations.
 
 ## Problem Statement
 
@@ -228,7 +228,7 @@ async def validate_embedding_config():
                 f"Model mismatch for '{object_type}': "
                 f"collection={collection.metadata['embedding_model']}, "
                 f"config={config.model}. "
-                f"Run: soldier migrate embeddings {object_type}"
+                f"Run: focal migrate embeddings {object_type}"
             )
 ```
 
@@ -240,10 +240,10 @@ Step 1: Operator changes config
 
 Step 2: Pod startup FAILS with clear message
         "Model mismatch for 'rules': collection=openai/text-embedding-3-small,
-         config=voyage/voyage-3. Run: soldier migrate embeddings rules"
+         config=voyage/voyage-3. Run: focal migrate embeddings rules"
 
 Step 3: Operator runs migration command
-        $ soldier migrate embeddings rules --dry-run
+        $ focal migrate embeddings rules --dry-run
 
         Migration Plan:
         - Source: rules (openai/text-embedding-3-small)
@@ -330,18 +330,18 @@ Step 5: Pods can now start successfully
 ### Detailed File List
 
 **Models to modify**:
-- `soldier/alignment/models/rule.py` - Remove `embedding_model` field
-- `soldier/alignment/models/intent.py` - Remove `embedding_model` field
-- `soldier/memory/models/episode.py` - Remove `embedding_model` field
+- `focal/alignment/models/rule.py` - Remove `embedding_model` field
+- `focal/alignment/models/intent.py` - Remove `embedding_model` field
+- `focal/memory/models/episode.py` - Remove `embedding_model` field
 
 **Stores to modify**:
-- `soldier/alignment/stores/postgres.py` - Remove from all queries
-- `soldier/memory/stores/postgres.py` - Remove from episode queries
+- `focal/alignment/stores/postgres.py` - Remove from all queries
+- `focal/memory/stores/postgres.py` - Remove from episode queries
 
 **New components**:
-- `soldier/vector/validation.py` - Startup validation
-- `soldier/cli/migrate.py` - Migration command
-- `soldier/config/models/embedding.py` - Embedding config models
+- `focal/vector/validation.py` - Startup validation
+- `focal/cli/migrate.py` - Migration command
+- `focal/config/models/embedding.py` - Embedding config models
 
 ## Migration Strategy
 
@@ -359,7 +359,7 @@ Step 5: Pods can now start successfully
 
 ### Phase 3: Migration Tooling
 
-1. Implement `soldier migrate embeddings` command
+1. Implement `focal migrate embeddings` command
 2. Add dry-run with cost estimation
 3. Add rollback capability
 

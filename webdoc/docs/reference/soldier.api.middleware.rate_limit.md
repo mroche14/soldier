@@ -1,10 +1,10 @@
-<a id="soldier.api.middleware.rate_limit"></a>
+<a id="focal.api.middleware.rate_limit"></a>
 
-# soldier.api.middleware.rate\_limit
+# focal.api.middleware.rate\_limit
 
 Rate limiting middleware for per-tenant request limits.
 
-<a id="soldier.api.middleware.rate_limit.RateLimiter"></a>
+<a id="focal.api.middleware.rate_limit.RateLimiter"></a>
 
 ## RateLimiter Objects
 
@@ -14,7 +14,7 @@ class RateLimiter(ABC)
 
 Abstract base class for rate limiters.
 
-<a id="soldier.api.middleware.rate_limit.RateLimiter.check"></a>
+<a id="focal.api.middleware.rate_limit.RateLimiter.check"></a>
 
 #### check
 
@@ -35,7 +35,7 @@ Check if a request is allowed under the rate limit.
 
   RateLimitResult indicating if request is allowed
 
-<a id="soldier.api.middleware.rate_limit.RateLimiter.reset"></a>
+<a id="focal.api.middleware.rate_limit.RateLimiter.reset"></a>
 
 #### reset
 
@@ -50,7 +50,7 @@ Reset rate limit state for a tenant.
 
 - `tenant_id` - Tenant identifier
 
-<a id="soldier.api.middleware.rate_limit.RateLimitWindow"></a>
+<a id="focal.api.middleware.rate_limit.RateLimitWindow"></a>
 
 ## RateLimitWindow Objects
 
@@ -61,13 +61,13 @@ class RateLimitWindow()
 
 Sliding window rate limit state.
 
-<a id="soldier.api.middleware.rate_limit.RateLimitWindow.requests"></a>
+<a id="focal.api.middleware.rate_limit.RateLimitWindow.requests"></a>
 
 #### requests
 
 Timestamps of requests within the window.
 
-<a id="soldier.api.middleware.rate_limit.SlidingWindowRateLimiter"></a>
+<a id="focal.api.middleware.rate_limit.SlidingWindowRateLimiter"></a>
 
 ## SlidingWindowRateLimiter Objects
 
@@ -82,7 +82,7 @@ within a 60-second window. Each request outside the window is pruned.
 
 For production use with multiple instances, use Redis-backed storage.
 
-<a id="soldier.api.middleware.rate_limit.SlidingWindowRateLimiter.__init__"></a>
+<a id="focal.api.middleware.rate_limit.SlidingWindowRateLimiter.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -96,7 +96,7 @@ Initialize the rate limiter.
 
 - `window_seconds` - Size of the sliding window in seconds
 
-<a id="soldier.api.middleware.rate_limit.SlidingWindowRateLimiter.check"></a>
+<a id="focal.api.middleware.rate_limit.SlidingWindowRateLimiter.check"></a>
 
 #### check
 
@@ -116,7 +116,7 @@ Check if a request is allowed under the rate limit.
 
   RateLimitResult indicating if request is allowed
 
-<a id="soldier.api.middleware.rate_limit.SlidingWindowRateLimiter.reset"></a>
+<a id="focal.api.middleware.rate_limit.SlidingWindowRateLimiter.reset"></a>
 
 #### reset
 
@@ -130,7 +130,7 @@ Reset rate limit state for a tenant.
 
 - `tenant_id` - Tenant identifier
 
-<a id="soldier.api.middleware.rate_limit.RedisRateLimiter"></a>
+<a id="focal.api.middleware.rate_limit.RedisRateLimiter"></a>
 
 ## RedisRateLimiter Objects
 
@@ -147,7 +147,7 @@ efficient range queries to count requests within the window.
 This implementation is suitable for distributed deployments where
 multiple application instances need to share rate limit state.
 
-<a id="soldier.api.middleware.rate_limit.RedisRateLimiter.__init__"></a>
+<a id="focal.api.middleware.rate_limit.RedisRateLimiter.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -165,7 +165,7 @@ Initialize the Redis rate limiter.
 - `window_seconds` - Size of the sliding window in seconds
 - `key_prefix` - Prefix for Redis keys
 
-<a id="soldier.api.middleware.rate_limit.RedisRateLimiter.check"></a>
+<a id="focal.api.middleware.rate_limit.RedisRateLimiter.check"></a>
 
 #### check
 
@@ -191,7 +191,7 @@ Uses Redis sorted sets with timestamps as scores:
 
   RateLimitResult indicating if request is allowed
 
-<a id="soldier.api.middleware.rate_limit.RedisRateLimiter.reset"></a>
+<a id="focal.api.middleware.rate_limit.RedisRateLimiter.reset"></a>
 
 #### reset
 
@@ -205,7 +205,7 @@ Reset rate limit state for a tenant.
 
 - `tenant_id` - Tenant identifier
 
-<a id="soldier.api.middleware.rate_limit.get_rate_limiter"></a>
+<a id="focal.api.middleware.rate_limit.get_rate_limiter"></a>
 
 #### get\_rate\_limiter
 
@@ -219,7 +219,7 @@ Get the global rate limiter instance.
 
   RateLimiter instance (in-memory by default)
 
-<a id="soldier.api.middleware.rate_limit.set_rate_limiter"></a>
+<a id="focal.api.middleware.rate_limit.set_rate_limiter"></a>
 
 #### set\_rate\_limiter
 
@@ -232,7 +232,7 @@ Set the global rate limiter instance.
 Use this to configure Redis-backed rate limiting:
 
 import redis
-from soldier.api.middleware.rate_limit import (
+from focal.api.middleware.rate_limit import (
 RedisRateLimiter,
 set_rate_limiter,
 )
@@ -244,7 +244,7 @@ set_rate_limiter(RedisRateLimiter(client))
 
 - `limiter` - RateLimiter instance to use globally
 
-<a id="soldier.api.middleware.rate_limit.reset_rate_limiter"></a>
+<a id="focal.api.middleware.rate_limit.reset_rate_limiter"></a>
 
 #### reset\_rate\_limiter
 
@@ -256,7 +256,7 @@ Reset the global rate limiter to None.
 
 Useful for testing to ensure fresh state between tests.
 
-<a id="soldier.api.middleware.rate_limit.get_tenant_limit"></a>
+<a id="focal.api.middleware.rate_limit.get_tenant_limit"></a>
 
 #### get\_tenant\_limit
 
@@ -275,7 +275,7 @@ Get the rate limit for a tenant tier.
 
   Requests per minute limit
 
-<a id="soldier.api.middleware.rate_limit.RateLimitMiddleware"></a>
+<a id="focal.api.middleware.rate_limit.RateLimitMiddleware"></a>
 
 ## RateLimitMiddleware Objects
 
@@ -295,7 +295,7 @@ Rate limit headers are added to all responses:
 - X-RateLimit-Remaining: Remaining requests
 - X-RateLimit-Reset: Unix timestamp when limit resets
 
-<a id="soldier.api.middleware.rate_limit.RateLimitMiddleware.__init__"></a>
+<a id="focal.api.middleware.rate_limit.RateLimitMiddleware.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -313,7 +313,7 @@ Initialize the middleware.
 - `enabled` - Whether rate limiting is enabled
 - `exclude_paths` - Paths to exclude from rate limiting
 
-<a id="soldier.api.middleware.rate_limit.RateLimitMiddleware.dispatch"></a>
+<a id="focal.api.middleware.rate_limit.RateLimitMiddleware.dispatch"></a>
 
 #### dispatch
 
@@ -324,7 +324,7 @@ async def dispatch(request: Request,
 
 Process request with rate limiting.
 
-<a id="soldier.api.middleware.rate_limit.add_rate_limit_headers"></a>
+<a id="focal.api.middleware.rate_limit.add_rate_limit_headers"></a>
 
 #### add\_rate\_limit\_headers
 

@@ -1,10 +1,10 @@
-<a id="soldier.alignment.filtering.scenario_filter"></a>
+<a id="focal.alignment.filtering.scenario_filter"></a>
 
-# soldier.alignment.filtering.scenario\_filter
+# focal.alignment.filtering.scenario\_filter
 
 Scenario filtering and navigation decisions.
 
-<a id="soldier.alignment.filtering.scenario_filter.ScenarioFilter"></a>
+<a id="focal.alignment.filtering.scenario_filter.ScenarioFilter"></a>
 
 ## ScenarioFilter Objects
 
@@ -20,7 +20,7 @@ Handles scenario lifecycle including:
 - Detecting and handling loops via relocalization
 - Exiting scenarios when requested
 
-<a id="soldier.alignment.filtering.scenario_filter.ScenarioFilter.__init__"></a>
+<a id="focal.alignment.filtering.scenario_filter.ScenarioFilter.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -35,7 +35,7 @@ Initialize the scenario filter.
 - `config_store` - Store for scenario definitions
 - `max_loop_count` - Maximum visits to a step before triggering relocalization
 
-<a id="soldier.alignment.filtering.scenario_filter.ScenarioFilter.evaluate"></a>
+<a id="focal.alignment.filtering.scenario_filter.ScenarioFilter.evaluate"></a>
 
 #### evaluate
 

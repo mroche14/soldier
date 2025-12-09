@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from soldier.api.models.chat import (
+from focal.api.models.chat import (
     ChatRequest,
     ChatResponse,
     DoneEvent,

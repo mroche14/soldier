@@ -2,10 +2,10 @@
 
 from uuid import uuid4
 
-from soldier.alignment.enforcement.fallback import FallbackHandler
-from soldier.alignment.enforcement.models import EnforcementResult
-from soldier.alignment.models import Template
-from soldier.alignment.models.enums import Scope, TemplateResponseMode
+from focal.alignment.enforcement.fallback import FallbackHandler
+from focal.alignment.enforcement.models import EnforcementResult
+from focal.alignment.models import Template
+from focal.alignment.models.enums import Scope, TemplateResponseMode
 
 
 def _template(mode: TemplateResponseMode) -> Template:

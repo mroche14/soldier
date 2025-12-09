@@ -1,10 +1,10 @@
-<a id="soldier.audit.stores.inmemory"></a>
+<a id="focal.audit.stores.inmemory"></a>
 
-# soldier.audit.stores.inmemory
+# focal.audit.stores.inmemory
 
 In-memory implementation of AuditStore.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore"></a>
 
 ## InMemoryAuditStore Objects
 
@@ -17,7 +17,7 @@ In-memory implementation of AuditStore for testing and development.
 Uses simple dict storage with linear scan for queries.
 Not suitable for production use.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.__init__"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -27,7 +27,7 @@ def __init__() -> None
 
 Initialize empty storage.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.save_turn"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.save_turn"></a>
 
 #### save\_turn
 
@@ -37,7 +37,7 @@ async def save_turn(turn: TurnRecord) -> UUID
 
 Save a turn record.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.get_turn"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.get_turn"></a>
 
 #### get\_turn
 
@@ -47,7 +47,7 @@ async def get_turn(turn_id: UUID) -> TurnRecord | None
 
 Get a turn record by ID.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.list_turns_by_session"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.list_turns_by_session"></a>
 
 #### list\_turns\_by\_session
 
@@ -60,7 +60,7 @@ async def list_turns_by_session(session_id: UUID,
 
 List turn records for a session in chronological order.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.list_turns_by_tenant"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.list_turns_by_tenant"></a>
 
 #### list\_turns\_by\_tenant
 
@@ -74,7 +74,7 @@ async def list_turns_by_tenant(tenant_id: UUID,
 
 List turn records for a tenant with optional time filter.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.save_event"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.save_event"></a>
 
 #### save\_event
 
@@ -84,7 +84,7 @@ async def save_event(event: AuditEvent) -> UUID
 
 Save an audit event.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.get_event"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.get_event"></a>
 
 #### get\_event
 
@@ -94,7 +94,7 @@ async def get_event(event_id: UUID) -> AuditEvent | None
 
 Get an audit event by ID.
 
-<a id="soldier.audit.stores.inmemory.InMemoryAuditStore.list_events_by_session"></a>
+<a id="focal.audit.stores.inmemory.InMemoryAuditStore.list_events_by_session"></a>
 
 #### list\_events\_by\_session
 

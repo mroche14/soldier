@@ -23,7 +23,7 @@ This document defines the data models and their relationships for the Memory Ing
 - `source`: string - Origin: "user", "agent", "system", "external"
 - `source_metadata`: dict - Additional context (e.g., summary metadata)
 - `occurred_at`: datetime - When the event happened in real world
-- `recorded_at`: datetime - When Soldier learned about it (ingestion time)
+- `recorded_at`: datetime - When Focal learned about it (ingestion time)
 - `embedding`: list[float] | None - Semantic vector representation
 - `embedding_model`: string | None - Model that generated the embedding
 - `entity_ids`: list[UUID] - References to extracted entities
@@ -55,7 +55,7 @@ This document defines the data models and their relationships for the Memory Ing
 - `attributes`: dict[string, any] - Key-value metadata (e.g., `{"email": "...", "status": "..."}`)
 - `valid_from`: datetime - When this entity became valid in real world
 - `valid_to`: datetime | None - When it stopped being valid (None = still valid)
-- `recorded_at`: datetime - When Soldier extracted this entity
+- `recorded_at`: datetime - When Focal extracted this entity
 - `embedding`: list[float] | None - Semantic vector for deduplication
 - `confidence`: string | None - Extraction confidence: "high", "medium", "low"
 
@@ -95,7 +95,7 @@ This document defines the data models and their relationships for the Memory Ing
 - `attributes`: dict[string, any] - Optional relationship metadata
 - `valid_from`: datetime - When this relationship became valid
 - `valid_to`: datetime | None - When it stopped being valid (None = still valid)
-- `recorded_at`: datetime - When Soldier extracted this relationship
+- `recorded_at`: datetime - When Focal extracted this relationship
 - `confidence`: string | None - Extraction confidence: "high", "medium", "low"
 
 **Validations**:
@@ -599,7 +599,7 @@ Episode (1) ──has many──> (N) Entity
 
 ### Adding to Existing Codebase
 
-**No schema changes required** - All models already exist in `soldier/memory/models/`.
+**No schema changes required** - All models already exist in `focal/memory/models/`.
 
 **New implementations**:
 - `MemoryIngestor` - New service class
@@ -608,7 +608,7 @@ Episode (1) ──has many──> (N) Entity
 - `ConversationSummarizer` - New service class
 
 **Configuration additions**:
-- `MemoryIngestionConfig` in `soldier/config/models/pipeline.py`
+- `MemoryIngestionConfig` in `focal/config/models/pipeline.py`
 - TOML sections in `config/default.toml`
 
 **Backward compatibility**:

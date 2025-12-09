@@ -3,8 +3,8 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.execution.variable_merger import VariableMerger
-from soldier.alignment.execution.models import ToolResult
+from focal.alignment.execution.variable_merger import VariableMerger
+from focal.alignment.execution.models import ToolResult
 
 
 @pytest.fixture

@@ -1,13 +1,13 @@
-<a id="soldier.alignment.generation.prompt_builder"></a>
+<a id="focal.alignment.generation.prompt_builder"></a>
 
-# soldier.alignment.generation.prompt\_builder
+# focal.alignment.generation.prompt\_builder
 
 Prompt building for response generation.
 
 Assembles context, rules, memory, and tool results into prompts
 for response generation.
 
-<a id="soldier.alignment.generation.prompt_builder.PromptBuilder"></a>
+<a id="focal.alignment.generation.prompt_builder.PromptBuilder"></a>
 
 ## PromptBuilder Objects
 
@@ -23,7 +23,7 @@ Assembles all context into a structured prompt including:
 - Memory/conversation history
 - Tool execution results
 
-<a id="soldier.alignment.generation.prompt_builder.PromptBuilder.__init__"></a>
+<a id="focal.alignment.generation.prompt_builder.PromptBuilder.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -39,7 +39,7 @@ Initialize the prompt builder.
 - `system_template` - Optional custom system prompt template
 - `max_history_turns` - Maximum history turns to include
 
-<a id="soldier.alignment.generation.prompt_builder.PromptBuilder.build_system_prompt"></a>
+<a id="focal.alignment.generation.prompt_builder.PromptBuilder.build_system_prompt"></a>
 
 #### build\_system\_prompt
 
@@ -64,7 +64,7 @@ Build the system prompt with all context.
 
   Complete system prompt string
 
-<a id="soldier.alignment.generation.prompt_builder.PromptBuilder.build_messages"></a>
+<a id="focal.alignment.generation.prompt_builder.PromptBuilder.build_messages"></a>
 
 #### build\_messages
 

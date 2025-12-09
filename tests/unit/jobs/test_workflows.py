@@ -8,13 +8,13 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.jobs.workflows import (
+from focal.jobs.workflows import (
     DetectOrphanedItemsWorkflow,
     DetectOrphansInput,
     ExpireFieldsInput,
     ExpireStaleFieldsWorkflow,
 )
-from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
 
 
 @pytest.fixture
@@ -196,13 +196,13 @@ class TestWorkflowRetryPolicy:
         # The retry policy is configured in the register_workflow function
         # with @hatchet.step(retries=3, retry_delay="60s")
         # This is a documentation test to verify the pattern exists
-        from soldier.jobs.workflows import profile_expiry
+        from focal.jobs.workflows import profile_expiry
 
         # Verify the module has the register_workflow function
         assert hasattr(profile_expiry, "register_workflow")
 
     def test_orphan_workflow_has_retry_configuration(self):
         """Test DetectOrphanedItemsWorkflow uses retries in step decorator."""
-        from soldier.jobs.workflows import orphan_detection
+        from focal.jobs.workflows import orphan_detection
 
         assert hasattr(orphan_detection, "register_workflow")

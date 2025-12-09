@@ -1,6 +1,6 @@
-<a id="soldier.alignment.engine"></a>
+<a id="focal.alignment.engine"></a>
 
-# soldier.alignment.engine
+# focal.alignment.engine
 
 Alignment Engine - Main pipeline orchestrator.
 
@@ -12,7 +12,7 @@ Handles the complete turn lifecycle including:
 - Conversation history retrieval (via AuditStore)
 - Turn record creation for audit trail (via AuditStore)
 
-<a id="soldier.alignment.engine.AlignmentEngine"></a>
+<a id="focal.alignment.engine.AlignmentEngine"></a>
 
 ## AlignmentEngine Objects
 
@@ -34,7 +34,7 @@ The AlignmentEngine coordinates all pipeline steps:
 
 Each step can be enabled/disabled via configuration.
 
-<a id="soldier.alignment.engine.AlignmentEngine.__init__"></a>
+<a id="focal.alignment.engine.AlignmentEngine.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -70,7 +70,7 @@ Initialize the alignment engine.
 - `memory_store` - Store for memory episodes
 - `migration_config` - Configuration for scenario migrations
 
-<a id="soldier.alignment.engine.AlignmentEngine.process_turn"></a>
+<a id="focal.alignment.engine.AlignmentEngine.process_turn"></a>
 
 #### process\_turn
 

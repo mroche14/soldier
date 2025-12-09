@@ -16,7 +16,7 @@
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd soldier
+cd focal
 
 # Install dependencies
 uv sync
@@ -29,7 +29,7 @@ uv sync --dev
 
 ```bash
 # Check that the package is importable
-uv run python -c "from soldier.config import get_settings; print('OK')"
+uv run python -c "from focal.config import get_settings; print('OK')"
 
 # Run tests
 uv run pytest
@@ -39,17 +39,17 @@ uv run pytest
 
 ### Environment Selection
 
-Set the environment via `SOLDIER_ENV`:
+Set the environment via `FOCAL_ENV`:
 
 ```bash
 # Development (default)
-export SOLDIER_ENV=development
+export FOCAL_ENV=development
 
 # Production
-export SOLDIER_ENV=production
+export FOCAL_ENV=production
 
 # Test
-export SOLDIER_ENV=test
+export FOCAL_ENV=test
 ```
 
 ### Configuration Files
@@ -103,10 +103,10 @@ temperature = 0.7
 Override any setting via environment variables:
 
 ```bash
-# Format: SOLDIER_{SECTION}__{KEY}
-export SOLDIER_API__PORT=9000
-export SOLDIER_DEBUG=true
-export SOLDIER_STORAGE__SESSION__BACKEND=redis
+# Format: FOCAL_{SECTION}__{KEY}
+export FOCAL_API__PORT=9000
+export FOCAL_DEBUG=true
+export FOCAL_STORAGE__SESSION__BACKEND=redis
 ```
 
 ### Secrets
@@ -127,7 +127,7 @@ OPENAI_API_KEY=sk-...
 ### Access Settings
 
 ```python
-from soldier.config import get_settings
+from focal.config import get_settings
 
 # Get the singleton settings instance
 settings = get_settings()
@@ -145,8 +145,8 @@ if llm_config:
 ### Dependency Injection Pattern
 
 ```python
-from soldier.config import get_settings
-from soldier.config.models.pipeline import GenerationConfig
+from focal.config import get_settings
+from focal.config.models.pipeline import GenerationConfig
 
 def create_generator(config: GenerationConfig):
     """Create a generator with injected configuration."""
@@ -167,7 +167,7 @@ generator = create_generator(settings.pipeline.generation)
 uv run pytest
 
 # Run with coverage
-uv run pytest --cov=soldier --cov-report=html
+uv run pytest --cov=focal --cov-report=html
 
 # Run specific test file
 uv run pytest tests/unit/config/test_loader.py
@@ -180,13 +180,13 @@ uv run ptw
 
 ```bash
 # Lint with ruff
-uv run ruff check soldier/ tests/
+uv run ruff check focal/ tests/
 
 # Format with ruff
-uv run ruff format soldier/ tests/
+uv run ruff format focal/ tests/
 
 # Type check with mypy
-uv run mypy soldier/
+uv run mypy focal/
 ```
 
 ### Common Make Commands
@@ -203,9 +203,9 @@ make all        # Run all checks
 ## Project Structure
 
 ```
-soldier/
+focal/
 ├── config/              # TOML configuration files
-├── soldier/             # Main Python package
+├── focal/             # Main Python package
 │   ├── alignment/       # Alignment engine
 │   ├── memory/          # Long-term memory
 │   ├── conversation/    # Session state
@@ -226,7 +226,7 @@ soldier/
 
 ### Configuration Not Loading
 
-1. Check `SOLDIER_ENV` is set correctly
+1. Check `FOCAL_ENV` is set correctly
 2. Verify TOML syntax: `uv run python -c "import tomllib; tomllib.load(open('config/default.toml', 'rb'))"`
 3. Check for validation errors in startup logs
 
@@ -234,11 +234,11 @@ soldier/
 
 1. Ensure `uv sync` completed successfully
 2. Check you're using the correct Python version: `python --version`
-3. Verify the package is installed: `uv run pip list | grep soldier`
+3. Verify the package is installed: `uv run pip list | grep focal`
 
 ### Environment Variables Not Applied
 
-1. Verify prefix is `SOLDIER_` (uppercase)
+1. Verify prefix is `FOCAL_` (uppercase)
 2. Use `__` for nesting (double underscore)
 3. Check spelling matches configuration keys exactly
 

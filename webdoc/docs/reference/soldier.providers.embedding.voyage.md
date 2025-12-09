@@ -1,4 +1,4 @@
-<a id="soldier.providers.embedding.voyage"></a>
+<a id="focal.providers.embedding.voyage"></a>
 
-# soldier.providers.embedding.voyage
+# focal.providers.embedding.voyage
 

@@ -373,7 +373,7 @@ thread tenant/session info straight into Agno’s session state.
 
 Instead of your OpenRouterProvider, you define something like:
 
-# soldier/providers/llm/agno.py  (conceptual)
+# focal/providers/llm/agno.py  (conceptual)
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat   # or Anthropic, etc.
@@ -382,7 +382,7 @@ class AgnoProvider(LLMProvider):
     def __init__(self, default_model: str):
         self._default_model = default_model
         self._agent = Agent(
-            name="soldier_generic_llm",
+            name="focal_generic_llm",
             model=OpenAIChat(id=default_model),
             add_history_to_context=False,
             markdown=False,
@@ -478,7 +478,7 @@ results = await self._tool_executor.execute(
 
 You can define ToolExecutor to operate on Agno tools that accept run_context: RunContext exactly like in the Agno multi-tenant doc you pasted earlier:
 
-# soldier/alignment/execution/agno_tool_executor.py (conceptual)
+# focal/alignment/execution/agno_tool_executor.py (conceptual)
 
 from agno.run import RunContext
 
@@ -642,7 +642,7 @@ But this is a bigger refactor. I’d treat Level 3 as a second phase.
 
 TL;DR – “More integrated” in practice
 
-If you want Agno to be more than “just an HTTP client”, for SmartBeez / soldier I’d do:
+If you want Agno to be more than “just an HTTP client”, for SmartBeez / focal I’d do:
 
 Swap OpenRouterProvider → AgnoProvider, but keep LLMProvider interface.
 
@@ -677,7 +677,7 @@ Make those choices agent-specific and tenant-specific
 
 Still reuse one shared workflow definition across all agents/tenants.
 
-Let’s break down how to do it in a way that fits your Soldier/SmartBeez architecture.
+Let’s break down how to do it in a way that fits your Focal/SmartBeez architecture.
 
 1. Levels where you can vary the model
 
@@ -750,7 +750,7 @@ workflow.run(
 
 Then inside the step you pick the right Agent/model.
 
-3. A concrete design that fits Soldier
+3. A concrete design that fits Focal
 
 Let’s map it to your engine:
 

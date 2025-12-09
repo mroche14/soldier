@@ -1,10 +1,10 @@
-<a id="soldier.profile.store"></a>
+<a id="focal.profile.store"></a>
 
-# soldier.profile.store
+# focal.profile.store
 
 ProfileStore abstract interface.
 
-<a id="soldier.profile.store.ProfileStore"></a>
+<a id="focal.profile.store.ProfileStore"></a>
 
 ## ProfileStore Objects
 
@@ -17,7 +17,7 @@ Abstract interface for customer profile storage.
 Manages customer profiles with support for channel
 identity lookup and field updates.
 
-<a id="soldier.profile.store.ProfileStore.get_by_customer_id"></a>
+<a id="focal.profile.store.ProfileStore.get_by_customer_id"></a>
 
 #### get\_by\_customer\_id
 
@@ -29,7 +29,7 @@ async def get_by_customer_id(tenant_id: UUID,
 
 Get profile by customer ID.
 
-<a id="soldier.profile.store.ProfileStore.get_by_id"></a>
+<a id="focal.profile.store.ProfileStore.get_by_id"></a>
 
 #### get\_by\_id
 
@@ -41,7 +41,7 @@ async def get_by_id(tenant_id: UUID,
 
 Get profile by profile ID.
 
-<a id="soldier.profile.store.ProfileStore.get_by_channel_identity"></a>
+<a id="focal.profile.store.ProfileStore.get_by_channel_identity"></a>
 
 #### get\_by\_channel\_identity
 
@@ -54,7 +54,7 @@ async def get_by_channel_identity(
 
 Get profile by channel identity.
 
-<a id="soldier.profile.store.ProfileStore.get_or_create"></a>
+<a id="focal.profile.store.ProfileStore.get_or_create"></a>
 
 #### get\_or\_create
 
@@ -66,7 +66,7 @@ async def get_or_create(tenant_id: UUID, channel: Channel,
 
 Get existing profile or create new one for channel identity.
 
-<a id="soldier.profile.store.ProfileStore.save"></a>
+<a id="focal.profile.store.ProfileStore.save"></a>
 
 #### save
 
@@ -77,7 +77,7 @@ async def save(profile: CustomerProfile) -> UUID
 
 Save a profile.
 
-<a id="soldier.profile.store.ProfileStore.update_field"></a>
+<a id="focal.profile.store.ProfileStore.update_field"></a>
 
 #### update\_field
 
@@ -89,7 +89,7 @@ async def update_field(tenant_id: UUID, profile_id: UUID,
 
 Update a profile field.
 
-<a id="soldier.profile.store.ProfileStore.add_asset"></a>
+<a id="focal.profile.store.ProfileStore.add_asset"></a>
 
 #### add\_asset
 
@@ -101,7 +101,7 @@ async def add_asset(tenant_id: UUID, profile_id: UUID,
 
 Add an asset to profile.
 
-<a id="soldier.profile.store.ProfileStore.link_channel"></a>
+<a id="focal.profile.store.ProfileStore.link_channel"></a>
 
 #### link\_channel
 
@@ -113,7 +113,7 @@ async def link_channel(tenant_id: UUID, profile_id: UUID,
 
 Link a new channel identity to profile.
 
-<a id="soldier.profile.store.ProfileStore.merge_profiles"></a>
+<a id="focal.profile.store.ProfileStore.merge_profiles"></a>
 
 #### merge\_profiles
 

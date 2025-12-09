@@ -7,17 +7,17 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Turn
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.filtering.models import ScenarioAction, ScenarioFilterResult
-from soldier.alignment.stores import InMemoryAgentConfigStore
-from soldier.audit.models import TurnRecord
-from soldier.audit.stores.inmemory import InMemoryAuditStore
-from soldier.config.models.pipeline import PipelineConfig
-from soldier.conversation.models import Channel, Session
-from soldier.conversation.stores.inmemory import InMemorySessionStore
-from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from focal.alignment.context.models import Turn
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.filtering.models import ScenarioAction, ScenarioFilterResult
+from focal.alignment.stores import InMemoryAgentConfigStore
+from focal.audit.models import TurnRecord
+from focal.audit.stores.inmemory import InMemoryAuditStore
+from focal.config.models.pipeline import PipelineConfig
+from focal.conversation.models import Channel, Session
+from focal.conversation.stores.inmemory import InMemorySessionStore
+from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 
@@ -569,7 +569,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_start(self, stores) -> None:
         """Scenario start updates session state."""
-        from soldier.alignment.engine import AlignmentEngine
+        from focal.alignment.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -610,7 +610,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_exit(self, stores) -> None:
         """Scenario exit clears session state."""
-        from soldier.alignment.engine import AlignmentEngine
+        from focal.alignment.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -647,7 +647,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_relocalize_increments_count(self, stores) -> None:
         """Relocalization increments the counter."""
-        from soldier.alignment.engine import AlignmentEngine
+        from focal.alignment.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -767,7 +767,7 @@ class TestStepHistoryTrimming:
         # Create session with 100 steps already
         from datetime import UTC, datetime
 
-        from soldier.conversation.models import StepVisit
+        from focal.conversation.models import StepVisit
 
         session = Session(
             tenant_id=tenant_id,
@@ -815,10 +815,10 @@ class TestToolOutputVariables:
     @pytest.mark.asyncio
     async def test_tool_outputs_update_session_variables(self, stores) -> None:
         """Tool outputs are stored in session variables."""
-        from soldier.alignment.context.situation_snapshot import SituationSnapshot
-        from soldier.alignment.execution import ToolExecutor
-        from soldier.alignment.filtering.models import MatchedRule
-        from soldier.config.models.pipeline import PipelineConfig, ToolExecutionConfig
+        from focal.alignment.context.situation_snapshot import SituationSnapshot
+        from focal.alignment.execution import ToolExecutor
+        from focal.alignment.filtering.models import MatchedRule
+        from focal.config.models.pipeline import PipelineConfig, ToolExecutionConfig
 
         tenant_id = uuid4()
         agent_id = uuid4()
@@ -912,8 +912,8 @@ class TestMemoryRetrieverIntegration:
         """Memory episodes are retrieved when memory_store provided."""
         from datetime import UTC, datetime
 
-        from soldier.memory.models import Episode
-        from soldier.memory.stores.inmemory import InMemoryMemoryStore
+        from focal.memory.models import Episode
+        from focal.memory.stores.inmemory import InMemoryMemoryStore
 
         memory_store = InMemoryMemoryStore()
         tenant_id = uuid4()
@@ -968,7 +968,7 @@ class TestScenarioFilteringDisabled:
     @pytest.mark.asyncio
     async def test_scenario_filtering_disabled_returns_none(self, stores) -> None:
         """Scenario result is None when filtering disabled."""
-        from soldier.config.models.pipeline import (
+        from focal.config.models.pipeline import (
             PipelineConfig,
             ScenarioFilteringConfig,
         )
@@ -1011,8 +1011,8 @@ class TestRerankerCreation:
     @pytest.mark.asyncio
     async def test_reranker_created_when_provider_and_config_enabled(self, stores) -> None:
         """Reranker is created when rerank_provider provided and enabled."""
-        from soldier.config.models.pipeline import PipelineConfig, RerankingConfig, RetrievalConfig
-        from soldier.providers.rerank.mock import MockRerankProvider
+        from focal.config.models.pipeline import PipelineConfig, RerankingConfig, RetrievalConfig
+        from focal.providers.rerank.mock import MockRerankProvider
 
         rerank_provider = MockRerankProvider()
 
@@ -1085,11 +1085,11 @@ class TestEnforcementFallback:
     @pytest.mark.asyncio
     async def test_fallback_handler_used_when_enforcement_fails(self, stores) -> None:
         """Fallback handler is invoked when enforcement validation fails."""
-        from soldier.alignment.enforcement import EnforcementValidator, FallbackHandler
-        from soldier.alignment.generation import PromptBuilder, ResponseGenerator
-        from soldier.alignment.models.enums import TemplateResponseMode
-        from soldier.alignment.models import Template
-        from soldier.config.models.pipeline import EnforcementConfig, PipelineConfig
+        from focal.alignment.enforcement import EnforcementValidator, FallbackHandler
+        from focal.alignment.generation import PromptBuilder, ResponseGenerator
+        from focal.alignment.models.enums import TemplateResponseMode
+        from focal.alignment.models import Template
+        from focal.config.models.pipeline import EnforcementConfig, PipelineConfig
 
         tenant_id = uuid4()
         agent_id = uuid4()
@@ -1240,10 +1240,10 @@ class TestEngineWithoutAuditStore:
     @pytest.mark.asyncio
     async def test_persist_turn_record_without_audit_store_returns(self, stores) -> None:
         """_persist_turn_record is no-op when no audit_store."""
-        from soldier.alignment.context.situation_snapshot import SituationSnapshot
-        from soldier.alignment.generation.models import GenerationResult
-        from soldier.alignment.result import AlignmentResult
-        from soldier.alignment.retrieval.models import RetrievalResult
+        from focal.alignment.context.situation_snapshot import SituationSnapshot
+        from focal.alignment.generation.models import GenerationResult
+        from focal.alignment.result import AlignmentResult
+        from focal.alignment.retrieval.models import RetrievalResult
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -1305,7 +1305,7 @@ class TestMemoryContextBuilding:
             pipeline_config=PipelineConfig(),
         )
 
-        from soldier.alignment.retrieval.models import ScoredEpisode
+        from focal.alignment.retrieval.models import ScoredEpisode
 
         episodes = [
             ScoredEpisode(

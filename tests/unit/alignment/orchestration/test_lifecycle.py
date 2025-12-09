@@ -4,14 +4,14 @@ import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.context.models import ScenarioSignal
-from soldier.alignment.filtering.models import ScenarioLifecycleAction
-from soldier.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
-from soldier.alignment.orchestration.orchestrator import ScenarioOrchestrator
-from soldier.alignment.retrieval.models import ScoredScenario
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.conversation.models.session import ScenarioInstance
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.context.models import ScenarioSignal
+from focal.alignment.filtering.models import ScenarioLifecycleAction
+from focal.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
+from focal.alignment.orchestration.orchestrator import ScenarioOrchestrator
+from focal.alignment.retrieval.models import ScoredScenario
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.conversation.models.session import ScenarioInstance
 
 
 @pytest.fixture

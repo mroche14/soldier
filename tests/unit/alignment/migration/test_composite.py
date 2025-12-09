@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.migration.composite import CompositeMapper
-from soldier.alignment.migration.models import (
+from focal.alignment.migration.composite import CompositeMapper
+from focal.alignment.migration.models import (
     AnchorTransformation,
     InsertedNode,
     MigrationPlan,
@@ -15,9 +15,9 @@ from soldier.alignment.migration.models import (
     TransformationMap,
     UpstreamChanges,
 )
-from soldier.alignment.models import Scenario, ScenarioStep, StepTransition
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.conversation.models import Channel, Session
+from focal.alignment.models import Scenario, ScenarioStep, StepTransition
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.conversation.models import Channel, Session
 
 
 @pytest.fixture

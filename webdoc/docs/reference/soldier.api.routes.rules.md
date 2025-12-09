@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.rules"></a>
+<a id="focal.api.routes.rules"></a>
 
-# soldier.api.routes.rules
+# focal.api.routes.rules
 
 Rule management endpoints.
 
-<a id="soldier.api.routes.rules.list_rules"></a>
+<a id="focal.api.routes.rules.list_rules"></a>
 
 #### list\_rules
 
@@ -50,7 +50,7 @@ Retrieve a paginated list of rules with optional filtering and sorting.
 
   Paginated list of rules
 
-<a id="soldier.api.routes.rules.create_rule"></a>
+<a id="focal.api.routes.rules.create_rule"></a>
 
 #### create\_rule
 
@@ -80,7 +80,7 @@ triggered asynchronously in the background.
 
   Created rule
 
-<a id="soldier.api.routes.rules.get_rule"></a>
+<a id="focal.api.routes.rules.get_rule"></a>
 
 #### get\_rule
 
@@ -110,7 +110,7 @@ Get a rule by ID.
 
 - `RuleNotFoundError` - If rule doesn't exist
 
-<a id="soldier.api.routes.rules.update_rule"></a>
+<a id="focal.api.routes.rules.update_rule"></a>
 
 #### update\_rule
 
@@ -146,7 +146,7 @@ is triggered asynchronously.
 
 - `RuleNotFoundError` - If rule doesn't exist
 
-<a id="soldier.api.routes.rules.delete_rule"></a>
+<a id="focal.api.routes.rules.delete_rule"></a>
 
 #### delete\_rule
 
@@ -171,7 +171,7 @@ Delete a rule (soft delete).
 
 - `RuleNotFoundError` - If rule doesn't exist
 
-<a id="soldier.api.routes.rules.bulk_rule_operations"></a>
+<a id="focal.api.routes.rules.bulk_rule_operations"></a>
 
 #### bulk\_rule\_operations
 

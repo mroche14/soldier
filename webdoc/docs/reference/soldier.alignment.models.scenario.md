@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.scenario"></a>
+<a id="focal.alignment.models.scenario"></a>
 
-# soldier.alignment.models.scenario
+# focal.alignment.models.scenario
 
 Scenario models for alignment domain.
 
-<a id="soldier.alignment.models.scenario.StepTransition"></a>
+<a id="focal.alignment.models.scenario.StepTransition"></a>
 
 ## StepTransition Objects
 
@@ -14,7 +14,7 @@ class StepTransition(BaseModel)
 
 Possible transition between steps.
 
-<a id="soldier.alignment.models.scenario.ScenarioStep"></a>
+<a id="focal.alignment.models.scenario.ScenarioStep"></a>
 
 ## ScenarioStep Objects
 
@@ -24,7 +24,7 @@ class ScenarioStep(BaseModel)
 
 Single step within a Scenario.
 
-<a id="soldier.alignment.models.scenario.Scenario"></a>
+<a id="focal.alignment.models.scenario.Scenario"></a>
 
 ## Scenario Objects
 

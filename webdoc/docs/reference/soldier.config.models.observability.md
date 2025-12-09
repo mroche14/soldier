@@ -1,10 +1,10 @@
-<a id="soldier.config.models.observability"></a>
+<a id="focal.config.models.observability"></a>
 
-# soldier.config.models.observability
+# focal.config.models.observability
 
 Observability configuration models.
 
-<a id="soldier.config.models.observability.LoggingConfig"></a>
+<a id="focal.config.models.observability.LoggingConfig"></a>
 
 ## LoggingConfig Objects
 
@@ -14,7 +14,7 @@ class LoggingConfig(BaseModel)
 
 Logging configuration.
 
-<a id="soldier.config.models.observability.TracingConfig"></a>
+<a id="focal.config.models.observability.TracingConfig"></a>
 
 ## TracingConfig Objects
 
@@ -24,7 +24,7 @@ class TracingConfig(BaseModel)
 
 Distributed tracing configuration.
 
-<a id="soldier.config.models.observability.MetricsConfig"></a>
+<a id="focal.config.models.observability.MetricsConfig"></a>
 
 ## MetricsConfig Objects
 
@@ -34,7 +34,7 @@ class MetricsConfig(BaseModel)
 
 Metrics configuration.
 
-<a id="soldier.config.models.observability.ObservabilityConfig"></a>
+<a id="focal.config.models.observability.ObservabilityConfig"></a>
 
 ## ObservabilityConfig Objects
 

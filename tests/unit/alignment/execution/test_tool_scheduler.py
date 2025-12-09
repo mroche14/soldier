@@ -3,8 +3,8 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.execution.tool_scheduler import ToolScheduler, FutureToolQueue
-from soldier.alignment.models.tool_binding import ToolBinding
+from focal.alignment.execution.tool_scheduler import ToolScheduler, FutureToolQueue
+from focal.alignment.models.tool_binding import ToolBinding
 
 
 @pytest.fixture

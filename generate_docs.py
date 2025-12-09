@@ -14,7 +14,7 @@ def find_modules(root_dir: Path):
 
 def generate_docs():
     """Generate markdown documentation for all modules."""
-    root_dir = Path("soldier")
+    root_dir = Path("focal")
     output_dir = Path("webdoc/docs/reference")
     output_dir.mkdir(exist_ok=True)
 

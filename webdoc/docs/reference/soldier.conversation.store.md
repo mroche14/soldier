@@ -1,10 +1,10 @@
-<a id="soldier.conversation.store"></a>
+<a id="focal.conversation.store"></a>
 
-# soldier.conversation.store
+# focal.conversation.store
 
 SessionStore abstract interface.
 
-<a id="soldier.conversation.store.SessionStore"></a>
+<a id="focal.conversation.store.SessionStore"></a>
 
 ## SessionStore Objects
 
@@ -17,7 +17,7 @@ Abstract interface for session storage.
 Manages session state with support for channel-based
 lookup and status filtering.
 
-<a id="soldier.conversation.store.SessionStore.get"></a>
+<a id="focal.conversation.store.SessionStore.get"></a>
 
 #### get
 
@@ -28,7 +28,7 @@ async def get(session_id: UUID) -> Session | None
 
 Get a session by ID.
 
-<a id="soldier.conversation.store.SessionStore.save"></a>
+<a id="focal.conversation.store.SessionStore.save"></a>
 
 #### save
 
@@ -39,7 +39,7 @@ async def save(session: Session) -> UUID
 
 Save a session, returning its ID.
 
-<a id="soldier.conversation.store.SessionStore.delete"></a>
+<a id="focal.conversation.store.SessionStore.delete"></a>
 
 #### delete
 
@@ -50,7 +50,7 @@ async def delete(session_id: UUID) -> bool
 
 Delete a session.
 
-<a id="soldier.conversation.store.SessionStore.get_by_channel"></a>
+<a id="focal.conversation.store.SessionStore.get_by_channel"></a>
 
 #### get\_by\_channel
 
@@ -62,7 +62,7 @@ async def get_by_channel(tenant_id: UUID, channel: Channel,
 
 Get session by channel identity.
 
-<a id="soldier.conversation.store.SessionStore.list_by_agent"></a>
+<a id="focal.conversation.store.SessionStore.list_by_agent"></a>
 
 #### list\_by\_agent
 
@@ -77,7 +77,7 @@ async def list_by_agent(tenant_id: UUID,
 
 List sessions for an agent with optional status filter.
 
-<a id="soldier.conversation.store.SessionStore.list_by_customer"></a>
+<a id="focal.conversation.store.SessionStore.list_by_customer"></a>
 
 #### list\_by\_customer
 
@@ -91,7 +91,7 @@ async def list_by_customer(tenant_id: UUID,
 
 List sessions for a customer profile.
 
-<a id="soldier.conversation.store.SessionStore.find_sessions_by_step_hash"></a>
+<a id="focal.conversation.store.SessionStore.find_sessions_by_step_hash"></a>
 
 #### find\_sessions\_by\_step\_hash
 

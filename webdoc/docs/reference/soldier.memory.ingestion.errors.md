@@ -1,10 +1,10 @@
-<a id="soldier.memory.ingestion.errors"></a>
+<a id="focal.memory.ingestion.errors"></a>
 
-# soldier.memory.ingestion.errors
+# focal.memory.ingestion.errors
 
 Exception classes for memory ingestion system.
 
-<a id="soldier.memory.ingestion.errors.IngestionError"></a>
+<a id="focal.memory.ingestion.errors.IngestionError"></a>
 
 ## IngestionError Objects
 
@@ -14,7 +14,7 @@ class IngestionError(Exception)
 
 Raised when episode ingestion fails.
 
-<a id="soldier.memory.ingestion.errors.ExtractionError"></a>
+<a id="focal.memory.ingestion.errors.ExtractionError"></a>
 
 ## ExtractionError Objects
 
@@ -24,7 +24,7 @@ class ExtractionError(Exception)
 
 Raised when entity/relationship extraction fails.
 
-<a id="soldier.memory.ingestion.errors.SummarizationError"></a>
+<a id="focal.memory.ingestion.errors.SummarizationError"></a>
 
 ## SummarizationError Objects
 

@@ -1,13 +1,13 @@
-<a id="soldier.alignment.migration.executor"></a>
+<a id="focal.alignment.migration.executor"></a>
 
-# soldier.alignment.migration.executor
+# focal.alignment.migration.executor
 
 Migration executor for JIT session migration.
 
 Applies migration scenarios (clean graft, gap fill, re-route) when
 customers return after a scenario version change.
 
-<a id="soldier.alignment.migration.executor.MigrationExecutor"></a>
+<a id="focal.alignment.migration.executor.MigrationExecutor"></a>
 
 ## MigrationExecutor Objects
 
@@ -22,7 +22,7 @@ Handles three migration scenarios:
 - Gap Fill: Collect missing data before teleport
 - Re-Route: Evaluate upstream fork and potentially block at checkpoint
 
-<a id="soldier.alignment.migration.executor.MigrationExecutor.__init__"></a>
+<a id="focal.alignment.migration.executor.MigrationExecutor.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -44,7 +44,7 @@ Initialize the migration executor.
 - `profile_store` - Optional profile store for gap fill
 - `llm_provider` - Optional LLM for conversation extraction
 
-<a id="soldier.alignment.migration.executor.MigrationExecutor.reconcile"></a>
+<a id="focal.alignment.migration.executor.MigrationExecutor.reconcile"></a>
 
 #### reconcile
 

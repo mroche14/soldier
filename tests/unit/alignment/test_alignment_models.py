@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from soldier.alignment.models import (
+from focal.alignment.models import (
     Context,
     ExtractedEntities,
     MatchedRule,

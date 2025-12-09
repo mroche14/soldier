@@ -2,7 +2,7 @@
 
 import pytest
 
-from soldier.utils.hybrid import HybridScorer
+from focal.utils.hybrid import HybridScorer
 
 
 class TestHybridScorer:

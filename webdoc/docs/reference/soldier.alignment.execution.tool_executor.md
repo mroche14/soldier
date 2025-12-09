@@ -1,10 +1,10 @@
-<a id="soldier.alignment.execution.tool_executor"></a>
+<a id="focal.alignment.execution.tool_executor"></a>
 
-# soldier.alignment.execution.tool\_executor
+# focal.alignment.execution.tool\_executor
 
 Tool execution with timeout handling.
 
-<a id="soldier.alignment.execution.tool_executor.ToolExecutor"></a>
+<a id="focal.alignment.execution.tool_executor.ToolExecutor"></a>
 
 ## ToolExecutor Objects
 
@@ -20,7 +20,7 @@ Supports:
 - Fail-fast mode for critical tool chains
 - Result aggregation with success/failure tracking
 
-<a id="soldier.alignment.execution.tool_executor.ToolExecutor.__init__"></a>
+<a id="focal.alignment.execution.tool_executor.ToolExecutor.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -40,7 +40,7 @@ Initialize the tool executor.
 - `max_parallel` - Maximum concurrent tool executions
 - `fail_fast` - Stop on first tool failure
 
-<a id="soldier.alignment.execution.tool_executor.ToolExecutor.execute"></a>
+<a id="focal.alignment.execution.tool_executor.ToolExecutor.execute"></a>
 
 #### execute
 

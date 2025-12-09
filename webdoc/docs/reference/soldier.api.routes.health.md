@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.health"></a>
+<a id="focal.api.routes.health"></a>
 
-# soldier.api.routes.health
+# focal.api.routes.health
 
 Health check and metrics endpoints.
 
-<a id="soldier.api.routes.health.health_check"></a>
+<a id="focal.api.routes.health.health_check"></a>
 
 #### health\_check
 
@@ -32,7 +32,7 @@ the status of individual components.
 
   HealthResponse with status and component health
 
-<a id="soldier.api.routes.health.get_metrics"></a>
+<a id="focal.api.routes.health.get_metrics"></a>
 
 #### get\_metrics
 

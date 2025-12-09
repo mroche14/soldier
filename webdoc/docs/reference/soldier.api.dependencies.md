@@ -1,13 +1,13 @@
-<a id="soldier.api.dependencies"></a>
+<a id="focal.api.dependencies"></a>
 
-# soldier.api.dependencies
+# focal.api.dependencies
 
 Dependency injection for API routes.
 
 Provides FastAPI dependencies for stores and providers used by API endpoints.
 Dependencies are configured based on settings and can be overridden for testing.
 
-<a id="soldier.api.dependencies.get_settings"></a>
+<a id="focal.api.dependencies.get_settings"></a>
 
 #### get\_settings
 
@@ -25,7 +25,7 @@ Cached to avoid reloading on every request.
 
   Settings object with all configuration
 
-<a id="soldier.api.dependencies.get_config_store"></a>
+<a id="focal.api.dependencies.get_config_store"></a>
 
 #### get\_config\_store
 
@@ -39,7 +39,7 @@ Get the ConfigStore instance.
 
   ConfigStore for rules, scenarios, templates, variables
 
-<a id="soldier.api.dependencies.get_session_store"></a>
+<a id="focal.api.dependencies.get_session_store"></a>
 
 #### get\_session\_store
 
@@ -53,7 +53,7 @@ Get the SessionStore instance.
 
   SessionStore for session state
 
-<a id="soldier.api.dependencies.get_audit_store"></a>
+<a id="focal.api.dependencies.get_audit_store"></a>
 
 #### get\_audit\_store
 
@@ -67,7 +67,7 @@ Get the AuditStore instance.
 
   AuditStore for turn records and audit events
 
-<a id="soldier.api.dependencies.get_llm_provider"></a>
+<a id="focal.api.dependencies.get_llm_provider"></a>
 
 #### get\_llm\_provider
 
@@ -87,7 +87,7 @@ Get the LLMProvider instance.
 
   LLMProvider for text generation
 
-<a id="soldier.api.dependencies.get_embedding_provider"></a>
+<a id="focal.api.dependencies.get_embedding_provider"></a>
 
 #### get\_embedding\_provider
 
@@ -108,7 +108,7 @@ Get the EmbeddingProvider instance.
 
   EmbeddingProvider for vector embeddings
 
-<a id="soldier.api.dependencies.get_alignment_engine"></a>
+<a id="focal.api.dependencies.get_alignment_engine"></a>
 
 #### get\_alignment\_engine
 
@@ -146,7 +146,7 @@ Creates the alignment engine with all required dependencies.
 
   AlignmentEngine for processing turns
 
-<a id="soldier.api.dependencies.reset_dependencies"></a>
+<a id="focal.api.dependencies.reset_dependencies"></a>
 
 #### reset\_dependencies
 

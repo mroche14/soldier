@@ -1,10 +1,10 @@
-<a id="soldier.providers.embedding.sentence_transformers"></a>
+<a id="focal.providers.embedding.sentence_transformers"></a>
 
-# soldier.providers.embedding.sentence\_transformers
+# focal.providers.embedding.sentence\_transformers
 
 Sentence-Transformers embedding provider for local embeddings.
 
-<a id="soldier.providers.embedding.sentence_transformers.SentenceTransformersProvider"></a>
+<a id="focal.providers.embedding.sentence_transformers.SentenceTransformersProvider"></a>
 
 ## SentenceTransformersProvider Objects
 
@@ -14,7 +14,7 @@ class SentenceTransformersProvider(EmbeddingProvider)
 
 Embedding provider using sentence-transformers models.
 
-<a id="soldier.providers.embedding.sentence_transformers.SentenceTransformersProvider.__init__"></a>
+<a id="focal.providers.embedding.sentence_transformers.SentenceTransformersProvider.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -29,7 +29,7 @@ Initialize sentence-transformers provider.
 - `model_name` - Model name to load
 - `batch_size` - Batch size for encoding
 
-<a id="soldier.providers.embedding.sentence_transformers.SentenceTransformersProvider.provider_name"></a>
+<a id="focal.providers.embedding.sentence_transformers.SentenceTransformersProvider.provider_name"></a>
 
 #### provider\_name
 
@@ -40,7 +40,7 @@ def provider_name() -> str
 
 Return the provider name.
 
-<a id="soldier.providers.embedding.sentence_transformers.SentenceTransformersProvider.dimensions"></a>
+<a id="focal.providers.embedding.sentence_transformers.SentenceTransformersProvider.dimensions"></a>
 
 #### dimensions
 
@@ -51,7 +51,7 @@ def dimensions() -> int
 
 Return embedding dimensions.
 
-<a id="soldier.providers.embedding.sentence_transformers.SentenceTransformersProvider.embed"></a>
+<a id="focal.providers.embedding.sentence_transformers.SentenceTransformersProvider.embed"></a>
 
 #### embed
 

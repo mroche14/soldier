@@ -3,12 +3,12 @@
 **Feature Branch**: `010-customer-context-vault`
 **Created**: 2025-12-03
 **Status**: Draft
-**Input**: Evolve the existing CustomerProfile system into a comprehensive Customer Context Vault with lineage tracking, explicit status management, schema-driven field definitions, and Redis caching—combining the best of the original Soldier design with CCV proposal enhancements.
+**Input**: Evolve the existing CustomerProfile system into a comprehensive Customer Context Vault with lineage tracking, explicit status management, schema-driven field definitions, and Redis caching—combining the best of the original Focal design with CCV proposal enhancements.
 
 ## Executive Summary
 
 This specification defines a **hybrid approach** that:
-1. **Preserves** Soldier's type-safe separate models (`ProfileField`, `ProfileAsset`)
+1. **Preserves** Focal's type-safe separate models (`ProfileField`, `ProfileAsset`)
 2. **Adds** CCV's lineage tracking (`source_item_id`) for derivation chains
 3. **Adds** CCV's explicit status management (`active`, `superseded`, `expired`, `orphaned`)
 4. **Implements** the documented but unimplemented schema layer (`ProfileFieldDefinition`, `ScenarioFieldRequirement`)

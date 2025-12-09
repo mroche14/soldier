@@ -633,10 +633,10 @@ min_score = 0.4
 
 ### Pydantic Models
 
-Selection strategies are defined as Pydantic models in `soldier/config/models/selection.py`:
+Selection strategies are defined as Pydantic models in `focal/config/models/selection.py`:
 
 ```python
-# soldier/config/models/selection.py
+# focal/config/models/selection.py
 from typing import Literal
 from pydantic import BaseModel, Field
 
@@ -684,8 +684,8 @@ SelectionStrategyConfig = (
 Create selection strategies from Pydantic config:
 
 ```python
-# soldier/alignment/retrieval/selection.py
-from soldier.config.models.selection import SelectionStrategyConfig
+# focal/alignment/retrieval/selection.py
+from focal.config.models.selection import SelectionStrategyConfig
 
 
 def create_selection_strategy(config: SelectionStrategyConfig) -> SelectionStrategy:
@@ -731,12 +731,12 @@ Override strategy configuration via environment variables:
 
 ```bash
 # Change rule selection to entropy strategy
-export SOLDIER_PIPELINE__RETRIEVAL__RULE_SELECTION__STRATEGY=entropy
-export SOLDIER_PIPELINE__RETRIEVAL__RULE_SELECTION__LOW_ENTROPY_K=5
-export SOLDIER_PIPELINE__RETRIEVAL__RULE_SELECTION__MIN_SCORE=0.6
+export FOCAL_PIPELINE__RETRIEVAL__RULE_SELECTION__STRATEGY=entropy
+export FOCAL_PIPELINE__RETRIEVAL__RULE_SELECTION__LOW_ENTROPY_K=5
+export FOCAL_PIPELINE__RETRIEVAL__RULE_SELECTION__MIN_SCORE=0.6
 
 # Adjust adaptive-k sensitivity
-export SOLDIER_PIPELINE__RETRIEVAL__RULE_SELECTION__ALPHA=2.0
+export FOCAL_PIPELINE__RETRIEVAL__RULE_SELECTION__ALPHA=2.0
 ```
 
 ---
@@ -746,8 +746,8 @@ export SOLDIER_PIPELINE__RETRIEVAL__RULE_SELECTION__ALPHA=2.0
 ### Rule Retrieval
 
 ```python
-from soldier.config.settings import get_settings
-from soldier.alignment.retrieval.selection import create_selection_strategy
+from focal.config.settings import get_settings
+from focal.alignment.retrieval.selection import create_selection_strategy
 
 
 async def retrieve_rules(
@@ -799,8 +799,8 @@ async def retrieve_rules(
 ### Memory Retrieval
 
 ```python
-from soldier.config.settings import get_settings
-from soldier.alignment.retrieval.selection import create_selection_strategy
+from focal.config.settings import get_settings
+from focal.alignment.retrieval.selection import create_selection_strategy
 
 
 async def retrieve_memory(

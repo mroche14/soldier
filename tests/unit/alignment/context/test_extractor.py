@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
-from soldier.alignment.context.extractor import ContextExtractor
-from soldier.alignment.context.models import (
+from focal.alignment.context.extractor import ContextExtractor
+from focal.alignment.context.models import (
     Context,
     ExtractedEntity,
     ScenarioSignal,
@@ -15,8 +15,8 @@ from soldier.alignment.context.models import (
     Turn,
     Urgency,
 )
-from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

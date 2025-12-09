@@ -1,4 +1,4 @@
-<a id="soldier.providers.rerank.voyage"></a>
+<a id="focal.providers.rerank.voyage"></a>
 
-# soldier.providers.rerank.voyage
+# focal.providers.rerank.voyage
 

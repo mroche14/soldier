@@ -35,7 +35,7 @@
 ### 1.1 Create TurnContext Model
 
 - [x] **Create TurnContext model**
-  - File: `soldier/alignment/models/turn_context.py`
+  - File: `focal/alignment/models/turn_context.py`
   - Action: Create new file
   - Details:
     ```python
@@ -73,7 +73,7 @@
 ### 1.2 Create GlossaryItem Model
 
 - [x] **Create GlossaryItem model**
-  - File: `soldier/alignment/models/glossary.py`
+  - File: `focal/alignment/models/glossary.py`
   - Action: Create new file
   - Details:
     ```python
@@ -102,7 +102,7 @@
   - Why: LLM needs domain-specific terminology to extract intent and generate responses
 
 - [x] **Add GlossaryItem methods to ConfigStore interface**
-  - File: `soldier/alignment/stores/agent_config_store.py`
+  - File: `focal/alignment/stores/agent_config_store.py`
   - Action: Add methods
   - Details:
     ```python
@@ -124,7 +124,7 @@
   - Why: ConfigStore owns static configuration including glossary
 
 - [x] **Implement glossary methods in InMemoryConfigStore**
-  - File: `soldier/alignment/stores/inmemory.py`
+  - File: `focal/alignment/stores/inmemory.py`
   - Action: Added implementation
   - **Implemented**: Added `get_glossary_items()` and `save_glossary_item()` methods with filtering by tenant, agent, and enabled status
   - Details: Dictionary storage keyed by item ID, filters by tenant_id and agent_id
@@ -132,10 +132,10 @@
 
 ### 1.3 Extend Existing ProfileFieldDefinition (Rename to CustomerDataField)
 
-> **COMPLETED**: Renamed `ProfileFieldDefinition` → `CustomerDataField` in `soldier/customer_data/models.py`
+> **COMPLETED**: Renamed `ProfileFieldDefinition` → `CustomerDataField` in `focal/customer_data/models.py`
 
 - [x] **Add `scope` field to CustomerDataField**
-  - File: `soldier/customer_data/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Modified existing class
   - Details: Add after `value_type` field:
     ```python
@@ -146,7 +146,7 @@
     ```
 
 - [x] **Add `persist` field to CustomerDataField**
-  - File: `soldier/customer_data/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Modified existing class
   - Details: Add after `scope` field:
     ```python
@@ -157,13 +157,13 @@
     ```
 
 - [x] **Rename ProfileFieldDefinition → CustomerDataField**
-  - File: `soldier/customer_data/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Renamed class and updated all imports
   - Details: Updated 27 files across codebase
   - Why: Aligns with focal pipeline spec naming
 
 - [x] **Add history field to VariableEntry (renamed from ProfileField)**
-  - File: `soldier/customer_data/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Modified existing class
   - Details: Add field:
     ```python
@@ -174,25 +174,25 @@
     ```
 
 - [x] **Rename ProfileField → VariableEntry**
-  - File: `soldier/customer_data/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Renamed class and updated all imports
 
 - [x] **Rename CustomerProfile → CustomerDataStore**
-  - File: `soldier/customer_data/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Renamed class and updated all imports
 
 - [x] **Rename ProfileStore → CustomerDataStore (interface)**
-  - File: `soldier/customer_data/store.py`
+  - File: `focal/customer_data/store.py`
   - Action: Renamed interface and updated all imports
 
 - [x] **Update existing model field names for consistency**
-  - File: `soldier/customer_data/models.py`
+  - File: `focal/customer_data/models.py`
   - Details: Field uses `name` per existing convention
 
 ### 1.4 Create CustomerSchemaMask Model (New - Not in Profile)
 
 - [x] **Create CustomerSchemaMask model**
-  - File: `soldier/alignment/context/customer_schema_mask.py`
+  - File: `focal/alignment/context/customer_schema_mask.py`
   - Action: Create new file
   - Details:
     ```python
@@ -231,7 +231,7 @@
 ### 1.5 Create TurnInput Model
 
 - [x] **Create TurnInput model**
-  - File: `soldier/alignment/models/turn_input.py`
+  - File: `focal/alignment/models/turn_input.py`
   - Action: Created new file
   - Details:
     ```python
@@ -302,7 +302,7 @@
 ### 2.3 Update Pipeline Configuration Model
 
 - [x] **Add turn context config**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Added fields to PipelineConfig
   - Details:
     ```python
@@ -325,7 +325,7 @@
 ### 3.1 Customer Resolution (P1.2)
 
 - [x] **Add explicit customer resolution method to AlignmentEngine**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Added private method
   - **Implemented**: Added `_resolve_customer()` method that resolves customer from channel identity, creates new profile if not found, handles ephemeral IDs when no profile store available
   - Details:
@@ -367,12 +367,12 @@
 ### 3.2 CustomerDataStore Loading (P1.5)
 
 - [x] **Add CustomerDataStore loader**
-  - File: `soldier/alignment/loaders/__init__.py`
+  - File: `focal/alignment/loaders/__init__.py`
   - Action: Created new module
-  - Details: Created `soldier/alignment/loaders/customer_data_loader.py`
+  - Details: Created `focal/alignment/loaders/customer_data_loader.py`
 
 - [x] **Implement CustomerDataLoader**
-  - File: `soldier/alignment/loaders/customer_data_loader.py`
+  - File: `focal/alignment/loaders/customer_data_loader.py`
   - Action: Created new file
   - Details:
     ```python
@@ -448,7 +448,7 @@
 ### 3.3 Static Config Loading (P1.6)
 
 - [x] **Add config loader for glossary and schema**
-  - File: `soldier/alignment/loaders/static_config_loader.py`
+  - File: `focal/alignment/loaders/static_config_loader.py`
   - Action: Created new file
   - Details:
     ```python
@@ -489,7 +489,7 @@
 ### 3.4 TurnContext Builder (P1.8)
 
 - [x] **Add build_turn_context method to AlignmentEngine**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Added private method
   - **Implemented**: Added `_build_turn_context()` method that aggregates session, customer data, glossary, schema, and reconciliation results into TurnContext. Includes graceful error handling with fallback to empty data on failures.
   - Details:
@@ -539,7 +539,7 @@
 ### 3.5 Refactor process_turn to Use TurnContext
 
 - [x] **Refactor process_turn to integrate Phase 1**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modified existing method
   - **Implemented**: 2025-12-08
   - Details:
@@ -558,7 +558,7 @@
 ### 3.6 Parallel Loading Optimization (P1.5-P1.6)
 
 - [x] **Parallel loading already implemented in _build_turn_context**
-  - File: `soldier/alignment/engine.py` (lines 1338-1449)
+  - File: `focal/alignment/engine.py` (lines 1338-1449)
   - Action: Already implemented
   - **Status**: Complete - no action needed
   - Details:
@@ -683,14 +683,14 @@
 ### 5.1 Metrics
 
 - [x] **Timing metrics implemented**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Added timing for customer resolution step
   - **Implemented**: 2025-12-08
   - Details:
     - Added `PipelineStepTiming` for "customer_resolution" step (lines 333-339)
     - Records elapsed time for `_resolve_customer` call
     - Integrated into existing `timings` list for `AlignmentResult`
-  - **Future Enhancement**: Consider adding Prometheus counters/histograms in `soldier/observability/metrics.py`:
+  - **Future Enhancement**: Consider adding Prometheus counters/histograms in `focal/observability/metrics.py`:
     - `turn_context_builds_total` - Counter for TurnContext builds
     - `customer_resolutions_total` - Counter for customer resolutions (labeled by is_new_customer)
     - `turn_context_load_duration_seconds` - Histogram for load times
@@ -700,7 +700,7 @@
 ### 5.2 Structured Logging
 
 - [x] **Phase 1 log events added**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Added structured logs for Phase 1 operations
   - **Implemented**: 2025-12-08
   - Details:
@@ -718,7 +718,7 @@
 ### 5.3 Tracing
 
 - [x] **OpenTelemetry spans**: Infrastructure ready, spans can be added incrementally
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Status: Structured logging provides traceability; OTel spans are enhancement
   - Current tracing: All Phase 1 operations logged with tenant_id, agent_id, session_id, customer_id
   - OTel spans can be added when instrumenting full pipeline
@@ -862,7 +862,7 @@ Recommended order to minimize dependencies:
 
 ## 11. Notes
 
-- **IMPORTANT - Renaming Convention**: The `soldier/customer_data/` module (formerly `soldier/profile/`) IS the CustomerDataStore implementation. Renames completed:
+- **IMPORTANT - Renaming Convention**: The `focal/customer_data/` module (formerly `focal/profile/`) IS the CustomerDataStore implementation. Renames completed:
   - `ProfileFieldDefinition` → `CustomerDataField` ✓
   - `ProfileField` → `VariableEntry` ✓
   - `CustomerProfile` → `CustomerDataStore` ✓
@@ -898,20 +898,20 @@ Recommended order to minimize dependencies:
 - ProfileFieldSource → VariableSource ✓
 
 **Files Modified:**
-- `soldier/profile/models.py` - Renamed all three classes
-- `soldier/profile/enums.py` - Renamed VariableSource enum
-- `soldier/profile/__init__.py` - Updated exports (removed aliases)
-- `soldier/profile/store.py` - Updated all type hints
-- `soldier/profile/validation.py` - Updated imports and type hints
-- `soldier/profile/extraction.py` - Updated imports and type hints
-- `soldier/profile/stores/cached.py` - Updated imports and type hints
-- `soldier/profile/stores/inmemory.py` - Updated imports and type hints
-- `soldier/profile/stores/postgres.py` - Updated imports and type hints
-- `soldier/alignment/filtering/scenario_filter.py` - Updated imports
-- `soldier/alignment/loaders/customer_data_loader.py` - Updated imports
-- `soldier/alignment/migration/field_resolver.py` - Updated imports
-- `soldier/alignment/migration/models.py` - Updated imports
-- `soldier/jobs/workflows/schema_extraction.py` - Updated imports
+- `focal/profile/models.py` - Renamed all three classes
+- `focal/profile/enums.py` - Renamed VariableSource enum
+- `focal/profile/__init__.py` - Updated exports (removed aliases)
+- `focal/profile/store.py` - Updated all type hints
+- `focal/profile/validation.py` - Updated imports and type hints
+- `focal/profile/extraction.py` - Updated imports and type hints
+- `focal/profile/stores/cached.py` - Updated imports and type hints
+- `focal/profile/stores/inmemory.py` - Updated imports and type hints
+- `focal/profile/stores/postgres.py` - Updated imports and type hints
+- `focal/alignment/filtering/scenario_filter.py` - Updated imports
+- `focal/alignment/loaders/customer_data_loader.py` - Updated imports
+- `focal/alignment/migration/field_resolver.py` - Updated imports
+- `focal/alignment/migration/models.py` - Updated imports
+- `focal/jobs/workflows/schema_extraction.py` - Updated imports
 - `tests/integration/stores/test_postgres_profile.py` - Updated imports
 - `tests/contract/test_profile_store_contract.py` - Updated imports
 - `tests/performance/test_profile_performance.py` - Updated imports
@@ -947,7 +947,7 @@ All profile unit tests passing:
 ### Folder Rename Completed: 2025-12-08
 
 **Folder Renames:**
-- `soldier/profile/` → `soldier/customer_data/` ✓
+- `focal/profile/` → `focal/customer_data/` ✓
 - `tests/unit/profile/` → `tests/unit/customer_data/` ✓
 
 **Test File Renames:**
@@ -959,7 +959,7 @@ All profile unit tests passing:
 - `test_profile_performance.py` → `test_customer_data_performance.py` ✓
 
 **All Imports Updated:**
-- 27 files updated from `soldier.profile` → `soldier.customer_data`
+- 27 files updated from `focal.profile` → `focal.customer_data`
 
 **Final Test Results:**
 ```
@@ -976,19 +976,19 @@ All profile unit tests passing:
 
 **Changes Made:**
 
-1. **Updated process_turn signature** (`soldier/alignment/engine.py` lines 220-258)
+1. **Updated process_turn signature** (`focal/alignment/engine.py` lines 220-258)
    - Added `channel: str = "api"` parameter
    - Added `channel_user_id: str | None = None` parameter
    - Added `customer_id: UUID | None = None` parameter
    - Updated docstring to reflect Phase 1 steps
 
-2. **Added customer resolution** (`soldier/alignment/engine.py` lines 317-340)
+2. **Added customer resolution** (`focal/alignment/engine.py` lines 317-340)
    - Call `_resolve_customer()` at start of `_process_turn_impl`
    - Use `channel_user_id or str(session_id)` as fallback identifier
    - Added timing for customer_resolution step
    - Returns `(customer_id, is_new_customer)` tuple
 
-3. **Added TurnContext building** (`soldier/alignment/engine.py` lines 389-409)
+3. **Added TurnContext building** (`focal/alignment/engine.py` lines 389-409)
    - Call `_build_turn_context()` after reconciliation
    - Only builds when session exists (graceful degradation)
    - Added structured logging for turn_context_built event

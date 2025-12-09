@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.vector import (
+from focal.vector import (
     EntityType,
     InMemoryVectorStore,
     VectorDocument,

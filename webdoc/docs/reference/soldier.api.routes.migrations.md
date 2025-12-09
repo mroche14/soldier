@@ -1,6 +1,6 @@
-<a id="soldier.api.routes.migrations"></a>
+<a id="focal.api.routes.migrations"></a>
 
-# soldier.api.routes.migrations
+# focal.api.routes.migrations
 
 Migration API routes.
 
@@ -11,7 +11,7 @@ Provides endpoints for managing scenario migrations:
 - Deploy migrations
 - Monitor deployment status
 
-<a id="soldier.api.routes.migrations.TransitionInput"></a>
+<a id="focal.api.routes.migrations.TransitionInput"></a>
 
 ## TransitionInput Objects
 
@@ -21,7 +21,7 @@ class TransitionInput(BaseModel)
 
 Input for a step transition.
 
-<a id="soldier.api.routes.migrations.ScenarioStepInput"></a>
+<a id="focal.api.routes.migrations.ScenarioStepInput"></a>
 
 ## ScenarioStepInput Objects
 
@@ -31,7 +31,7 @@ class ScenarioStepInput(BaseModel)
 
 Input for a scenario step.
 
-<a id="soldier.api.routes.migrations.ScenarioInput"></a>
+<a id="focal.api.routes.migrations.ScenarioInput"></a>
 
 ## ScenarioInput Objects
 
@@ -41,7 +41,7 @@ class ScenarioInput(BaseModel)
 
 Input for a new scenario version.
 
-<a id="soldier.api.routes.migrations.GenerateMigrationPlanRequest"></a>
+<a id="focal.api.routes.migrations.GenerateMigrationPlanRequest"></a>
 
 ## GenerateMigrationPlanRequest Objects
 
@@ -51,7 +51,7 @@ class GenerateMigrationPlanRequest(BaseModel)
 
 Request to generate a migration plan.
 
-<a id="soldier.api.routes.migrations.ApprovePlanRequest"></a>
+<a id="focal.api.routes.migrations.ApprovePlanRequest"></a>
 
 ## ApprovePlanRequest Objects
 
@@ -61,7 +61,7 @@ class ApprovePlanRequest(BaseModel)
 
 Request to approve a plan.
 
-<a id="soldier.api.routes.migrations.RejectPlanRequest"></a>
+<a id="focal.api.routes.migrations.RejectPlanRequest"></a>
 
 ## RejectPlanRequest Objects
 
@@ -71,7 +71,7 @@ class RejectPlanRequest(BaseModel)
 
 Request to reject a plan.
 
-<a id="soldier.api.routes.migrations.UpdatePoliciesRequest"></a>
+<a id="focal.api.routes.migrations.UpdatePoliciesRequest"></a>
 
 ## UpdatePoliciesRequest Objects
 
@@ -81,7 +81,7 @@ class UpdatePoliciesRequest(BaseModel)
 
 Request to update anchor policies.
 
-<a id="soldier.api.routes.migrations.MigrationPlanSummaryItem"></a>
+<a id="focal.api.routes.migrations.MigrationPlanSummaryItem"></a>
 
 ## MigrationPlanSummaryItem Objects
 
@@ -91,7 +91,7 @@ class MigrationPlanSummaryItem(BaseModel)
 
 Summary item for list view.
 
-<a id="soldier.api.routes.migrations.DeploymentResult"></a>
+<a id="focal.api.routes.migrations.DeploymentResult"></a>
 
 ## DeploymentResult Objects
 
@@ -101,7 +101,7 @@ class DeploymentResult(BaseModel)
 
 Result of deployment operation.
 
-<a id="soldier.api.routes.migrations.DeploymentStatus"></a>
+<a id="focal.api.routes.migrations.DeploymentStatus"></a>
 
 ## DeploymentStatus Objects
 
@@ -111,7 +111,7 @@ class DeploymentStatus(BaseModel)
 
 Current deployment status.
 
-<a id="soldier.api.routes.migrations.generate_migration_plan"></a>
+<a id="focal.api.routes.migrations.generate_migration_plan"></a>
 
 #### generate\_migration\_plan
 
@@ -135,7 +135,7 @@ Generate a migration plan for a scenario update.
 Computes the graph diff, identifies anchors, and determines
 migration scenarios (Clean Graft, Gap Fill, Re-Route) for each anchor.
 
-<a id="soldier.api.routes.migrations.list_migration_plans"></a>
+<a id="focal.api.routes.migrations.list_migration_plans"></a>
 
 #### list\_migration\_plans
 
@@ -152,7 +152,7 @@ async def list_migration_plans(
 
 List migration plans for a tenant.
 
-<a id="soldier.api.routes.migrations.get_migration_plan"></a>
+<a id="focal.api.routes.migrations.get_migration_plan"></a>
 
 #### get\_migration\_plan
 
@@ -167,7 +167,7 @@ async def get_migration_plan(
 
 Get full details of a migration plan.
 
-<a id="soldier.api.routes.migrations.get_migration_summary"></a>
+<a id="focal.api.routes.migrations.get_migration_summary"></a>
 
 #### get\_migration\_summary
 
@@ -183,7 +183,7 @@ async def get_migration_summary(
 
 Get operator-friendly summary of a migration plan.
 
-<a id="soldier.api.routes.migrations.update_anchor_policies"></a>
+<a id="focal.api.routes.migrations.update_anchor_policies"></a>
 
 #### update\_anchor\_policies
 
@@ -201,7 +201,7 @@ async def update_anchor_policies(
 
 Update per-anchor migration policies.
 
-<a id="soldier.api.routes.migrations.approve_migration_plan"></a>
+<a id="focal.api.routes.migrations.approve_migration_plan"></a>
 
 #### approve\_migration\_plan
 
@@ -219,7 +219,7 @@ async def approve_migration_plan(
 
 Approve a migration plan for deployment.
 
-<a id="soldier.api.routes.migrations.reject_migration_plan"></a>
+<a id="focal.api.routes.migrations.reject_migration_plan"></a>
 
 #### reject\_migration\_plan
 
@@ -236,7 +236,7 @@ async def reject_migration_plan(
 
 Reject a migration plan.
 
-<a id="soldier.api.routes.migrations.deploy_migration_plan"></a>
+<a id="focal.api.routes.migrations.deploy_migration_plan"></a>
 
 #### deploy\_migration\_plan
 
@@ -256,7 +256,7 @@ Deploy an approved migration plan.
 Marks eligible sessions with pending_migration flag.
 Migrations are applied JIT at next customer message.
 
-<a id="soldier.api.routes.migrations.get_deployment_status"></a>
+<a id="focal.api.routes.migrations.get_deployment_status"></a>
 
 #### get\_deployment\_status
 

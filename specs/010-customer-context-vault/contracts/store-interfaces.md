@@ -10,8 +10,8 @@ This document defines the enhanced ProfileStore interface and supporting service
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from soldier.conversation.models import Channel
-from soldier.profile.models import (
+from focal.conversation.models import Channel
+from focal.profile.models import (
     ChannelIdentity,
     CustomerProfile,
     ItemStatus,
@@ -444,7 +444,7 @@ class ProfileStore(ABC):
 from datetime import timedelta
 from typing import Any
 
-from soldier.profile.store import ProfileStore
+from focal.profile.store import ProfileStore
 
 
 class CachedProfileStore(ProfileStore):
@@ -592,7 +592,7 @@ class CachedProfileStore(ProfileStore):
 import re
 from typing import Any
 
-from soldier.profile.models import ProfileField, ProfileFieldDefinition
+from focal.profile.models import ProfileField, ProfileFieldDefinition
 
 
 class SchemaValidationError(Exception):
@@ -698,8 +698,8 @@ class SchemaValidationService:
 ## 4. Enhanced GapFillService Integration
 
 ```python
-from soldier.alignment.migration.gap_fill import GapFillService
-from soldier.profile.models import ScenarioFieldRequirement, FallbackAction
+from focal.alignment.migration.gap_fill import GapFillService
+from focal.profile.models import ScenarioFieldRequirement, FallbackAction
 
 
 class EnhancedGapFillService(GapFillService):

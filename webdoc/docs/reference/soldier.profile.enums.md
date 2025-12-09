@@ -1,10 +1,10 @@
-<a id="soldier.profile.enums"></a>
+<a id="focal.profile.enums"></a>
 
-# soldier.profile.enums
+# focal.profile.enums
 
 Enums for profile domain.
 
-<a id="soldier.profile.enums.ProfileFieldSource"></a>
+<a id="focal.profile.enums.ProfileFieldSource"></a>
 
 ## ProfileFieldSource Objects
 
@@ -16,7 +16,7 @@ How a profile field was populated.
 
 Tracks the provenance of profile data.
 
-<a id="soldier.profile.enums.VerificationLevel"></a>
+<a id="focal.profile.enums.VerificationLevel"></a>
 
 ## VerificationLevel Objects
 

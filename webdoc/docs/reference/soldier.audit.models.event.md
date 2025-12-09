@@ -1,10 +1,10 @@
-<a id="soldier.audit.models.event"></a>
+<a id="focal.audit.models.event"></a>
 
-# soldier.audit.models.event
+# focal.audit.models.event
 
 AuditEvent model for audit domain.
 
-<a id="soldier.audit.models.event.utc_now"></a>
+<a id="focal.audit.models.event.utc_now"></a>
 
 #### utc\_now
 
@@ -14,7 +14,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.audit.models.event.AuditEvent"></a>
+<a id="focal.audit.models.event.AuditEvent"></a>
 
 ## AuditEvent Objects
 

@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.variable"></a>
+<a id="focal.alignment.models.variable"></a>
 
-# soldier.alignment.models.variable
+# focal.alignment.models.variable
 
 Variable models for alignment domain.
 
-<a id="soldier.alignment.models.variable.Variable"></a>
+<a id="focal.alignment.models.variable.Variable"></a>
 
 ## Variable Objects
 

@@ -1,10 +1,10 @@
-<a id="soldier.alignment.stores.inmemory"></a>
+<a id="focal.alignment.stores.inmemory"></a>
 
-# soldier.alignment.stores.inmemory
+# focal.alignment.stores.inmemory
 
 In-memory implementation of ConfigStore.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore"></a>
 
 ## InMemoryConfigStore Objects
 
@@ -17,7 +17,7 @@ In-memory implementation of ConfigStore for testing and development.
 Uses simple dict storage with linear scan for queries.
 Not suitable for production use.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.__init__"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -27,7 +27,7 @@ def __init__() -> None
 
 Initialize empty storage.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_rule"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_rule"></a>
 
 #### get\_rule
 
@@ -37,7 +37,7 @@ async def get_rule(tenant_id: UUID, rule_id: UUID) -> Rule | None
 
 Get a rule by ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_rules"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_rules"></a>
 
 #### get\_rules
 
@@ -52,7 +52,7 @@ async def get_rules(tenant_id: UUID,
 
 Get rules for an agent with optional filtering.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.save_rule"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.save_rule"></a>
 
 #### save\_rule
 
@@ -62,7 +62,7 @@ async def save_rule(rule: Rule) -> UUID
 
 Save a rule, returning its ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.delete_rule"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.delete_rule"></a>
 
 #### delete\_rule
 
@@ -72,7 +72,7 @@ async def delete_rule(tenant_id: UUID, rule_id: UUID) -> bool
 
 Soft-delete a rule by setting deleted_at.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.vector_search_rules"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.vector_search_rules"></a>
 
 #### vector\_search\_rules
 
@@ -88,7 +88,7 @@ async def vector_search_rules(
 
 Search rules by vector similarity.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_scenario"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_scenario"></a>
 
 #### get\_scenario
 
@@ -98,7 +98,7 @@ async def get_scenario(tenant_id: UUID, scenario_id: UUID) -> Scenario | None
 
 Get a scenario by ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_scenarios"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_scenarios"></a>
 
 #### get\_scenarios
 
@@ -111,7 +111,7 @@ async def get_scenarios(tenant_id: UUID,
 
 Get scenarios for an agent.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.save_scenario"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.save_scenario"></a>
 
 #### save\_scenario
 
@@ -121,7 +121,7 @@ async def save_scenario(scenario: Scenario) -> UUID
 
 Save a scenario, returning its ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.delete_scenario"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.delete_scenario"></a>
 
 #### delete\_scenario
 
@@ -131,7 +131,7 @@ async def delete_scenario(tenant_id: UUID, scenario_id: UUID) -> bool
 
 Soft-delete a scenario.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_template"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_template"></a>
 
 #### get\_template
 
@@ -141,7 +141,7 @@ async def get_template(tenant_id: UUID, template_id: UUID) -> Template | None
 
 Get a template by ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_templates"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_templates"></a>
 
 #### get\_templates
 
@@ -155,7 +155,7 @@ async def get_templates(tenant_id: UUID,
 
 Get templates for an agent with optional filtering.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.save_template"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.save_template"></a>
 
 #### save\_template
 
@@ -165,7 +165,7 @@ async def save_template(template: Template) -> UUID
 
 Save a template, returning its ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.delete_template"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.delete_template"></a>
 
 #### delete\_template
 
@@ -175,7 +175,7 @@ async def delete_template(tenant_id: UUID, template_id: UUID) -> bool
 
 Soft-delete a template.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_variable"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_variable"></a>
 
 #### get\_variable
 
@@ -185,7 +185,7 @@ async def get_variable(tenant_id: UUID, variable_id: UUID) -> Variable | None
 
 Get a variable by ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_variables"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_variables"></a>
 
 #### get\_variables
 
@@ -195,7 +195,7 @@ async def get_variables(tenant_id: UUID, agent_id: UUID) -> list[Variable]
 
 Get variables for an agent.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_variable_by_name"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_variable_by_name"></a>
 
 #### get\_variable\_by\_name
 
@@ -206,7 +206,7 @@ async def get_variable_by_name(tenant_id: UUID, agent_id: UUID,
 
 Get a variable by name.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.save_variable"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.save_variable"></a>
 
 #### save\_variable
 
@@ -216,7 +216,7 @@ async def save_variable(variable: Variable) -> UUID
 
 Save a variable, returning its ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.delete_variable"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.delete_variable"></a>
 
 #### delete\_variable
 
@@ -226,7 +226,7 @@ async def delete_variable(tenant_id: UUID, variable_id: UUID) -> bool
 
 Soft-delete a variable.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_agent"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_agent"></a>
 
 #### get\_agent
 
@@ -236,7 +236,7 @@ async def get_agent(tenant_id: UUID, agent_id: UUID) -> Agent | None
 
 Get an agent by ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_agents"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_agents"></a>
 
 #### get\_agents
 
@@ -250,7 +250,7 @@ async def get_agents(tenant_id: UUID,
 
 Get agents for a tenant with pagination.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.save_agent"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.save_agent"></a>
 
 #### save\_agent
 
@@ -260,7 +260,7 @@ async def save_agent(agent: Agent) -> UUID
 
 Save an agent, returning its ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.delete_agent"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.delete_agent"></a>
 
 #### delete\_agent
 
@@ -270,7 +270,7 @@ async def delete_agent(tenant_id: UUID, agent_id: UUID) -> bool
 
 Soft-delete an agent.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_tool_activation"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_tool_activation"></a>
 
 #### get\_tool\_activation
 
@@ -281,7 +281,7 @@ async def get_tool_activation(tenant_id: UUID, agent_id: UUID,
 
 Get a tool activation by agent and tool ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_tool_activations"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_tool_activations"></a>
 
 #### get\_tool\_activations
 
@@ -292,7 +292,7 @@ async def get_tool_activations(tenant_id: UUID,
 
 Get all tool activations for an agent.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.save_tool_activation"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.save_tool_activation"></a>
 
 #### save\_tool\_activation
 
@@ -302,7 +302,7 @@ async def save_tool_activation(activation: ToolActivation) -> UUID
 
 Save a tool activation, returning its ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.delete_tool_activation"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.delete_tool_activation"></a>
 
 #### delete\_tool\_activation
 
@@ -313,7 +313,7 @@ async def delete_tool_activation(tenant_id: UUID, agent_id: UUID,
 
 Delete a tool activation.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_migration_plan"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_migration_plan"></a>
 
 #### get\_migration\_plan
 
@@ -324,7 +324,7 @@ async def get_migration_plan(tenant_id: UUID,
 
 Get migration plan by ID.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_migration_plan_for_versions"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_migration_plan_for_versions"></a>
 
 #### get\_migration\_plan\_for\_versions
 
@@ -336,7 +336,7 @@ async def get_migration_plan_for_versions(
 
 Get migration plan for specific version transition.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.save_migration_plan"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.save_migration_plan"></a>
 
 #### save\_migration\_plan
 
@@ -346,7 +346,7 @@ async def save_migration_plan(plan: MigrationPlan) -> UUID
 
 Save or update migration plan.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.list_migration_plans"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.list_migration_plans"></a>
 
 #### list\_migration\_plans
 
@@ -359,7 +359,7 @@ async def list_migration_plans(tenant_id: UUID,
 
 List migration plans for scenario.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.delete_migration_plan"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.delete_migration_plan"></a>
 
 #### delete\_migration\_plan
 
@@ -369,7 +369,7 @@ async def delete_migration_plan(tenant_id: UUID, plan_id: UUID) -> bool
 
 Delete a migration plan.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.archive_scenario_version"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.archive_scenario_version"></a>
 
 #### archive\_scenario\_version
 
@@ -380,7 +380,7 @@ async def archive_scenario_version(tenant_id: UUID,
 
 Archive scenario version before update.
 
-<a id="soldier.alignment.stores.inmemory.InMemoryConfigStore.get_archived_scenario"></a>
+<a id="focal.alignment.stores.inmemory.InMemoryConfigStore.get_archived_scenario"></a>
 
 #### get\_archived\_scenario
 

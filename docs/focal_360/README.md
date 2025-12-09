@@ -467,7 +467,7 @@ Since P9 outputs structured categories, you can automatically open a KB ticket w
 
 ## Related Documents
 
-- [Gap Analysis](gap_analysis.md) - Mapping of FOCAL 360 concepts to existing Soldier implementations
+- [Gap Analysis](gap_analysis.md) - Mapping of FOCAL 360 concepts to existing Focal implementations
 - [Turn Pipeline](../focal_turn_pipeline/README.md) - The 11-phase turn pipeline this platform wraps
 - [Subagent Protocol](SUBAGENT_PROTOCOL.md) - Protocol for implementing FOCAL 360 features
 - [Wave Execution Guide](WAVE_EXECUTION_GUIDE.md) - Orchestration guide for wave-based implementation

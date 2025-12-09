@@ -1,10 +1,10 @@
-<a id="soldier.conversation.models.enums"></a>
+<a id="focal.conversation.models.enums"></a>
 
-# soldier.conversation.models.enums
+# focal.conversation.models.enums
 
 Enums for conversation domain.
 
-<a id="soldier.conversation.models.enums.Channel"></a>
+<a id="focal.conversation.models.enums.Channel"></a>
 
 ## Channel Objects
 
@@ -17,7 +17,7 @@ Communication channels.
 Represents the medium through which the conversation
 is taking place.
 
-<a id="soldier.conversation.models.enums.SessionStatus"></a>
+<a id="focal.conversation.models.enums.SessionStatus"></a>
 
 ## SessionStatus Objects
 

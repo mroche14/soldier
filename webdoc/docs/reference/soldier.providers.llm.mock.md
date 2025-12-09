@@ -1,10 +1,10 @@
-<a id="soldier.providers.llm.mock"></a>
+<a id="focal.providers.llm.mock"></a>
 
-# soldier.providers.llm.mock
+# focal.providers.llm.mock
 
 Mock LLM provider for testing.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider"></a>
 
 ## MockLLMProvider Objects
 
@@ -17,7 +17,7 @@ Mock LLM provider for testing.
 Returns configurable responses without making actual API calls.
 Useful for unit testing and development.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.__init__"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -37,7 +37,7 @@ Initialize mock provider.
 - `responses` - Dict mapping message content to responses
 - `stream_chunk_size` - Number of chars per stream chunk
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.provider_name"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.provider_name"></a>
 
 #### provider\_name
 
@@ -48,7 +48,7 @@ def provider_name() -> str
 
 Return the provider name.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.call_history"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.call_history"></a>
 
 #### call\_history
 
@@ -59,7 +59,7 @@ def call_history() -> list[dict[str, Any]]
 
 Return history of calls for testing assertions.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.clear_history"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.clear_history"></a>
 
 #### clear\_history
 
@@ -69,7 +69,7 @@ def clear_history() -> None
 
 Clear call history.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.set_response"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.set_response"></a>
 
 #### set\_response
 
@@ -79,7 +79,7 @@ def set_response(trigger: str, response: str) -> None
 
 Set a response for a specific message content.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.generate"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.generate"></a>
 
 #### generate
 
@@ -95,7 +95,7 @@ async def generate(messages: list[LLMMessage],
 
 Generate mock response.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.generate_stream"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.generate_stream"></a>
 
 #### generate\_stream
 
@@ -111,7 +111,7 @@ async def generate_stream(messages: list[LLMMessage],
 
 Stream mock response in chunks.
 
-<a id="soldier.providers.llm.mock.MockLLMProvider.count_tokens"></a>
+<a id="focal.providers.llm.mock.MockLLMProvider.count_tokens"></a>
 
 #### count\_tokens
 

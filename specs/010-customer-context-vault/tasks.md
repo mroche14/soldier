@@ -11,12 +11,12 @@
 
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story (e.g., US1, US2..., US7)
-- Paths use Soldier's existing structure: `soldier/`, `tests/`
+- Paths use Focal's existing structure: `focal/`, `tests/`
 
 ## Path Conventions
 
 Single backend project per plan.md:
-- Source: `soldier/profile/`, `soldier/jobs/`, `soldier/db/migrations/`
+- Source: `focal/profile/`, `focal/jobs/`, `focal/db/migrations/`
 - Tests: `tests/unit/`, `tests/contract/`, `tests/integration/`, `tests/performance/`
 
 ---
@@ -27,10 +27,10 @@ Single backend project per plan.md:
 
 - [x] T001 Add hatchet-sdk dependency via `uv add hatchet-sdk` in pyproject.toml
 - [x] T002 [P] Add Hatchet services to docker-compose.yml (hatchet-engine, hatchet-api)
-- [x] T003 [P] Create HatchetConfig model in soldier/config/models/jobs.py
+- [x] T003 [P] Create HatchetConfig model in focal/config/models/jobs.py
 - [x] T004 [P] Add [jobs.hatchet] section to config/default.toml
-- [x] T005 [P] Create soldier/jobs/__init__.py module structure
-- [x] T006 [P] Create soldier/jobs/workflows/__init__.py module structure
+- [x] T005 [P] Create focal/jobs/__init__.py module structure
+- [x] T006 [P] Create focal/jobs/workflows/__init__.py module structure
 
 ---
 
@@ -42,25 +42,25 @@ Single backend project per plan.md:
 
 ### 2.1 Enums (Required by all models)
 
-- [x] T007 [P] Add ItemStatus enum (active, superseded, expired, orphaned) to soldier/profile/enums.py
-- [x] T008 [P] Add SourceType enum (profile_field, profile_asset, session, tool, external) to soldier/profile/enums.py
-- [x] T009 [P] Add RequiredLevel enum (hard, soft) to soldier/profile/enums.py
-- [x] T010 [P] Add FallbackAction enum (ask, skip, block, extract) to soldier/profile/enums.py
-- [x] T011 [P] Add ValidationMode enum (strict, warn, disabled) to soldier/profile/enums.py
+- [x] T007 [P] Add ItemStatus enum (active, superseded, expired, orphaned) to focal/profile/enums.py
+- [x] T008 [P] Add SourceType enum (profile_field, profile_asset, session, tool, external) to focal/profile/enums.py
+- [x] T009 [P] Add RequiredLevel enum (hard, soft) to focal/profile/enums.py
+- [x] T010 [P] Add FallbackAction enum (ask, skip, block, extract) to focal/profile/enums.py
+- [x] T011 [P] Add ValidationMode enum (strict, warn, disabled) to focal/profile/enums.py
 
 ### 2.2 Enhanced Models
 
-- [x] T012 Enhance ProfileField model with lineage fields (id, source_item_id, source_item_type, source_metadata) in soldier/profile/models.py
-- [x] T013 Enhance ProfileField model with status fields (status, superseded_by_id, superseded_at) in soldier/profile/models.py
-- [x] T014 Add is_orphaned computed property to ProfileField in soldier/profile/models.py
-- [x] T015 Enhance ProfileAsset model with lineage fields (source_item_id, source_item_type, derived_from_tool) in soldier/profile/models.py
-- [x] T016 Enhance ProfileAsset model with status fields (status, superseded_by_id, superseded_at, analysis_field_ids) in soldier/profile/models.py
-- [x] T017 Add is_orphaned computed property to ProfileAsset in soldier/profile/models.py
+- [x] T012 Enhance ProfileField model with lineage fields (id, source_item_id, source_item_type, source_metadata) in focal/profile/models.py
+- [x] T013 Enhance ProfileField model with status fields (status, superseded_by_id, superseded_at) in focal/profile/models.py
+- [x] T014 Add is_orphaned computed property to ProfileField in focal/profile/models.py
+- [x] T015 Enhance ProfileAsset model with lineage fields (source_item_id, source_item_type, derived_from_tool) in focal/profile/models.py
+- [x] T016 Enhance ProfileAsset model with status fields (status, superseded_by_id, superseded_at, analysis_field_ids) in focal/profile/models.py
+- [x] T017 Add is_orphaned computed property to ProfileAsset in focal/profile/models.py
 
 ### 2.3 New Schema Models
 
-- [x] T018 [P] Create ProfileFieldDefinition model per contracts/data-model.md in soldier/profile/models.py
-- [x] T019 [P] Create ScenarioFieldRequirement model per contracts/data-model.md in soldier/profile/models.py
+- [x] T018 [P] Create ProfileFieldDefinition model per contracts/data-model.md in focal/profile/models.py
+- [x] T019 [P] Create ScenarioFieldRequirement model per contracts/data-model.md in focal/profile/models.py
 
 ### 2.4 Unit Tests for Models
 
@@ -89,15 +89,15 @@ Single backend project per plan.md:
 
 ### Store Interface Updates for US1
 
-- [x] T029 [US1] Add get_derivation_chain(tenant_id, item_id, item_type) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T030 [US1] Add get_derived_items(tenant_id, source_item_id) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T031 [US1] Add check_has_dependents(tenant_id, item_id) method to ProfileStore ABC in soldier/profile/store.py
+- [x] T029 [US1] Add get_derivation_chain(tenant_id, item_id, item_type) method to ProfileStore ABC in focal/profile/store.py
+- [x] T030 [US1] Add get_derived_items(tenant_id, source_item_id) method to ProfileStore ABC in focal/profile/store.py
+- [x] T031 [US1] Add check_has_dependents(tenant_id, item_id) method to ProfileStore ABC in focal/profile/store.py
 
 ### InMemoryProfileStore for US1
 
-- [x] T032 [US1] Implement get_derivation_chain() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T033 [US1] Implement get_derived_items() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T034 [US1] Implement check_has_dependents() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
+- [x] T032 [US1] Implement get_derivation_chain() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T033 [US1] Implement get_derived_items() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T034 [US1] Implement check_has_dependents() in InMemoryProfileStore in focal/profile/stores/inmemory.py
 
 ### Unit Tests for US1
 
@@ -125,18 +125,18 @@ Single backend project per plan.md:
 
 ### Store Interface Updates for US2
 
-- [x] T043 [US2] Update get_field() to accept status filter (default=ACTIVE) in soldier/profile/store.py
-- [x] T044 [US2] Add get_field_history(tenant_id, profile_id, name) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T045 [US2] Add expire_stale_fields(tenant_id) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T046 [US2] Add mark_orphaned_items(tenant_id) method to ProfileStore ABC in soldier/profile/store.py
+- [x] T043 [US2] Update get_field() to accept status filter (default=ACTIVE) in focal/profile/store.py
+- [x] T044 [US2] Add get_field_history(tenant_id, profile_id, name) method to ProfileStore ABC in focal/profile/store.py
+- [x] T045 [US2] Add expire_stale_fields(tenant_id) method to ProfileStore ABC in focal/profile/store.py
+- [x] T046 [US2] Add mark_orphaned_items(tenant_id) method to ProfileStore ABC in focal/profile/store.py
 
 ### InMemoryProfileStore for US2
 
-- [x] T047 [US2] Implement status-aware get_field() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T048 [US2] Implement get_field_history() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T049 [US2] Implement superseding logic in update_field() in soldier/profile/stores/inmemory.py
-- [x] T050 [US2] Implement expire_stale_fields() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T051 [US2] Implement mark_orphaned_items() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
+- [x] T047 [US2] Implement status-aware get_field() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T048 [US2] Implement get_field_history() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T049 [US2] Implement superseding logic in update_field() in focal/profile/stores/inmemory.py
+- [x] T050 [US2] Implement expire_stale_fields() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T051 [US2] Implement mark_orphaned_items() in InMemoryProfileStore in focal/profile/stores/inmemory.py
 
 ### Unit Tests for US2
 
@@ -165,28 +165,28 @@ Single backend project per plan.md:
 
 ### Store Interface Updates for US3
 
-- [x] T061 [US3] Add save_field_definition(definition) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T062 [US3] Add get_field_definitions(tenant_id, agent_id) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T063 [US3] Add save_scenario_requirement(requirement) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T064 [US3] Add get_scenario_requirements(tenant_id, scenario_id) method to ProfileStore ABC in soldier/profile/store.py
-- [x] T065 [US3] Add get_missing_fields(tenant_id, profile, scenario_id) method to ProfileStore ABC in soldier/profile/store.py
+- [x] T061 [US3] Add save_field_definition(definition) method to ProfileStore ABC in focal/profile/store.py
+- [x] T062 [US3] Add get_field_definitions(tenant_id, agent_id) method to ProfileStore ABC in focal/profile/store.py
+- [x] T063 [US3] Add save_scenario_requirement(requirement) method to ProfileStore ABC in focal/profile/store.py
+- [x] T064 [US3] Add get_scenario_requirements(tenant_id, scenario_id) method to ProfileStore ABC in focal/profile/store.py
+- [x] T065 [US3] Add get_missing_fields(tenant_id, profile, scenario_id) method to ProfileStore ABC in focal/profile/store.py
 
 ### SchemaValidationService for US3
 
-- [x] T066 [US3] Create SchemaValidationService class in soldier/profile/validation.py
-- [x] T067 [US3] Implement validate_field(field, definition) returning error list in soldier/profile/validation.py
-- [x] T068 [US3] Implement type validators (string, email, phone, date, number, boolean, json) in soldier/profile/validation.py
-- [x] T069 [US3] Implement regex validation in soldier/profile/validation.py
-- [x] T070 [US3] Implement allowed_values validation in soldier/profile/validation.py
-- [x] T071 [US3] Implement ValidationMode support (strict, warn, disabled) in soldier/profile/validation.py
+- [x] T066 [US3] Create SchemaValidationService class in focal/profile/validation.py
+- [x] T067 [US3] Implement validate_field(field, definition) returning error list in focal/profile/validation.py
+- [x] T068 [US3] Implement type validators (string, email, phone, date, number, boolean, json) in focal/profile/validation.py
+- [x] T069 [US3] Implement regex validation in focal/profile/validation.py
+- [x] T070 [US3] Implement allowed_values validation in focal/profile/validation.py
+- [x] T071 [US3] Implement ValidationMode support (strict, warn, disabled) in focal/profile/validation.py
 
 ### InMemoryProfileStore for US3
 
-- [x] T072 [US3] Implement save_field_definition() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T073 [US3] Implement get_field_definitions() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T074 [US3] Implement save_scenario_requirement() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T075 [US3] Implement get_scenario_requirements() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
-- [x] T076 [US3] Implement get_missing_fields() in InMemoryProfileStore in soldier/profile/stores/inmemory.py
+- [x] T072 [US3] Implement save_field_definition() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T073 [US3] Implement get_field_definitions() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T074 [US3] Implement save_scenario_requirement() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T075 [US3] Implement get_scenario_requirements() in InMemoryProfileStore in focal/profile/stores/inmemory.py
+- [x] T076 [US3] Implement get_missing_fields() in InMemoryProfileStore in focal/profile/stores/inmemory.py
 
 ### Unit Tests for US3
 
@@ -208,19 +208,19 @@ Single backend project per plan.md:
 
 ### Migrations
 
-- [x] T082 [US5] Create migration 006_profile_fields_enhancement.py (add lineage + status columns) in soldier/db/migrations/versions/
-- [x] T083 [US5] Create migration 007_profile_assets_enhancement.py (add lineage + status columns) in soldier/db/migrations/versions/
-- [x] T084 [US5] Create migration 008_profile_field_definitions.py (new table) in soldier/db/migrations/versions/
-- [x] T085 [US5] Create migration 009_scenario_field_requirements.py (new table) in soldier/db/migrations/versions/
+- [x] T082 [US5] Create migration 006_profile_fields_enhancement.py (add lineage + status columns) in focal/db/migrations/versions/
+- [x] T083 [US5] Create migration 007_profile_assets_enhancement.py (add lineage + status columns) in focal/db/migrations/versions/
+- [x] T084 [US5] Create migration 008_profile_field_definitions.py (new table) in focal/db/migrations/versions/
+- [x] T085 [US5] Create migration 009_scenario_field_requirements.py (new table) in focal/db/migrations/versions/
 - [x] T086 [US5] Add rollback functions to all migrations for safe rollback
 
 ### PostgresProfileStore Implementation
 
-- [x] T087 [US5] Implement all US1 methods (lineage) in PostgresProfileStore in soldier/profile/stores/postgres.py
-- [x] T088 [US5] Implement all US2 methods (status) in PostgresProfileStore in soldier/profile/stores/postgres.py
-- [x] T089 [US5] Implement all US3 methods (schema) in PostgresProfileStore in soldier/profile/stores/postgres.py
-- [x] T090 [US5] Implement recursive CTE for get_derivation_chain() in soldier/profile/stores/postgres.py
-- [x] T091 [US5] Add soft-delete enforcement in delete methods in soldier/profile/stores/postgres.py
+- [x] T087 [US5] Implement all US1 methods (lineage) in PostgresProfileStore in focal/profile/stores/postgres.py
+- [x] T088 [US5] Implement all US2 methods (status) in PostgresProfileStore in focal/profile/stores/postgres.py
+- [x] T089 [US5] Implement all US3 methods (schema) in PostgresProfileStore in focal/profile/stores/postgres.py
+- [x] T090 [US5] Implement recursive CTE for get_derivation_chain() in focal/profile/stores/postgres.py
+- [x] T091 [US5] Add soft-delete enforcement in delete methods in focal/profile/stores/postgres.py
 
 ### Integration Tests for US5
 
@@ -240,19 +240,19 @@ Single backend project per plan.md:
 
 ### CachedProfileStore Implementation
 
-- [x] T095 [US4] Create CachedProfileStore wrapper class in soldier/profile/stores/cached.py
-- [x] T096 [US4] Implement cache-through read for get_profile() in soldier/profile/stores/cached.py
-- [x] T097 [US4] Implement cache invalidation on update_field() in soldier/profile/stores/cached.py
-- [x] T098 [US4] Implement cache invalidation on save_asset() in soldier/profile/stores/cached.py
-- [x] T099 [US4] Implement Redis fallback (return from backend if Redis unavailable) in soldier/profile/stores/cached.py
-- [x] T100 [US4] Add cache key patterns (profile:{tenant}:{customer}) in soldier/profile/stores/cached.py
-- [x] T101 [US4] Add configurable TTL (default 30 min) in soldier/profile/stores/cached.py
+- [x] T095 [US4] Create CachedProfileStore wrapper class in focal/profile/stores/cached.py
+- [x] T096 [US4] Implement cache-through read for get_profile() in focal/profile/stores/cached.py
+- [x] T097 [US4] Implement cache invalidation on update_field() in focal/profile/stores/cached.py
+- [x] T098 [US4] Implement cache invalidation on save_asset() in focal/profile/stores/cached.py
+- [x] T099 [US4] Implement Redis fallback (return from backend if Redis unavailable) in focal/profile/stores/cached.py
+- [x] T100 [US4] Add cache key patterns (profile:{tenant}:{customer}) in focal/profile/stores/cached.py
+- [x] T101 [US4] Add configurable TTL (default 30 min) in focal/profile/stores/cached.py
 
 ### Cache Metrics for US4
 
-- [x] T102 [US4] Add PROFILE_CACHE_HITS counter to soldier/observability/metrics.py
-- [x] T103 [US4] Add PROFILE_CACHE_MISSES counter to soldier/observability/metrics.py
-- [x] T104 [US4] Add PROFILE_CACHE_INVALIDATIONS counter to soldier/observability/metrics.py
+- [x] T102 [US4] Add PROFILE_CACHE_HITS counter to focal/observability/metrics.py
+- [x] T103 [US4] Add PROFILE_CACHE_MISSES counter to focal/observability/metrics.py
+- [x] T104 [US4] Add PROFILE_CACHE_INVALIDATIONS counter to focal/observability/metrics.py
 
 ### Unit Tests for US4
 
@@ -279,16 +279,16 @@ Single backend project per plan.md:
 
 ### Hatchet Client
 
-- [x] T112 [US6] Create HatchetClient wrapper class in soldier/jobs/client.py
-- [x] T113 [US6] Implement get_client() factory function in soldier/jobs/client.py
-- [x] T114 [US6] Implement health_check() method in soldier/jobs/client.py
-- [x] T115 [US6] Add graceful degradation when Hatchet unavailable in soldier/jobs/client.py
+- [x] T112 [US6] Create HatchetClient wrapper class in focal/jobs/client.py
+- [x] T113 [US6] Implement get_client() factory function in focal/jobs/client.py
+- [x] T114 [US6] Implement health_check() method in focal/jobs/client.py
+- [x] T115 [US6] Add graceful degradation when Hatchet unavailable in focal/jobs/client.py
 
 ### Hatchet Workflows
 
-- [x] T116 [US6] Create ExpireStaleFieldsWorkflow with cron schedule in soldier/jobs/workflows/profile_expiry.py
-- [x] T117 [US6] Create DetectOrphanedItemsWorkflow with cron schedule in soldier/jobs/workflows/orphan_detection.py
-- [x] T118 [US6] Ensure all workflows are idempotent in soldier/jobs/workflows/
+- [x] T116 [US6] Create ExpireStaleFieldsWorkflow with cron schedule in focal/jobs/workflows/profile_expiry.py
+- [x] T117 [US6] Create DetectOrphanedItemsWorkflow with cron schedule in focal/jobs/workflows/orphan_detection.py
+- [x] T118 [US6] Ensure all workflows are idempotent in focal/jobs/workflows/
 - [x] T119 [US6] Add retry policy with exponential backoff to workflows
 
 ### Unit Tests for US6
@@ -315,26 +315,26 @@ Single backend project per plan.md:
 
 ### ProfileItemSchemaExtractor Service
 
-- [x] T125 [US7] Create ProfileItemSchemaExtractor class in soldier/profile/extraction.py
-- [x] T126 [US7] Implement extract_requirements(scenario_or_rule) method in soldier/profile/extraction.py
-- [x] T127 [US7] Implement suggest_field_definitions(field_names) method in soldier/profile/extraction.py
-- [x] T128 [US7] Implement confidence scoring logic in soldier/profile/extraction.py
-- [x] T129 [US7] Add needs_human_review flag when confidence < 0.8 in soldier/profile/extraction.py
-- [x] T130 [US7] Create extraction prompt templates in soldier/profile/extraction.py
+- [x] T125 [US7] Create ProfileItemSchemaExtractor class in focal/profile/extraction.py
+- [x] T126 [US7] Implement extract_requirements(scenario_or_rule) method in focal/profile/extraction.py
+- [x] T127 [US7] Implement suggest_field_definitions(field_names) method in focal/profile/extraction.py
+- [x] T128 [US7] Implement confidence scoring logic in focal/profile/extraction.py
+- [x] T129 [US7] Add needs_human_review flag when confidence < 0.8 in focal/profile/extraction.py
+- [x] T130 [US7] Create extraction prompt templates in focal/profile/extraction.py
 
 ### Hatchet Workflow for US7
 
-- [x] T131 [US7] Create ExtractSchemaRequirementsWorkflow in soldier/jobs/workflows/schema_extraction.py
+- [x] T131 [US7] Create ExtractSchemaRequirementsWorkflow in focal/jobs/workflows/schema_extraction.py
 - [x] T132 [US7] Add extract() step using ProfileItemSchemaExtractor
 - [x] T133 [US7] Add persist() step saving requirements to store
 - [x] T134 [US7] Ensure non-blocking (failures don't block scenario/rule creation)
 
 ### ConfigStore Integration
 
-- [x] T135 [US7] Add hook to trigger extraction on Scenario create in soldier/alignment/stores/config_store_extraction.py
-- [x] T136 [US7] Add hook to trigger extraction on Scenario update in soldier/alignment/stores/config_store_extraction.py
-- [x] T137 [US7] Add hook to trigger extraction on Rule create in soldier/alignment/stores/config_store_extraction.py
-- [x] T138 [US7] Add hook to trigger extraction on Rule update in soldier/alignment/stores/config_store_extraction.py
+- [x] T135 [US7] Add hook to trigger extraction on Scenario create in focal/alignment/stores/config_store_extraction.py
+- [x] T136 [US7] Add hook to trigger extraction on Scenario update in focal/alignment/stores/config_store_extraction.py
+- [x] T137 [US7] Add hook to trigger extraction on Rule create in focal/alignment/stores/config_store_extraction.py
+- [x] T138 [US7] Add hook to trigger extraction on Rule update in focal/alignment/stores/config_store_extraction.py
 
 ### Unit Tests for US7
 
@@ -359,22 +359,22 @@ Single backend project per plan.md:
 
 ### GapFillService Enhancement
 
-- [x] T146 Add schema_validator parameter to GapFillService constructor in soldier/alignment/migration/gap_fill.py
-- [x] T147 Add profile_store parameter to GapFillService constructor in soldier/alignment/migration/gap_fill.py
-- [x] T148 Integrate get_missing_fields() into GapFillService flow in soldier/alignment/migration/gap_fill.py
-- [x] T149 Use collection_prompt from ProfileFieldDefinition in soldier/alignment/migration/gap_fill.py
-- [x] T150 Track lineage (source_item_id, source_item_type) on extracted fields in soldier/alignment/migration/gap_fill.py
-- [x] T151 Validate extracted values against schema before persistence in soldier/alignment/migration/gap_fill.py
+- [x] T146 Add schema_validator parameter to GapFillService constructor in focal/alignment/migration/gap_fill.py
+- [x] T147 Add profile_store parameter to GapFillService constructor in focal/alignment/migration/gap_fill.py
+- [x] T148 Integrate get_missing_fields() into GapFillService flow in focal/alignment/migration/gap_fill.py
+- [x] T149 Use collection_prompt from ProfileFieldDefinition in focal/alignment/migration/gap_fill.py
+- [x] T150 Track lineage (source_item_id, source_item_type) on extracted fields in focal/alignment/migration/gap_fill.py
+- [x] T151 Validate extracted values against schema before persistence in focal/alignment/migration/gap_fill.py
 
 ### GapFillResult Enhancement
 
-- [x] T152 Add field_definition field to GapFillResult in soldier/alignment/migration/models.py
-- [x] T153 Add validation_errors field to GapFillResult in soldier/alignment/migration/models.py
-- [x] T154 Add source_item_id and source_item_type fields to GapFillResult in soldier/alignment/migration/models.py
+- [x] T152 Add field_definition field to GapFillResult in focal/alignment/migration/models.py
+- [x] T153 Add validation_errors field to GapFillResult in focal/alignment/migration/models.py
+- [x] T154 Add source_item_id and source_item_type fields to GapFillResult in focal/alignment/migration/models.py
 
 ### ScenarioFilter Integration
 
-- [x] T155 Update ScenarioFilter to check required fields via get_missing_fields() in soldier/alignment/filtering/scenario_filter.py
+- [x] T155 Update ScenarioFilter to check required fields via get_missing_fields() in focal/alignment/filtering/scenario_filter.py
 - [x] T156 Return missing_profile_fields in ScenarioFilter result
 
 ### Integration Tests
@@ -394,12 +394,12 @@ Single backend project per plan.md:
 
 ### Observability Metrics
 
-- [x] T161 [P] Add DERIVATION_CHAIN_DEPTH histogram to soldier/observability/metrics.py
-- [x] T162 [P] Add SCHEMA_VALIDATION_ERRORS counter to soldier/observability/metrics.py
-- [x] T163 [P] Add FIELD_STATUS_GAUGE gauge to soldier/observability/metrics.py
-- [x] T164 [P] Add GAP_FILL_ATTEMPTS counter to soldier/observability/metrics.py
-- [x] T165 [P] Add SCHEMA_EXTRACTION_SUCCESS counter to soldier/observability/metrics.py
-- [x] T166 [P] Add SCHEMA_EXTRACTION_FAILED counter to soldier/observability/metrics.py
+- [x] T161 [P] Add DERIVATION_CHAIN_DEPTH histogram to focal/observability/metrics.py
+- [x] T162 [P] Add SCHEMA_VALIDATION_ERRORS counter to focal/observability/metrics.py
+- [x] T163 [P] Add FIELD_STATUS_GAUGE gauge to focal/observability/metrics.py
+- [x] T164 [P] Add GAP_FILL_ATTEMPTS counter to focal/observability/metrics.py
+- [x] T165 [P] Add SCHEMA_EXTRACTION_SUCCESS counter to focal/observability/metrics.py
+- [x] T166 [P] Add SCHEMA_EXTRACTION_FAILED counter to focal/observability/metrics.py
 
 ### Structured Logging
 

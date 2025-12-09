@@ -1,10 +1,10 @@
-<a id="soldier.alignment.retrieval.scenario_retriever"></a>
+<a id="focal.alignment.retrieval.scenario_retriever"></a>
 
-# soldier.alignment.retrieval.scenario\_retriever
+# focal.alignment.retrieval.scenario\_retriever
 
 Scenario retrieval using embeddings and selection strategies.
 
-<a id="soldier.alignment.retrieval.scenario_retriever.ScenarioRetriever"></a>
+<a id="focal.alignment.retrieval.scenario_retriever.ScenarioRetriever"></a>
 
 ## ScenarioRetriever Objects
 
@@ -18,7 +18,7 @@ Scenarios are retrieved by comparing the user message embedding against
 each scenario's entry condition embedding. Selection strategies filter
 to the most relevant candidates.
 
-<a id="soldier.alignment.retrieval.scenario_retriever.ScenarioRetriever.__init__"></a>
+<a id="focal.alignment.retrieval.scenario_retriever.ScenarioRetriever.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -36,7 +36,7 @@ Initialize the scenario retriever.
 - `embedding_provider` - Provider for query embeddings
 - `selection_config` - Configuration for selection strategy
 
-<a id="soldier.alignment.retrieval.scenario_retriever.ScenarioRetriever.selection_strategy_name"></a>
+<a id="focal.alignment.retrieval.scenario_retriever.ScenarioRetriever.selection_strategy_name"></a>
 
 #### selection\_strategy\_name
 
@@ -47,7 +47,7 @@ def selection_strategy_name() -> str
 
 Return the selection strategy name.
 
-<a id="soldier.alignment.retrieval.scenario_retriever.ScenarioRetriever.retrieve"></a>
+<a id="focal.alignment.retrieval.scenario_retriever.ScenarioRetriever.retrieve"></a>
 
 #### retrieve
 

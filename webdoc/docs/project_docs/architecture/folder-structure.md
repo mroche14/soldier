@@ -1,6 +1,6 @@
 # Folder Architecture
 
-A human-readable guide to Soldier's codebase organization.
+A human-readable guide to Focal's codebase organization.
 
 ## Philosophy
 
@@ -14,7 +14,7 @@ Answer: In the folder named after X.
 ## Top-Level Structure
 
 ```
-soldier/
+focal/
 ├── config/                  # TOML configuration files (per environment)
 │   ├── default.toml        # Base defaults (committed)
 │   ├── development.toml    # Local development overrides
@@ -22,7 +22,7 @@ soldier/
 │   ├── production.toml     # Production environment
 │   └── test.toml           # Test environment
 │
-├── soldier/                 # Main Python package
+├── focal/                 # Main Python package
 │   ├── alignment/          # The brain: rules, scenarios, context
 │   ├── memory/             # Long-term memory: episodes, entities
 │   ├── conversation/       # Live conversation state
@@ -32,7 +32,7 @@ soldier/
 │   ├── api/                # HTTP/gRPC interfaces
 │   └── config/             # Configuration loading (Pydantic models)
 │
-├── tests/                   # Mirrors soldier/ structure
+├── tests/                   # Mirrors focal/ structure
 ├── docs/                    # Documentation
 └── deploy/                  # Kubernetes, Docker, etc.
 ```
@@ -41,7 +41,7 @@ soldier/
 
 ## Core Domains
 
-### `soldier/alignment/` — The Brain
+### `focal/alignment/` — The Brain
 
 **Purpose**: Determines what the agent should do on each turn.
 
@@ -124,7 +124,7 @@ class AlignmentEngine:
 
 ---
 
-### `soldier/memory/` — Long-term Memory
+### `focal/memory/` — Long-term Memory
 
 **Purpose**: Stores and retrieves episodic memory (what happened) and semantic knowledge (entities, relationships).
 
@@ -160,7 +160,7 @@ memory/
 
 ---
 
-### `soldier/conversation/` — Live State
+### `focal/conversation/` — Live State
 
 **Purpose**: Manages active conversation state (sessions).
 
@@ -184,7 +184,7 @@ conversation/
 
 ---
 
-### `soldier/audit/` — What Happened
+### `focal/audit/` — What Happened
 
 **Purpose**: Immutable record of all interactions for compliance and debugging.
 
@@ -209,7 +209,7 @@ audit/
 
 ---
 
-### `soldier/observability/` — Logging, Tracing, Metrics
+### `focal/observability/` — Logging, Tracing, Metrics
 
 **Purpose**: Structured logging, distributed tracing, and Prometheus metrics. See [observability.md](./observability.md) for full architecture.
 
@@ -226,7 +226,7 @@ observability/
 ```python
 # observability/logging.py
 def setup_logging(level: str, format: str, include_trace_id: bool) -> None:
-    """Configure structured logging for Soldier."""
+    """Configure structured logging for Focal."""
 
 def get_logger(name: str) -> structlog.BoundLogger:
     """Get a logger instance with the given name."""
@@ -242,11 +242,11 @@ async def logging_context_middleware(request: Request, call_next):
     """Bind tenant_id, agent_id, session_id, trace_id to all logs."""
 ```
 
-**Note**: Soldier integrates with kernel_agent's existing OpenTelemetry Collector and Prometheus setup. Logs go to stdout (JSON), traces to OTLP, metrics scraped at `/metrics`.
+**Note**: Focal integrates with kernel_agent's existing OpenTelemetry Collector and Prometheus setup. Logs go to stdout (JSON), traces to OTLP, metrics scraped at `/metrics`.
 
 ---
 
-### `soldier/providers/` — External Services
+### `focal/providers/` — External Services
 
 **Purpose**: Interfaces for LLMs, embeddings, and other external services. Each step in the pipeline can use a different provider.
 
@@ -321,7 +321,7 @@ class EmbeddingProvider(ABC):
 
 ---
 
-### `soldier/config/` — Configuration Loading
+### `focal/config/` — Configuration Loading
 
 **Purpose**: Load TOML configuration files with Pydantic validation. See [configuration.md](./configuration.md) for full details.
 
@@ -346,11 +346,11 @@ config/
 1. **Defaults** in Pydantic models
 2. **Base config** in `config/default.toml`
 3. **Environment overrides** in `config/{env}.toml`
-4. **Runtime overrides** via `SOLDIER_*` environment variables
+4. **Runtime overrides** via `FOCAL_*` environment variables
 
 ```python
 # Usage
-from soldier.config.settings import get_settings
+from focal.config.settings import get_settings
 
 settings = get_settings()
 port = settings.api.port
@@ -360,7 +360,7 @@ rule_strategy = settings.pipeline.retrieval.rule_selection.strategy
 
 ---
 
-### `soldier/api/` — External Interfaces
+### `focal/api/` — External Interfaces
 
 **Purpose**: HTTP and gRPC APIs.
 
@@ -519,19 +519,19 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 
 | Looking for... | Location |
 |----------------|----------|
-| Rule matching logic | `soldier/alignment/retrieval/rule_retriever.py` |
-| Scenario state machine | `soldier/alignment/models/scenario.py` |
-| Context extraction prompts | `soldier/alignment/context/prompts/` |
-| Add a new LLM provider | `soldier/providers/llm/` |
-| Add a new embedding provider | `soldier/providers/embedding/` |
-| Memory storage implementations | `soldier/memory/stores/` |
-| Session management | `soldier/conversation/` |
-| API endpoints | `soldier/api/routes/` |
-| Domain models for rules | `soldier/alignment/models/rule.py` |
-| Pipeline configuration | `soldier/config/models/pipeline.py` |
-| Logging setup | `soldier/observability/logging.py` |
-| Tracing setup | `soldier/observability/tracing.py` |
-| Metrics definitions | `soldier/observability/metrics.py` |
+| Rule matching logic | `focal/alignment/retrieval/rule_retriever.py` |
+| Scenario state machine | `focal/alignment/models/scenario.py` |
+| Context extraction prompts | `focal/alignment/context/prompts/` |
+| Add a new LLM provider | `focal/providers/llm/` |
+| Add a new embedding provider | `focal/providers/embedding/` |
+| Memory storage implementations | `focal/memory/stores/` |
+| Session management | `focal/conversation/` |
+| API endpoints | `focal/api/routes/` |
+| Domain models for rules | `focal/alignment/models/rule.py` |
+| Pipeline configuration | `focal/config/models/pipeline.py` |
+| Logging setup | `focal/observability/logging.py` |
+| Tracing setup | `focal/observability/tracing.py` |
+| Metrics definitions | `focal/observability/metrics.py` |
 
 ---
 

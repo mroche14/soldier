@@ -1,10 +1,10 @@
-<a id="soldier.conversation.models.turn"></a>
+<a id="focal.conversation.models.turn"></a>
 
-# soldier.conversation.models.turn
+# focal.conversation.models.turn
 
 Turn models for conversation domain.
 
-<a id="soldier.conversation.models.turn.utc_now"></a>
+<a id="focal.conversation.models.turn.utc_now"></a>
 
 #### utc\_now
 
@@ -14,7 +14,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.conversation.models.turn.ToolCall"></a>
+<a id="focal.conversation.models.turn.ToolCall"></a>
 
 ## ToolCall Objects
 
@@ -24,7 +24,7 @@ class ToolCall(BaseModel)
 
 Record of tool execution.
 
-<a id="soldier.conversation.models.turn.Turn"></a>
+<a id="focal.conversation.models.turn.Turn"></a>
 
 ## Turn Objects
 

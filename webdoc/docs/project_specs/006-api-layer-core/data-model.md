@@ -353,46 +353,46 @@ AuditStore
 
 ## 8. Exception Hierarchy
 
-All API exceptions inherit from `SoldierAPIError` for consistent error handling:
+All API exceptions inherit from `FocalAPIError` for consistent error handling:
 
 ```python
-class SoldierAPIError(Exception):
+class FocalAPIError(Exception):
     """Base exception for all API errors."""
     status_code: int = 500
     error_code: ErrorCode = ErrorCode.INTERNAL_ERROR
     message: str
 
-class AgentNotFoundError(SoldierAPIError):
+class AgentNotFoundError(FocalAPIError):
     """Raised when agent_id doesn't exist."""
     status_code = 400
     error_code = ErrorCode.AGENT_NOT_FOUND
 
-class SessionNotFoundError(SoldierAPIError):
+class SessionNotFoundError(FocalAPIError):
     """Raised when session_id doesn't exist."""
     status_code = 404
     error_code = ErrorCode.SESSION_NOT_FOUND
 
-class RateLimitExceededError(SoldierAPIError):
+class RateLimitExceededError(FocalAPIError):
     """Raised when tenant exceeds rate limit."""
     status_code = 429
     error_code = ErrorCode.RATE_LIMIT_EXCEEDED
 
-class LLMProviderError(SoldierAPIError):
+class LLMProviderError(FocalAPIError):
     """Raised when LLM provider fails."""
     status_code = 502
     error_code = ErrorCode.LLM_ERROR
 ```
 
-**Location**: `soldier/api/exceptions.py`
+**Location**: `focal/api/exceptions.py`
 
 ---
 
 ## 9. Model Location
 
 All models defined in:
-- `soldier/api/models/chat.py` - ChatRequest, ChatResponse, StreamEvent
-- `soldier/api/models/errors.py` - ErrorCode, ErrorResponse
-- `soldier/api/models/session.py` - SessionResponse, TurnResponse
-- `soldier/api/models/health.py` - HealthResponse
-- `soldier/api/models/context.py` - TenantContext, RateLimitResult, RequestContext
-- `soldier/api/exceptions.py` - SoldierAPIError and subclasses
+- `focal/api/models/chat.py` - ChatRequest, ChatResponse, StreamEvent
+- `focal/api/models/errors.py` - ErrorCode, ErrorResponse
+- `focal/api/models/session.py` - SessionResponse, TurnResponse
+- `focal/api/models/health.py` - HealthResponse
+- `focal/api/models/context.py` - TenantContext, RateLimitResult, RequestContext
+- `focal/api/exceptions.py` - FocalAPIError and subclasses

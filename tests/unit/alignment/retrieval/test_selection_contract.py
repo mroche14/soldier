@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 
 import pytest
 
-from soldier.alignment.retrieval.selection import (
+from focal.alignment.retrieval.selection import (
     AdaptiveKSelectionStrategy,
     ClusterSelectionStrategy,
     ElbowSelectionStrategy,

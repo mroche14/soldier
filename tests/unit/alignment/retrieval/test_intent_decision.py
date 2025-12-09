@@ -3,8 +3,8 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.models.intent import IntentCandidate
-from soldier.alignment.retrieval.intent_retriever import decide_canonical_intent
+from focal.alignment.models.intent import IntentCandidate
+from focal.alignment.retrieval.intent_retriever import decide_canonical_intent
 
 
 class TestDecideCanonicalIntent:

@@ -1,4 +1,4 @@
-<a id="soldier.audit.stores.timescale"></a>
+<a id="focal.audit.stores.timescale"></a>
 
-# soldier.audit.stores.timescale
+# focal.audit.stores.timescale
 

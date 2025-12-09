@@ -4,7 +4,7 @@ Extending the enforcement pipeline with deterministic rule evaluation, LLM-as-Ju
 
 ## Overview
 
-Soldier already has a rule-based system where:
+Focal already has a rule-based system where:
 1. **Rules are matched semantically** against user input (`condition_text`)
 2. **Matched rules guide generation** via `action_text` in the prompt
 3. **Hard constraints are enforced** post-generation (`is_hard_constraint=True`)
@@ -84,7 +84,7 @@ Rules fall into two categories that require different verification approaches:
 ### New Field: `enforcement_expression`
 
 ```python
-# soldier/alignment/models/rule.py
+# focal/alignment/models/rule.py
 
 class Rule(AgentScopedModel):
     """Behavioral policy: when X, then Y."""
@@ -571,7 +571,7 @@ Output ONE word: ENTAILMENT, NEUTRAL, or CONTRADICTION"""
 ### Pipeline Configuration (Extended)
 
 ```python
-# soldier/config/models/pipeline.py
+# focal/config/models/pipeline.py
 
 class EnforcementConfig(BaseModel):
     """Configuration for enforcement step."""
@@ -707,7 +707,7 @@ Rule(
 ### Extended EnforcementValidator
 
 ```python
-# soldier/alignment/enforcement/validator.py
+# focal/alignment/enforcement/validator.py
 
 class EnforcementValidator:
     """Validate responses against hard constraint rules."""

@@ -5,7 +5,7 @@
 
 ## Overview
 
-This document captures research findings for implementing Soldier's HTTP API layer. All "NEEDS CLARIFICATION" items from the technical context have been resolved.
+This document captures research findings for implementing Focal's HTTP API layer. All "NEEDS CLARIFICATION" items from the technical context have been resolved.
 
 ---
 
@@ -17,7 +17,7 @@ Use FastAPI's application factory pattern with `create_app()` function for testa
 ### Rationale
 - Allows different configurations for testing vs production
 - Enables lazy initialization of dependencies
-- Follows existing Soldier patterns (dependency injection)
+- Follows existing Focal patterns (dependency injection)
 - Standard practice in production FastAPI applications
 
 ### Implementation Pattern
@@ -28,7 +28,7 @@ def create_app(
     session_store: SessionStore | None = None,
     # ... other dependencies
 ) -> FastAPI:
-    app = FastAPI(title="Soldier API", version="1.0.0")
+    app = FastAPI(title="Focal API", version="1.0.0")
     # Configure middleware, routes, exception handlers
     return app
 ```
@@ -98,7 +98,7 @@ async def get_current_tenant(
 ```
 
 ### Alternatives Considered
-- **FastAPI-Users**: Rejected - too opinionated, Soldier handles auth upstream
+- **FastAPI-Users**: Rejected - too opinionated, Focal handles auth upstream
 - **Authlib**: Rejected - more complex, designed for OAuth flows we don't need
 
 ---
@@ -190,10 +190,10 @@ idem:{tenant_id}:{idempotency_key}
 ## 6. OpenTelemetry Integration
 
 ### Decision
-Use existing `soldier.observability` module with FastAPI instrumentation middleware.
+Use existing `focal.observability` module with FastAPI instrumentation middleware.
 
 ### Rationale
-- Soldier already has OpenTelemetry setup in `observability/tracing.py`
+- Focal already has OpenTelemetry setup in `observability/tracing.py`
 - FastAPI has official OpenTelemetry instrumentation
 - Trace context propagation via headers (W3C Trace Context)
 - Consistent with existing pipeline step tracing
@@ -278,7 +278,7 @@ dev = [
 ## Summary
 
 All technical decisions align with:
-- Existing Soldier patterns (DI, async-first, structured logging)
+- Existing Focal patterns (DI, async-first, structured logging)
 - Production best practices for FastAPI
 - Spec requirements (SSE streaming, idempotency, rate limiting)
 - Horizontal scaling requirements (stateless pods, Redis for shared state)

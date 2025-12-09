@@ -84,7 +84,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 1.1 Convert Sequential Retrieval to Parallel
 
 - [x] **Refactor `AlignmentEngine._retrieve()` to use `asyncio.gather()`**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modified
   - **Implemented**: Converted sequential retrieval to parallel using `asyncio.gather` with exception handling
   - Added `import asyncio` at top of file
@@ -93,7 +93,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
   - Expected savings: 160ms per turn (from 240ms to 80ms)
 
 - [x] **Update retrieval timing metrics**
-  - File: `soldier/observability/metrics.py`
+  - File: `focal/observability/metrics.py`
   - Action: Modified (duplicate entry - see section 7.1)
   - **Implemented**: Already completed in section 7.1
   - Details:
@@ -118,7 +118,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 2.1 Add Reranking Config per Object Type
 
 - [x] **Add `RerankingConfig` to each retrieval config**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Modified
   - **Implemented**: Added per-object-type reranking config fields to `RetrievalConfig`
   - Added `intent_selection` field for intent selection strategy
@@ -151,14 +151,14 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 2.2 Add Hybrid Retrieval Config
 
 - [x] **Create `HybridRetrievalConfig` model**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Added
   - **Implemented**: Created `HybridRetrievalConfig` with `enabled`, `vector_weight`, `bm25_weight`, and `normalization` fields
   - Supports "min_max", "z_score", and "softmax" normalization methods
   - Default weights: 70% vector, 30% BM25
 
 - [x] **Add hybrid config to `RetrievalConfig`**
-  - File: `soldier/config/models/pipeline.py`
+  - File: `focal/config/models/pipeline.py`
   - Action: Modified
   - **Implemented**: Added `rule_hybrid`, `scenario_hybrid`, `memory_hybrid`, and `intent_hybrid` fields to `RetrievalConfig`
   - All default to disabled hybrid retrieval (can be enabled per object type)
@@ -170,7 +170,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 3.1 Add Reranking to ScenarioRetriever
 
 - [x] **Add optional reranker to `ScenarioRetriever.__init__()`**
-  - File: `soldier/alignment/retrieval/scenario_retriever.py`
+  - File: `focal/alignment/retrieval/scenario_retriever.py`
   - Action: Modified
   - **Implemented**: Added `ScenarioReranker` class and integrated into `ScenarioRetriever`
   - Added `reranker` parameter to constructor
@@ -178,7 +178,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
   - Updated exports in `__init__.py`
   - Details:
     ```python
-    from soldier.alignment.retrieval.reranker import ScenarioReranker
+    from focal.alignment.retrieval.reranker import ScenarioReranker
 
     class ScenarioRetriever:
         def __init__(
@@ -193,7 +193,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Apply reranking before selection in `ScenarioRetriever.retrieve()`**
-  - File: `soldier/alignment/retrieval/scenario_retriever.py`
+  - File: `focal/alignment/retrieval/scenario_retriever.py`
   - Action: Modify
   - **Already Implemented**: Reranking is applied at lines 107-108 before selection
   - Current location: Lines 51-56 (retrieve method)
@@ -219,27 +219,27 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 3.2 Add Reranking to MemoryRetriever
 
 - [x] **Add optional reranker to `MemoryRetriever.__init__()`**
-  - File: `soldier/memory/retrieval/retriever.py`
+  - File: `focal/memory/retrieval/retriever.py`
   - Action: Modify
   - **Implemented**: Added reranker parameter to constructor
   - Details: Similar to ScenarioRetriever changes above
 
 - [x] **Apply reranking before selection in `MemoryRetriever.retrieve()`**
-  - File: `soldier/memory/retrieval/retriever.py`
+  - File: `focal/memory/retrieval/retriever.py`
   - Action: Modify
   - **Implemented**: Added reranking step at lines 70-72 before selection
   - Details: Add reranking step between initial scoring and selection
 
 - [x] **Create `MemoryReranker` if not exists**
-  - File: `soldier/memory/retrieval/reranker.py`
+  - File: `focal/memory/retrieval/reranker.py`
   - Action: Create if missing, or use existing
   - **Implemented**: Created MemoryReranker following RuleReranker/ScenarioReranker pattern
-  - Details: Similar pattern to `RuleReranker` in `soldier/alignment/retrieval/reranker.py`
+  - Details: Similar pattern to `RuleReranker` in `focal/alignment/retrieval/reranker.py`
 
 ### 3.3 Update AlignmentEngine to Pass Rerankers
 
 - [x] **Construct rerankers in `AlignmentEngine.__init__()`**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - **Implemented**: Created per-object-type rerankers (rule, scenario, memory) and passed to retrievers
   - Current location: Lines ~100-180 (constructor)
@@ -269,8 +269,8 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 
 ### 4.1 Create Intent Models
 
-- [x] **Create `soldier/alignment/models/intent.py`**
-  - File: `soldier/alignment/models/intent.py`
+- [x] **Create `focal/alignment/models/intent.py`**
+  - File: `focal/alignment/models/intent.py`
   - Action: Create
   - **Implemented**: Created Intent, IntentCandidate, and ScoredIntent models with all required fields
   - Details:
@@ -310,7 +310,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Add intent to `Context` model**
-  - File: `soldier/alignment/context/models.py`
+  - File: `focal/alignment/context/models.py`
   - Action: Modify
   - **Implemented**: Added canonical_intent_label and canonical_intent_score fields to Context
   - Details:
@@ -326,7 +326,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 4.2 Add Intent to ConfigStore
 
 - [x] **Add intent methods to `AgentConfigStore` interface**
-  - File: `soldier/alignment/stores/agent_config_store.py`
+  - File: `focal/alignment/stores/agent_config_store.py`
   - Action: Modify
   - **Implemented**: Added get_intent, get_intents, save_intent, delete_intent methods to interface
   - Details:
@@ -357,13 +357,13 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Implement intent methods in `InMemoryConfigStore`**
-  - File: `soldier/alignment/stores/inmemory.py`
+  - File: `focal/alignment/stores/inmemory.py`
   - Action: Modify
   - **Implemented**: Added _intents storage dict and implemented all CRUD methods
   - Details: Add `_intents: dict[UUID, Intent]` and implement CRUD methods
 
 - [x] **Implement intent methods in `PostgresConfigStore`**
-  - File: `soldier/alignment/stores/postgres.py`
+  - File: `focal/alignment/stores/postgres.py`
   - Action: Modify
   - **Implemented**: Added stub methods that raise NotImplementedError with clear TODO notes
   - Details: Add database queries for intent table (create migration separately)
@@ -371,8 +371,8 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 
 ### 4.3 Create IntentRetriever
 
-- [x] **Create `soldier/alignment/retrieval/intent_retriever.py`**
-  - File: `soldier/alignment/retrieval/intent_retriever.py`
+- [x] **Create `focal/alignment/retrieval/intent_retriever.py`**
+  - File: `focal/alignment/retrieval/intent_retriever.py`
   - Action: Create
   - **Implemented**: Created IntentRetriever class with hybrid search and decide_canonical_intent function
   - Details:
@@ -452,7 +452,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 4.4 Implement Canonical Intent Decision (P4.3)
 
 - [x] **Create `decide_canonical_intent()` function**
-  - File: `soldier/alignment/retrieval/intent_retriever.py`
+  - File: `focal/alignment/retrieval/intent_retriever.py`
   - Action: Add
   - **Implemented**: Created function to merge LLM sensor intent with hybrid retrieval results
   - Details:
@@ -496,7 +496,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Integrate intent decision in AlignmentEngine**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modify
   - **Implemented**: Added IntentRetriever construction, intent retrieval task, and canonical intent decision logic
   - Details:
@@ -532,8 +532,8 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 
 ### 5.2 Create Hybrid Scorer Utility
 
-- [x] **Create `soldier/utils/hybrid.py`**
-  - File: `soldier/utils/hybrid.py`
+- [x] **Create `focal/utils/hybrid.py`**
+  - File: `focal/utils/hybrid.py`
   - Action: Created
   - **Implemented**: Created `HybridScorer` class for combining vector and BM25 scores
   - Supports three normalization methods: min_max, z_score, softmax
@@ -600,13 +600,13 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 5.3 Add BM25 to RuleRetriever
 
 - [x] **Add BM25 index creation to `RuleRetriever`**
-  - File: `soldier/alignment/retrieval/rule_retriever.py`
+  - File: `focal/alignment/retrieval/rule_retriever.py`
   - Action: Modified
   - **Implemented**: Added hybrid_config parameter, HybridScorer integration, and _hybrid_retrieval method
   - Details:
     ```python
     from rank_bm25 import BM25Okapi
-    from soldier.utils.hybrid import HybridScorer
+    from focal.utils.hybrid import HybridScorer
 
     class RuleRetriever:
         def __init__(
@@ -670,13 +670,13 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Add BM25 to ScenarioRetriever**
-  - File: `soldier/alignment/retrieval/scenario_retriever.py`
+  - File: `focal/alignment/retrieval/scenario_retriever.py`
   - Action: Modified
   - **Implemented**: Added hybrid_config parameter, HybridScorer integration, _hybrid_retrieval and _vector_only_retrieval methods
   - Details: Similar pattern to RuleRetriever above
 
 - [x] **Add BM25 to MemoryRetriever**
-  - File: `soldier/memory/retrieval/retriever.py`
+  - File: `focal/memory/retrieval/retriever.py`
   - Action: Modified
   - **Implemented**: Added hybrid_config parameter, HybridScorer integration, _hybrid_retrieval and _vector_only_retrieval methods
   - Details: Similar pattern, apply to episode content
@@ -762,13 +762,13 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 7.1 Add Per-Object-Type Metrics
 
 - [x] **Update retrieval metrics to track per object type**
-  - File: `soldier/observability/metrics.py`
+  - File: `focal/observability/metrics.py`
   - Action: Modified
   - **Implemented**: Added RETRIEVAL_DURATION histogram with tenant_id, object_type, strategy labels
   - Details:
     ```python
     RETRIEVAL_DURATION = Histogram(
-        "soldier_retrieval_duration_seconds",
+        "focal_retrieval_duration_seconds",
         "Retrieval duration per object type",
         ["tenant_id", "object_type", "strategy"],
     )
@@ -777,19 +777,19 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Add hybrid retrieval metrics**
-  - File: `soldier/observability/metrics.py`
+  - File: `focal/observability/metrics.py`
   - Action: Modified
   - **Implemented**: Added HYBRID_RETRIEVAL_ENABLED gauge and BM25_SCORE_CONTRIBUTION histogram
   - Details:
     ```python
     HYBRID_RETRIEVAL_ENABLED = Gauge(
-        "soldier_hybrid_retrieval_enabled",
+        "focal_hybrid_retrieval_enabled",
         "Whether hybrid retrieval is enabled",
         ["object_type"],
     )
 
     BM25_SCORE_CONTRIBUTION = Histogram(
-        "soldier_bm25_score_contribution",
+        "focal_bm25_score_contribution",
         "BM25 score contribution to final scores",
         ["object_type"],
     )
@@ -798,7 +798,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 7.2 Add Parallel Execution Timing
 
 - [x] **Track parallel vs sequential timing**
-  - File: `soldier/alignment/engine.py`
+  - File: `focal/alignment/engine.py`
   - Action: Modified (already implemented in previous changes)
   - **Implemented**: Added PARALLEL_RETRIEVAL_DURATION metric and logging in engine.py
   - Details:
@@ -953,10 +953,10 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 - **Selection Strategies**: `docs/architecture/selection-strategies.md`
 - **Implementation Plan**: `IMPLEMENTATION_PLAN.md` (Phase 8)
 - **Current Code**:
-  - `soldier/alignment/retrieval/rule_retriever.py`
-  - `soldier/alignment/retrieval/scenario_retriever.py`
-  - `soldier/memory/retrieval/retriever.py`
-  - `soldier/alignment/engine.py` (lines 746-778 - sequential retrieval)
+  - `focal/alignment/retrieval/rule_retriever.py`
+  - `focal/alignment/retrieval/scenario_retriever.py`
+  - `focal/memory/retrieval/retriever.py`
+  - `focal/alignment/engine.py` (lines 746-778 - sequential retrieval)
 
 ---
 

@@ -1,10 +1,10 @@
-<a id="soldier.api.models.crud"></a>
+<a id="focal.api.models.crud"></a>
 
-# soldier.api.models.crud
+# focal.api.models.crud
 
 Request and response models for CRUD operations.
 
-<a id="soldier.api.models.crud.AgentCreate"></a>
+<a id="focal.api.models.crud.AgentCreate"></a>
 
 ## AgentCreate Objects
 
@@ -14,7 +14,7 @@ class AgentCreate(BaseModel)
 
 Request model for creating an agent.
 
-<a id="soldier.api.models.crud.AgentUpdate"></a>
+<a id="focal.api.models.crud.AgentUpdate"></a>
 
 ## AgentUpdate Objects
 
@@ -24,7 +24,7 @@ class AgentUpdate(BaseModel)
 
 Request model for updating an agent.
 
-<a id="soldier.api.models.crud.AgentStats"></a>
+<a id="focal.api.models.crud.AgentStats"></a>
 
 ## AgentStats Objects
 
@@ -34,7 +34,7 @@ class AgentStats(BaseModel)
 
 Agent usage statistics.
 
-<a id="soldier.api.models.crud.AgentResponse"></a>
+<a id="focal.api.models.crud.AgentResponse"></a>
 
 ## AgentResponse Objects
 
@@ -44,7 +44,7 @@ class AgentResponse(BaseModel)
 
 Response model for agent operations.
 
-<a id="soldier.api.models.crud.RuleCreate"></a>
+<a id="focal.api.models.crud.RuleCreate"></a>
 
 ## RuleCreate Objects
 
@@ -54,7 +54,7 @@ class RuleCreate(BaseModel)
 
 Request model for creating a rule.
 
-<a id="soldier.api.models.crud.RuleUpdate"></a>
+<a id="focal.api.models.crud.RuleUpdate"></a>
 
 ## RuleUpdate Objects
 
@@ -64,7 +64,7 @@ class RuleUpdate(BaseModel)
 
 Request model for updating a rule.
 
-<a id="soldier.api.models.crud.RuleResponse"></a>
+<a id="focal.api.models.crud.RuleResponse"></a>
 
 ## RuleResponse Objects
 
@@ -74,7 +74,7 @@ class RuleResponse(BaseModel)
 
 Response model for rule operations.
 
-<a id="soldier.api.models.crud.StepTransitionCreate"></a>
+<a id="focal.api.models.crud.StepTransitionCreate"></a>
 
 ## StepTransitionCreate Objects
 
@@ -84,7 +84,7 @@ class StepTransitionCreate(BaseModel)
 
 Request model for step transition.
 
-<a id="soldier.api.models.crud.StepCreate"></a>
+<a id="focal.api.models.crud.StepCreate"></a>
 
 ## StepCreate Objects
 
@@ -94,7 +94,7 @@ class StepCreate(BaseModel)
 
 Request model for creating a scenario step.
 
-<a id="soldier.api.models.crud.StepUpdate"></a>
+<a id="focal.api.models.crud.StepUpdate"></a>
 
 ## StepUpdate Objects
 
@@ -104,7 +104,7 @@ class StepUpdate(BaseModel)
 
 Request model for updating a scenario step.
 
-<a id="soldier.api.models.crud.ScenarioCreate"></a>
+<a id="focal.api.models.crud.ScenarioCreate"></a>
 
 ## ScenarioCreate Objects
 
@@ -114,7 +114,7 @@ class ScenarioCreate(BaseModel)
 
 Request model for creating a scenario.
 
-<a id="soldier.api.models.crud.ScenarioUpdate"></a>
+<a id="focal.api.models.crud.ScenarioUpdate"></a>
 
 ## ScenarioUpdate Objects
 
@@ -124,7 +124,7 @@ class ScenarioUpdate(BaseModel)
 
 Request model for updating a scenario.
 
-<a id="soldier.api.models.crud.StepTransitionResponse"></a>
+<a id="focal.api.models.crud.StepTransitionResponse"></a>
 
 ## StepTransitionResponse Objects
 
@@ -134,7 +134,7 @@ class StepTransitionResponse(BaseModel)
 
 Response model for step transition.
 
-<a id="soldier.api.models.crud.StepResponse"></a>
+<a id="focal.api.models.crud.StepResponse"></a>
 
 ## StepResponse Objects
 
@@ -144,7 +144,7 @@ class StepResponse(BaseModel)
 
 Response model for scenario step.
 
-<a id="soldier.api.models.crud.ScenarioResponse"></a>
+<a id="focal.api.models.crud.ScenarioResponse"></a>
 
 ## ScenarioResponse Objects
 
@@ -154,7 +154,7 @@ class ScenarioResponse(BaseModel)
 
 Response model for scenario operations.
 
-<a id="soldier.api.models.crud.TemplateCreate"></a>
+<a id="focal.api.models.crud.TemplateCreate"></a>
 
 ## TemplateCreate Objects
 
@@ -164,7 +164,7 @@ class TemplateCreate(BaseModel)
 
 Request model for creating a template.
 
-<a id="soldier.api.models.crud.TemplateUpdate"></a>
+<a id="focal.api.models.crud.TemplateUpdate"></a>
 
 ## TemplateUpdate Objects
 
@@ -174,7 +174,7 @@ class TemplateUpdate(BaseModel)
 
 Request model for updating a template.
 
-<a id="soldier.api.models.crud.TemplateResponse"></a>
+<a id="focal.api.models.crud.TemplateResponse"></a>
 
 ## TemplateResponse Objects
 
@@ -184,7 +184,7 @@ class TemplateResponse(BaseModel)
 
 Response model for template operations.
 
-<a id="soldier.api.models.crud.TemplatePreviewRequest"></a>
+<a id="focal.api.models.crud.TemplatePreviewRequest"></a>
 
 ## TemplatePreviewRequest Objects
 
@@ -194,7 +194,7 @@ class TemplatePreviewRequest(BaseModel)
 
 Request model for template preview.
 
-<a id="soldier.api.models.crud.TemplatePreviewResponse"></a>
+<a id="focal.api.models.crud.TemplatePreviewResponse"></a>
 
 ## TemplatePreviewResponse Objects
 
@@ -204,7 +204,7 @@ class TemplatePreviewResponse(BaseModel)
 
 Response model for template preview.
 
-<a id="soldier.api.models.crud.VariableCreate"></a>
+<a id="focal.api.models.crud.VariableCreate"></a>
 
 ## VariableCreate Objects
 
@@ -214,7 +214,7 @@ class VariableCreate(BaseModel)
 
 Request model for creating a variable.
 
-<a id="soldier.api.models.crud.VariableUpdate"></a>
+<a id="focal.api.models.crud.VariableUpdate"></a>
 
 ## VariableUpdate Objects
 
@@ -224,7 +224,7 @@ class VariableUpdate(BaseModel)
 
 Request model for updating a variable.
 
-<a id="soldier.api.models.crud.VariableResponse"></a>
+<a id="focal.api.models.crud.VariableResponse"></a>
 
 ## VariableResponse Objects
 
@@ -234,7 +234,7 @@ class VariableResponse(BaseModel)
 
 Response model for variable operations.
 
-<a id="soldier.api.models.crud.ToolActivationCreate"></a>
+<a id="focal.api.models.crud.ToolActivationCreate"></a>
 
 ## ToolActivationCreate Objects
 
@@ -244,7 +244,7 @@ class ToolActivationCreate(BaseModel)
 
 Request model for enabling a tool.
 
-<a id="soldier.api.models.crud.ToolActivationUpdate"></a>
+<a id="focal.api.models.crud.ToolActivationUpdate"></a>
 
 ## ToolActivationUpdate Objects
 
@@ -254,7 +254,7 @@ class ToolActivationUpdate(BaseModel)
 
 Request model for updating tool activation.
 
-<a id="soldier.api.models.crud.ToolActivationResponse"></a>
+<a id="focal.api.models.crud.ToolActivationResponse"></a>
 
 ## ToolActivationResponse Objects
 
@@ -264,7 +264,7 @@ class ToolActivationResponse(BaseModel)
 
 Response model for tool activation.
 
-<a id="soldier.api.models.crud.PublishStatusResponse"></a>
+<a id="focal.api.models.crud.PublishStatusResponse"></a>
 
 ## PublishStatusResponse Objects
 
@@ -274,7 +274,7 @@ class PublishStatusResponse(BaseModel)
 
 Response model for publish status.
 
-<a id="soldier.api.models.crud.PublishRequest"></a>
+<a id="focal.api.models.crud.PublishRequest"></a>
 
 ## PublishRequest Objects
 
@@ -284,7 +284,7 @@ class PublishRequest(BaseModel)
 
 Request model for initiating publish.
 
-<a id="soldier.api.models.crud.PublishStageResponse"></a>
+<a id="focal.api.models.crud.PublishStageResponse"></a>
 
 ## PublishStageResponse Objects
 
@@ -294,7 +294,7 @@ class PublishStageResponse(BaseModel)
 
 Response model for publish stage.
 
-<a id="soldier.api.models.crud.PublishJobResponse"></a>
+<a id="focal.api.models.crud.PublishJobResponse"></a>
 
 ## PublishJobResponse Objects
 
@@ -304,7 +304,7 @@ class PublishJobResponse(BaseModel)
 
 Response model for publish job.
 
-<a id="soldier.api.models.crud.RollbackRequest"></a>
+<a id="focal.api.models.crud.RollbackRequest"></a>
 
 ## RollbackRequest Objects
 

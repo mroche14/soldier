@@ -1,10 +1,10 @@
-<a id="soldier.api.middleware.context"></a>
+<a id="focal.api.middleware.context"></a>
 
-# soldier.api.middleware.context
+# focal.api.middleware.context
 
 Request context middleware for observability.
 
-<a id="soldier.api.middleware.context.get_request_context"></a>
+<a id="focal.api.middleware.context.get_request_context"></a>
 
 #### get\_request\_context
 
@@ -18,7 +18,7 @@ Get the current request context.
 
   The RequestContext for the current request, or None if not in a request.
 
-<a id="soldier.api.middleware.context.set_request_context"></a>
+<a id="focal.api.middleware.context.set_request_context"></a>
 
 #### set\_request\_context
 
@@ -32,7 +32,7 @@ Set the request context for the current request.
 
 - `context` - The RequestContext to set
 
-<a id="soldier.api.middleware.context.RequestContextMiddleware"></a>
+<a id="focal.api.middleware.context.RequestContextMiddleware"></a>
 
 ## RequestContextMiddleware Objects
 
@@ -45,7 +45,7 @@ Middleware that binds request context for observability.
 Creates a RequestContext at the start of each request and makes it
 available via context variable for logging and tracing.
 
-<a id="soldier.api.middleware.context.RequestContextMiddleware.dispatch"></a>
+<a id="focal.api.middleware.context.RequestContextMiddleware.dispatch"></a>
 
 #### dispatch
 
@@ -56,7 +56,7 @@ async def dispatch(request: Request,
 
 Process request and bind context.
 
-<a id="soldier.api.middleware.context.update_request_context"></a>
+<a id="focal.api.middleware.context.update_request_context"></a>
 
 #### update\_request\_context
 

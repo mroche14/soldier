@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from soldier.config.models import (
+from focal.config.models import (
     APIConfig,
     EmbeddingProviderConfig,
     GenerationConfig,
@@ -21,7 +21,7 @@ from soldier.config.models import (
     StoreBackendConfig,
     TracingConfig,
 )
-from soldier.config.models.pipeline import SituationSensorConfig
+from focal.config.models.pipeline import SituationSensorConfig
 
 
 class TestRateLimitConfig:
@@ -345,7 +345,7 @@ class TestTracingConfig:
         """Default values are correct."""
         config = TracingConfig()
         assert config.enabled is True
-        assert config.service_name == "soldier"
+        assert config.service_name == "focal"
         assert config.sample_rate == 1.0
 
     def test_sample_rate_range(self) -> None:

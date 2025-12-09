@@ -6,8 +6,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from soldier.api.dependencies import get_settings, reset_dependencies
-from soldier.api.middleware.context import (
+from focal.api.dependencies import get_settings, reset_dependencies
+from focal.api.middleware.context import (
     RequestContextMiddleware,
     get_request_context,
 )

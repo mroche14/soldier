@@ -1,4 +1,4 @@
-<a id="soldier.providers.llm.ollama"></a>
+<a id="focal.providers.llm.ollama"></a>
 
-# soldier.providers.llm.ollama
+# focal.providers.llm.ollama
 

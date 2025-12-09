@@ -1,10 +1,10 @@
-<a id="soldier.alignment.retrieval.reranker"></a>
+<a id="focal.alignment.retrieval.reranker"></a>
 
-# soldier.alignment.retrieval.reranker
+# focal.alignment.retrieval.reranker
 
 Reranker wrapper for rule retrieval.
 
-<a id="soldier.alignment.retrieval.reranker.RuleReranker"></a>
+<a id="focal.alignment.retrieval.reranker.RuleReranker"></a>
 
 ## RuleReranker Objects
 
@@ -18,7 +18,7 @@ Reranking improves retrieval precision by using a cross-encoder
 model to score query-document pairs more accurately than
 embedding-based similarity alone.
 
-<a id="soldier.alignment.retrieval.reranker.RuleReranker.__init__"></a>
+<a id="focal.alignment.retrieval.reranker.RuleReranker.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -33,7 +33,7 @@ Initialize the reranker.
 - `provider` - RerankProvider implementation
 - `top_k` - Optional limit on results to keep from reranker
 
-<a id="soldier.alignment.retrieval.reranker.RuleReranker.rerank"></a>
+<a id="focal.alignment.retrieval.reranker.RuleReranker.rerank"></a>
 
 #### rerank
 

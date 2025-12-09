@@ -3,7 +3,7 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.planning.models import (
+from focal.alignment.planning.models import (
     ContributionType,
     ScenarioContribution,
     ScenarioContributionPlan,

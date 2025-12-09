@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from soldier.config.loader import (
+from focal.config.loader import (
     deep_merge,
     get_config_dir,
     get_environment,
@@ -88,13 +88,13 @@ class TestGetEnvironment:
     """Tests for get_environment function."""
 
     def test_returns_env_var_value(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Returns SOLDIER_ENV value when set."""
-        monkeypatch.setenv("SOLDIER_ENV", "production")
+        """Returns FOCAL_ENV value when set."""
+        monkeypatch.setenv("FOCAL_ENV", "production")
         assert get_environment() == "production"
 
     def test_defaults_to_development(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Defaults to 'development' when SOLDIER_ENV not set."""
-        monkeypatch.delenv("SOLDIER_ENV", raising=False)
+        """Defaults to 'development' when FOCAL_ENV not set."""
+        monkeypatch.delenv("FOCAL_ENV", raising=False)
         assert get_environment() == "development"
 
 
@@ -104,10 +104,10 @@ class TestGetConfigDir:
     def test_uses_env_var_when_set(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Uses SOLDIER_CONFIG_DIR when set."""
+        """Uses FOCAL_CONFIG_DIR when set."""
         config_dir = tmp_path / "custom_config"
         config_dir.mkdir()
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
 
         result = get_config_dir()
         assert result == config_dir
@@ -115,8 +115,8 @@ class TestGetConfigDir:
     def test_raises_for_missing_env_dir(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Raises error when SOLDIER_CONFIG_DIR doesn't exist."""
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(tmp_path / "missing"))
+        """Raises error when FOCAL_CONFIG_DIR doesn't exist."""
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(tmp_path / "missing"))
 
         with pytest.raises(FileNotFoundError):
             get_config_dir()
@@ -134,8 +134,8 @@ class TestLoadConfig:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("app_name = 'test'\ndebug = false")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "nonexistent")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
 
         result = load_config()
         assert result == {"app_name": "test", "debug": False}
@@ -153,8 +153,8 @@ class TestLoadConfig:
         dev_toml = config_dir / "development.toml"
         dev_toml.write_text("debug = true")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "development")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "development")
 
         result = load_config()
         assert result == {"app_name": "test", "debug": True}
@@ -166,7 +166,7 @@ class TestLoadConfig:
         config_dir = tmp_path / "config"
         config_dir.mkdir()
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
 
         with pytest.raises(FileNotFoundError, match="default.toml"):
             load_config()

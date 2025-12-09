@@ -2,7 +2,7 @@
 
 import pytest
 
-from soldier.alignment.context.customer_schema_mask import (
+from focal.alignment.context.customer_schema_mask import (
     CustomerSchemaMask,
     CustomerSchemaMaskEntry,
 )

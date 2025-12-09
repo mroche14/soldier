@@ -4,15 +4,15 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.models import Turn
-from soldier.alignment.context.situation_snapshot import (
+from focal.alignment.context.models import Turn
+from focal.alignment.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from soldier.alignment.execution.models import ToolResult
-from soldier.alignment.filtering.models import MatchedRule
-from soldier.alignment.generation.prompt_builder import PromptBuilder
-from soldier.alignment.models import Rule
+from focal.alignment.execution.models import ToolResult
+from focal.alignment.filtering.models import MatchedRule
+from focal.alignment.generation.prompt_builder import PromptBuilder
+from focal.alignment.models import Rule
 
 
 def create_rule(

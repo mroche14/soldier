@@ -1,10 +1,10 @@
-<a id="soldier.memory.models.relationship"></a>
+<a id="focal.memory.models.relationship"></a>
 
-# soldier.memory.models.relationship
+# focal.memory.models.relationship
 
 Relationship model for memory domain.
 
-<a id="soldier.memory.models.relationship.utc_now"></a>
+<a id="focal.memory.models.relationship.utc_now"></a>
 
 #### utc\_now
 
@@ -14,7 +14,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.memory.models.relationship.Relationship"></a>
+<a id="focal.memory.models.relationship.Relationship"></a>
 
 ## Relationship Objects
 

@@ -1,12 +1,12 @@
-<a id="soldier.alignment.filtering.models"></a>
+<a id="focal.alignment.filtering.models"></a>
 
-# soldier.alignment.filtering.models
+# focal.alignment.filtering.models
 
 Filtering models for alignment pipeline.
 
 Contains models for rule and scenario filtering results.
 
-<a id="soldier.alignment.filtering.models.MatchedRule"></a>
+<a id="focal.alignment.filtering.models.MatchedRule"></a>
 
 ## MatchedRule Objects
 
@@ -16,7 +16,7 @@ class MatchedRule(BaseModel)
 
 A rule determined to apply to the current turn.
 
-<a id="soldier.alignment.filtering.models.RuleFilterResult"></a>
+<a id="focal.alignment.filtering.models.RuleFilterResult"></a>
 
 ## RuleFilterResult Objects
 
@@ -26,7 +26,7 @@ class RuleFilterResult(BaseModel)
 
 Result of rule filtering.
 
-<a id="soldier.alignment.filtering.models.ScenarioAction"></a>
+<a id="focal.alignment.filtering.models.ScenarioAction"></a>
 
 ## ScenarioAction Objects
 
@@ -36,43 +36,43 @@ class ScenarioAction(str, Enum)
 
 Action to take regarding scenario navigation.
 
-<a id="soldier.alignment.filtering.models.ScenarioAction.NONE"></a>
+<a id="focal.alignment.filtering.models.ScenarioAction.NONE"></a>
 
 #### NONE
 
 No scenario action
 
-<a id="soldier.alignment.filtering.models.ScenarioAction.START"></a>
+<a id="focal.alignment.filtering.models.ScenarioAction.START"></a>
 
 #### START
 
 Start a new scenario
 
-<a id="soldier.alignment.filtering.models.ScenarioAction.CONTINUE"></a>
+<a id="focal.alignment.filtering.models.ScenarioAction.CONTINUE"></a>
 
 #### CONTINUE
 
 Stay in current step
 
-<a id="soldier.alignment.filtering.models.ScenarioAction.TRANSITION"></a>
+<a id="focal.alignment.filtering.models.ScenarioAction.TRANSITION"></a>
 
 #### TRANSITION
 
 Move to new step
 
-<a id="soldier.alignment.filtering.models.ScenarioAction.EXIT"></a>
+<a id="focal.alignment.filtering.models.ScenarioAction.EXIT"></a>
 
 #### EXIT
 
 Exit scenario
 
-<a id="soldier.alignment.filtering.models.ScenarioAction.RELOCALIZE"></a>
+<a id="focal.alignment.filtering.models.ScenarioAction.RELOCALIZE"></a>
 
 #### RELOCALIZE
 
 Recovery to valid step
 
-<a id="soldier.alignment.filtering.models.ScenarioFilterResult"></a>
+<a id="focal.alignment.filtering.models.ScenarioFilterResult"></a>
 
 ## ScenarioFilterResult Objects
 

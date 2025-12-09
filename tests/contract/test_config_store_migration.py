@@ -10,13 +10,13 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.migration.models import (
+from focal.alignment.migration.models import (
     MigrationPlan,
     MigrationPlanStatus,
     MigrationSummary,
     TransformationMap,
 )
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
 
 
 class ConfigStoreMigrationContract(ABC):

@@ -5,18 +5,18 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.migration.diff import compute_node_content_hash
-from soldier.alignment.migration.models import (
+from focal.alignment.migration.diff import compute_node_content_hash
+from focal.alignment.migration.models import (
     AnchorMigrationPolicy,
     MigrationPlanStatus,
     ScopeFilter,
 )
-from soldier.alignment.migration.planner import MigrationDeployer, MigrationPlanner
-from soldier.alignment.models import Scenario, ScenarioStep, StepTransition
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.config.models.migration import ScenarioMigrationConfig
-from soldier.conversation.models import Channel, PendingMigration, Session, StepVisit
-from soldier.conversation.stores.inmemory import InMemorySessionStore
+from focal.alignment.migration.planner import MigrationDeployer, MigrationPlanner
+from focal.alignment.models import Scenario, ScenarioStep, StepTransition
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.config.models.migration import ScenarioMigrationConfig
+from focal.conversation.models import Channel, PendingMigration, Session, StepVisit
+from focal.conversation.stores.inmemory import InMemorySessionStore
 
 
 @pytest.fixture

@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.scenarios"></a>
+<a id="focal.api.routes.scenarios"></a>
 
-# soldier.api.routes.scenarios
+# focal.api.routes.scenarios
 
 Scenario management endpoints.
 
-<a id="soldier.api.routes.scenarios.list_scenarios"></a>
+<a id="focal.api.routes.scenarios.list_scenarios"></a>
 
 #### list\_scenarios
 
@@ -26,7 +26,7 @@ async def list_scenarios(
 
 List scenarios for an agent.
 
-<a id="soldier.api.routes.scenarios.create_scenario"></a>
+<a id="focal.api.routes.scenarios.create_scenario"></a>
 
 #### create\_scenario
 
@@ -39,7 +39,7 @@ async def create_scenario(agent_id: UUID, request: ScenarioCreate,
 
 Create a new scenario with steps.
 
-<a id="soldier.api.routes.scenarios.get_scenario"></a>
+<a id="focal.api.routes.scenarios.get_scenario"></a>
 
 #### get\_scenario
 
@@ -52,7 +52,7 @@ async def get_scenario(agent_id: UUID, scenario_id: UUID,
 
 Get a scenario by ID.
 
-<a id="soldier.api.routes.scenarios.update_scenario"></a>
+<a id="focal.api.routes.scenarios.update_scenario"></a>
 
 #### update\_scenario
 
@@ -66,7 +66,7 @@ async def update_scenario(agent_id: UUID, scenario_id: UUID,
 
 Update a scenario.
 
-<a id="soldier.api.routes.scenarios.delete_scenario"></a>
+<a id="focal.api.routes.scenarios.delete_scenario"></a>
 
 #### delete\_scenario
 
@@ -79,7 +79,7 @@ async def delete_scenario(agent_id: UUID, scenario_id: UUID,
 
 Delete a scenario (soft delete).
 
-<a id="soldier.api.routes.scenarios.add_step"></a>
+<a id="focal.api.routes.scenarios.add_step"></a>
 
 #### add\_step
 
@@ -94,7 +94,7 @@ async def add_step(agent_id: UUID, scenario_id: UUID, request: StepCreate,
 
 Add a step to a scenario.
 
-<a id="soldier.api.routes.scenarios.update_step"></a>
+<a id="focal.api.routes.scenarios.update_step"></a>
 
 #### update\_step
 
@@ -107,7 +107,7 @@ async def update_step(agent_id: UUID, scenario_id: UUID, step_id: UUID,
 
 Update a scenario step.
 
-<a id="soldier.api.routes.scenarios.delete_step"></a>
+<a id="focal.api.routes.scenarios.delete_step"></a>
 
 #### delete\_step
 

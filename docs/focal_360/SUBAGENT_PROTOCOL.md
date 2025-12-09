@@ -29,10 +29,10 @@ The gap analysis identifies many partial implementations. Search before creating
 ```bash
 # Search for related classes/functions
 mgrep "your feature name"
-grep -r "RelatedClassName" soldier/
+grep -r "RelatedClassName" focal/
 
 # Check if the mechanism already exists somewhere
-grep -r "def method_you_plan_to_add" soldier/
+grep -r "def method_you_plan_to_add" focal/
 ```
 
 ### 2. Modify, Don't Duplicate
@@ -153,7 +153,7 @@ import anthropic
 print(f"Processing {user_id}")  # WRONG!
 
 # CORRECT: structlog
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 logger = get_logger(__name__)
 logger.info("processing_user", user_id=str(user_id))
 
@@ -181,7 +181,7 @@ The gap analysis (`docs/focal_360/gap_analysis.md`) identifies what already exis
 
 ### Vocabulary Mapping
 
-| FOCAL 360 Term | Existing Soldier Term | Status |
+| FOCAL 360 Term | Existing Focal Term | Status |
 |----------------|----------------------|--------|
 | Ingress Control | `RateLimitMiddleware` | Extend (add debouncing) |
 | Debouncing | `burst_size` config | Implement (field unused) |
@@ -195,9 +195,9 @@ The gap analysis (`docs/focal_360/gap_analysis.md`) identifies what already exis
 
 | Category | Description | Example Files |
 |----------|-------------|---------------|
-| **Category A: Pre-Pipeline** | Wraps the turn pipeline | `soldier/api/middleware/` |
-| **Category B: Pipeline Extensions** | Extends existing phases | `soldier/alignment/`, `soldier/config/` |
-| **Category C: New Systems** | Entirely new subsystems | `soldier/agenda/`, `soldier/meta_agents/` |
+| **Category A: Pre-Pipeline** | Wraps the turn pipeline | `focal/api/middleware/` |
+| **Category B: Pipeline Extensions** | Extends existing phases | `focal/alignment/`, `focal/config/` |
+| **Category C: New Systems** | Entirely new subsystems | `focal/agenda/`, `focal/meta_agents/` |
 
 ---
 
@@ -206,9 +206,9 @@ The gap analysis (`docs/focal_360/gap_analysis.md`) identifies what already exis
 ### Adding Middleware (Category A)
 
 ```python
-# soldier/api/middleware/ingress.py
+# focal/api/middleware/ingress.py
 from starlette.middleware.base import BaseHTTPMiddleware
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -236,7 +236,7 @@ abuse_threshold = 5
 ```
 
 ```python
-# soldier/config/models/api.py
+# focal/config/models/api.py
 class IngressConfig(BaseModel):
     """Configuration for ingress control."""
     enabled: bool = True
@@ -253,7 +253,7 @@ class APIConfig(BaseModel):
 ### Adding Structured Logging
 
 ```python
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -273,17 +273,17 @@ logger.info(f"Coalesced {count} messages in {elapsed}ms")  # WRONG!
 ### Adding Metrics
 
 ```python
-# soldier/observability/metrics.py
+# focal/observability/metrics.py
 from prometheus_client import Counter, Histogram
 
 ingress_coalesced_total = Counter(
-    "soldier_ingress_coalesced_total",
+    "focal_ingress_coalesced_total",
     "Total coalesced message bursts",
     ["tenant_id", "channel"],
 )
 
 ingress_debounce_duration = Histogram(
-    "soldier_ingress_debounce_duration_seconds",
+    "focal_ingress_debounce_duration_seconds",
     "Duration of debounce window",
     ["tenant_id"],
 )
@@ -292,7 +292,7 @@ ingress_debounce_duration = Histogram(
 ### Adding a Store Interface (Category C)
 
 ```python
-# soldier/agenda/store.py
+# focal/agenda/store.py
 from abc import ABC, abstractmethod
 from uuid import UUID
 
@@ -311,7 +311,7 @@ class AgendaStore(ABC):
         """Save an agenda task."""
         pass
 
-# soldier/agenda/stores/inmemory.py
+# focal/agenda/stores/inmemory.py
 class InMemoryAgendaStore(AgendaStore):
     """In-memory implementation for testing."""
 
@@ -386,12 +386,12 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before (in the checklist file)
 - [ ] **Create IngressConfig model**
-  - File: `soldier/config/models/api.py`
+  - File: `focal/config/models/api.py`
   - Action: Add config model
 
 # After (edit the checklist file to show)
 - [x] **Create IngressConfig model**
-  - File: `soldier/config/models/api.py`
+  - File: `focal/config/models/api.py`
   - Action: Added config model
   - **Implemented**: Created with `debounce_window_ms`, `coalesce_enabled`, `abuse_threshold`. Added to APIConfig.
 ```
@@ -415,11 +415,11 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before
 - [ ] **Integrate with SideEffectRegistry**
-  - File: `soldier/api/middleware/ingress.py`
+  - File: `focal/api/middleware/ingress.py`
 
 # After
 - [ ] ⏸️ BLOCKED: SideEffectRegistry not yet created (Wave 4 prerequisite)
-  - File: `soldier/api/middleware/ingress.py`
+  - File: `focal/api/middleware/ingress.py`
 ```
 
 ### Adding Implementation Notes
@@ -451,10 +451,10 @@ uv run pytest
 uv run pytest tests/unit/api/middleware/test_ingress.py -v
 
 # Run with coverage
-uv run pytest --cov=soldier/api/middleware --cov-report=term-missing
+uv run pytest --cov=focal/api/middleware --cov-report=term-missing
 
 # Run only your feature's tests
-uv run pytest tests/unit/agenda/ -v --cov=soldier/agenda
+uv run pytest tests/unit/agenda/ -v --cov=focal/agenda
 ```
 
 ### Test Patterns
@@ -462,7 +462,7 @@ uv run pytest tests/unit/agenda/ -v --cov=soldier/agenda
 ```python
 # tests/unit/api/middleware/test_ingress.py
 import pytest
-from soldier.api.middleware.ingress import IngressControlMiddleware
+from focal.api.middleware.ingress import IngressControlMiddleware
 
 class TestIngressControlMiddleware:
     """Test suite for IngressControlMiddleware."""
@@ -488,7 +488,7 @@ class TestIngressControlMiddleware:
 
 ```python
 # tests/factories/focal_360.py
-from soldier.agenda.models import AgendaTask
+from focal.agenda.models import AgendaTask
 
 class AgendaTaskFactory:
     @staticmethod
@@ -519,7 +519,7 @@ At the end of your work, provide this report:
 - **Coverage**: XX%
 
 ## Completed Items
-1. Created `IngressControlMiddleware` in `soldier/api/middleware/ingress.py`
+1. Created `IngressControlMiddleware` in `focal/api/middleware/ingress.py`
 2. Added config section `[api.ingress]` to `config/default.toml`
 3. Extended `RateLimiter` with debouncing capability
 4. ... (list all)
@@ -541,15 +541,15 @@ At the end of your work, provide this report:
 
 ## Files Created/Modified
 ### Created
-- `soldier/api/middleware/ingress.py`
-- `soldier/config/models/ingress.py`
+- `focal/api/middleware/ingress.py`
+- `focal/config/models/ingress.py`
 - `tests/unit/api/middleware/test_ingress.py`
 
 ### Modified
-- `soldier/api/app.py` (added middleware registration)
-- `soldier/api/middleware/rate_limit.py` (added debounce support)
+- `focal/api/app.py` (added middleware registration)
+- `focal/api/middleware/rate_limit.py` (added debounce support)
 - `config/default.toml` (added [api.ingress] section)
-- `soldier/config/models/api.py` (added IngressConfig)
+- `focal/config/models/api.py` (added IngressConfig)
 
 ## Notes for Next Wave
 - The IngressControl is ready for SideEffectRegistry integration
@@ -564,39 +564,39 @@ At the end of your work, provide this report:
 
 ```python
 # Logging
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 logger = get_logger(__name__)
 
 # Metrics
-from soldier.observability.metrics import my_metric
+from focal.observability.metrics import my_metric
 
 # Models
-from soldier.alignment.models import Rule, MatchedRule
+from focal.alignment.models import Rule, MatchedRule
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime, UTC
 
 # Stores
-from soldier.alignment.stores.config_store import ConfigStore
-from soldier.alignment.stores.inmemory import InMemoryConfigStore
+from focal.alignment.stores.config_store import ConfigStore
+from focal.alignment.stores.inmemory import InMemoryConfigStore
 
 # Config
-from soldier.config.loader import get_settings
+from focal.config.loader import get_settings
 settings = get_settings()
 
 # Existing middleware
-from soldier.api.middleware.rate_limit import RateLimiter
+from focal.api.middleware.rate_limit import RateLimiter
 ```
 
 ### File Locations
 
 | Type | Location Pattern |
 |------|------------------|
-| Middleware | `soldier/api/middleware/{name}.py` |
-| Models (alignment) | `soldier/alignment/models/{name}.py` |
-| Models (new system) | `soldier/{system}/models.py` |
-| Stores | `soldier/{system}/store.py` + `soldier/{system}/stores/` |
-| Config Models | `soldier/config/models/{domain}.py` |
+| Middleware | `focal/api/middleware/{name}.py` |
+| Models (alignment) | `focal/alignment/models/{name}.py` |
+| Models (new system) | `focal/{system}/models.py` |
+| Stores | `focal/{system}/store.py` + `focal/{system}/stores/` |
+| Config Models | `focal/config/models/{domain}.py` |
 | Unit Tests | `tests/unit/{mirror_of_src}/test_{name}.py` |
 | Integration Tests | `tests/integration/{feature}/test_{name}.py` |
 
@@ -610,13 +610,13 @@ from soldier.api.middleware.rate_limit import RateLimiter
 
 ```bash
 # Check for linting issues
-uv run ruff check soldier/
+uv run ruff check focal/
 
 # Auto-fix what can be fixed
-uv run ruff check --fix soldier/
+uv run ruff check --fix focal/
 
 # Format code
-uv run ruff format soldier/
+uv run ruff format focal/
 ```
 
 **All ruff errors MUST be fixed** before marking feature complete.
@@ -625,10 +625,10 @@ uv run ruff format soldier/
 
 ```bash
 # Run type checking on your changes
-uv run mypy soldier/ --ignore-missing-imports
+uv run mypy focal/ --ignore-missing-imports
 
 # Or check specific files you modified
-uv run mypy soldier/api/middleware/ingress.py
+uv run mypy focal/api/middleware/ingress.py
 ```
 
 **Target**: No new type errors introduced. Pre-existing errors are acceptable but don't add more.
@@ -639,9 +639,9 @@ Run this at the end of each feature:
 
 ```bash
 # Full quality check
-echo "=== RUFF CHECK ===" && uv run ruff check soldier/ && \
-echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check soldier/ && \
-echo "=== MYPY ===" && uv run mypy soldier/ --ignore-missing-imports && \
+echo "=== RUFF CHECK ===" && uv run ruff check focal/ && \
+echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check focal/ && \
+echo "=== MYPY ===" && uv run mypy focal/ --ignore-missing-imports && \
 echo "=== TESTS ===" && uv run pytest tests/unit/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```

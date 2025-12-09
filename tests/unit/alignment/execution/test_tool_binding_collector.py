@@ -3,10 +3,10 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.execution.tool_binding_collector import ToolBindingCollector
-from soldier.alignment.filtering.models import MatchedRule
-from soldier.alignment.models.tool_binding import ToolBinding
-from soldier.alignment.planning.models import ScenarioContributionPlan, ScenarioContribution
+from focal.alignment.execution.tool_binding_collector import ToolBindingCollector
+from focal.alignment.filtering.models import MatchedRule
+from focal.alignment.models.tool_binding import ToolBinding
+from focal.alignment.planning.models import ScenarioContributionPlan, ScenarioContribution
 from tests.factories.alignment import RuleFactory
 
 
@@ -18,7 +18,7 @@ def collector() -> ToolBindingCollector:
 @pytest.fixture
 def sample_contribution_plan() -> ScenarioContributionPlan:
     """Create a sample contribution plan."""
-    from soldier.alignment.planning.models import ContributionType
+    from focal.alignment.planning.models import ContributionType
 
     scenario_id = uuid4()
     step_id = uuid4()
@@ -63,7 +63,7 @@ async def test_collect_from_rules_only(collector: ToolBindingCollector, sample_c
 @pytest.mark.asyncio
 async def test_collect_from_scenario_steps_only(collector: ToolBindingCollector, sample_contribution_plan: ScenarioContributionPlan) -> None:
     """Test collecting tool bindings from scenario steps only."""
-    from soldier.alignment.models.scenario import ScenarioStep
+    from focal.alignment.models.scenario import ScenarioStep
 
     binding1 = ToolBinding(tool_id="step_tool_1", when="DURING_STEP")
 
@@ -93,7 +93,7 @@ async def test_collect_from_scenario_steps_only(collector: ToolBindingCollector,
 @pytest.mark.asyncio
 async def test_collect_from_both_rules_and_steps(collector: ToolBindingCollector, sample_contribution_plan: ScenarioContributionPlan) -> None:
     """Test collecting from both rules and scenario steps."""
-    from soldier.alignment.models.scenario import ScenarioStep
+    from focal.alignment.models.scenario import ScenarioStep
 
     rule_binding = ToolBinding(tool_id="rule_tool", when="BEFORE_STEP")
     step_binding = ToolBinding(tool_id="step_tool", when="DURING_STEP")
@@ -223,7 +223,7 @@ async def test_legacy_attached_tool_ids_fallback(collector: ToolBindingCollector
 @pytest.mark.asyncio
 async def test_legacy_tool_ids_on_scenario_step(collector: ToolBindingCollector, sample_contribution_plan: ScenarioContributionPlan) -> None:
     """Test fallback to legacy tool_ids field on scenario step."""
-    from soldier.alignment.models.scenario import ScenarioStep
+    from focal.alignment.models.scenario import ScenarioStep
 
     scenario_id = sample_contribution_plan.contributions[0].scenario_id
     step_id = sample_contribution_plan.contributions[0].current_step_id

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from soldier.config import get_settings, reload_settings
-from soldier.config.settings import Settings, set_toml_config
+from focal.config import get_settings, reload_settings
+from focal.config.settings import Settings, set_toml_config
 
 
 class TestSettings:
@@ -25,7 +25,7 @@ class TestSettings:
     def test_default_values(self) -> None:
         """Settings has sensible defaults."""
         settings = Settings()
-        assert settings.app_name == "soldier"
+        assert settings.app_name == "focal"
         assert settings.debug is False
         assert settings.log_level == "INFO"
 
@@ -72,8 +72,8 @@ class TestGetSettings:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("app_name = 'test'")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "nonexistent")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
 
         # Clear any cached settings
         get_settings.cache_clear()
@@ -91,8 +91,8 @@ class TestGetSettings:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("app_name = 'cached'")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "nonexistent")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
 
         get_settings.cache_clear()
 
@@ -109,8 +109,8 @@ class TestGetSettings:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("app_name = 'original'")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "nonexistent")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
 
         get_settings.cache_clear()
         settings1 = get_settings()
@@ -136,9 +136,9 @@ class TestEnvironmentVariableOverrides:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("debug = false")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "nonexistent")
-        monkeypatch.setenv("SOLDIER_DEBUG", "true")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
+        monkeypatch.setenv("FOCAL_DEBUG", "true")
 
         get_settings.cache_clear()
         settings = get_settings()
@@ -153,9 +153,9 @@ class TestEnvironmentVariableOverrides:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("[api]\nport = 8000")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "nonexistent")
-        monkeypatch.setenv("SOLDIER_API__PORT", "9000")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
+        monkeypatch.setenv("FOCAL_API__PORT", "9000")
 
         get_settings.cache_clear()
         settings = get_settings()
@@ -170,9 +170,9 @@ class TestEnvironmentVariableOverrides:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("[api.rate_limit]\nenabled = true")
 
-        monkeypatch.setenv("SOLDIER_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("SOLDIER_ENV", "nonexistent")
-        monkeypatch.setenv("SOLDIER_API__RATE_LIMIT__ENABLED", "false")
+        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
+        monkeypatch.setenv("FOCAL_API__RATE_LIMIT__ENABLED", "false")
 
         get_settings.cache_clear()
         settings = get_settings()

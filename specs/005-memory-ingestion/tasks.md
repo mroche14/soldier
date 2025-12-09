@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/005-memory-ingestion/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅
 
-**Tests**: Unit tests included as per Soldier testing requirements (85% coverage target). Integration tests included for full ingestion flow.
+**Tests**: Unit tests included as per Focal testing requirements (85% coverage target). Integration tests included for full ingestion flow.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -22,7 +22,7 @@
 - [x] T001 Add sentence-transformers dependency via uv
 - [x] T002 Add python-Levenshtein dependency for fuzzy matching via uv
 - [x] T003 [P] Add rq (optional) dependency for Redis task queue via uv
-- [x] T004 [P] Create soldier/memory/ingestion/ module with __init__.py
+- [x] T004 [P] Create focal/memory/ingestion/ module with __init__.py
 
 ---
 
@@ -32,21 +32,21 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T005 [P] Create MemoryIngestionConfig in soldier/config/models/pipeline.py
-- [x] T006 [P] Create EntityExtractionConfig in soldier/config/models/pipeline.py
-- [x] T007 [P] Create EntityDeduplicationConfig in soldier/config/models/pipeline.py
-- [x] T008 [P] Create SummarizationConfig in soldier/config/models/pipeline.py
-- [x] T009 [P] Create ExtractedEntity structured output model in soldier/memory/ingestion/models.py
-- [x] T010 [P] Create ExtractedRelationship structured output model in soldier/memory/ingestion/models.py
-- [x] T011 [P] Create EntityExtractionResult structured output model in soldier/memory/ingestion/models.py
-- [x] T012 [P] Create IngestionError exception in soldier/memory/ingestion/errors.py
-- [x] T013 [P] Create ExtractionError exception in soldier/memory/ingestion/errors.py
-- [x] T014 [P] Create SummarizationError exception in soldier/memory/ingestion/errors.py
+- [x] T005 [P] Create MemoryIngestionConfig in focal/config/models/pipeline.py
+- [x] T006 [P] Create EntityExtractionConfig in focal/config/models/pipeline.py
+- [x] T007 [P] Create EntityDeduplicationConfig in focal/config/models/pipeline.py
+- [x] T008 [P] Create SummarizationConfig in focal/config/models/pipeline.py
+- [x] T009 [P] Create ExtractedEntity structured output model in focal/memory/ingestion/models.py
+- [x] T010 [P] Create ExtractedRelationship structured output model in focal/memory/ingestion/models.py
+- [x] T011 [P] Create EntityExtractionResult structured output model in focal/memory/ingestion/models.py
+- [x] T012 [P] Create IngestionError exception in focal/memory/ingestion/errors.py
+- [x] T013 [P] Create ExtractionError exception in focal/memory/ingestion/errors.py
+- [x] T014 [P] Create SummarizationError exception in focal/memory/ingestion/errors.py
 - [x] T015 [P] Add memory ingestion configuration section to config/default.toml
-- [x] T016 [P] Create SentenceTransformersProvider in soldier/providers/embedding/sentence_transformers.py
-- [x] T017 [P] Create TaskQueue interface in soldier/memory/ingestion/queue.py
-- [x] T018 [P] Create InMemoryTaskQueue implementation in soldier/memory/ingestion/queue.py
-- [x] T019 [P] Create RedisTaskQueue implementation (optional) in soldier/memory/ingestion/queue.py
+- [x] T016 [P] Create SentenceTransformersProvider in focal/providers/embedding/sentence_transformers.py
+- [x] T017 [P] Create TaskQueue interface in focal/memory/ingestion/queue.py
+- [x] T018 [P] Create InMemoryTaskQueue implementation in focal/memory/ingestion/queue.py
+- [x] T019 [P] Create RedisTaskQueue implementation (optional) in focal/memory/ingestion/queue.py
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -72,17 +72,17 @@
 
 ### Implementation for User Story 1
 
-- [x] T027 [US1] Implement MemoryIngestor class skeleton in soldier/memory/ingestion/ingestor.py
-- [x] T028 [US1] Implement MemoryIngestor.__init__() with dependency injection in soldier/memory/ingestion/ingestor.py
-- [x] T029 [US1] Implement MemoryIngestor.ingest_turn() - episode creation logic in soldier/memory/ingestion/ingestor.py
-- [x] T030 [US1] Implement MemoryIngestor.ingest_turn() - embedding generation with fallback in soldier/memory/ingestion/ingestor.py
-- [x] T031 [US1] Implement MemoryIngestor.ingest_turn() - episode storage in soldier/memory/ingestion/ingestor.py
-- [x] T032 [US1] Implement MemoryIngestor.ingest_event() for system events in soldier/memory/ingestion/ingestor.py
-- [x] T033 [US1] Implement MemoryIngestor._queue_async_task() helper for task queuing in soldier/memory/ingestion/ingestor.py
-- [x] T034 [US1] Add structured logging for episode creation in soldier/memory/ingestion/ingestor.py
-- [x] T035 [US1] Add OpenTelemetry span for memory.ingest_turn in soldier/memory/ingestion/ingestor.py
-- [x] T036 [US1] Add Prometheus metrics for episode creation in soldier/memory/ingestion/ingestor.py
-- [x] T037 [US1] Implement error handling and graceful degradation in soldier/memory/ingestion/ingestor.py
+- [x] T027 [US1] Implement MemoryIngestor class skeleton in focal/memory/ingestion/ingestor.py
+- [x] T028 [US1] Implement MemoryIngestor.__init__() with dependency injection in focal/memory/ingestion/ingestor.py
+- [x] T029 [US1] Implement MemoryIngestor.ingest_turn() - episode creation logic in focal/memory/ingestion/ingestor.py
+- [x] T030 [US1] Implement MemoryIngestor.ingest_turn() - embedding generation with fallback in focal/memory/ingestion/ingestor.py
+- [x] T031 [US1] Implement MemoryIngestor.ingest_turn() - episode storage in focal/memory/ingestion/ingestor.py
+- [x] T032 [US1] Implement MemoryIngestor.ingest_event() for system events in focal/memory/ingestion/ingestor.py
+- [x] T033 [US1] Implement MemoryIngestor._queue_async_task() helper for task queuing in focal/memory/ingestion/ingestor.py
+- [x] T034 [US1] Add structured logging for episode creation in focal/memory/ingestion/ingestor.py
+- [x] T035 [US1] Add OpenTelemetry span for memory.ingest_turn in focal/memory/ingestion/ingestor.py
+- [x] T036 [US1] Add Prometheus metrics for episode creation in focal/memory/ingestion/ingestor.py
+- [x] T037 [US1] Implement error handling and graceful degradation in focal/memory/ingestion/ingestor.py
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - episodes are created from conversation turns with embeddings, async tasks are queued, and the system handles failures gracefully
 
@@ -109,27 +109,27 @@
 
 ### Implementation for User Story 2
 
-- [x] T048 [P] [US2] Implement EntityExtractor class skeleton in soldier/memory/ingestion/entity_extractor.py
-- [x] T049 [US2] Implement EntityExtractor.__init__() with LLM provider dependency in soldier/memory/ingestion/entity_extractor.py
-- [x] T050 [US2] Implement EntityExtractor._build_extraction_prompt() for LLM in soldier/memory/ingestion/entity_extractor.py
-- [x] T051 [US2] Implement EntityExtractor.extract() - LLM call with structured output in soldier/memory/ingestion/entity_extractor.py
-- [x] T052 [US2] Implement EntityExtractor.extract() - confidence filtering logic in soldier/memory/ingestion/entity_extractor.py
-- [x] T053 [US2] Implement EntityExtractor.extract_batch() for parallel extraction in soldier/memory/ingestion/entity_extractor.py
-- [x] T054 [US2] Implement EntityExtractor error handling and timeout logic in soldier/memory/ingestion/entity_extractor.py
-- [x] T055 [P] [US2] Implement EntityDeduplicator class skeleton in soldier/memory/ingestion/entity_extractor.py
-- [x] T056 [US2] Implement EntityDeduplicator.find_duplicate() - exact match stage in soldier/memory/ingestion/entity_extractor.py
-- [x] T057 [US2] Implement EntityDeduplicator.find_duplicate() - fuzzy match stage with Levenshtein in soldier/memory/ingestion/entity_extractor.py
-- [x] T058 [US2] Implement EntityDeduplicator.find_duplicate() - embedding similarity stage in soldier/memory/ingestion/entity_extractor.py
-- [x] T059 [US2] Implement EntityDeduplicator.find_duplicate() - rule-based matching stage in soldier/memory/ingestion/entity_extractor.py
-- [x] T060 [US2] Implement EntityDeduplicator.merge_entities() for attribute merging in soldier/memory/ingestion/entity_extractor.py
-- [x] T061 [US2] Implement entity storage with deduplication in soldier/memory/ingestion/entity_extractor.py
-- [x] T062 [US2] Implement temporal relationship update logic (valid_from/valid_to) in soldier/memory/ingestion/entity_extractor.py
-- [x] T063 [US2] Implement relationship storage with temporal versioning in soldier/memory/ingestion/entity_extractor.py
-- [x] T064 [US2] Add structured logging for entity extraction in soldier/memory/ingestion/entity_extractor.py
-- [x] T065 [US2] Add OpenTelemetry spans for extraction and deduplication in soldier/memory/ingestion/entity_extractor.py
-- [x] T066 [US2] Add Prometheus metrics for entities and relationships in soldier/memory/ingestion/entity_extractor.py
-- [x] T067 [US2] Integrate EntityExtractor with MemoryIngestor async task queue in soldier/memory/ingestion/ingestor.py
-- [x] T068 [US2] Create background task handler for entity extraction in soldier/memory/ingestion/tasks.py
+- [x] T048 [P] [US2] Implement EntityExtractor class skeleton in focal/memory/ingestion/entity_extractor.py
+- [x] T049 [US2] Implement EntityExtractor.__init__() with LLM provider dependency in focal/memory/ingestion/entity_extractor.py
+- [x] T050 [US2] Implement EntityExtractor._build_extraction_prompt() for LLM in focal/memory/ingestion/entity_extractor.py
+- [x] T051 [US2] Implement EntityExtractor.extract() - LLM call with structured output in focal/memory/ingestion/entity_extractor.py
+- [x] T052 [US2] Implement EntityExtractor.extract() - confidence filtering logic in focal/memory/ingestion/entity_extractor.py
+- [x] T053 [US2] Implement EntityExtractor.extract_batch() for parallel extraction in focal/memory/ingestion/entity_extractor.py
+- [x] T054 [US2] Implement EntityExtractor error handling and timeout logic in focal/memory/ingestion/entity_extractor.py
+- [x] T055 [P] [US2] Implement EntityDeduplicator class skeleton in focal/memory/ingestion/entity_extractor.py
+- [x] T056 [US2] Implement EntityDeduplicator.find_duplicate() - exact match stage in focal/memory/ingestion/entity_extractor.py
+- [x] T057 [US2] Implement EntityDeduplicator.find_duplicate() - fuzzy match stage with Levenshtein in focal/memory/ingestion/entity_extractor.py
+- [x] T058 [US2] Implement EntityDeduplicator.find_duplicate() - embedding similarity stage in focal/memory/ingestion/entity_extractor.py
+- [x] T059 [US2] Implement EntityDeduplicator.find_duplicate() - rule-based matching stage in focal/memory/ingestion/entity_extractor.py
+- [x] T060 [US2] Implement EntityDeduplicator.merge_entities() for attribute merging in focal/memory/ingestion/entity_extractor.py
+- [x] T061 [US2] Implement entity storage with deduplication in focal/memory/ingestion/entity_extractor.py
+- [x] T062 [US2] Implement temporal relationship update logic (valid_from/valid_to) in focal/memory/ingestion/entity_extractor.py
+- [x] T063 [US2] Implement relationship storage with temporal versioning in focal/memory/ingestion/entity_extractor.py
+- [x] T064 [US2] Add structured logging for entity extraction in focal/memory/ingestion/entity_extractor.py
+- [x] T065 [US2] Add OpenTelemetry spans for extraction and deduplication in focal/memory/ingestion/entity_extractor.py
+- [x] T066 [US2] Add Prometheus metrics for entities and relationships in focal/memory/ingestion/entity_extractor.py
+- [x] T067 [US2] Integrate EntityExtractor with MemoryIngestor async task queue in focal/memory/ingestion/ingestor.py
+- [x] T068 [US2] Create background task handler for entity extraction in focal/memory/ingestion/tasks.py
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work - episodes are created with entities and relationships automatically extracted asynchronously, building a knowledge graph
 
@@ -153,20 +153,20 @@
 
 ### Implementation for User Story 3
 
-- [x] T076 [P] [US3] Implement ConversationSummarizer class skeleton in soldier/memory/ingestion/summarizer.py
-- [x] T077 [US3] Implement ConversationSummarizer.__init__() with dependencies in soldier/memory/ingestion/summarizer.py
-- [x] T078 [US3] Implement ConversationSummarizer._format_episodes_for_summary() helper in soldier/memory/ingestion/summarizer.py
-- [x] T079 [US3] Implement ConversationSummarizer.summarize_window() - LLM call for window summary in soldier/memory/ingestion/summarizer.py
-- [x] T080 [US3] Implement ConversationSummarizer.summarize_window() - summary episode creation in soldier/memory/ingestion/summarizer.py
-- [x] T081 [US3] Implement ConversationSummarizer.create_meta_summary() for hierarchical summaries in soldier/memory/ingestion/summarizer.py
-- [x] T082 [US3] Implement ConversationSummarizer.check_and_summarize_if_needed() - threshold checking in soldier/memory/ingestion/summarizer.py
-- [x] T083 [US3] Implement ConversationSummarizer.check_and_summarize_if_needed() - automatic trigger logic in soldier/memory/ingestion/summarizer.py
-- [x] T084 [US3] Implement ConversationSummarizer.check_and_summarize_if_needed() - summary persistence in soldier/memory/ingestion/summarizer.py
-- [x] T085 [US3] Add structured logging for summarization in soldier/memory/ingestion/summarizer.py
-- [x] T086 [US3] Add OpenTelemetry spans for summarization operations in soldier/memory/ingestion/summarizer.py
-- [x] T087 [US3] Add Prometheus metrics for summaries in soldier/memory/ingestion/summarizer.py
-- [x] T088 [US3] Integrate ConversationSummarizer with MemoryIngestor async queue in soldier/memory/ingestion/ingestor.py
-- [x] T089 [US3] Create background task handler for summarization in soldier/memory/ingestion/tasks.py
+- [x] T076 [P] [US3] Implement ConversationSummarizer class skeleton in focal/memory/ingestion/summarizer.py
+- [x] T077 [US3] Implement ConversationSummarizer.__init__() with dependencies in focal/memory/ingestion/summarizer.py
+- [x] T078 [US3] Implement ConversationSummarizer._format_episodes_for_summary() helper in focal/memory/ingestion/summarizer.py
+- [x] T079 [US3] Implement ConversationSummarizer.summarize_window() - LLM call for window summary in focal/memory/ingestion/summarizer.py
+- [x] T080 [US3] Implement ConversationSummarizer.summarize_window() - summary episode creation in focal/memory/ingestion/summarizer.py
+- [x] T081 [US3] Implement ConversationSummarizer.create_meta_summary() for hierarchical summaries in focal/memory/ingestion/summarizer.py
+- [x] T082 [US3] Implement ConversationSummarizer.check_and_summarize_if_needed() - threshold checking in focal/memory/ingestion/summarizer.py
+- [x] T083 [US3] Implement ConversationSummarizer.check_and_summarize_if_needed() - automatic trigger logic in focal/memory/ingestion/summarizer.py
+- [x] T084 [US3] Implement ConversationSummarizer.check_and_summarize_if_needed() - summary persistence in focal/memory/ingestion/summarizer.py
+- [x] T085 [US3] Add structured logging for summarization in focal/memory/ingestion/summarizer.py
+- [x] T086 [US3] Add OpenTelemetry spans for summarization operations in focal/memory/ingestion/summarizer.py
+- [x] T087 [US3] Add Prometheus metrics for summaries in focal/memory/ingestion/summarizer.py
+- [x] T088 [US3] Integrate ConversationSummarizer with MemoryIngestor async queue in focal/memory/ingestion/ingestor.py
+- [x] T089 [US3] Create background task handler for summarization in focal/memory/ingestion/tasks.py
 
 **Checkpoint**: All user stories should now be independently functional - episodes are created, entities extracted, and summaries generated for long conversations
 
@@ -190,7 +190,7 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [x] T097 [P] Add docstrings to all public methods in soldier/memory/ingestion/
+- [x] T097 [P] Add docstrings to all public methods in focal/memory/ingestion/
 - [x] T098 [P] Verify test coverage meets 85% threshold for ingestion module
 - [x] T099 [P] Update IMPLEMENTATION_PLAN.md Phase 12 checkboxes as complete
 - [ ] T100 [P] Performance profiling and optimization if latency targets not met
@@ -257,8 +257,8 @@ Task T026: "Unit test for MemoryIngestor - latency target validation (<500ms) in
 
 ```bash
 # After Foundational phase, can work on US2 in parallel with US1:
-Task T048: "Implement EntityExtractor class skeleton in soldier/memory/ingestion/entity_extractor.py"
-Task T055: "Implement EntityDeduplicator class skeleton in soldier/memory/ingestion/entity_extractor.py"
+Task T048: "Implement EntityExtractor class skeleton in focal/memory/ingestion/entity_extractor.py"
+Task T055: "Implement EntityDeduplicator class skeleton in focal/memory/ingestion/entity_extractor.py"
 
 # Different team members can work on different modules:
 Developer A: EntityExtractor implementation (T048-T054)
@@ -314,7 +314,7 @@ With multiple developers:
 - All unit tests should FAIL before implementation begins
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
-- Follow Soldier coding standards: async-first, dependency injection, structured logging, provider interfaces
+- Follow Focal coding standards: async-first, dependency injection, structured logging, provider interfaces
 - Do NOT skip temporal update logic - critical for relationship versioning
 - Do NOT skip observability (logging, spans, metrics) - required for production monitoring
 - Do NOT hardcode configuration - all settings via TOML with Pydantic defaults

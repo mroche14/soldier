@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.conversation.models import Channel, Session, SessionStatus
-from soldier.conversation.stores import InMemorySessionStore
+from focal.conversation.models import Channel, Session, SessionStatus
+from focal.conversation.stores import InMemorySessionStore
 
 
 @pytest.fixture

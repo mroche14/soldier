@@ -5,11 +5,11 @@
 
 ## Overview
 
-This guide shows how to use the Soldier CRUD API to manage agent configurations.
+This guide shows how to use the Focal CRUD API to manage agent configurations.
 
 ## Prerequisites
 
-1. Soldier API running (`uv run uvicorn soldier.api.app:create_app --factory`)
+1. Focal API running (`uv run uvicorn focal.api.app:create_app --factory`)
 2. Valid JWT token with `tenant_id` claim
 
 ## Authentication

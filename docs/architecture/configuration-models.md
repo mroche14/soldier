@@ -2,10 +2,10 @@
 
 ### Deployment Configuration
 
-Soldier supports two deployment modes to accommodate different integration patterns. See [overview.md](./overview.md#deployment-modes) for architectural details.
+Focal supports two deployment modes to accommodate different integration patterns. See [overview.md](./overview.md#deployment-modes) for architectural details.
 
 ```python
-# soldier/config/models/deployment.py
+# focal/config/models/deployment.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -41,14 +41,14 @@ class DeploymentConfig(BaseModel):
     """
     Deployment mode configuration.
 
-    Controls whether Soldier is the source of truth for configuration
+    Controls whether Focal is the source of truth for configuration
     (standalone) or consumes configuration from an external control plane
     (external).
     """
 
     mode: Literal["standalone", "external"] = Field(
         default="standalone",
-        description="Deployment mode: 'standalone' (Soldier owns config) or 'external' (external control plane)"
+        description="Deployment mode: 'standalone' (Focal owns config) or 'external' (external control plane)"
     )
 
     # External Platform integration settings (only used when mode = "external")
@@ -72,8 +72,8 @@ class DeploymentConfig(BaseModel):
 The Settings class includes deployment configuration:
 
 ```python
-# In soldier/config/settings.py
-from soldier.config.models.deployment import DeploymentConfig
+# In focal/config/settings.py
+from focal.config.models.deployment import DeploymentConfig
 
 class Settings(BaseSettings):
     # ... existing fields ...
@@ -83,7 +83,7 @@ class Settings(BaseSettings):
 ### API Configuration
 
 ```python
-# soldier/config/models/api.py
+# focal/config/models/api.py
 from pydantic import BaseModel, Field
 
 
@@ -139,7 +139,7 @@ class APIConfig(BaseModel):
 
 ### Provider Configuration
 
-Soldier supports multiple AI modalities through a unified provider configuration system built on **LiteLLM**. Each modality type has dedicated providers with **fallback chains** for resilience.
+Focal supports multiple AI modalities through a unified provider configuration system built on **LiteLLM**. Each modality type has dedicated providers with **fallback chains** for resilience.
 
 #### Why LiteLLM + OpenRouter?
 
@@ -207,7 +207,7 @@ Soldier supports multiple AI modalities through a unified provider configuration
 | **Rerank** | Text pairs | Scores | Result reordering |
 
 ```python
-# soldier/config/models/providers.py
+# focal/config/models/providers.py
 from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr
@@ -668,11 +668,11 @@ class ProvidersConfig(BaseModel):
 The provider system uses LiteLLM for unified model access:
 
 ```python
-# soldier/providers/litellm_provider.py
+# focal/providers/litellm_provider.py
 import litellm
 from litellm import acompletion
 
-from soldier.config.models.pipeline import GenerationConfig
+from focal.config.models.pipeline import GenerationConfig
 
 
 class LiteLLMProvider:
@@ -766,7 +766,7 @@ class LiteLLMProvider:
 
 
 # Usage - models come directly from the pipeline step config
-from soldier.config.settings import get_settings
+from focal.config.settings import get_settings
 
 settings = get_settings()
 llm = LiteLLMProvider.from_config(settings.pipeline.generation)
@@ -776,7 +776,7 @@ response = await llm.generate("Hello, world!")
 ### Selection Strategy Configuration
 
 ```python
-# soldier/config/models/selection.py
+# focal/config/models/selection.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -906,12 +906,12 @@ The pipeline configuration defines which model/provider is used at each step. Th
 - Cost optimization (cheaper models for simple tasks)
 
 ```python
-# soldier/config/models/pipeline.py
+# focal/config/models/pipeline.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from soldier.config.models.selection import (
+from focal.config.models.selection import (
     AdaptiveKSelectionConfig,
     ClusterSelectionConfig,
     EntropySelectionConfig,
@@ -1600,7 +1600,7 @@ Each pipeline step has its own model fallback chain configured directly. No indi
 ### Storage Configuration
 
 ```python
-# soldier/config/models/storage.py
+# focal/config/models/storage.py
 from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr
@@ -1611,8 +1611,8 @@ class PostgresConfig(BaseModel):
 
     host: str = Field(default="localhost")
     port: int = Field(default=5432)
-    database: str = Field(default="soldier")
-    user: str = Field(default="soldier")
+    database: str = Field(default="focal")
+    user: str = Field(default="focal")
     password: SecretStr = Field(default=SecretStr(""))
 
     # Connection pool
@@ -1658,7 +1658,7 @@ class MongoDBConfig(BaseModel):
     """MongoDB connection configuration."""
 
     uri: str = Field(default="mongodb://localhost:27017")
-    database: str = Field(default="soldier")
+    database: str = Field(default="focal")
 
     # Connection pool
     max_pool_size: int = Field(default=50, ge=1)
@@ -1751,7 +1751,7 @@ class StorageConfig(BaseModel):
 See [observability.md](./observability.md) for detailed architecture. The Pydantic model below defines the configuration schema.
 
 ```python
-# soldier/config/models/observability.py
+# focal/config/models/observability.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -1795,7 +1795,7 @@ class ObservabilityConfig(BaseModel):
         description="Enable distributed tracing"
     )
     tracing_service_name: str = Field(
-        default="soldier",
+        default="focal",
         description="Service name for traces (overridden by OTEL_SERVICE_NAME)"
     )
     tracing_otlp_endpoint: str = Field(
@@ -1833,8 +1833,8 @@ class ObservabilityConfig(BaseModel):
 The Settings class includes observability configuration:
 
 ```python
-# In soldier/config/settings.py
-from soldier.config.models.observability import ObservabilityConfig
+# In focal/config/settings.py
+from focal.config.models.observability import ObservabilityConfig
 
 class Settings(BaseSettings):
     # ... existing fields ...

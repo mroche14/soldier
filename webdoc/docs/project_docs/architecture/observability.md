@@ -1,6 +1,6 @@
 # Observability Architecture
 
-This document defines Soldier's logging, tracing, and metrics strategy. Soldier is designed to integrate seamlessly into the External Platform (kernel_agent) observability stack while providing rich, structured telemetry for debugging, auditing, and performance analysis.
+This document defines Focal's logging, tracing, and metrics strategy. Focal is designed to integrate seamlessly into the External Platform (kernel_agent) observability stack while providing rich, structured telemetry for debugging, auditing, and performance analysis.
 
 ---
 
@@ -39,7 +39,7 @@ This document defines Soldier's logging, tracing, and metrics strategy. Soldier 
 
 ### Library Choice: structlog
 
-Soldier uses [structlog](https://www.structlog.org/) for structured logging. This provides:
+Focal uses [structlog](https://www.structlog.org/) for structured logging. This provides:
 
 - **JSON output** for machine parsing in production
 - **Console output** with colors for local development
@@ -55,7 +55,7 @@ Every log entry includes these fields:
   "timestamp": "2024-01-15T10:30:45.123456Z",
   "level": "info",
   "event": "turn_processed",
-  "logger": "soldier.alignment.pipeline",
+  "logger": "focal.alignment.pipeline",
 
   "tenant_id": "tenant_abc123",
   "agent_id": "agent_xyz789",
@@ -111,7 +111,7 @@ format = "console"           # Pretty-printed for local development
 ### Implementation
 
 ```python
-# soldier/observability/logging.py
+# focal/observability/logging.py
 import logging
 import os
 from typing import Literal
@@ -124,7 +124,7 @@ def setup_logging(
     format: Literal["json", "console"] = "json",
     include_trace_id: bool = True,
 ) -> None:
-    """Configure structured logging for Soldier.
+    """Configure structured logging for Focal.
 
     Args:
         level: Log level (DEBUG, INFO, WARNING, ERROR)
@@ -195,11 +195,11 @@ def get_logger(name: str) -> structlog.stdlib.BoundLogger:
 ### Request Context Middleware
 
 ```python
-# soldier/api/middleware/logging.py
+# focal/api/middleware/logging.py
 from fastapi import Request
 from structlog.contextvars import bind_contextvars, clear_contextvars
 
-from soldier.observability.logging import get_logger
+from focal.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -246,10 +246,10 @@ def _extract_trace_id(traceparent: str | None) -> str | None:
 
 ### Integration with kernel_agent
 
-Soldier reuses the OpenTelemetry setup from `libs/observability` in kernel_agent:
+Focal reuses the OpenTelemetry setup from `libs/observability` in kernel_agent:
 
 ```python
-# soldier/observability/tracing.py
+# focal/observability/tracing.py
 import os
 from typing import Optional
 
@@ -258,11 +258,11 @@ try:
     from libs.observability import setup_tracing as _setup_tracing
 
     def setup_tracing(
-        service_name: str = "soldier",
+        service_name: str = "focal",
         service_version: str = "0.1.0",
         otlp_endpoint: Optional[str] = None,
     ) -> None:
-        """Setup OpenTelemetry tracing for Soldier."""
+        """Setup OpenTelemetry tracing for Focal."""
         endpoint = otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
         _setup_tracing(service_name, service_version, endpoint)
 
@@ -275,11 +275,11 @@ except ImportError:
     from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 
     def setup_tracing(
-        service_name: str = "soldier",
+        service_name: str = "focal",
         service_version: str = "0.1.0",
         otlp_endpoint: Optional[str] = None,
     ) -> None:
-        """Setup OpenTelemetry tracing for Soldier (standalone mode)."""
+        """Setup OpenTelemetry tracing for Focal (standalone mode)."""
         resource = Resource.create({
             "service.name": service_name,
             "service.version": service_version,
@@ -345,7 +345,7 @@ span.set_attribute("scenario.active", "returns_flow")
 # config/default.toml
 [observability.tracing]
 enabled = true
-service_name = "soldier"
+service_name = "focal"
 otlp_endpoint = ""           # Empty = use OTEL_EXPORTER_OTLP_ENDPOINT env var
 sample_rate = 1.0            # 1.0 = 100% sampling (reduce in production)
 propagators = ["tracecontext", "baggage"]  # W3C standard
@@ -357,24 +357,24 @@ propagators = ["tracecontext", "baggage"]  # W3C standard
 
 ### Prometheus Integration
 
-Soldier exposes a `/metrics` endpoint compatible with Prometheus scraping:
+Focal exposes a `/metrics` endpoint compatible with Prometheus scraping:
 
 ```python
-# soldier/observability/metrics.py
+# focal/observability/metrics.py
 from prometheus_client import Counter, Histogram, Gauge, Info
 
 # Service info
-SERVICE_INFO = Info("soldier", "Soldier service information")
+SERVICE_INFO = Info("focal", "Focal service information")
 
 # Request metrics
 REQUEST_COUNT = Counter(
-    "soldier_requests_total",
+    "focal_requests_total",
     "Total number of requests",
     ["tenant_id", "agent_id", "endpoint", "status"],
 )
 
 REQUEST_LATENCY = Histogram(
-    "soldier_request_duration_seconds",
+    "focal_request_duration_seconds",
     "Request latency in seconds",
     ["tenant_id", "agent_id", "endpoint"],
     buckets=[0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
@@ -382,7 +382,7 @@ REQUEST_LATENCY = Histogram(
 
 # Pipeline metrics
 PIPELINE_STEP_LATENCY = Histogram(
-    "soldier_pipeline_step_duration_seconds",
+    "focal_pipeline_step_duration_seconds",
     "Pipeline step latency in seconds",
     ["step", "tenant_id"],
     buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0],
@@ -390,61 +390,61 @@ PIPELINE_STEP_LATENCY = Histogram(
 
 # Provider metrics
 LLM_CALL_COUNT = Counter(
-    "soldier_llm_calls_total",
+    "focal_llm_calls_total",
     "Total LLM provider calls",
     ["provider", "model", "step", "status"],
 )
 
 LLM_TOKENS = Counter(
-    "soldier_llm_tokens_total",
+    "focal_llm_tokens_total",
     "Total LLM tokens consumed",
     ["provider", "model", "direction"],  # direction: input/output
 )
 
 LLM_LATENCY = Histogram(
-    "soldier_llm_call_duration_seconds",
+    "focal_llm_call_duration_seconds",
     "LLM call latency in seconds",
     ["provider", "model", "step"],
     buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0],
 )
 
 PROVIDER_FALLBACK = Counter(
-    "soldier_provider_fallbacks_total",
+    "focal_provider_fallbacks_total",
     "Provider fallback events",
     ["step", "from_provider", "to_provider", "reason"],
 )
 
 # Rule matching metrics
 RULES_MATCHED = Histogram(
-    "soldier_rules_matched",
+    "focal_rules_matched",
     "Number of rules matched per turn",
     ["tenant_id", "agent_id"],
     buckets=[0, 1, 2, 3, 5, 10, 20],
 )
 
 RULE_FIRES = Counter(
-    "soldier_rule_fires_total",
+    "focal_rule_fires_total",
     "Total rule fires",
     ["tenant_id", "agent_id", "rule_id", "scope"],
 )
 
 # Scenario metrics
 SCENARIO_TRANSITIONS = Counter(
-    "soldier_scenario_transitions_total",
+    "focal_scenario_transitions_total",
     "Scenario state transitions",
     ["tenant_id", "agent_id", "scenario_id", "from_step", "to_step"],
 )
 
 # Memory metrics
 MEMORY_RETRIEVAL_LATENCY = Histogram(
-    "soldier_memory_retrieval_duration_seconds",
+    "focal_memory_retrieval_duration_seconds",
     "Memory retrieval latency",
     ["tenant_id", "retrieval_type"],  # retrieval_type: vector, bm25, graph
     buckets=[0.01, 0.05, 0.1, 0.25, 0.5],
 )
 
 MEMORY_RESULTS = Histogram(
-    "soldier_memory_results",
+    "focal_memory_results",
     "Number of memory results retrieved",
     ["tenant_id", "retrieval_type"],
     buckets=[0, 1, 5, 10, 20, 50],
@@ -452,14 +452,14 @@ MEMORY_RESULTS = Histogram(
 
 # Session metrics
 ACTIVE_SESSIONS = Gauge(
-    "soldier_active_sessions",
+    "focal_active_sessions",
     "Number of active sessions",
     ["tenant_id", "agent_id"],
 )
 
 # Error metrics
 ERRORS = Counter(
-    "soldier_errors_total",
+    "focal_errors_total",
     "Total errors",
     ["tenant_id", "error_type", "component"],
 )
@@ -481,11 +481,11 @@ Add to kernel_agent's `infra/observability/prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'soldier'
+  - job_name: 'focal'
     static_configs:
-      - targets: ['soldier:8000']
+      - targets: ['focal:8000']
         labels:
-          service: 'soldier'
+          service: 'focal'
           component: 'cognitive-layer'
 ```
 
@@ -540,14 +540,14 @@ logger.info(
 
 ```yaml
 # In kernel_agent's docker-compose.yml
-soldier:
+focal:
   build:
-    context: ../soldier
+    context: ../focal
     dockerfile: Dockerfile
   environment:
     # Observability
     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-    OTEL_SERVICE_NAME: soldier
+    OTEL_SERVICE_NAME: focal
     LOG_LEVEL: INFO
 
     # ... other env vars
@@ -559,7 +559,7 @@ soldier:
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Message-Router │────▶│     Soldier     │────▶│    ToolHub      │
+│  Message-Router │────▶│     Focal     │────▶│    ToolHub      │
 │                 │     │                 │     │                 │
 │  traceparent:   │     │  traceparent:   │     │  traceparent:   │
 │  00-abc123-...  │     │  00-abc123-...  │     │  00-abc123-...  │
@@ -590,7 +590,7 @@ Observability settings are split between root-level settings (for compatibility 
 # config/default.toml
 
 # Root-level logging (existing config pattern)
-app_name = "soldier"
+app_name = "focal"
 debug = false
 log_level = "INFO"                # DEBUG, INFO, WARNING, ERROR
 
@@ -604,7 +604,7 @@ log_redact_patterns = []          # Additional regex patterns to redact
 
 # Tracing (OpenTelemetry)
 tracing_enabled = true
-tracing_service_name = "soldier"
+tracing_service_name = "focal"
 tracing_otlp_endpoint = ""        # Uses OTEL_EXPORTER_OTLP_ENDPOINT if empty
 tracing_sample_rate = 1.0         # 0.0-1.0, reduce in high-traffic production
 tracing_propagators = ["tracecontext", "baggage"]
@@ -639,16 +639,16 @@ tracing_sample_rate = 0.1         # 10% sampling in production
 
 ```bash
 # Root-level logging (existing pattern)
-export SOLDIER_LOG_LEVEL=DEBUG
-export SOLDIER_DEBUG=true
+export FOCAL_LOG_LEVEL=DEBUG
+export FOCAL_DEBUG=true
 
 # Observability section
-export SOLDIER_OBSERVABILITY__LOG_FORMAT=console
-export SOLDIER_OBSERVABILITY__TRACING_ENABLED=true
+export FOCAL_OBSERVABILITY__LOG_FORMAT=console
+export FOCAL_OBSERVABILITY__TRACING_ENABLED=true
 
 # Standard OpenTelemetry environment variables (used by kernel_agent)
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-export OTEL_SERVICE_NAME=soldier
+export OTEL_SERVICE_NAME=focal
 export LOG_LEVEL=INFO
 ```
 

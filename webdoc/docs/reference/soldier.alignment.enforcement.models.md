@@ -1,12 +1,12 @@
-<a id="soldier.alignment.enforcement.models"></a>
+<a id="focal.alignment.enforcement.models"></a>
 
-# soldier.alignment.enforcement.models
+# focal.alignment.enforcement.models
 
 Enforcement models for alignment pipeline.
 
 Contains models for constraint validation and enforcement results.
 
-<a id="soldier.alignment.enforcement.models.ConstraintViolation"></a>
+<a id="focal.alignment.enforcement.models.ConstraintViolation"></a>
 
 ## ConstraintViolation Objects
 
@@ -16,7 +16,7 @@ class ConstraintViolation(BaseModel)
 
 A detected constraint violation.
 
-<a id="soldier.alignment.enforcement.models.EnforcementResult"></a>
+<a id="focal.alignment.enforcement.models.EnforcementResult"></a>
 
 ## EnforcementResult Objects
 

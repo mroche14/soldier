@@ -54,7 +54,7 @@ Use prometheus_client for Prometheus-compatible metrics with standard metric typ
 | Custom metrics | Reinventing the wheel, no ecosystem integration |
 
 ### Best Practices
-1. Use descriptive metric names with `soldier_` prefix
+1. Use descriptive metric names with `focal_` prefix
 2. Keep label cardinality bounded (don't use unbounded values like user_id)
 3. Use Histograms for latency, Counters for events, Gauges for current state
 4. Define buckets appropriate to expected latency distributions

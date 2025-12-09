@@ -5,7 +5,7 @@
 
 ## Overview
 
-This guide shows how to integrate and use the Memory Ingestion System in Soldier. The system automatically captures conversation turns as episodes, extracts entities and relationships, and generates hierarchical summaries.
+This guide shows how to integrate and use the Memory Ingestion System in Focal. The system automatically captures conversation turns as episodes, extracts entities and relationships, and generates hierarchical summaries.
 
 ---
 
@@ -78,16 +78,16 @@ temperature = 0.5
 
 **Python code**:
 ```python
-from soldier.config.settings import get_settings
-from soldier.memory.stores.inmemory import InMemoryMemoryStore
-from soldier.providers.factory import (
+from focal.config.settings import get_settings
+from focal.memory.stores.inmemory import InMemoryMemoryStore
+from focal.providers.factory import (
     create_llm_provider,
     create_embedding_provider,
 )
-from soldier.memory.ingestion.ingestor import MemoryIngestor
-from soldier.memory.ingestion.entity_extractor import EntityExtractor
-from soldier.memory.ingestion.summarizer import ConversationSummarizer
-from soldier.observability.logging import get_logger
+from focal.memory.ingestion.ingestor import MemoryIngestor
+from focal.memory.ingestion.entity_extractor import EntityExtractor
+from focal.memory.ingestion.summarizer import ConversationSummarizer
+from focal.observability.logging import get_logger
 
 # Load configuration
 settings = get_settings()
@@ -135,8 +135,8 @@ logger = get_logger(__name__)
 ### Example 1: Ingest a Conversation Turn
 
 ```python
-from soldier.conversation.models.turn import Turn
-from soldier.conversation.models.session import Session
+from focal.conversation.models.turn import Turn
+from focal.conversation.models.session import Session
 from datetime import datetime, UTC
 from uuid import uuid4
 
@@ -268,7 +268,7 @@ about delivery address and...
 
 ```python
 # Create episode without using ingestor
-from soldier.memory.models.episode import Episode
+from focal.memory.models.episode import Episode
 
 episode = Episode(
     group_id=f"{session.tenant_id}:{session.id}",
@@ -478,7 +478,7 @@ async def process_turn(
 ### Check Ingestion Metrics
 
 ```python
-from soldier.observability.metrics import (
+from focal.observability.metrics import (
     EPISODES_CREATED,
     ENTITIES_EXTRACTED,
     SUMMARIES_CREATED,
@@ -496,10 +496,10 @@ print(f"Summaries created: {SUMMARIES_CREATED._value.get()}")
 
 ```python
 import logging
-from soldier.observability.logging import setup_logging
+from focal.observability.logging import setup_logging
 
 # Set log level to DEBUG for memory ingestion
-logging.getLogger("soldier.memory.ingestion").setLevel(logging.DEBUG)
+logging.getLogger("focal.memory.ingestion").setLevel(logging.DEBUG)
 
 # Re-run ingestion
 episode = await ingestor.ingest_turn(turn, session)

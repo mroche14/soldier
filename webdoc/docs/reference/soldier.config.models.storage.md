@@ -1,10 +1,10 @@
-<a id="soldier.config.models.storage"></a>
+<a id="focal.config.models.storage"></a>
 
-# soldier.config.models.storage
+# focal.config.models.storage
 
 Storage backend configuration models.
 
-<a id="soldier.config.models.storage.StoreBackendConfig"></a>
+<a id="focal.config.models.storage.StoreBackendConfig"></a>
 
 ## StoreBackendConfig Objects
 
@@ -14,7 +14,7 @@ class StoreBackendConfig(BaseModel)
 
 Configuration for a single store backend.
 
-<a id="soldier.config.models.storage.StorageConfig"></a>
+<a id="focal.config.models.storage.StorageConfig"></a>
 
 ## StorageConfig Objects
 

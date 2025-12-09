@@ -24,17 +24,17 @@ uv add --optional api redis
 
 ```bash
 # Start with auto-reload
-uv run uvicorn soldier.api.app:create_app --factory --reload --host 0.0.0.0 --port 8000
+uv run uvicorn focal.api.app:create_app --factory --reload --host 0.0.0.0 --port 8000
 
 # Or with the CLI (when implemented)
-uv run soldier serve --dev
+uv run focal serve --dev
 ```
 
 ### Production Mode
 
 ```bash
 # Multiple workers with gunicorn
-uv run gunicorn soldier.api.app:create_app \
+uv run gunicorn focal.api.app:create_app \
     --factory \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
@@ -62,7 +62,7 @@ burst_size = 10
 
 ```bash
 # For JWT validation
-export SOLDIER_JWT_SECRET="your-secret-key"
+export FOCAL_JWT_SECRET="your-secret-key"
 
 # For Redis-backed rate limiting (optional)
 export REDIS_URL="redis://localhost:6379/0"
@@ -178,10 +178,10 @@ curl http://localhost:8000/metrics
 ```
 
 Key metrics:
-- `soldier_api_requests_total{method, path, status}` - Request count
-- `soldier_api_request_duration_seconds{method, path}` - Request latency
-- `soldier_llm_tokens_total{provider, model}` - LLM token usage
-- `soldier_rate_limit_exceeded_total{tenant_tier}` - Rate limit hits
+- `focal_api_requests_total{method, path, status}` - Request count
+- `focal_api_request_duration_seconds{method, path}` - Request latency
+- `focal_llm_tokens_total{provider, model}` - LLM token usage
+- `focal_rate_limit_exceeded_total{tenant_tier}` - Rate limit hits
 
 ## Testing
 
@@ -193,7 +193,7 @@ uv run pytest tests/unit/api/ -v
 uv run pytest tests/integration/api/ -v
 
 # Run with coverage
-uv run pytest tests/unit/api/ --cov=soldier.api --cov-report=term-missing
+uv run pytest tests/unit/api/ --cov=focal.api --cov-report=term-missing
 ```
 
 ## OpenAPI Documentation

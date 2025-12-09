@@ -7,7 +7,7 @@
 
 ## Overview
 
-This specification covers the foundational abstractions that all other Soldier components build upon. It encompasses four implementation phases:
+This specification covers the foundational abstractions that all other Focal components build upon. It encompasses four implementation phases:
 
 - **Phase 2**: Observability Foundation (logging, tracing, metrics)
 - **Phase 3**: Domain Models (all Pydantic models for core entities)
@@ -22,7 +22,7 @@ These phases are grouped because they form the complete "abstraction layer" - on
 
 ### User Story 1 - Developer Debugging with Structured Logs (Priority: P1)
 
-A developer working on Soldier needs to debug issues in the turn processing pipeline. They require structured, consistent logging that includes all relevant context (tenant, agent, session, turn IDs) without manually passing this context everywhere.
+A developer working on Focal needs to debug issues in the turn processing pipeline. They require structured, consistent logging that includes all relevant context (tenant, agent, session, turn IDs) without manually passing this context everywhere.
 
 **Why this priority**: Without observability, debugging any subsequent feature is extremely difficult. This is the first thing needed before building anything else.
 
@@ -40,7 +40,7 @@ A developer working on Soldier needs to debug issues in the turn processing pipe
 
 ### User Story 2 - Operator Monitoring System Health (Priority: P1)
 
-An operations engineer needs to monitor Soldier's health and performance through standard tooling (Prometheus/Grafana). They need metrics for request counts, latencies, error rates, and resource usage.
+An operations engineer needs to monitor Focal's health and performance through standard tooling (Prometheus/Grafana). They need metrics for request counts, latencies, error rates, and resource usage.
 
 **Why this priority**: Metrics are essential for production operation and must be available from the start.
 

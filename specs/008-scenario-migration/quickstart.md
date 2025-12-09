@@ -11,7 +11,7 @@ This guide explains how to use the scenario migration system to safely update sc
 
 ## Prerequisites
 
-- Soldier API running
+- Focal API running
 - Tenant configured with at least one agent
 - Active scenario with sessions (for testing)
 - Operator access to approve migrations

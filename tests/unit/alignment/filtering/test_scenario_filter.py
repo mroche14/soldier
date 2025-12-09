@@ -4,13 +4,13 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.context.models import ScenarioSignal
-from soldier.alignment.filtering.models import ScenarioAction
-from soldier.alignment.filtering.scenario_filter import ScenarioFilter
-from soldier.alignment.models.scenario import Scenario, ScenarioStep
-from soldier.alignment.retrieval.models import ScoredScenario
-from soldier.alignment.stores import InMemoryAgentConfigStore
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.context.models import ScenarioSignal
+from focal.alignment.filtering.models import ScenarioAction
+from focal.alignment.filtering.scenario_filter import ScenarioFilter
+from focal.alignment.models.scenario import Scenario, ScenarioStep
+from focal.alignment.retrieval.models import ScoredScenario
+from focal.alignment.stores import InMemoryAgentConfigStore
 
 
 @pytest.mark.asyncio

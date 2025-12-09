@@ -1,10 +1,10 @@
-<a id="soldier.config.models.providers"></a>
+<a id="focal.config.models.providers"></a>
 
-# soldier.config.models.providers
+# focal.config.models.providers
 
 AI provider configuration models.
 
-<a id="soldier.config.models.providers.LLMProviderConfig"></a>
+<a id="focal.config.models.providers.LLMProviderConfig"></a>
 
 ## LLMProviderConfig Objects
 
@@ -14,7 +14,7 @@ class LLMProviderConfig(BaseModel)
 
 Configuration for an LLM provider.
 
-<a id="soldier.config.models.providers.EmbeddingProviderConfig"></a>
+<a id="focal.config.models.providers.EmbeddingProviderConfig"></a>
 
 ## EmbeddingProviderConfig Objects
 
@@ -24,7 +24,7 @@ class EmbeddingProviderConfig(BaseModel)
 
 Configuration for an embedding provider.
 
-<a id="soldier.config.models.providers.RerankProviderConfig"></a>
+<a id="focal.config.models.providers.RerankProviderConfig"></a>
 
 ## RerankProviderConfig Objects
 
@@ -34,7 +34,7 @@ class RerankProviderConfig(BaseModel)
 
 Configuration for a rerank provider.
 
-<a id="soldier.config.models.providers.ProvidersConfig"></a>
+<a id="focal.config.models.providers.ProvidersConfig"></a>
 
 ## ProvidersConfig Objects
 

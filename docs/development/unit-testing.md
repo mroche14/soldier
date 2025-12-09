@@ -1,6 +1,6 @@
 # Unit Testing Guide
 
-This document provides concrete guidance for writing unit tests in the Soldier codebase. It covers naming conventions, patterns, fixture composition, async testing, and provides templates for testing different component types.
+This document provides concrete guidance for writing unit tests in the Focal codebase. It covers naming conventions, patterns, fixture composition, async testing, and provides templates for testing different component types.
 
 ---
 
@@ -21,13 +21,13 @@ This document provides concrete guidance for writing unit tests in the Soldier c
 Test files mirror the source structure:
 
 ```
-soldier/alignment/retrieval/rule_retriever.py
+focal/alignment/retrieval/rule_retriever.py
     → tests/unit/alignment/retrieval/test_rule_retriever.py
 
-soldier/memory/stores/inmemory.py
+focal/memory/stores/inmemory.py
     → tests/unit/memory/stores/test_inmemory.py
 
-soldier/providers/llm/base.py
+focal/providers/llm/base.py
     → tests/unit/providers/llm/test_base.py
 ```
 
@@ -40,8 +40,8 @@ soldier/providers/llm/base.py
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.retrieval.rule_retriever import RuleRetriever
-from soldier.alignment.models import Rule, Context
+from focal.alignment.retrieval.rule_retriever import RuleRetriever
+from focal.alignment.models import Rule, Context
 from tests.factories import RuleFactory, ContextFactory
 
 
@@ -242,7 +242,7 @@ async def test_get_nonexistent_rule_returns_none(self, config_store):
 
 ### Configuration
 
-Soldier uses `pytest-asyncio` in auto mode:
+Focal uses `pytest-asyncio` in auto mode:
 
 ```toml
 # pyproject.toml
@@ -386,7 +386,7 @@ from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from soldier.alignment.models import Rule, RuleScope
+from focal.alignment.models import Rule, RuleScope
 
 
 @dataclass
@@ -937,10 +937,10 @@ pytest tests/unit/alignment/retrieval/test_rule_retriever.py::TestRetrieve
 
 ```bash
 # Run with coverage
-pytest tests/unit/ --cov=soldier --cov-report=term-missing
+pytest tests/unit/ --cov=focal --cov-report=term-missing
 
 # Generate HTML report
-pytest tests/unit/ --cov=soldier --cov-report=html
+pytest tests/unit/ --cov=focal --cov-report=html
 open htmlcov/index.html
 ```
 
@@ -963,7 +963,7 @@ def __repr__(self) -> str:  # pragma: no cover
 
 # Or for type checking blocks
 if TYPE_CHECKING:  # Automatically excluded
-    from soldier.types import SomeType
+    from focal.types import SomeType
 ```
 
 ---

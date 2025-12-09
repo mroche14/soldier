@@ -1,12 +1,12 @@
 # Testing Strategy
 
-This document defines Soldier's overall testing approach, including the test pyramid, CI/CD pipeline, coverage requirements, and environment configurations.
+This document defines Focal's overall testing approach, including the test pyramid, CI/CD pipeline, coverage requirements, and environment configurations.
 
 ---
 
 ## Test Pyramid
 
-Soldier follows a test pyramid strategy with three layers. Each layer has a specific purpose and different characteristics.
+Focal follows a test pyramid strategy with three layers. Each layer has a specific purpose and different characteristics.
 
 ```
                     ┌───────────┐
@@ -135,7 +135,7 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: soldier_test
+      POSTGRES_DB: focal_test
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
     ports:
@@ -275,7 +275,7 @@ docker-compose -f docker-compose.yml up -d
 pytest tests/e2e/ --e2e-base-url=http://localhost:8000
 
 # Or against staging
-pytest tests/e2e/ --e2e-base-url=https://staging.soldier.example.com
+pytest tests/e2e/ --e2e-base-url=https://staging.focal.example.com
 ```
 
 ---
@@ -286,13 +286,13 @@ pytest tests/e2e/ --e2e-base-url=https://staging.soldier.example.com
 
 | Module | Line Coverage | Branch Coverage |
 |--------|---------------|-----------------|
-| `soldier/alignment/` | 85% | 80% |
-| `soldier/memory/` | 85% | 80% |
-| `soldier/conversation/` | 80% | 75% |
-| `soldier/audit/` | 80% | 75% |
-| `soldier/providers/` | 80% | 75% |
-| `soldier/config/` | 90% | 85% |
-| `soldier/api/` | 80% | 75% |
+| `focal/alignment/` | 85% | 80% |
+| `focal/memory/` | 85% | 80% |
+| `focal/conversation/` | 80% | 75% |
+| `focal/audit/` | 80% | 75% |
+| `focal/providers/` | 80% | 75% |
+| `focal/config/` | 90% | 85% |
+| `focal/api/` | 80% | 75% |
 | **Overall** | **85%** | **80%** |
 
 ### Coverage Enforcement
@@ -302,11 +302,11 @@ Coverage is enforced in CI:
 ```toml
 # pyproject.toml
 [tool.coverage.run]
-source = ["soldier"]
+source = ["focal"]
 branch = true
 omit = [
-    "soldier/__main__.py",
-    "soldier/api/grpc/protos/*",
+    "focal/__main__.py",
+    "focal/api/grpc/protos/*",
 ]
 
 [tool.coverage.report]
@@ -323,7 +323,7 @@ exclude_lines = [
 
 ```bash
 # Generate coverage report
-pytest --cov=soldier --cov-report=html --cov-report=term-missing
+pytest --cov=focal --cov-report=html --cov-report=term-missing
 
 # View HTML report
 open htmlcov/index.html
@@ -374,9 +374,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff mypy
-      - run: ruff check soldier/ tests/
-      - run: ruff format --check soldier/ tests/
-      - run: mypy soldier/
+      - run: ruff check focal/ tests/
+      - run: ruff format --check focal/ tests/
+      - run: mypy focal/
 
   unit:
     runs-on: ubuntu-latest
@@ -387,7 +387,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - run: pytest tests/unit/ -v --cov=soldier --cov-fail-under=85
+      - run: pytest tests/unit/ -v --cov=focal --cov-fail-under=85
       - uses: codecov/codecov-action@v4
 
   integration:
@@ -397,7 +397,7 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_DB: soldier_test
+          POSTGRES_DB: focal_test
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
         ports:
@@ -414,7 +414,7 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: pytest tests/integration/ -v
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/soldier_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/focal_test
           REDIS_URL: redis://localhost:6379
 
   e2e:
@@ -454,7 +454,7 @@ From the architecture docs, these are the latency targets to validate:
 ```python
 # tests/performance/test_pipeline_latency.py
 import pytest
-from soldier.testing.performance import measure_latency, LatencyReport
+from focal.testing.performance import measure_latency, LatencyReport
 
 @pytest.mark.performance
 async def test_context_extraction_latency(context_extractor, benchmark_messages):
@@ -517,7 +517,7 @@ Every `Store` implementation must pass the same contract tests:
 # tests/contracts/test_config_store_contract.py
 import pytest
 from abc import ABC
-from soldier.alignment.stores import ConfigStore
+from focal.alignment.stores import ConfigStore
 
 class ConfigStoreContract(ABC):
     """Contract tests that all ConfigStore implementations must pass."""
@@ -622,8 +622,8 @@ Use factories to create test data with sensible defaults:
 
 ```python
 # tests/factories.py
-from soldier.alignment.models import Rule, Scenario, ScenarioStep
-from soldier.conversation.models import Session
+from focal.alignment.models import Rule, Scenario, ScenarioStep
+from focal.conversation.models import Session
 from uuid import uuid4
 
 class RuleFactory:

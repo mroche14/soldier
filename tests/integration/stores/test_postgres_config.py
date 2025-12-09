@@ -9,7 +9,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from soldier.alignment.models import (
+from focal.alignment.models import (
     Agent,
     Rule,
     Scenario,
@@ -20,7 +20,7 @@ from soldier.alignment.models import (
     Variable,
     VariableUpdatePolicy,
 )
-from soldier.alignment.stores.postgres import PostgresAgentConfigStore
+from focal.alignment.stores.postgres import PostgresAgentConfigStore
 
 
 @pytest_asyncio.fixture

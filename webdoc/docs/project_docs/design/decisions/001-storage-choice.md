@@ -6,7 +6,7 @@
 
 ## Context
 
-Soldier needs:
+Focal needs:
 1. **Storage** for data persistence (config, sessions, memory, audit)
 2. **Providers** for AI capabilities (LLMs, embeddings, reranking)
 
@@ -627,7 +627,7 @@ backend = "postgres"
 [storage.config.connection]
 host = "${POSTGRES_HOST}"
 port = 5432
-database = "soldier"
+database = "focal"
 username = "${POSTGRES_USER}"
 password = "${POSTGRES_PASSWORD}"
 

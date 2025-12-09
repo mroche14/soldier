@@ -1,10 +1,10 @@
-<a id="soldier.config.settings"></a>
+<a id="focal.config.settings"></a>
 
-# soldier.config.settings
+# focal.config.settings
 
-Root settings model for Soldier configuration.
+Root settings model for Focal configuration.
 
-<a id="soldier.config.settings.set_toml_config"></a>
+<a id="focal.config.settings.set_toml_config"></a>
 
 #### set\_toml\_config
 
@@ -14,7 +14,7 @@ def set_toml_config(config: dict[str, Any]) -> None
 
 Set the TOML configuration to be used by Settings.
 
-<a id="soldier.config.settings.TomlConfigSettingsSource"></a>
+<a id="focal.config.settings.TomlConfigSettingsSource"></a>
 
 ## TomlConfigSettingsSource Objects
 
@@ -24,7 +24,7 @@ class TomlConfigSettingsSource(PydanticBaseSettingsSource)
 
 Custom settings source that reads from TOML configuration.
 
-<a id="soldier.config.settings.TomlConfigSettingsSource.get_field_value"></a>
+<a id="focal.config.settings.TomlConfigSettingsSource.get_field_value"></a>
 
 #### get\_field\_value
 
@@ -34,7 +34,7 @@ def get_field_value(field: Any, field_name: str) -> tuple[Any, str, bool]
 
 Get field value from TOML config.
 
-<a id="soldier.config.settings.TomlConfigSettingsSource.__call__"></a>
+<a id="focal.config.settings.TomlConfigSettingsSource.__call__"></a>
 
 #### \_\_call\_\_
 
@@ -44,7 +44,7 @@ def __call__() -> dict[str, Any]
 
 Return the TOML config values.
 
-<a id="soldier.config.settings.Settings"></a>
+<a id="focal.config.settings.Settings"></a>
 
 ## Settings Objects
 
@@ -57,10 +57,10 @@ Root configuration object containing all nested configuration sections.
 Configuration is loaded in this order:
 1. Pydantic model defaults (in code)
 2. config/default.toml (base configuration)
-3. config/{SOLDIER_ENV}.toml (environment overrides)
-4. SOLDIER_* environment variables (runtime overrides)
+3. config/{FOCAL_ENV}.toml (environment overrides)
+4. FOCAL_* environment variables (runtime overrides)
 
-<a id="soldier.config.settings.Settings.settings_customise_sources"></a>
+<a id="focal.config.settings.Settings.settings_customise_sources"></a>
 
 #### settings\_customise\_sources
 
@@ -79,7 +79,7 @@ Customize settings sources to include TOML config.
 
 Priority order (highest to lowest):
 1. init_settings (constructor arguments)
-2. env_settings (SOLDIER_* environment variables)
+2. env_settings (FOCAL_* environment variables)
 3. toml_settings (config/*.toml files)
 4. (defaults from model)
 

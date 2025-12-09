@@ -3,9 +3,9 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.filtering.scenario_filter import ScenarioFilter
-from soldier.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.alignment.filtering.scenario_filter import ScenarioFilter
+from focal.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
 
 
 @pytest.fixture

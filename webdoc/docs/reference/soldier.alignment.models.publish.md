@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.publish"></a>
+<a id="focal.alignment.models.publish"></a>
 
-# soldier.alignment.models.publish
+# focal.alignment.models.publish
 
 Publish job models for configuration versioning.
 
-<a id="soldier.alignment.models.publish.PublishStage"></a>
+<a id="focal.alignment.models.publish.PublishStage"></a>
 
 ## PublishStage Objects
 
@@ -21,7 +21,7 @@ Each publish job goes through multiple stages:
 - swap_pointer: Atomic version switch
 - invalidate_cache: Clear cached config
 
-<a id="soldier.alignment.models.publish.PublishJob"></a>
+<a id="focal.alignment.models.publish.PublishJob"></a>
 
 ## PublishJob Objects
 
@@ -35,7 +35,7 @@ A publish job represents the process of making configuration
 changes live for an agent. It progresses through multiple
 stages and tracks success/failure for each.
 
-<a id="soldier.alignment.models.publish.PublishJob.create_with_stages"></a>
+<a id="focal.alignment.models.publish.PublishJob.create_with_stages"></a>
 
 #### create\_with\_stages
 

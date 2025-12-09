@@ -19,16 +19,16 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.conversation.models.enums import Channel
-from soldier.customer_data.enums import VariableSource, SourceType, ValidationMode
-from soldier.customer_data.models import (
+from focal.conversation.models.enums import Channel
+from focal.customer_data.enums import VariableSource, SourceType, ValidationMode
+from focal.customer_data.models import (
     ChannelIdentity,
     CustomerDataStore,
     VariableEntry,
     CustomerDataField,
 )
-from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
-from soldier.customer_data.validation import CustomerDataFieldValidator
+from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from focal.customer_data.validation import CustomerDataFieldValidator
 
 
 def percentile(data: list[float], p: float) -> float:
@@ -273,7 +273,7 @@ class TestSchemaExtractionPerformance:
         Note: This test uses a mock LLM to measure extraction overhead.
         Real LLM performance depends on provider latency.
         """
-        from soldier.customer_data.extraction import CustomerDataSchemaExtractor
+        from focal.customer_data.extraction import CustomerDataSchemaExtractor
 
         # Create mock LLM that returns realistic response
         mock_llm = AsyncMock()

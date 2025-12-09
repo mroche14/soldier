@@ -4,16 +4,16 @@ import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from soldier.alignment.context.situation_snapshot import CandidateVariableInfo
-from soldier.alignment.customer.models import CustomerDataUpdate
-from soldier.alignment.customer.updater import CustomerDataUpdater
-from soldier.customer_data.models import (
+from focal.alignment.context.situation_snapshot import CandidateVariableInfo
+from focal.alignment.customer.models import CustomerDataUpdate
+from focal.alignment.customer.updater import CustomerDataUpdater
+from focal.customer_data.models import (
     CustomerDataField,
     CustomerDataStore,
     VariableEntry,
 )
-from soldier.customer_data.validation import CustomerDataFieldValidator
-from soldier.customer_data.enums import ValidationMode, VariableSource
+from focal.customer_data.validation import CustomerDataFieldValidator
+from focal.customer_data.enums import ValidationMode, VariableSource
 
 
 def utc_now():

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement the core alignment pipeline (Phases 6-11) that processes user messages through a multi-step orchestration: context extraction, rule/scenario/memory retrieval with dynamic selection strategies, LLM-based filtering, tool execution, response generation with template support, and enforcement validation. This is the "brain" of the Soldier cognitive engine.
+Implement the core alignment pipeline (Phases 6-11) that processes user messages through a multi-step orchestration: context extraction, rule/scenario/memory retrieval with dynamic selection strategies, LLM-based filtering, tool execution, response generation with template support, and enforcement validation. This is the "brain" of the Focal cognitive engine.
 
 ## Technical Context
 
@@ -14,7 +14,7 @@ Implement the core alignment pipeline (Phases 6-11) that processes user messages
 **Storage**: In-memory stores (existing); ConfigStore, MemoryStore, SessionStore, AuditStore interfaces already defined
 **Testing**: pytest, pytest-asyncio, pytest-cov (existing)
 **Target Platform**: Linux server (containerized)
-**Project Type**: Single Python package (soldier/)
+**Project Type**: Single Python package (focal/)
 **Performance Goals**: <1s simple message processing, <2s with tools (per SC-001, SC-002)
 **Constraints**: 100 concurrent requests (SC-006), zero in-memory state, multi-tenant isolation
 **Scale/Scope**: All 6 pipeline phases, 32 functional requirements, 5 selection strategies
@@ -62,7 +62,7 @@ specs/004-alignment-pipeline/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── alignment/
 │   ├── retrieval/
 │   │   ├── __init__.py              # Exports
@@ -127,7 +127,7 @@ tests/
         └── test_engine.py           # Full pipeline integration tests [NEW]
 ```
 
-**Structure Decision**: Follows existing `soldier/` package structure with domain-aligned folders. Each pipeline phase maps to a subdirectory under `alignment/`. Test structure mirrors source.
+**Structure Decision**: Follows existing `focal/` package structure with domain-aligned folders. Each pipeline phase maps to a subdirectory under `alignment/`. Test structure mirrors source.
 
 ## Task Ordering Rationale
 

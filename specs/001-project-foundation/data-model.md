@@ -5,7 +5,7 @@
 
 ## Overview
 
-This document defines the Pydantic models for the Soldier configuration system. These models validate configuration loaded from TOML files and environment variables.
+This document defines the Pydantic models for the Focal configuration system. These models validate configuration loaded from TOML files and environment variables.
 
 ---
 
@@ -17,7 +17,7 @@ The root configuration object containing all nested configuration sections.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `app_name` | `str` | `"soldier"` | Application name for logging/tracing |
+| `app_name` | `str` | `"focal"` | Application name for logging/tracing |
 | `debug` | `bool` | `False` | Enable debug mode |
 | `log_level` | `str` | `"INFO"` | Logging level (DEBUG, INFO, WARNING, ERROR) |
 | `api` | `APIConfig` | `APIConfig()` | API server configuration |
@@ -300,7 +300,7 @@ Configuration for the turn pipeline.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `True` | Enable tracing |
-| `service_name` | `str` | `"soldier"` | Service name for traces |
+| `service_name` | `str` | `"focal"` | Service name for traces |
 | `otlp_endpoint` | `str \| None` | `None` | OTLP exporter endpoint |
 | `sample_rate` | `float` | `1.0` | Trace sample rate |
 

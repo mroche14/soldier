@@ -36,7 +36,7 @@ uv add asyncpg pgvector alembic
 
 ```bash
 # Initialize database schema
-cd soldier/db
+cd focal/db
 alembic upgrade head
 
 # Check migration status
@@ -50,7 +50,7 @@ alembic current
 cp .env.example .env
 
 # Edit .env with your settings:
-# DATABASE_URL=postgresql://soldier:soldier@localhost:5432/soldier
+# DATABASE_URL=postgresql://focal:focal@localhost:5432/focal
 # REDIS_URL=redis://localhost:6379/0
 # ANTHROPIC_API_KEY=sk-ant-...  (optional)
 # OPENAI_API_KEY=sk-...  (optional)
@@ -89,10 +89,10 @@ uv run pytest tests/integration/ -v
 
 ```python
 import asyncio
-from soldier.alignment.stores.postgres import PostgresConfigStore
+from focal.alignment.stores.postgres import PostgresConfigStore
 
 async def test_postgres():
-    store = PostgresConfigStore("postgresql://soldier:soldier@localhost:5432/soldier")
+    store = PostgresConfigStore("postgresql://focal:focal@localhost:5432/focal")
     await store.connect()
 
     # Test basic operation
@@ -108,7 +108,7 @@ asyncio.run(test_postgres())
 
 ```python
 import asyncio
-from soldier.conversation.stores.redis import RedisSessionStore
+from focal.conversation.stores.redis import RedisSessionStore
 
 async def test_redis():
     store = RedisSessionStore("redis://localhost:6379/0")
@@ -127,7 +127,7 @@ asyncio.run(test_redis())
 
 ```bash
 # Check current migration version
-cd soldier/db
+cd focal/db
 alembic current
 
 # Show migration history
@@ -167,14 +167,14 @@ redis-cli -h localhost -p 6379 ping
 
 ```bash
 # Connect to PostgreSQL and enable extension
-docker-compose exec postgres psql -U soldier -d soldier -c "CREATE EXTENSION IF NOT EXISTS vector;"
+docker-compose exec postgres psql -U focal -d focal -c "CREATE EXTENSION IF NOT EXISTS vector;"
 ```
 
 ### Migration Conflicts
 
 ```bash
 # If migrations are out of sync
-cd soldier/db
+cd focal/db
 alembic stamp head  # Mark current as head
 alembic upgrade head  # Reapply if needed
 ```
@@ -192,9 +192,9 @@ alembic upgrade head  # Reapply if needed
 
 | Component | Location |
 |-----------|----------|
-| PostgreSQL stores | `soldier/*/stores/postgres.py` |
-| Redis session store | `soldier/conversation/stores/redis.py` |
-| Alembic config | `soldier/db/alembic.ini` |
-| Migration scripts | `soldier/db/migrations/versions/` |
+| PostgreSQL stores | `focal/*/stores/postgres.py` |
+| Redis session store | `focal/conversation/stores/redis.py` |
+| Alembic config | `focal/db/alembic.ini` |
+| Migration scripts | `focal/db/migrations/versions/` |
 | Integration tests | `tests/integration/stores/`, `tests/integration/providers/` |
 | Docker Compose | `docker-compose.yml` |

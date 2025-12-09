@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.template"></a>
+<a id="focal.alignment.models.template"></a>
 
-# soldier.alignment.models.template
+# focal.alignment.models.template
 
 Template models for alignment domain.
 
-<a id="soldier.alignment.models.template.Template"></a>
+<a id="focal.alignment.models.template.Template"></a>
 
 ## Template Objects
 

@@ -1,10 +1,10 @@
-<a id="soldier.memory.stores.inmemory"></a>
+<a id="focal.memory.stores.inmemory"></a>
 
-# soldier.memory.stores.inmemory
+# focal.memory.stores.inmemory
 
 In-memory implementation of MemoryStore.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore"></a>
 
 ## InMemoryMemoryStore Objects
 
@@ -18,7 +18,7 @@ Uses simple dict storage with linear scan for queries.
 Implements BFS for graph traversal.
 Not suitable for production use.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.__init__"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -28,7 +28,7 @@ def __init__() -> None
 
 Initialize empty storage.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.add_episode"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.add_episode"></a>
 
 #### add\_episode
 
@@ -38,7 +38,7 @@ async def add_episode(episode: Episode) -> UUID
 
 Add an episode to the store.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.get_episode"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.get_episode"></a>
 
 #### get\_episode
 
@@ -48,7 +48,7 @@ async def get_episode(group_id: str, episode_id: UUID) -> Episode | None
 
 Get an episode by ID.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.get_episodes"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.get_episodes"></a>
 
 #### get\_episodes
 
@@ -58,7 +58,7 @@ async def get_episodes(group_id: str, *, limit: int = 100) -> list[Episode]
 
 Get episodes for a group.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.vector_search_episodes"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.vector_search_episodes"></a>
 
 #### vector\_search\_episodes
 
@@ -73,7 +73,7 @@ async def vector_search_episodes(
 
 Search episodes by vector similarity.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.text_search_episodes"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.text_search_episodes"></a>
 
 #### text\_search\_episodes
 
@@ -86,7 +86,7 @@ async def text_search_episodes(query: str,
 
 Search episodes by text content (substring match).
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.delete_episode"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.delete_episode"></a>
 
 #### delete\_episode
 
@@ -96,7 +96,7 @@ async def delete_episode(group_id: str, episode_id: UUID) -> bool
 
 Delete an episode.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.add_entity"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.add_entity"></a>
 
 #### add\_entity
 
@@ -106,7 +106,7 @@ async def add_entity(entity: Entity) -> UUID
 
 Add an entity to the store.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.get_entity"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.get_entity"></a>
 
 #### get\_entity
 
@@ -116,7 +116,7 @@ async def get_entity(group_id: str, entity_id: UUID) -> Entity | None
 
 Get an entity by ID.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.get_entities"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.get_entities"></a>
 
 #### get\_entities
 
@@ -129,7 +129,7 @@ async def get_entities(group_id: str,
 
 Get entities for a group with optional type filter.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.update_entity"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.update_entity"></a>
 
 #### update\_entity
 
@@ -139,7 +139,7 @@ async def update_entity(entity: Entity) -> bool
 
 Update an existing entity.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.delete_entity"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.delete_entity"></a>
 
 #### delete\_entity
 
@@ -149,7 +149,7 @@ async def delete_entity(group_id: str, entity_id: UUID) -> bool
 
 Delete an entity.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.add_relationship"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.add_relationship"></a>
 
 #### add\_relationship
 
@@ -159,7 +159,7 @@ async def add_relationship(relationship: Relationship) -> UUID
 
 Add a relationship to the store.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.get_relationship"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.get_relationship"></a>
 
 #### get\_relationship
 
@@ -170,7 +170,7 @@ async def get_relationship(group_id: str,
 
 Get a single relationship by ID.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.get_relationships"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.get_relationships"></a>
 
 #### get\_relationships
 
@@ -185,7 +185,7 @@ async def get_relationships(
 
 Get relationships with optional filters.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.update_relationship"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.update_relationship"></a>
 
 #### update\_relationship
 
@@ -195,7 +195,7 @@ async def update_relationship(relationship: Relationship) -> bool
 
 Update an existing relationship.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.delete_relationship"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.delete_relationship"></a>
 
 #### delete\_relationship
 
@@ -205,7 +205,7 @@ async def delete_relationship(group_id: str, relationship_id: UUID) -> bool
 
 Delete a relationship.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.traverse_from_entities"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.traverse_from_entities"></a>
 
 #### traverse\_from\_entities
 
@@ -220,7 +220,7 @@ async def traverse_from_entities(
 
 Traverse graph from given entities using BFS.
 
-<a id="soldier.memory.stores.inmemory.InMemoryMemoryStore.delete_by_group"></a>
+<a id="focal.memory.stores.inmemory.InMemoryMemoryStore.delete_by_group"></a>
 
 #### delete\_by\_group
 

@@ -1,4 +1,4 @@
-<a id="soldier.providers.embedding.openai"></a>
+<a id="focal.providers.embedding.openai"></a>
 
-# soldier.providers.embedding.openai
+# focal.providers.embedding.openai
 

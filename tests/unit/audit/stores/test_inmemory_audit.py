@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.audit.models import AuditEvent, TurnRecord
-from soldier.audit.stores import InMemoryAuditStore
+from focal.audit.models import AuditEvent, TurnRecord
+from focal.audit.stores import InMemoryAuditStore
 
 
 @pytest.fixture

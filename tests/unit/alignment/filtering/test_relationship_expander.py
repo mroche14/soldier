@@ -3,10 +3,10 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.filtering.models import MatchedRule
-from soldier.alignment.filtering.relationship_expander import RelationshipExpander
-from soldier.alignment.models import Rule, RuleRelationship, RuleRelationshipKind, Scope
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.alignment.filtering.models import MatchedRule
+from focal.alignment.filtering.relationship_expander import RelationshipExpander
+from focal.alignment.models import Rule, RuleRelationship, RuleRelationshipKind, Scope
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
 
 
 @pytest.fixture

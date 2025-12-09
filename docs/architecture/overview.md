@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Soldier is an **API-first, multi-tenant cognitive engine** with pluggable storage and AI providers. Every component is designed for horizontal scaling.
+Focal is an **API-first, multi-tenant cognitive engine** with pluggable storage and AI providers. Every component is designed for horizontal scaling.
 
 ## Design Principles
 
@@ -17,18 +17,18 @@ Soldier is an **API-first, multi-tenant cognitive engine** with pluggable storag
 
 ## Deployment Modes
 
-Soldier supports two deployment modes to accommodate different integration patterns:
+Focal supports two deployment modes to accommodate different integration patterns:
 
 ### Standalone Mode (Default)
 
-Soldier is the **source of truth** for all configuration. Use this mode when:
-- Deploying Soldier as an independent service
-- Managing configuration via Soldier's REST API
-- Building your own admin UI on top of Soldier
+Focal is the **source of truth** for all configuration. Use this mode when:
+- Deploying Focal as an independent service
+- Managing configuration via Focal's REST API
+- Building your own admin UI on top of Focal
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Admin UI   │────▶│   Soldier   │────▶│ PostgreSQL  │
+│  Admin UI   │────▶│   Focal   │────▶│ PostgreSQL  │
 │  (custom)   │     │   REST API  │     │  (config)   │
 └─────────────┘     └─────────────┘     └─────────────┘
 ```
@@ -41,7 +41,7 @@ Soldier is the **source of truth** for all configuration. Use this mode when:
 
 ### External Control Plane Mode
 
-Soldier is a **consumer** of configuration from an external Control Plane. Use this mode when:
+Focal is a **consumer** of configuration from an external Control Plane. Use this mode when:
 - Integrating into a larger platform architecture
 - An external Control Plane is the source of truth
 - Configuration is managed via an external Admin UI
@@ -55,7 +55,7 @@ Soldier is a **consumer** of configuration from an external Control Plane. Use t
                                                     cfg-updated    │
                                                                    ▼
                                                             ┌─────────────┐
-                                                            │   Soldier   │
+                                                            │   Focal   │
                                                             │ (read-only) │
                                                             └─────────────┘
 ```
@@ -333,7 +333,7 @@ Every operation is scoped by `tenant_id`:
 
 ## Configuration
 
-Soldier uses **TOML configuration files** with **Pydantic validation**. No hardcoded values in code—only defaults in Pydantic models. See [configuration.md](./configuration.md) for full details.
+Focal uses **TOML configuration files** with **Pydantic validation**. No hardcoded values in code—only defaults in Pydantic models. See [configuration.md](./configuration.md) for full details.
 
 ### Configuration Files
 
@@ -463,12 +463,12 @@ self_critique_provider = "haiku"
 
 ### Environment Variable Overrides
 
-Override any configuration via `SOLDIER_*` environment variables:
+Override any configuration via `FOCAL_*` environment variables:
 
 ```bash
-export SOLDIER_API__PORT=9000
-export SOLDIER_PIPELINE__GENERATION__LLM_PROVIDER=haiku
-export SOLDIER_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
+export FOCAL_API__PORT=9000
+export FOCAL_PIPELINE__GENERATION__LLM_PROVIDER=haiku
+export FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
 ```
 
 ---

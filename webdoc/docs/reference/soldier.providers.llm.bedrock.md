@@ -1,4 +1,4 @@
-<a id="soldier.providers.llm.bedrock"></a>
+<a id="focal.providers.llm.bedrock"></a>
 
-# soldier.providers.llm.bedrock
+# focal.providers.llm.bedrock
 

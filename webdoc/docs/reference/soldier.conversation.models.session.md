@@ -1,10 +1,10 @@
-<a id="soldier.conversation.models.session"></a>
+<a id="focal.conversation.models.session"></a>
 
-# soldier.conversation.models.session
+# focal.conversation.models.session
 
 Session models for conversation domain.
 
-<a id="soldier.conversation.models.session.utc_now"></a>
+<a id="focal.conversation.models.session.utc_now"></a>
 
 #### utc\_now
 
@@ -14,7 +14,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.conversation.models.session.PendingMigration"></a>
+<a id="focal.conversation.models.session.PendingMigration"></a>
 
 ## PendingMigration Objects
 
@@ -24,7 +24,7 @@ class PendingMigration(BaseModel)
 
 Session marker for pending migration.
 
-<a id="soldier.conversation.models.session.StepVisit"></a>
+<a id="focal.conversation.models.session.StepVisit"></a>
 
 ## StepVisit Objects
 
@@ -34,7 +34,7 @@ class StepVisit(BaseModel)
 
 Record of visiting a scenario step.
 
-<a id="soldier.conversation.models.session.Session"></a>
+<a id="focal.conversation.models.session.Session"></a>
 
 ## Session Objects
 

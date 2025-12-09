@@ -15,7 +15,7 @@
 
 ## Path Conventions
 
-- **Source**: `soldier/` package at repository root
+- **Source**: `focal/` package at repository root
 - **Tests**: `tests/` at repository root
 - All paths are relative to repository root
 
@@ -27,7 +27,7 @@
 
 - [x] T001 Add numpy, scipy, scikit-learn dependencies via `uv add numpy scipy scikit-learn`
 - [x] T002 [P] Create test directory structure: `tests/unit/alignment/retrieval/`, `tests/unit/alignment/context/`, `tests/unit/alignment/filtering/`, `tests/unit/alignment/execution/`, `tests/unit/alignment/generation/`, `tests/unit/alignment/enforcement/`
-- [x] T003 [P] Create prompt template directories: `soldier/alignment/context/prompts/`, `soldier/alignment/filtering/prompts/`, `soldier/alignment/generation/prompts/`
+- [x] T003 [P] Create prompt template directories: `focal/alignment/context/prompts/`, `focal/alignment/filtering/prompts/`, `focal/alignment/generation/prompts/`
 - [x] T004 [P] Create `tests/integration/alignment/` directory for integration tests
 
 ---
@@ -40,22 +40,22 @@
 
 ### Data Models (from data-model.md)
 
-- [x] T005 [P] Implement ScoredItem and SelectionResult dataclasses in `soldier/alignment/retrieval/selection.py`
-- [x] T006 [P] Implement SelectionStrategy ABC interface in `soldier/alignment/retrieval/selection.py`
-- [x] T007 [P] Extend Context model with intent, entities, sentiment, scenario_signal in `soldier/alignment/context/models.py`
-- [x] T008 [P] Implement ExtractedEntity, Sentiment, Urgency, ScenarioSignal enums in `soldier/alignment/context/models.py`
-- [x] T009 [P] Implement ScoredRule, RuleSource, RetrievalResult in `soldier/alignment/retrieval/models.py`
-- [x] T010 [P] Implement MatchedRule, RuleFilterResult in `soldier/alignment/filtering/models.py`
-- [x] T011 [P] Implement ScenarioAction, ScenarioFilterResult in `soldier/alignment/filtering/models.py`
-- [x] T012 [P] Implement ToolResult, VariableResolution in `soldier/alignment/execution/models.py`
-- [x] T013 [P] Implement TemplateMode, GenerationResult in `soldier/alignment/generation/models.py`
-- [x] T014 [P] Implement ConstraintViolation, EnforcementResult in `soldier/alignment/enforcement/models.py`
-- [x] T015 [P] Implement PipelineStepTiming, AlignmentResult in `soldier/alignment/result.py`
+- [x] T005 [P] Implement ScoredItem and SelectionResult dataclasses in `focal/alignment/retrieval/selection.py`
+- [x] T006 [P] Implement SelectionStrategy ABC interface in `focal/alignment/retrieval/selection.py`
+- [x] T007 [P] Extend Context model with intent, entities, sentiment, scenario_signal in `focal/alignment/context/models.py`
+- [x] T008 [P] Implement ExtractedEntity, Sentiment, Urgency, ScenarioSignal enums in `focal/alignment/context/models.py`
+- [x] T009 [P] Implement ScoredRule, RuleSource, RetrievalResult in `focal/alignment/retrieval/models.py`
+- [x] T010 [P] Implement MatchedRule, RuleFilterResult in `focal/alignment/filtering/models.py`
+- [x] T011 [P] Implement ScenarioAction, ScenarioFilterResult in `focal/alignment/filtering/models.py`
+- [x] T012 [P] Implement ToolResult, VariableResolution in `focal/alignment/execution/models.py`
+- [x] T013 [P] Implement TemplateMode, GenerationResult in `focal/alignment/generation/models.py`
+- [x] T014 [P] Implement ConstraintViolation, EnforcementResult in `focal/alignment/enforcement/models.py`
+- [x] T015 [P] Implement PipelineStepTiming, AlignmentResult in `focal/alignment/result.py`
 
 ### Configuration Models
 
-- [x] T016 [P] Extend SelectionConfig with strategy-specific params in `soldier/config/models/selection.py`
-- [x] T017 [P] Implement PipelineStepConfig, PipelineConfig in `soldier/config/models/pipeline.py`
+- [x] T016 [P] Extend SelectionConfig with strategy-specific params in `focal/config/models/selection.py`
+- [x] T017 [P] Implement PipelineStepConfig, PipelineConfig in `focal/config/models/pipeline.py`
 
 ### Test Factories
 
@@ -84,13 +84,13 @@
 
 ### Implementation for User Story 4
 
-- [x] T025 [US4] Implement FixedKSelectionStrategy in `soldier/alignment/retrieval/selection.py`
-- [x] T026 [US4] Implement ElbowSelectionStrategy in `soldier/alignment/retrieval/selection.py`
-- [x] T027 [US4] Implement AdaptiveKSelectionStrategy in `soldier/alignment/retrieval/selection.py`
-- [x] T028 [US4] Implement EntropySelectionStrategy in `soldier/alignment/retrieval/selection.py`
-- [x] T029 [US4] Implement ClusterSelectionStrategy in `soldier/alignment/retrieval/selection.py`
-- [x] T030 [US4] Implement create_selection_strategy factory in `soldier/alignment/retrieval/selection.py`
-- [x] T031 [US4] Export selection strategies in `soldier/alignment/retrieval/__init__.py`
+- [x] T025 [US4] Implement FixedKSelectionStrategy in `focal/alignment/retrieval/selection.py`
+- [x] T026 [US4] Implement ElbowSelectionStrategy in `focal/alignment/retrieval/selection.py`
+- [x] T027 [US4] Implement AdaptiveKSelectionStrategy in `focal/alignment/retrieval/selection.py`
+- [x] T028 [US4] Implement EntropySelectionStrategy in `focal/alignment/retrieval/selection.py`
+- [x] T029 [US4] Implement ClusterSelectionStrategy in `focal/alignment/retrieval/selection.py`
+- [x] T030 [US4] Implement create_selection_strategy factory in `focal/alignment/retrieval/selection.py`
+- [x] T031 [US4] Export selection strategies in `focal/alignment/retrieval/__init__.py`
 
 **Checkpoint**: Selection strategies complete - can be used by retrieval components
 
@@ -114,36 +114,36 @@
 
 ### Context Extraction (Phase 7)
 
-- [x] T039 [US1] Create intent extraction prompt template in `soldier/alignment/context/prompts/extract_intent.txt`
-- [x] T040 [US1] Implement ContextExtractor with LLM, embedding_only, and disabled modes in `soldier/alignment/context/extractor.py`
-- [x] T041 [US1] Export ContextExtractor in `soldier/alignment/context/__init__.py`
+- [x] T039 [US1] Create intent extraction prompt template in `focal/alignment/context/prompts/extract_intent.txt`
+- [x] T040 [US1] Implement ContextExtractor with LLM, embedding_only, and disabled modes in `focal/alignment/context/extractor.py`
+- [x] T041 [US1] Export ContextExtractor in `focal/alignment/context/__init__.py`
 
 ### Retrieval (Phase 8)
 
-- [x] T042 [US1] Implement RuleRetriever with scope hierarchy (global, scenario, step) in `soldier/alignment/retrieval/rule_retriever.py`
-- [x] T043 [US1] Implement business filters (enabled, max_fires, cooldown) in `soldier/alignment/retrieval/rule_retriever.py`
-- [x] T044 [US1] Implement Reranker wrapper for RerankProvider in `soldier/alignment/retrieval/reranker.py`
-- [x] T045 [US1] Export retrieval components in `soldier/alignment/retrieval/__init__.py`
+- [x] T042 [US1] Implement RuleRetriever with scope hierarchy (global, scenario, step) in `focal/alignment/retrieval/rule_retriever.py`
+- [x] T043 [US1] Implement business filters (enabled, max_fires, cooldown) in `focal/alignment/retrieval/rule_retriever.py`
+- [x] T044 [US1] Implement Reranker wrapper for RerankProvider in `focal/alignment/retrieval/reranker.py`
+- [x] T045 [US1] Export retrieval components in `focal/alignment/retrieval/__init__.py`
 
 ### Filtering (Phase 9)
 
-- [x] T046 [US1] Create rule filtering prompt template in `soldier/alignment/filtering/prompts/filter_rules.txt`
-- [x] T047 [US1] Implement RuleFilter with LLM-based judgment in `soldier/alignment/filtering/rule_filter.py`
-- [x] T048 [US1] Export filtering components in `soldier/alignment/filtering/__init__.py`
+- [x] T046 [US1] Create rule filtering prompt template in `focal/alignment/filtering/prompts/filter_rules.txt`
+- [x] T047 [US1] Implement RuleFilter with LLM-based judgment in `focal/alignment/filtering/rule_filter.py`
+- [x] T048 [US1] Export filtering components in `focal/alignment/filtering/__init__.py`
 
 ### Generation (Phase 10)
 
-- [x] T049 [US1] Create system prompt template in `soldier/alignment/generation/prompts/system_prompt.txt`
-- [x] T050 [US1] Implement PromptBuilder for assembling context, rules, memory, tools in `soldier/alignment/generation/prompt_builder.py`
-- [x] T051 [US1] Implement ResponseGenerator with template mode handling in `soldier/alignment/generation/generator.py`
-- [x] T052 [US1] Export generation components in `soldier/alignment/generation/__init__.py`
+- [x] T049 [US1] Create system prompt template in `focal/alignment/generation/prompts/system_prompt.txt`
+- [x] T050 [US1] Implement PromptBuilder for assembling context, rules, memory, tools in `focal/alignment/generation/prompt_builder.py`
+- [x] T051 [US1] Implement ResponseGenerator with template mode handling in `focal/alignment/generation/generator.py`
+- [x] T052 [US1] Export generation components in `focal/alignment/generation/__init__.py`
 
 ### Engine Integration (Phase 11)
 
-- [x] T053 [US1] Implement AlignmentEngine orchestrator with step enable/disable in `soldier/alignment/engine.py`
-- [x] T054 [US1] Implement pipeline step timing and logging in `soldier/alignment/engine.py`
-- [x] T055 [US1] Implement graceful error handling per step in `soldier/alignment/engine.py`
-- [x] T056 [US1] Export AlignmentEngine and AlignmentResult in `soldier/alignment/__init__.py`
+- [x] T053 [US1] Implement AlignmentEngine orchestrator with step enable/disable in `focal/alignment/engine.py`
+- [x] T054 [US1] Implement pipeline step timing and logging in `focal/alignment/engine.py`
+- [x] T055 [US1] Implement graceful error handling per step in `focal/alignment/engine.py`
+- [x] T056 [US1] Export AlignmentEngine and AlignmentResult in `focal/alignment/__init__.py`
 
 **Checkpoint**: MVP complete - simple message processing works end-to-end
 
@@ -163,13 +163,13 @@
 
 ### Implementation for User Story 2
 
-- [x] T060 [US2] Implement ScenarioRetriever with selection strategy in `soldier/alignment/retrieval/scenario_retriever.py`
-- [x] T061 [US2] Create scenario evaluation prompt in `soldier/alignment/filtering/prompts/evaluate_scenario.txt`
-- [x] T062 [US2] Implement ScenarioFilter with graph navigation in `soldier/alignment/filtering/scenario_filter.py`
-- [x] T063 [US2] Implement transition evaluation with LLM adjudication in `soldier/alignment/filtering/scenario_filter.py`
-- [x] T064 [US2] Implement loop detection in scenario transitions in `soldier/alignment/filtering/scenario_filter.py`
-- [x] T065 [US2] Implement re-localization for inconsistent state recovery in `soldier/alignment/filtering/scenario_filter.py`
-- [x] T066 [US2] Integrate ScenarioFilter into AlignmentEngine in `soldier/alignment/engine.py`
+- [x] T060 [US2] Implement ScenarioRetriever with selection strategy in `focal/alignment/retrieval/scenario_retriever.py`
+- [x] T061 [US2] Create scenario evaluation prompt in `focal/alignment/filtering/prompts/evaluate_scenario.txt`
+- [x] T062 [US2] Implement ScenarioFilter with graph navigation in `focal/alignment/filtering/scenario_filter.py`
+- [x] T063 [US2] Implement transition evaluation with LLM adjudication in `focal/alignment/filtering/scenario_filter.py`
+- [x] T064 [US2] Implement loop detection in scenario transitions in `focal/alignment/filtering/scenario_filter.py`
+- [x] T065 [US2] Implement re-localization for inconsistent state recovery in `focal/alignment/filtering/scenario_filter.py`
+- [x] T066 [US2] Integrate ScenarioFilter into AlignmentEngine in `focal/alignment/engine.py`
 
 **Checkpoint**: Scenario navigation works - multi-step flows complete
 
@@ -189,12 +189,12 @@
 
 ### Implementation for User Story 3
 
-- [x] T070 [US3] Implement VariableResolver with session, profile, tool sources in `soldier/alignment/execution/variable_resolver.py`
-- [x] T071 [US3] Implement ToolExecutor with timeout handling in `soldier/alignment/execution/tool_executor.py`
-- [x] T072 [US3] Implement parallel tool execution for multiple matched rules in `soldier/alignment/execution/tool_executor.py`
-- [x] T073 [US3] Integrate tool results into PromptBuilder in `soldier/alignment/generation/prompt_builder.py`
-- [x] T074 [US3] Integrate ToolExecutor into AlignmentEngine in `soldier/alignment/engine.py`
-- [x] T075 [US3] Export execution components in `soldier/alignment/execution/__init__.py`
+- [x] T070 [US3] Implement VariableResolver with session, profile, tool sources in `focal/alignment/execution/variable_resolver.py`
+- [x] T071 [US3] Implement ToolExecutor with timeout handling in `focal/alignment/execution/tool_executor.py`
+- [x] T072 [US3] Implement parallel tool execution for multiple matched rules in `focal/alignment/execution/tool_executor.py`
+- [x] T073 [US3] Integrate tool results into PromptBuilder in `focal/alignment/generation/prompt_builder.py`
+- [x] T074 [US3] Integrate ToolExecutor into AlignmentEngine in `focal/alignment/engine.py`
+- [x] T075 [US3] Export execution components in `focal/alignment/execution/__init__.py`
 
 **Checkpoint**: Tool execution works - tools run and results incorporated
 
@@ -214,11 +214,11 @@
 
 ### Implementation for User Story 5
 
-- [x] T079 [US5] Implement EnforcementValidator with constraint checking in `soldier/alignment/enforcement/validator.py`
-- [x] T080 [US5] Implement regeneration logic with stronger prompt in `soldier/alignment/enforcement/validator.py`
-- [x] T081 [US5] Implement FallbackHandler with template fallback chain in `soldier/alignment/enforcement/fallback.py`
-- [x] T082 [US5] Integrate EnforcementValidator into AlignmentEngine in `soldier/alignment/engine.py`
-- [x] T083 [US5] Export enforcement components in `soldier/alignment/enforcement/__init__.py`
+- [x] T079 [US5] Implement EnforcementValidator with constraint checking in `focal/alignment/enforcement/validator.py`
+- [x] T080 [US5] Implement regeneration logic with stronger prompt in `focal/alignment/enforcement/validator.py`
+- [x] T081 [US5] Implement FallbackHandler with template fallback chain in `focal/alignment/enforcement/fallback.py`
+- [x] T082 [US5] Integrate EnforcementValidator into AlignmentEngine in `focal/alignment/engine.py`
+- [x] T083 [US5] Export enforcement components in `focal/alignment/enforcement/__init__.py`
 
 **Checkpoint**: Hard constraints work - violations detected and corrected
 
@@ -237,9 +237,9 @@
 
 ### Implementation for User Story 6
 
-- [x] T086 [US6] Implement EXCLUSIVE template mode in ResponseGenerator (skip LLM) in `soldier/alignment/generation/generator.py`
-- [x] T087 [US6] Implement SUGGEST template mode in PromptBuilder in `soldier/alignment/generation/prompt_builder.py`
-- [x] T088 [US6] Implement variable placeholder resolution in templates in `soldier/alignment/generation/generator.py`
+- [x] T086 [US6] Implement EXCLUSIVE template mode in ResponseGenerator (skip LLM) in `focal/alignment/generation/generator.py`
+- [x] T087 [US6] Implement SUGGEST template mode in PromptBuilder in `focal/alignment/generation/prompt_builder.py`
+- [x] T088 [US6] Implement variable placeholder resolution in templates in `focal/alignment/generation/generator.py`
 
 **Checkpoint**: Template modes work - exact text returned when configured
 
@@ -257,9 +257,9 @@
 
 ### Implementation for Memory Integration
 
-- [x] T090 [MEM] Implement MemoryRetriever with selection strategy in `soldier/memory/retrieval/retriever.py`
-- [x] T091 [MEM] Integrate memory context into PromptBuilder in `soldier/alignment/generation/prompt_builder.py`
-- [x] T092 [MEM] Integrate MemoryRetriever into AlignmentEngine in `soldier/alignment/engine.py`
+- [x] T090 [MEM] Implement MemoryRetriever with selection strategy in `focal/memory/retrieval/retriever.py`
+- [x] T091 [MEM] Integrate memory context into PromptBuilder in `focal/alignment/generation/prompt_builder.py`
+- [x] T092 [MEM] Integrate MemoryRetriever into AlignmentEngine in `focal/alignment/engine.py`
 
 **Checkpoint**: Memory retrieval works - past context incorporated
 
@@ -270,8 +270,8 @@
 **Purpose**: Final validation, performance testing, and documentation
 
  - [x] T093 [P] Add comprehensive docstrings to all public classes/methods
- - [x] T094 [P] Update `soldier/alignment/__init__.py` with all public exports
- - [x] T095 Run full test suite and verify 85% coverage in `soldier/alignment/`
+ - [x] T094 [P] Update `focal/alignment/__init__.py` with all public exports
+ - [x] T095 Run full test suite and verify 85% coverage in `focal/alignment/`
  - [x] T096 Run quickstart.md examples and verify they work
  - [x] T097 Run mypy type checking and fix any errors
  - [x] T098 Run ruff linting and formatting
@@ -342,13 +342,13 @@
 
 ```bash
 # Launch all model implementations in parallel:
-Task: "T005 Implement ScoredItem and SelectionResult in soldier/alignment/retrieval/selection.py"
-Task: "T007 Extend Context model in soldier/alignment/context/models.py"
-Task: "T010 Implement MatchedRule, RuleFilterResult in soldier/alignment/filtering/models.py"
-Task: "T012 Implement ToolResult in soldier/alignment/execution/models.py"
-Task: "T013 Implement GenerationResult in soldier/alignment/generation/models.py"
-Task: "T014 Implement EnforcementResult in soldier/alignment/enforcement/models.py"
-Task: "T015 Implement AlignmentResult in soldier/alignment/result.py"
+Task: "T005 Implement ScoredItem and SelectionResult in focal/alignment/retrieval/selection.py"
+Task: "T007 Extend Context model in focal/alignment/context/models.py"
+Task: "T010 Implement MatchedRule, RuleFilterResult in focal/alignment/filtering/models.py"
+Task: "T012 Implement ToolResult in focal/alignment/execution/models.py"
+Task: "T013 Implement GenerationResult in focal/alignment/generation/models.py"
+Task: "T014 Implement EnforcementResult in focal/alignment/enforcement/models.py"
+Task: "T015 Implement AlignmentResult in focal/alignment/result.py"
 ```
 
 ---

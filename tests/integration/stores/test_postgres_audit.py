@@ -10,9 +10,9 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from soldier.audit.models import AuditEvent, TurnRecord
-from soldier.audit.stores.postgres import PostgresAuditStore
-from soldier.conversation.models.turn import ToolCall
+from focal.audit.models import AuditEvent, TurnRecord
+from focal.audit.stores.postgres import PostgresAuditStore
+from focal.conversation.models.turn import ToolCall
 
 
 @pytest_asyncio.fixture

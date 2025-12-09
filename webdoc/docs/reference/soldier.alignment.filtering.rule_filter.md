@@ -1,13 +1,13 @@
-<a id="soldier.alignment.filtering.rule_filter"></a>
+<a id="focal.alignment.filtering.rule_filter"></a>
 
-# soldier.alignment.filtering.rule\_filter
+# focal.alignment.filtering.rule\_filter
 
 Rule filtering for alignment pipeline.
 
 Uses LLM-based judgment to determine which candidate rules apply
 to the current user message and context.
 
-<a id="soldier.alignment.filtering.rule_filter.RuleFilter"></a>
+<a id="focal.alignment.filtering.rule_filter.RuleFilter"></a>
 
 ## RuleFilter Objects
 
@@ -20,7 +20,7 @@ LLM-based rule relevance filtering.
 Evaluates candidate rules against the current context to determine
 which rules should apply to this turn.
 
-<a id="soldier.alignment.filtering.rule_filter.RuleFilter.__init__"></a>
+<a id="focal.alignment.filtering.rule_filter.RuleFilter.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -38,7 +38,7 @@ Initialize the rule filter.
 - `prompt_template` - Optional custom prompt template
 - `relevance_threshold` - Minimum relevance score to consider a match
 
-<a id="soldier.alignment.filtering.rule_filter.RuleFilter.filter"></a>
+<a id="focal.alignment.filtering.rule_filter.RuleFilter.filter"></a>
 
 #### filter
 

@@ -1,4 +1,4 @@
-<a id="soldier.memory.stores.neo4j"></a>
+<a id="focal.memory.stores.neo4j"></a>
 
-# soldier.memory.stores.neo4j
+# focal.memory.stores.neo4j
 

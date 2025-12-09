@@ -6,14 +6,14 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.execution import ToolExecutor
-from soldier.alignment.filtering.models import MatchedRule
-from soldier.alignment.models import Scope
-from soldier.alignment.stores import InMemoryAgentConfigStore
-from soldier.config.models.pipeline import PipelineConfig
-from soldier.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.execution import ToolExecutor
+from focal.alignment.filtering.models import MatchedRule
+from focal.alignment.models import Scope
+from focal.alignment.stores import InMemoryAgentConfigStore
+from focal.config.models.pipeline import PipelineConfig
+from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 

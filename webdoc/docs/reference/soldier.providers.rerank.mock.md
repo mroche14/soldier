@@ -1,10 +1,10 @@
-<a id="soldier.providers.rerank.mock"></a>
+<a id="focal.providers.rerank.mock"></a>
 
-# soldier.providers.rerank.mock
+# focal.providers.rerank.mock
 
 Mock rerank provider for testing.
 
-<a id="soldier.providers.rerank.mock.MockRerankProvider"></a>
+<a id="focal.providers.rerank.mock.MockRerankProvider"></a>
 
 ## MockRerankProvider Objects
 
@@ -16,7 +16,7 @@ Mock rerank provider for testing.
 
 Uses simple text similarity for ranking without making API calls.
 
-<a id="soldier.providers.rerank.mock.MockRerankProvider.__init__"></a>
+<a id="focal.providers.rerank.mock.MockRerankProvider.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -30,7 +30,7 @@ Initialize mock provider.
 
 - `default_model` - Model name to report
 
-<a id="soldier.providers.rerank.mock.MockRerankProvider.provider_name"></a>
+<a id="focal.providers.rerank.mock.MockRerankProvider.provider_name"></a>
 
 #### provider\_name
 
@@ -41,7 +41,7 @@ def provider_name() -> str
 
 Return the provider name.
 
-<a id="soldier.providers.rerank.mock.MockRerankProvider.call_history"></a>
+<a id="focal.providers.rerank.mock.MockRerankProvider.call_history"></a>
 
 #### call\_history
 
@@ -52,7 +52,7 @@ def call_history() -> list[dict[str, Any]]
 
 Return history of calls for testing assertions.
 
-<a id="soldier.providers.rerank.mock.MockRerankProvider.clear_history"></a>
+<a id="focal.providers.rerank.mock.MockRerankProvider.clear_history"></a>
 
 #### clear\_history
 
@@ -62,7 +62,7 @@ def clear_history() -> None
 
 Clear call history.
 
-<a id="soldier.providers.rerank.mock.MockRerankProvider.rerank"></a>
+<a id="focal.providers.rerank.mock.MockRerankProvider.rerank"></a>
 
 #### rerank
 

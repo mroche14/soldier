@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.models import Rule, Scenario, Scope, Template, Variable
-from soldier.alignment.stores import InMemoryAgentConfigStore
+from focal.alignment.models import Rule, Scenario, Scope, Template, Variable
+from focal.alignment.stores import InMemoryAgentConfigStore
 
 
 @pytest.fixture
@@ -336,7 +336,7 @@ class TestGlossaryOperations:
     @pytest.mark.asyncio
     async def test_save_and_get_glossary_items(self, store, tenant_id, agent_id):
         """Should save and retrieve glossary items."""
-        from soldier.alignment.models.glossary import GlossaryItem
+        from focal.alignment.models.glossary import GlossaryItem
 
         item1 = GlossaryItem(
             tenant_id=tenant_id,
@@ -365,7 +365,7 @@ class TestGlossaryOperations:
     @pytest.mark.asyncio
     async def test_get_glossary_items_tenant_isolation(self, store, tenant_id, agent_id):
         """Should not return glossary items from other tenants."""
-        from soldier.alignment.models.glossary import GlossaryItem
+        from focal.alignment.models.glossary import GlossaryItem
 
         item = GlossaryItem(
             tenant_id=tenant_id,
@@ -383,7 +383,7 @@ class TestGlossaryOperations:
     @pytest.mark.asyncio
     async def test_get_glossary_items_enabled_only(self, store, tenant_id, agent_id):
         """Should filter by enabled flag."""
-        from soldier.alignment.models.glossary import GlossaryItem
+        from focal.alignment.models.glossary import GlossaryItem
 
         enabled_item = GlossaryItem(
             tenant_id=tenant_id,
@@ -417,7 +417,7 @@ class TestCustomerDataFieldOperations:
     @pytest.mark.asyncio
     async def test_save_and_get_customer_data_fields(self, store, tenant_id, agent_id):
         """Should save and retrieve customer data field definitions."""
-        from soldier.customer_data.models import CustomerDataField
+        from focal.customer_data.models import CustomerDataField
 
         field1 = CustomerDataField(
             tenant_id=tenant_id,
@@ -450,7 +450,7 @@ class TestCustomerDataFieldOperations:
     @pytest.mark.asyncio
     async def test_get_customer_data_fields_tenant_isolation(self, store, tenant_id, agent_id):
         """Should not return fields from other tenants."""
-        from soldier.customer_data.models import CustomerDataField
+        from focal.customer_data.models import CustomerDataField
 
         field = CustomerDataField(
             tenant_id=tenant_id,
@@ -470,7 +470,7 @@ class TestCustomerDataFieldOperations:
     @pytest.mark.asyncio
     async def test_get_customer_data_fields_enabled_only(self, store, tenant_id, agent_id):
         """Should filter by enabled flag."""
-        from soldier.customer_data.models import CustomerDataField
+        from focal.customer_data.models import CustomerDataField
 
         enabled_field = CustomerDataField(
             tenant_id=tenant_id,

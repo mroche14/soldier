@@ -1,4 +1,4 @@
-"""Shared test fixtures for the Soldier test suite."""
+"""Shared test fixtures for the Focal test suite."""
 
 import os
 from collections.abc import Callable, Generator
@@ -62,7 +62,7 @@ def env_override() -> Generator[Callable[[dict[str, str]], EnvOverrideContext], 
 
     Usage:
         def test_something(env_override):
-            with env_override({"SOLDIER_DEBUG": "true"}):
+            with env_override({"FOCAL_DEBUG": "true"}):
                 # test code here
     """
 
@@ -78,7 +78,7 @@ def clear_settings_cache() -> Generator[None, None, None]:
 
     This ensures test isolation for configuration tests.
     """
-    from soldier.config import get_settings
+    from focal.config import get_settings
 
     get_settings.cache_clear()
     yield

@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.tool_activation"></a>
+<a id="focal.alignment.models.tool_activation"></a>
 
-# soldier.alignment.models.tool\_activation
+# focal.alignment.models.tool\_activation
 
 ToolActivation model for per-agent tool enablement.
 
-<a id="soldier.alignment.models.tool_activation.ToolActivation"></a>
+<a id="focal.alignment.models.tool_activation.ToolActivation"></a>
 
 ## ToolActivation Objects
 
@@ -19,7 +19,7 @@ and any policy overrides for those tools.
 
 Unique constraint: (tenant_id, agent_id, tool_id)
 
-<a id="soldier.alignment.models.tool_activation.ToolActivation.is_enabled"></a>
+<a id="focal.alignment.models.tool_activation.ToolActivation.is_enabled"></a>
 
 #### is\_enabled
 
@@ -30,7 +30,7 @@ def is_enabled() -> bool
 
 Check if tool is currently enabled.
 
-<a id="soldier.alignment.models.tool_activation.ToolActivation.enable"></a>
+<a id="focal.alignment.models.tool_activation.ToolActivation.enable"></a>
 
 #### enable
 
@@ -40,7 +40,7 @@ def enable() -> None
 
 Enable this tool activation.
 
-<a id="soldier.alignment.models.tool_activation.ToolActivation.disable"></a>
+<a id="focal.alignment.models.tool_activation.ToolActivation.disable"></a>
 
 #### disable
 
@@ -50,7 +50,7 @@ def disable() -> None
 
 Disable this tool activation.
 
-<a id="soldier.alignment.models.tool_activation.ToolActivation.create"></a>
+<a id="focal.alignment.models.tool_activation.ToolActivation.create"></a>
 
 #### create
 

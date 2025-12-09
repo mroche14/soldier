@@ -14,7 +14,7 @@ Implement an anchor-based scenario migration system that enables safe scenario u
 **Storage**: ConfigStore (migration plans, archived versions), SessionStore (pending_migration flag, step_history), ProfileStore (gap fill)
 **Testing**: pytest with InMemory store implementations, pytest-recording for LLM extraction tests
 **Target Platform**: Linux server (containerized)
-**Project Type**: Single Python package (soldier/)
+**Project Type**: Single Python package (focal/)
 **Performance Goals**: Migration plan generation < 5s for 50-step scenarios; JIT reconciliation < 100ms
 **Constraints**: Zero in-memory state, multi-tenant isolation, async everywhere
 **Scale/Scope**: Support scenarios with up to 100 steps, 10k+ concurrent sessions per tenant
@@ -52,7 +52,7 @@ specs/008-scenario-migration/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── alignment/
 │   ├── migration/           # NEW: Migration system
 │   │   ├── __init__.py
@@ -89,7 +89,7 @@ tests/
             └── test_migration_flow.py
 ```
 
-**Structure Decision**: New `soldier/alignment/migration/` module follows existing pattern of domain-aligned folders. Migration is part of the alignment pipeline (pre-turn reconciliation) so it belongs under alignment/.
+**Structure Decision**: New `focal/alignment/migration/` module follows existing pattern of domain-aligned folders. Migration is part of the alignment pipeline (pre-turn reconciliation) so it belongs under alignment/.
 
 ## Complexity Tracking
 

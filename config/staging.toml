@@ -1,4 +1,4 @@
-# Soldier Staging Configuration
+# Focal Staging Configuration
 # Overrides for staging environment
 
 debug = false

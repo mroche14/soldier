@@ -4,10 +4,10 @@ import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from soldier.alignment.loaders.customer_data_loader import CustomerDataLoader
-from soldier.customer_data import CustomerDataStore, CustomerDataField, VariableEntry
-from soldier.customer_data.enums import ItemStatus, VariableSource
-from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from focal.alignment.loaders.customer_data_loader import CustomerDataLoader
+from focal.customer_data import CustomerDataStore, CustomerDataField, VariableEntry
+from focal.customer_data.enums import ItemStatus, VariableSource
+from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
 
 
 @pytest.fixture

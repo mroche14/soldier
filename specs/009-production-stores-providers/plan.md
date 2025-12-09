@@ -5,7 +5,7 @@
 
 ## Summary
 
-Complete the production-ready store and provider implementations for Soldier by:
+Complete the production-ready store and provider implementations for Focal by:
 1. Implementing Redis two-tier session store with TTL management
 2. Setting up Alembic database migrations for PostgreSQL schemas
 3. Adding comprehensive integration tests for all production stores (PostgreSQL, Redis) and AI providers (Anthropic, OpenAI)
@@ -71,7 +71,7 @@ specs/009-production-stores-providers/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── alignment/
 │   └── stores/
 │       ├── config_store.py     # ABC interface (exists)
@@ -125,7 +125,7 @@ tests/
 └── contract/                   # Existing contract tests
 ```
 
-**Structure Decision**: Follows existing project structure. New files integrate into existing directory hierarchy. Alembic migrations placed in new `soldier/db/migrations/` directory.
+**Structure Decision**: Follows existing project structure. New files integrate into existing directory hierarchy. Alembic migrations placed in new `focal/db/migrations/` directory.
 
 ## Complexity Tracking
 

@@ -1,10 +1,10 @@
-<a id="soldier.config.models.pipeline"></a>
+<a id="focal.config.models.pipeline"></a>
 
-# soldier.config.models.pipeline
+# focal.config.models.pipeline
 
 Turn pipeline configuration models.
 
-<a id="soldier.config.models.pipeline.ContextExtractionConfig"></a>
+<a id="focal.config.models.pipeline.ContextExtractionConfig"></a>
 
 ## ContextExtractionConfig Objects
 
@@ -14,7 +14,7 @@ class ContextExtractionConfig(BaseModel)
 
 Context extraction step configuration.
 
-<a id="soldier.config.models.pipeline.RetrievalConfig"></a>
+<a id="focal.config.models.pipeline.RetrievalConfig"></a>
 
 ## RetrievalConfig Objects
 
@@ -24,7 +24,7 @@ class RetrievalConfig(BaseModel)
 
 Retrieval step configuration.
 
-<a id="soldier.config.models.pipeline.RerankingConfig"></a>
+<a id="focal.config.models.pipeline.RerankingConfig"></a>
 
 ## RerankingConfig Objects
 
@@ -34,7 +34,7 @@ class RerankingConfig(BaseModel)
 
 Reranking step configuration.
 
-<a id="soldier.config.models.pipeline.RuleFilteringConfig"></a>
+<a id="focal.config.models.pipeline.RuleFilteringConfig"></a>
 
 ## RuleFilteringConfig Objects
 
@@ -44,7 +44,7 @@ class RuleFilteringConfig(BaseModel)
 
 Rule filtering step configuration.
 
-<a id="soldier.config.models.pipeline.ScenarioFilteringConfig"></a>
+<a id="focal.config.models.pipeline.ScenarioFilteringConfig"></a>
 
 ## ScenarioFilteringConfig Objects
 
@@ -54,7 +54,7 @@ class ScenarioFilteringConfig(BaseModel)
 
 Scenario filtering step configuration.
 
-<a id="soldier.config.models.pipeline.ToolExecutionConfig"></a>
+<a id="focal.config.models.pipeline.ToolExecutionConfig"></a>
 
 ## ToolExecutionConfig Objects
 
@@ -64,7 +64,7 @@ class ToolExecutionConfig(BaseModel)
 
 Tool execution step configuration.
 
-<a id="soldier.config.models.pipeline.GenerationConfig"></a>
+<a id="focal.config.models.pipeline.GenerationConfig"></a>
 
 ## GenerationConfig Objects
 
@@ -74,7 +74,7 @@ class GenerationConfig(BaseModel)
 
 Response generation step configuration.
 
-<a id="soldier.config.models.pipeline.EnforcementConfig"></a>
+<a id="focal.config.models.pipeline.EnforcementConfig"></a>
 
 ## EnforcementConfig Objects
 
@@ -84,7 +84,7 @@ class EnforcementConfig(BaseModel)
 
 Enforcement step configuration.
 
-<a id="soldier.config.models.pipeline.EntityExtractionConfig"></a>
+<a id="focal.config.models.pipeline.EntityExtractionConfig"></a>
 
 ## EntityExtractionConfig Objects
 
@@ -94,7 +94,7 @@ class EntityExtractionConfig(BaseModel)
 
 Entity extraction configuration.
 
-<a id="soldier.config.models.pipeline.EntityDeduplicationConfig"></a>
+<a id="focal.config.models.pipeline.EntityDeduplicationConfig"></a>
 
 ## EntityDeduplicationConfig Objects
 
@@ -104,7 +104,7 @@ class EntityDeduplicationConfig(BaseModel)
 
 Entity deduplication configuration.
 
-<a id="soldier.config.models.pipeline.WindowSummarizationConfig"></a>
+<a id="focal.config.models.pipeline.WindowSummarizationConfig"></a>
 
 ## WindowSummarizationConfig Objects
 
@@ -114,7 +114,7 @@ class WindowSummarizationConfig(BaseModel)
 
 Window summarization configuration.
 
-<a id="soldier.config.models.pipeline.MetaSummarizationConfig"></a>
+<a id="focal.config.models.pipeline.MetaSummarizationConfig"></a>
 
 ## MetaSummarizationConfig Objects
 
@@ -124,7 +124,7 @@ class MetaSummarizationConfig(BaseModel)
 
 Meta-summarization configuration.
 
-<a id="soldier.config.models.pipeline.SummarizationConfig"></a>
+<a id="focal.config.models.pipeline.SummarizationConfig"></a>
 
 ## SummarizationConfig Objects
 
@@ -134,7 +134,7 @@ class SummarizationConfig(BaseModel)
 
 Summarization configuration.
 
-<a id="soldier.config.models.pipeline.MemoryIngestionConfig"></a>
+<a id="focal.config.models.pipeline.MemoryIngestionConfig"></a>
 
 ## MemoryIngestionConfig Objects
 
@@ -144,7 +144,7 @@ class MemoryIngestionConfig(BaseModel)
 
 Memory ingestion system configuration.
 
-<a id="soldier.config.models.pipeline.PipelineConfig"></a>
+<a id="focal.config.models.pipeline.PipelineConfig"></a>
 
 ## PipelineConfig Objects
 
@@ -154,7 +154,7 @@ class PipelineConfig(BaseModel)
 
 Configuration for the turn pipeline.
 
-<a id="soldier.config.models.pipeline.PipelineConfig.llm_filtering"></a>
+<a id="focal.config.models.pipeline.PipelineConfig.llm_filtering"></a>
 
 #### llm\_filtering
 

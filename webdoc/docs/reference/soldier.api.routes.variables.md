@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.variables"></a>
+<a id="focal.api.routes.variables"></a>
 
-# soldier.api.routes.variables
+# focal.api.routes.variables
 
 Variable management endpoints.
 
-<a id="soldier.api.routes.variables.list_variables"></a>
+<a id="focal.api.routes.variables.list_variables"></a>
 
 #### list\_variables
 
@@ -24,7 +24,7 @@ async def list_variables(
 
 List variables for an agent.
 
-<a id="soldier.api.routes.variables.create_variable"></a>
+<a id="focal.api.routes.variables.create_variable"></a>
 
 #### create\_variable
 
@@ -37,7 +37,7 @@ async def create_variable(agent_id: UUID, request: VariableCreate,
 
 Create a new variable.
 
-<a id="soldier.api.routes.variables.get_variable"></a>
+<a id="focal.api.routes.variables.get_variable"></a>
 
 #### get\_variable
 
@@ -50,7 +50,7 @@ async def get_variable(agent_id: UUID, variable_id: UUID,
 
 Get a variable by ID.
 
-<a id="soldier.api.routes.variables.update_variable"></a>
+<a id="focal.api.routes.variables.update_variable"></a>
 
 #### update\_variable
 
@@ -64,7 +64,7 @@ async def update_variable(agent_id: UUID, variable_id: UUID,
 
 Update a variable.
 
-<a id="soldier.api.routes.variables.delete_variable"></a>
+<a id="focal.api.routes.variables.delete_variable"></a>
 
 #### delete\_variable
 

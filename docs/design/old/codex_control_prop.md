@@ -1,6 +1,6 @@
 # Codex Control Layer Proposal
 
-Unified design for rule processing, scenario/journey control, and enforcement in Soldier.
+Unified design for rule processing, scenario/journey control, and enforcement in Focal.
 
 This document synthesizes:
 - `docs/design/turn-pipeline.md`
@@ -15,7 +15,7 @@ It resolves overlaps and tensions between the “Graph-Augmented State Machine�
 
 ## 1. Scope and Constraints
 
-**Goal:** Define how Soldier:
+**Goal:** Define how Focal:
 - represents and retrieves **rules** and **scenarios/journeys**,
 - navigates scenario state and intent,
 - deterministically **enforces constraints** on every turn,
@@ -582,7 +582,7 @@ Implementation can be incremental; the important part is that **control policies
 
 ## 7. Recommendations and Next Steps
 
-### 7.1 Recommended Baseline for Soldier
+### 7.1 Recommended Baseline for Focal
 
 For the default, multi‑tenant SaaS deployment:
 - **Architecture:**
@@ -684,4 +684,4 @@ This control design is explicitly tuned for:
   - CustomerProfile as a **ledger** with schema evolution and history avoids silent state drift; updates are explicit and auditable.
   - Scenario navigation, step history, and AuditStore logging provide a trace of how and why the engine moved between states, making drift detectable and correctable.
 
-Overall, Codex Control makes the “what should the agent do?” layer explicit, testable, and configurable, and then uses LLMs only to sense inputs and judge ambiguous or subjective aspects, which is the core requirement for robust alignment and drift control in Soldier.
+Overall, Codex Control makes the “what should the agent do?” layer explicit, testable, and configurable, and then uses LLMs only to sense inputs and judge ambiguous or subjective aspects, which is the core requirement for robust alignment and drift control in Focal.

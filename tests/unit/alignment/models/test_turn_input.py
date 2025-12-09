@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.models.turn_input import TurnInput
-from soldier.conversation.models.enums import Channel
+from focal.alignment.models.turn_input import TurnInput
+from focal.conversation.models.enums import Channel
 
 
 class TestTurnInput:

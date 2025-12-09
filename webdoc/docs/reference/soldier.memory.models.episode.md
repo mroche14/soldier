@@ -1,10 +1,10 @@
-<a id="soldier.memory.models.episode"></a>
+<a id="focal.memory.models.episode"></a>
 
-# soldier.memory.models.episode
+# focal.memory.models.episode
 
 Episode model for memory domain.
 
-<a id="soldier.memory.models.episode.utc_now"></a>
+<a id="focal.memory.models.episode.utc_now"></a>
 
 #### utc\_now
 
@@ -14,7 +14,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.memory.models.episode.Episode"></a>
+<a id="focal.memory.models.episode.Episode"></a>
 
 ## Episode Objects
 

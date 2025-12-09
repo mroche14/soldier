@@ -4,11 +4,11 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.enforcement.validator import EnforcementValidator
-from soldier.alignment.filtering.models import MatchedRule
-from soldier.alignment.generation.generator import ResponseGenerator
-from soldier.alignment.models import Rule
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.enforcement.validator import EnforcementValidator
+from focal.alignment.filtering.models import MatchedRule
+from focal.alignment.generation.generator import ResponseGenerator
+from focal.alignment.models import Rule
 
 
 class DummyConfigStore:

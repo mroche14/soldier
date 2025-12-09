@@ -1,10 +1,10 @@
-<a id="soldier.memory.ingestion.ingestor"></a>
+<a id="focal.memory.ingestion.ingestor"></a>
 
-# soldier.memory.ingestion.ingestor
+# focal.memory.ingestion.ingestor
 
 Memory ingestion orchestrator.
 
-<a id="soldier.memory.ingestion.ingestor.MemoryIngestor"></a>
+<a id="focal.memory.ingestion.ingestor.MemoryIngestor"></a>
 
 ## MemoryIngestor Objects
 
@@ -14,7 +14,7 @@ class MemoryIngestor()
 
 Main orchestrator for episode creation and async task dispatching.
 
-<a id="soldier.memory.ingestion.ingestor.MemoryIngestor.__init__"></a>
+<a id="focal.memory.ingestion.ingestor.MemoryIngestor.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -40,7 +40,7 @@ Initialize memory ingestor.
 - `config` - Configuration for ingestion
 - `fallback_embedding_provider` - Fallback provider for embeddings
 
-<a id="soldier.memory.ingestion.ingestor.MemoryIngestor.ingest_turn"></a>
+<a id="focal.memory.ingestion.ingestor.MemoryIngestor.ingest_turn"></a>
 
 #### ingest\_turn
 
@@ -75,7 +75,7 @@ Asynchronous operations (queued):
 
 - `IngestionError` - If episode creation or storage fails
 
-<a id="soldier.memory.ingestion.ingestor.MemoryIngestor.ingest_event"></a>
+<a id="focal.memory.ingestion.ingestor.MemoryIngestor.ingest_event"></a>
 
 #### ingest\_event
 

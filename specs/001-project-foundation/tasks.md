@@ -34,44 +34,44 @@
 
 ### Directory Structure
 
-- [x] [T004] [P1] [US1] Create soldier/ package root with __init__.py
-      └─ file: soldier/__init__.py
+- [x] [T004] [P1] [US1] Create focal/ package root with __init__.py
+      └─ file: focal/__init__.py
       └─ depends: T001
 
-- [x] [T005] [P1] [US1] Create soldier/alignment/ subpackage with nested directories
-      └─ files: soldier/alignment/__init__.py, soldier/alignment/context/__init__.py, soldier/alignment/retrieval/__init__.py, soldier/alignment/filtering/__init__.py, soldier/alignment/execution/__init__.py, soldier/alignment/generation/__init__.py, soldier/alignment/enforcement/__init__.py, soldier/alignment/models/__init__.py
+- [x] [T005] [P1] [US1] Create focal/alignment/ subpackage with nested directories
+      └─ files: focal/alignment/__init__.py, focal/alignment/context/__init__.py, focal/alignment/retrieval/__init__.py, focal/alignment/filtering/__init__.py, focal/alignment/execution/__init__.py, focal/alignment/generation/__init__.py, focal/alignment/enforcement/__init__.py, focal/alignment/models/__init__.py
       └─ depends: T004
 
-- [x] [T006] [P1] [US1] Create soldier/memory/ subpackage with nested directories
-      └─ files: soldier/memory/__init__.py, soldier/memory/models/__init__.py, soldier/memory/stores/__init__.py, soldier/memory/ingestion/__init__.py, soldier/memory/retrieval/__init__.py
+- [x] [T006] [P1] [US1] Create focal/memory/ subpackage with nested directories
+      └─ files: focal/memory/__init__.py, focal/memory/models/__init__.py, focal/memory/stores/__init__.py, focal/memory/ingestion/__init__.py, focal/memory/retrieval/__init__.py
       └─ depends: T004
 
-- [x] [T007] [P1] [US1] Create soldier/conversation/ subpackage with nested directories
-      └─ files: soldier/conversation/__init__.py, soldier/conversation/models/__init__.py, soldier/conversation/stores/__init__.py
+- [x] [T007] [P1] [US1] Create focal/conversation/ subpackage with nested directories
+      └─ files: focal/conversation/__init__.py, focal/conversation/models/__init__.py, focal/conversation/stores/__init__.py
       └─ depends: T004
 
-- [x] [T008] [P1] [US1] Create soldier/audit/ subpackage with nested directories
-      └─ files: soldier/audit/__init__.py, soldier/audit/models/__init__.py, soldier/audit/stores/__init__.py
+- [x] [T008] [P1] [US1] Create focal/audit/ subpackage with nested directories
+      └─ files: focal/audit/__init__.py, focal/audit/models/__init__.py, focal/audit/stores/__init__.py
       └─ depends: T004
 
-- [x] [T009] [P1] [US1] Create soldier/observability/ subpackage
-      └─ file: soldier/observability/__init__.py
+- [x] [T009] [P1] [US1] Create focal/observability/ subpackage
+      └─ file: focal/observability/__init__.py
       └─ depends: T004
 
-- [x] [T010] [P1] [US1] Create soldier/providers/ subpackage with nested directories
-      └─ files: soldier/providers/__init__.py, soldier/providers/llm/__init__.py, soldier/providers/embedding/__init__.py, soldier/providers/rerank/__init__.py
+- [x] [T010] [P1] [US1] Create focal/providers/ subpackage with nested directories
+      └─ files: focal/providers/__init__.py, focal/providers/llm/__init__.py, focal/providers/embedding/__init__.py, focal/providers/rerank/__init__.py
       └─ depends: T004
 
-- [x] [T011] [P1] [US1] Create soldier/api/ subpackage with nested directories
-      └─ files: soldier/api/__init__.py, soldier/api/routes/__init__.py, soldier/api/middleware/__init__.py, soldier/api/models/__init__.py
+- [x] [T011] [P1] [US1] Create focal/api/ subpackage with nested directories
+      └─ files: focal/api/__init__.py, focal/api/routes/__init__.py, focal/api/middleware/__init__.py, focal/api/models/__init__.py
       └─ depends: T004
 
-- [x] [T012] [P1] [US1] Create soldier/config/ subpackage with models/ subdirectory
-      └─ files: soldier/config/__init__.py, soldier/config/models/__init__.py
+- [x] [T012] [P1] [US1] Create focal/config/ subpackage with models/ subdirectory
+      └─ files: focal/config/__init__.py, focal/config/models/__init__.py
       └─ depends: T004
 
-- [x] [T013] [P1] [US1] Create soldier/profile/ subpackage
-      └─ file: soldier/profile/__init__.py
+- [x] [T013] [P1] [US1] Create focal/profile/ subpackage
+      └─ file: focal/profile/__init__.py
       └─ depends: T004
 
 ### Test Structure
@@ -119,142 +119,142 @@
 ### Configuration Models
 
 - [x] [T022] [P2] [US2] Implement RateLimitConfig Pydantic model
-      └─ file: soldier/config/models/api.py
+      └─ file: focal/config/models/api.py
       └─ depends: T012
       └─ fields: enabled (bool), requests_per_minute (int), burst_size (int)
       └─ validation: requests_per_minute > 0, burst_size >= 0
 
 - [x] [T023] [P2] [US2] Implement APIConfig Pydantic model
-      └─ file: soldier/config/models/api.py
+      └─ file: focal/config/models/api.py
       └─ depends: T022
       └─ fields: host (str), port (int), workers (int), cors_origins (list[str]), cors_allow_credentials (bool), rate_limit (RateLimitConfig)
       └─ validation: port 1-65535, workers >= 1
 
 - [x] [T024] [P2] [US2] Implement StoreBackendConfig Pydantic model
-      └─ file: soldier/config/models/storage.py
+      └─ file: focal/config/models/storage.py
       └─ depends: T012
       └─ fields: backend (str), connection_url (str|None), pool_size (int), pool_timeout (int)
       └─ validation: backend in [inmemory, postgres, redis, mongodb, neo4j, dynamodb]
 
 - [x] [T025] [P2] [US2] Implement StorageConfig Pydantic model
-      └─ file: soldier/config/models/storage.py
+      └─ file: focal/config/models/storage.py
       └─ depends: T024
       └─ fields: config (StoreBackendConfig), memory (StoreBackendConfig), session (StoreBackendConfig), audit (StoreBackendConfig)
 
 - [x] [T026] [P2] [US2] Implement LLMProviderConfig Pydantic model
-      └─ file: soldier/config/models/providers.py
+      └─ file: focal/config/models/providers.py
       └─ depends: T012
       └─ fields: provider (str), model (str), api_key (SecretStr|None), base_url (str|None), max_tokens (int), temperature (float), timeout (int)
       └─ validation: provider in [anthropic, openai, bedrock, vertex, ollama, mock], temperature 0.0-2.0
 
 - [x] [T027] [P2] [US2] Implement EmbeddingProviderConfig Pydantic model
-      └─ file: soldier/config/models/providers.py
+      └─ file: focal/config/models/providers.py
       └─ depends: T012
       └─ fields: provider (str), model (str), api_key (SecretStr|None), dimensions (int), batch_size (int)
       └─ validation: provider in [openai, cohere, voyage, sentence_transformers, mock]
 
 - [x] [T028] [P2] [US2] Implement RerankProviderConfig Pydantic model
-      └─ file: soldier/config/models/providers.py
+      └─ file: focal/config/models/providers.py
       └─ depends: T012
       └─ fields: provider (str), model (str), api_key (SecretStr|None), top_k (int)
       └─ validation: provider in [cohere, voyage, cross_encoder, mock]
 
 - [x] [T029] [P2] [US2] Implement ProvidersConfig Pydantic model
-      └─ file: soldier/config/models/providers.py
+      └─ file: focal/config/models/providers.py
       └─ depends: T026, T027, T028
       └─ fields: default_llm (str), default_embedding (str), default_rerank (str), llm (dict), embedding (dict), rerank (dict)
 
 - [x] [T030] [P2] [US2] Implement SelectionConfig Pydantic model
-      └─ file: soldier/config/models/selection.py
+      └─ file: focal/config/models/selection.py
       └─ depends: T012
       └─ fields: strategy (str), min_score (float), max_k (int), params (dict)
       └─ validation: strategy in [elbow, adaptive_k, entropy, clustering, fixed_k], min_score 0.0-1.0
 
 - [x] [T031] [P2] [US2] Implement SelectionStrategiesConfig Pydantic model
-      └─ file: soldier/config/models/selection.py
+      └─ file: focal/config/models/selection.py
       └─ depends: T030
       └─ fields: rule (SelectionConfig), scenario (SelectionConfig), memory (SelectionConfig)
 
 - [x] [T032] [P2] [US2] Implement ContextExtractionConfig Pydantic model
-      └─ file: soldier/config/models/pipeline.py
+      └─ file: focal/config/models/pipeline.py
       └─ depends: T012
       └─ fields: enabled (bool), mode (str), llm_provider (str), history_turns (int)
       └─ validation: mode in [llm, embedding, hybrid]
 
 - [x] [T033] [P2] [US2] Implement RetrievalConfig Pydantic model
-      └─ file: soldier/config/models/pipeline.py
+      └─ file: focal/config/models/pipeline.py
       └─ depends: T030
       └─ fields: enabled (bool), embedding_provider (str), max_k (int), rule_selection (SelectionConfig), scenario_selection (SelectionConfig), memory_selection (SelectionConfig)
 
 - [x] [T034] [P2] [US2] Implement RerankingConfig Pydantic model
-      └─ file: soldier/config/models/pipeline.py
+      └─ file: focal/config/models/pipeline.py
       └─ depends: T012
       └─ fields: enabled (bool), rerank_provider (str), top_k (int)
 
 - [x] [T035] [P2] [US2] Implement LLMFilteringConfig Pydantic model
-      └─ file: soldier/config/models/pipeline.py
+      └─ file: focal/config/models/pipeline.py
       └─ depends: T012
       └─ fields: enabled (bool), llm_provider (str), batch_size (int)
 
 - [x] [T036] [P2] [US2] Implement GenerationConfig Pydantic model
-      └─ file: soldier/config/models/pipeline.py
+      └─ file: focal/config/models/pipeline.py
       └─ depends: T012
       └─ fields: enabled (bool), llm_provider (str), temperature (float), max_tokens (int)
 
 - [x] [T037] [P2] [US2] Implement EnforcementConfig Pydantic model
-      └─ file: soldier/config/models/pipeline.py
+      └─ file: focal/config/models/pipeline.py
       └─ depends: T012
       └─ fields: enabled (bool), self_critique_enabled (bool), max_retries (int)
 
 - [x] [T038] [P2] [US2] Implement PipelineConfig Pydantic model
-      └─ file: soldier/config/models/pipeline.py
+      └─ file: focal/config/models/pipeline.py
       └─ depends: T032, T033, T034, T035, T036, T037
       └─ fields: context_extraction, retrieval, reranking, llm_filtering, generation, enforcement
 
 - [x] [T039] [P2] [US2] Implement LoggingConfig Pydantic model
-      └─ file: soldier/config/models/observability.py
+      └─ file: focal/config/models/observability.py
       └─ depends: T012
       └─ fields: level (str), format (str), include_trace_id (bool)
       └─ validation: level in [DEBUG, INFO, WARNING, ERROR, CRITICAL], format in [json, console]
 
 - [x] [T040] [P2] [US2] Implement TracingConfig Pydantic model
-      └─ file: soldier/config/models/observability.py
+      └─ file: focal/config/models/observability.py
       └─ depends: T012
       └─ fields: enabled (bool), service_name (str), otlp_endpoint (str|None), sample_rate (float)
       └─ validation: sample_rate 0.0-1.0
 
 - [x] [T041] [P2] [US2] Implement MetricsConfig Pydantic model
-      └─ file: soldier/config/models/observability.py
+      └─ file: focal/config/models/observability.py
       └─ depends: T012
       └─ fields: enabled (bool), port (int), path (str)
       └─ validation: port 1-65535
 
 - [x] [T042] [P2] [US2] Implement ObservabilityConfig Pydantic model
-      └─ file: soldier/config/models/observability.py
+      └─ file: focal/config/models/observability.py
       └─ depends: T039, T040, T041
       └─ fields: logging (LoggingConfig), tracing (TracingConfig), metrics (MetricsConfig)
 
 - [x] [T043] [P2] [US2] Implement AgentConfig Pydantic model
-      └─ file: soldier/config/models/agent.py
+      └─ file: focal/config/models/agent.py
       └─ depends: T012
       └─ fields: Agent-level configuration overrides
 
 ### Root Settings Model
 
 - [x] [T044] [P2] [US2] Implement Settings root Pydantic model
-      └─ file: soldier/config/settings.py
+      └─ file: focal/config/settings.py
       └─ depends: T023, T025, T029, T031, T038, T042
       └─ fields: app_name (str), debug (bool), log_level (str), api, storage, providers, pipeline, selection, observability
 
 ### Configuration Loader
 
 - [x] [T045] [P2] [US2] Implement TOML loader with deep merge functionality
-      └─ file: soldier/config/loader.py
+      └─ file: focal/config/loader.py
       └─ depends: T044
       └─ functions: load_toml(), deep_merge(), get_config_dir()
 
 - [x] [T046] [P2] [US2] Implement get_settings() function with @lru_cache
-      └─ file: soldier/config/__init__.py
+      └─ file: focal/config/__init__.py
       └─ depends: T045
       └─ exports: get_settings, Settings
 
@@ -282,8 +282,8 @@
 
 ## Phase 4: US3 - Developer Adds Config Section (P3)
 
-- [x] [T051] [P3] [US3] Export all config models from soldier/config/models/__init__.py
-      └─ file: soldier/config/models/__init__.py
+- [x] [T051] [P3] [US3] Export all config models from focal/config/models/__init__.py
+      └─ file: focal/config/models/__init__.py
       └─ depends: T042, T043
       └─ exports: All *Config classes
 
@@ -308,7 +308,7 @@
 - [x] [T054] [P3] [US4] Write unit tests for Settings class
       └─ file: tests/unit/config/test_settings.py
       └─ depends: T046
-      └─ tests: get_settings(), caching, env var overrides, SOLDIER_ prefix handling
+      └─ tests: get_settings(), caching, env var overrides, FOCAL_ prefix handling
 
 - [x] [T055] [P3] [US4] Write unit tests for API config models
       └─ file: tests/unit/config/test_models.py
@@ -353,7 +353,7 @@
 
 - [ ] [T062] [P3] [Polish] Verify all 9 domain packages are importable
       └─ depends: T004-T013
-      └─ test: `from soldier.{domain} import ...` for all 9 domains
+      └─ test: `from focal.{domain} import ...` for all 9 domains
 
 - [ ] [T063] [P3] [Polish] Verify configuration loads in under 100ms
       └─ depends: T046
@@ -361,15 +361,15 @@
 
 - [ ] [T064] [P3] [Polish] Verify 85% test coverage for config modules
       └─ depends: T053-T060
-      └─ command: `uv run pytest --cov=soldier/config --cov-report=term-missing`
+      └─ command: `uv run pytest --cov=focal/config --cov-report=term-missing`
 
 - [ ] [T065] [P3] [Polish] Run ruff linting and fix any issues
       └─ depends: T004-T060
-      └─ command: `uv run ruff check soldier/ tests/`
+      └─ command: `uv run ruff check focal/ tests/`
 
 - [ ] [T066] [P3] [Polish] Run mypy type checking and fix any issues
       └─ depends: T004-T060
-      └─ command: `uv run mypy soldier/`
+      └─ command: `uv run mypy focal/`
 
 ---
 

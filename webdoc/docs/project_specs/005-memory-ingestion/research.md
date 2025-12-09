@@ -22,7 +22,7 @@ Use Claude (or configured LLM provider) with structured output to extract entiti
 
 4. **Cost-Effective via Configuration**: Uses existing `LLMProvider` interface - configured to use cheaper models (Haiku) for extraction vs. expensive models (Sonnet) for generation. Fallback chains support cost optimization.
 
-5. **Aligns with Architecture**: Soldier uses LLMProvider for all heavy cognitive tasks. Consistent with context extraction, filtering, and generation patterns.
+5. **Aligns with Architecture**: Focal uses LLMProvider for all heavy cognitive tasks. Consistent with context extraction, filtering, and generation patterns.
 
 6. **Extensibility**: If requirements change, just update the extraction prompt or switch providers. No code changes needed.
 
@@ -553,7 +553,7 @@ class RedisTaskQueue:
     ) -> str:
         """Enqueue a task."""
         job = self.queue.enqueue(
-            f"soldier.memory.tasks.{job_type}",
+            f"focal.memory.tasks.{job_type}",
             **kwargs,
             job_timeout=600,  # 10 min timeout
             result_ttl=3600,  # Keep result for 1 hour
@@ -613,7 +613,7 @@ class InMemoryTaskQueue:
 ### Task Handlers
 
 ```python
-# soldier/memory/tasks.py
+# focal/memory/tasks.py
 
 async def extract_entities(
     episode_id: UUID,
@@ -1252,7 +1252,7 @@ llm_provider = "haiku"
 
 ## Integration Points
 
-All components integrate via existing Soldier abstractions:
+All components integrate via existing Focal abstractions:
 
 - **LLMProvider**: For entity extraction, summarization
 - **EmbeddingProvider**: For embeddings, deduplication similarity
@@ -1261,4 +1261,4 @@ All components integrate via existing Soldier abstractions:
 - **Observability**: Structured logging, OpenTelemetry spans, metrics
 - **Error Handling**: Graceful degradation, no blocking failures
 
-This design ensures the Memory Ingestion System fits naturally into the Soldier ecosystem while following the architectural principles of API-first, provider-based, configuration-driven processing.
+This design ensures the Memory Ingestion System fits naturally into the Focal ecosystem while following the architectural principles of API-first, provider-based, configuration-driven processing.

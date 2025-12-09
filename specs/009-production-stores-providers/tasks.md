@@ -15,9 +15,9 @@
 
 ## Path Conventions
 
-- **Python package**: `soldier/` at repository root
+- **Python package**: `focal/` at repository root
 - **Tests**: `tests/` at repository root
-- **Migrations**: `soldier/db/migrations/`
+- **Migrations**: `focal/db/migrations/`
 
 ---
 
@@ -28,8 +28,8 @@
 - [x] T001 Add asyncpg and pgvector dependencies to pyproject.toml
 - [x] T002 Add alembic dependency to pyproject.toml
 - [x] T003 [P] Update docker-compose.yml to use pgvector/pgvector:pg16 image
-- [x] T004 [P] Create soldier/db/ directory structure for migrations
-- [x] T005 [P] Add StoreError exception hierarchy in soldier/db/errors.py
+- [x] T004 [P] Create focal/db/ directory structure for migrations
+- [x] T005 [P] Add StoreError exception hierarchy in focal/db/errors.py
 
 ---
 
@@ -39,9 +39,9 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T006 Create soldier/db/alembic.ini configuration file
-- [x] T007 Create soldier/db/migrations/env.py with async support
-- [x] T008 [P] Create base PostgreSQL connection pool utility in soldier/db/pool.py
+- [x] T006 Create focal/db/alembic.ini configuration file
+- [x] T007 Create focal/db/migrations/env.py with async support
+- [x] T008 [P] Create base PostgreSQL connection pool utility in focal/db/pool.py
 - [x] T009 [P] Create tests/integration/stores/conftest.py with Docker fixtures for PostgreSQL and Redis
 - [x] T010 [P] Create tests/integration/providers/conftest.py with API key skip fixtures
 
@@ -57,19 +57,19 @@
 
 ### Implementation for User Story 1
 
-- [x] T011 [US1] Create RedisSessionStore configuration model in soldier/config/models/storage.py (add hot_ttl, persist_ttl settings)
-- [x] T012 [US1] Implement RedisSessionStore class skeleton in soldier/conversation/stores/redis.py
-- [x] T013 [US1] Implement get() method with hot-first, persistent-fallback, auto-promote in soldier/conversation/stores/redis.py
-- [x] T014 [US1] Implement save() method writing to hot tier with TTL in soldier/conversation/stores/redis.py
-- [x] T015 [US1] Implement delete() method removing from both tiers in soldier/conversation/stores/redis.py
-- [x] T016 [US1] Implement get_by_channel() with index lookup in soldier/conversation/stores/redis.py
-- [x] T017 [US1] Implement list_by_agent() using index set in soldier/conversation/stores/redis.py
-- [x] T018 [US1] Implement list_by_customer() using index set in soldier/conversation/stores/redis.py
-- [x] T019 [US1] Implement find_sessions_by_step_hash() for migration support in soldier/conversation/stores/redis.py
-- [x] T020 [US1] Implement promote_to_hot() and demote_to_persistent() helper methods in soldier/conversation/stores/redis.py
-- [x] T021 [US1] Implement health_check() method in soldier/conversation/stores/redis.py
-- [x] T022 [US1] Add Redis connection error handling with StoreError wrapping in soldier/conversation/stores/redis.py
-- [x] T023 [US1] Add structured logging for all Redis operations in soldier/conversation/stores/redis.py
+- [x] T011 [US1] Create RedisSessionStore configuration model in focal/config/models/storage.py (add hot_ttl, persist_ttl settings)
+- [x] T012 [US1] Implement RedisSessionStore class skeleton in focal/conversation/stores/redis.py
+- [x] T013 [US1] Implement get() method with hot-first, persistent-fallback, auto-promote in focal/conversation/stores/redis.py
+- [x] T014 [US1] Implement save() method writing to hot tier with TTL in focal/conversation/stores/redis.py
+- [x] T015 [US1] Implement delete() method removing from both tiers in focal/conversation/stores/redis.py
+- [x] T016 [US1] Implement get_by_channel() with index lookup in focal/conversation/stores/redis.py
+- [x] T017 [US1] Implement list_by_agent() using index set in focal/conversation/stores/redis.py
+- [x] T018 [US1] Implement list_by_customer() using index set in focal/conversation/stores/redis.py
+- [x] T019 [US1] Implement find_sessions_by_step_hash() for migration support in focal/conversation/stores/redis.py
+- [x] T020 [US1] Implement promote_to_hot() and demote_to_persistent() helper methods in focal/conversation/stores/redis.py
+- [x] T021 [US1] Implement health_check() method in focal/conversation/stores/redis.py
+- [x] T022 [US1] Add Redis connection error handling with StoreError wrapping in focal/conversation/stores/redis.py
+- [x] T023 [US1] Add structured logging for all Redis operations in focal/conversation/stores/redis.py
 
 **Checkpoint**: Redis session store fully implements SessionStore interface with two-tier caching
 
@@ -83,13 +83,13 @@
 
 ### Implementation for User Story 2
 
-- [x] T024 [US2] Create migration 001_initial_schema.py enabling pgvector extension in soldier/db/migrations/versions/
-- [x] T025 [US2] Create migration 002_config_store.py with agents, rules, scenarios, templates, variables, tool_activations tables in soldier/db/migrations/versions/
-- [x] T026 [US2] Create migration 003_memory_store.py with episodes, entities, relationships tables in soldier/db/migrations/versions/
-- [x] T027 [US2] Create migration 004_audit_store.py with turn_records, audit_events tables in soldier/db/migrations/versions/
-- [x] T028 [US2] Create migration 005_profile_store.py with customer_profiles, channel_identities, profile_fields, profile_assets tables in soldier/db/migrations/versions/
-- [x] T029 [US2] Create migration 006_migration_plans.py with migration_plans, scenario_archives tables in soldier/db/migrations/versions/
-- [x] T030 [US2] Create migration 007_vector_indexes.py with IVFFlat indexes for embeddings in soldier/db/migrations/versions/
+- [x] T024 [US2] Create migration 001_initial_schema.py enabling pgvector extension in focal/db/migrations/versions/
+- [x] T025 [US2] Create migration 002_config_store.py with agents, rules, scenarios, templates, variables, tool_activations tables in focal/db/migrations/versions/
+- [x] T026 [US2] Create migration 003_memory_store.py with episodes, entities, relationships tables in focal/db/migrations/versions/
+- [x] T027 [US2] Create migration 004_audit_store.py with turn_records, audit_events tables in focal/db/migrations/versions/
+- [x] T028 [US2] Create migration 005_profile_store.py with customer_profiles, channel_identities, profile_fields, profile_assets tables in focal/db/migrations/versions/
+- [x] T029 [US2] Create migration 006_migration_plans.py with migration_plans, scenario_archives tables in focal/db/migrations/versions/
+- [x] T030 [US2] Create migration 007_vector_indexes.py with IVFFlat indexes for embeddings in focal/db/migrations/versions/
 - [x] T031 [US2] Add downgrade functions to all migration files for rollback support
 - [ ] T032 [US2] Test migrations: run upgrade head, verify tables, run downgrade, verify rollback
 
@@ -105,12 +105,12 @@
 
 ### Implementation for User Story 3
 
-- [x] T033 [P] [US3] Implement PostgresConfigStore in soldier/alignment/stores/postgres.py (CRUD for agents, rules, scenarios, templates, variables)
-- [x] T034 [P] [US3] Implement PostgresConfigStore vector_search_rules() with pgvector in soldier/alignment/stores/postgres.py
-- [x] T035 [P] [US3] Implement PostgresMemoryStore in soldier/memory/stores/postgres.py (episodes, entities, relationships)
-- [x] T036 [P] [US3] Implement PostgresMemoryStore vector_search_episodes() with pgvector in soldier/memory/stores/postgres.py
-- [x] T037 [P] [US3] Implement PostgresAuditStore in soldier/audit/stores/postgres.py (turn_records, audit_events)
-- [x] T038 [P] [US3] Implement PostgresProfileStore in soldier/profile/stores/postgres.py (profiles, channels, fields, assets)
+- [x] T033 [P] [US3] Implement PostgresConfigStore in focal/alignment/stores/postgres.py (CRUD for agents, rules, scenarios, templates, variables)
+- [x] T034 [P] [US3] Implement PostgresConfigStore vector_search_rules() with pgvector in focal/alignment/stores/postgres.py
+- [x] T035 [P] [US3] Implement PostgresMemoryStore in focal/memory/stores/postgres.py (episodes, entities, relationships)
+- [x] T036 [P] [US3] Implement PostgresMemoryStore vector_search_episodes() with pgvector in focal/memory/stores/postgres.py
+- [x] T037 [P] [US3] Implement PostgresAuditStore in focal/audit/stores/postgres.py (turn_records, audit_events)
+- [x] T038 [P] [US3] Implement PostgresProfileStore in focal/profile/stores/postgres.py (profiles, channels, fields, assets)
 - [x] T039 [US3] Create tests/integration/stores/test_postgres_config.py with CRUD and vector search tests
 - [x] T040 [US3] Create tests/integration/stores/test_postgres_memory.py with episode and vector search tests
 - [x] T041 [US3] Create tests/integration/stores/test_postgres_audit.py with turn record and event tests
@@ -167,9 +167,9 @@
 **Purpose**: Improvements that affect multiple user stories
 
 - [ ] T059 [P] Update existing contract tests to include PostgreSQL store implementations in tests/contract/
-- [x] T060 [P] Register PostgresConfigStore as 'postgres' backend in soldier/config/models/storage.py
-- [x] T061 [P] Register RedisSessionStore as 'redis' backend in soldier/config/models/storage.py
-- [x] T062 Update soldier/config/models/storage.py with PostgreSQL connection pool settings
+- [x] T060 [P] Register PostgresConfigStore as 'postgres' backend in focal/config/models/storage.py
+- [x] T061 [P] Register RedisSessionStore as 'redis' backend in focal/config/models/storage.py
+- [x] T062 Update focal/config/models/storage.py with PostgreSQL connection pool settings
 - [ ] T063 Run quickstart.md validation - verify all setup steps work
 - [x] T064 Update IMPLEMENTATION_PLAN.md checkboxes for Phase 16 and 17 completion
 
@@ -220,10 +220,10 @@
 
 ```bash
 # Launch all PostgreSQL store implementations in parallel:
-Task: "Implement PostgresConfigStore in soldier/alignment/stores/postgres.py"
-Task: "Implement PostgresMemoryStore in soldier/memory/stores/postgres.py"
-Task: "Implement PostgresAuditStore in soldier/audit/stores/postgres.py"
-Task: "Implement PostgresProfileStore in soldier/profile/stores/postgres.py"
+Task: "Implement PostgresConfigStore in focal/alignment/stores/postgres.py"
+Task: "Implement PostgresMemoryStore in focal/memory/stores/postgres.py"
+Task: "Implement PostgresAuditStore in focal/audit/stores/postgres.py"
+Task: "Implement PostgresProfileStore in focal/profile/stores/postgres.py"
 ```
 
 ---

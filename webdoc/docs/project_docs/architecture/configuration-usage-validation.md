@@ -3,7 +3,7 @@
 ### Accessing Configuration
 
 ```python
-from soldier.config.settings import get_settings
+from focal.config.settings import get_settings
 
 # Get cached settings (loads once, reuses)
 settings = get_settings()
@@ -23,8 +23,8 @@ if settings.debug:
 ```python
 from fastapi import Depends
 
-from soldier.config.settings import Settings, get_settings
-from soldier.providers.litellm_provider import LiteLLMProvider
+from focal.config.settings import Settings, get_settings
+from focal.providers.litellm_provider import LiteLLMProvider
 
 
 def get_generation_provider(settings: Settings = Depends(get_settings)):
@@ -40,8 +40,8 @@ def get_filtering_provider(settings: Settings = Depends(get_settings)):
 ### Creating Selection Strategies from Config
 
 ```python
-from soldier.config.models.selection import SelectionStrategyConfig
-from soldier.alignment.retrieval.selection import (
+from focal.config.models.selection import SelectionStrategyConfig
+from focal.alignment.retrieval.selection import (
     SelectionStrategy,
     ElbowSelectionStrategy,
     AdaptiveKSelectionStrategy,
@@ -151,7 +151,7 @@ api_key = "sk-ant-..."
 
 # ✅ Good: reference env var or leave empty
 [providers.default_llm]
-# api_key loaded from ANTHROPIC_API_KEY or SOLDIER_PROVIDERS__DEFAULT_LLM__API_KEY
+# api_key loaded from ANTHROPIC_API_KEY or FOCAL_PROVIDERS__DEFAULT_LLM__API_KEY
 ```
 
 ### 3. Environment-Specific Overrides Only
@@ -166,7 +166,7 @@ api_key = "sk-ant-..."
 
 ```python
 # main.py
-from soldier.config.settings import get_settings
+from focal.config.settings import get_settings
 
 def main():
     # Validate config at startup, fail fast

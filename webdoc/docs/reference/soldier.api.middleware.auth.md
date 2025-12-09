@@ -1,10 +1,10 @@
-<a id="soldier.api.middleware.auth"></a>
+<a id="focal.api.middleware.auth"></a>
 
-# soldier.api.middleware.auth
+# focal.api.middleware.auth
 
 JWT authentication middleware for API requests.
 
-<a id="soldier.api.middleware.auth.get_jwt_secret"></a>
+<a id="focal.api.middleware.auth.get_jwt_secret"></a>
 
 #### get\_jwt\_secret
 
@@ -14,7 +14,7 @@ def get_jwt_secret() -> str
 
 Get JWT secret from environment.
 
-<a id="soldier.api.middleware.auth.get_jwt_algorithm"></a>
+<a id="focal.api.middleware.auth.get_jwt_algorithm"></a>
 
 #### get\_jwt\_algorithm
 
@@ -24,7 +24,7 @@ def get_jwt_algorithm() -> str
 
 Get JWT algorithm from environment.
 
-<a id="soldier.api.middleware.auth.get_tenant_context"></a>
+<a id="focal.api.middleware.auth.get_tenant_context"></a>
 
 #### get\_tenant\_context
 

@@ -1,13 +1,13 @@
-<a id="soldier.observability.metrics"></a>
+<a id="focal.observability.metrics"></a>
 
-# soldier.observability.metrics
+# focal.observability.metrics
 
-Prometheus metrics for Soldier.
+Prometheus metrics for Focal.
 
 Provides standard metrics for request tracking, latencies, token usage,
 and system health.
 
-<a id="soldier.observability.metrics.setup_metrics"></a>
+<a id="focal.observability.metrics.setup_metrics"></a>
 
 #### setup\_metrics
 

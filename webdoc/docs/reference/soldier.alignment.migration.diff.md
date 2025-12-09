@@ -1,13 +1,13 @@
-<a id="soldier.alignment.migration.diff"></a>
+<a id="focal.alignment.migration.diff"></a>
 
-# soldier.alignment.migration.diff
+# focal.alignment.migration.diff
 
 Graph diff and content hashing for scenario migration.
 
 Implements anchor detection, upstream/downstream analysis, and
 transformation map computation for migration plan generation.
 
-<a id="soldier.alignment.migration.diff.compute_node_content_hash"></a>
+<a id="focal.alignment.migration.diff.compute_node_content_hash"></a>
 
 #### compute\_node\_content\_hash
 
@@ -28,7 +28,7 @@ Uses SHA-256 of JSON-serialized semantic attributes, truncated to 16 chars.
 
   16-character hex hash string
 
-<a id="soldier.alignment.migration.diff.compute_scenario_checksum"></a>
+<a id="focal.alignment.migration.diff.compute_scenario_checksum"></a>
 
 #### compute\_scenario\_checksum
 
@@ -47,7 +47,7 @@ Compute checksum for entire scenario for version validation.
 
   16-character hex hash string
 
-<a id="soldier.alignment.migration.diff.find_anchor_nodes"></a>
+<a id="focal.alignment.migration.diff.find_anchor_nodes"></a>
 
 #### find\_anchor\_nodes
 
@@ -69,7 +69,7 @@ Find anchor nodes that exist in both versions with same semantic content.
 
   List of (v1_step, v2_step, content_hash) tuples for matching anchors
 
-<a id="soldier.alignment.migration.diff.compute_upstream_changes"></a>
+<a id="focal.alignment.migration.diff.compute_upstream_changes"></a>
 
 #### compute\_upstream\_changes
 
@@ -92,7 +92,7 @@ Compute changes upstream of an anchor using reverse BFS.
 
   UpstreamChanges describing what changed upstream of the anchor
 
-<a id="soldier.alignment.migration.diff.compute_downstream_changes"></a>
+<a id="focal.alignment.migration.diff.compute_downstream_changes"></a>
 
 #### compute\_downstream\_changes
 
@@ -115,7 +115,7 @@ Compute changes downstream of an anchor using forward BFS.
 
   DownstreamChanges describing what changed downstream of the anchor
 
-<a id="soldier.alignment.migration.diff.determine_migration_scenario"></a>
+<a id="focal.alignment.migration.diff.determine_migration_scenario"></a>
 
 #### determine\_migration\_scenario
 
@@ -137,7 +137,7 @@ Determine the migration scenario based on upstream/downstream changes.
 
   MigrationScenario indicating how to migrate sessions at this anchor
 
-<a id="soldier.alignment.migration.diff.compute_transformation_map"></a>
+<a id="focal.alignment.migration.diff.compute_transformation_map"></a>
 
 #### compute\_transformation\_map
 

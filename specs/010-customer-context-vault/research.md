@@ -11,7 +11,7 @@ Use **Hatchet** for background job orchestration instead of Celery, rq, or simil
 
 ### Rationale
 1. **PostgreSQL-native**: Uses PostgreSQL as the queue backend, avoiding Redis dependency for job state (we already have PostgreSQL)
-2. **Async Python support**: Native async/await support aligns with Soldier's "Async Everywhere" constitution requirement
+2. **Async Python support**: Native async/await support aligns with Focal's "Async Everywhere" constitution requirement
 3. **Cron scheduling**: Built-in cron support for scheduled jobs (field expiry, orphan detection)
 4. **Pydantic integration**: Works with Pydantic models for job inputs/outputs
 5. **Horizontal scaling**: Workers can be deployed independently, no leader election issues
@@ -29,7 +29,7 @@ Use **Hatchet** for background job orchestration instead of Celery, rq, or simil
 
 ### Integration Pattern
 ```python
-# soldier/jobs/client.py
+# focal/jobs/client.py
 from hatchet_sdk import Hatchet
 
 class HatchetClient:

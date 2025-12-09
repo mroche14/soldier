@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.models.glossary import GlossaryItem
+from focal.alignment.models.glossary import GlossaryItem
 
 
 class TestGlossaryItem:

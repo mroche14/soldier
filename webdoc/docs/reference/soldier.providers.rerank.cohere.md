@@ -1,4 +1,4 @@
-<a id="soldier.providers.rerank.cohere"></a>
+<a id="focal.providers.rerank.cohere"></a>
 
-# soldier.providers.rerank.cohere
+# focal.providers.rerank.cohere
 

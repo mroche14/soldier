@@ -1,10 +1,10 @@
-# Soldier Integration with External Platforms
+# Focal Integration with External Platforms
 
-This document describes how Soldier integrates into a multi-plane architecture as the cognitive layer.
+This document describes how Focal integrates into a multi-plane architecture as the cognitive layer.
 
 ## Architecture Position
 
-Soldier is the **Cognitive Layer** in a multi-plane architecture:
+Focal is the **Cognitive Layer** in a multi-plane architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -50,7 +50,7 @@ Soldier is the **Cognitive Layer** in a multi-plane architecture:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           COGNITIVE LAYER                                    │
 │                                                                              │
-│                              SOLDIER                                         │
+│                              FOCAL                                         │
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
 │  │                         Config Watcher                                │   │
@@ -98,7 +98,7 @@ Soldier is the **Cognitive Layer** in a multi-plane architecture:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           TOOL LAYER                                         │
 │                                                                              │
-│  Soldier Tool Orchestrator                                                  │
+│  Focal Tool Orchestrator                                                  │
 │         │                                                                    │
 │         ├── ToolHub (registry, schemas, activation)                         │
 │         │                                                                    │
@@ -115,12 +115,12 @@ Soldier is the **Cognitive Layer** in a multi-plane architecture:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## What Soldier Provides
+## What Focal Provides
 
 | Capability | Implementation |
 |------------|----------------|
-| API Layer | Soldier API + Session Router |
-| Core Engine | Soldier Core (Scenario, Rule, Memory, LLM) |
+| API Layer | Focal API + Session Router |
+| Core Engine | Focal Core (Scenario, Rule, Memory, LLM) |
 | Config Loading | Config Watcher (loads from Redis) |
 | Framework | FastAPI + PostgreSQL + Redis |
 | Session Storage | Redis (sessions) + Neo4j (memory) |
@@ -144,7 +144,7 @@ Soldier is the **Cognitive Layer** in a multi-plane architecture:
    - Sends interrupt if needed
    - Publishes to: events.routed.{tenant}.{channel}
 
-5. Soldier consumes:
+5. Focal consumes:
    - Loads session state
    - Runs turn pipeline
    - Returns response
@@ -165,7 +165,7 @@ Soldier is the **Cognitive Layer** in a multi-plane architecture:
    - Atomic pointer swap: {tenant}:{agent}:cfg → N
    - Publishes cfg-updated
 
-4. Soldier Config Watcher:
+4. Focal Config Watcher:
    - Receives cfg-updated
    - Loads bundle from Redis
    - Updates local cache
@@ -189,7 +189,7 @@ Every layer enforces tenant isolation:
 
 ## Cache Strategy
 
-Soldier uses **Redis with TTL-based eviction**:
+Focal uses **Redis with TTL-based eviction**:
 
 ### Agent Configuration Cache
 
@@ -252,7 +252,7 @@ DELETE /v1/sessions/{session_id}
 PATCH /v1/sessions/{session_id}  (update variables, force step)
 ```
 
-### Configuration (if Soldier manages directly)
+### Configuration (if Focal manages directly)
 
 ```
 # Scenarios
@@ -295,7 +295,7 @@ GET /internal/metrics
 
 ## Compatibility with External Control Plane
 
-Soldier reads configuration from **Redis bundles** produced by an external publisher. The bundle format is:
+Focal reads configuration from **Redis bundles** produced by an external publisher. The bundle format is:
 
 ```
 Redis Keys:
@@ -307,7 +307,7 @@ Redis Keys:
   {tenant}:{agent}:v{version}:variables
 ```
 
-### Bundle Schema (Soldier-native)
+### Bundle Schema (Focal-native)
 
 ```json
 // {tenant}:{agent}:v{version}:scenarios
@@ -350,13 +350,13 @@ Redis Keys:
 
 ## Migration Path
 
-### Phase 1: Deploy Soldier in shadow mode
-- Route subset of traffic to Soldier
+### Phase 1: Deploy Focal in shadow mode
+- Route subset of traffic to Focal
 - Compare responses (shadow mode)
 - Validate parity
 
 ### Phase 2: Gradual cutover
-- Route 10% → 50% → 100% to Soldier
+- Route 10% → 50% → 100% to Focal
 - Monitor latency, error rates
 - Keep legacy system as fallback
 
@@ -368,14 +368,14 @@ Redis Keys:
 ## Docker Compose Example
 
 ```yaml
-soldier:
+focal:
   build:
     context: ../..
-    dockerfile: apps/soldier/Dockerfile
-  container_name: soldier
+    dockerfile: apps/focal/Dockerfile
+  container_name: focal
   environment:
     # Database
-    POSTGRES_URL: postgresql://postgres:password@postgres:5432/soldier
+    POSTGRES_URL: postgresql://postgres:password@postgres:5432/focal
     NEO4J_URL: bolt://neo4j:7687
     REDIS_URL: redis://redis:6379/0
 
@@ -390,10 +390,10 @@ soldier:
     # Observability (integrates with kernel_agent's stack)
     # See docs/architecture/observability.md
     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-    OTEL_SERVICE_NAME: soldier
+    OTEL_SERVICE_NAME: focal
     LOG_LEVEL: INFO
-    SOLDIER_OBSERVABILITY__LOG_FORMAT: json
-    SOLDIER_OBSERVABILITY__TRACING_SAMPLE_RATE: 0.1
+    FOCAL_OBSERVABILITY__LOG_FORMAT: json
+    FOCAL_OBSERVABILITY__TRACING_SAMPLE_RATE: 0.1
 
     # Service
     ENVIRONMENT: development
@@ -413,11 +413,11 @@ soldier:
     timeout: 5s
     retries: 10
   networks:
-    - soldier
+    - focal
 
 neo4j:
   image: neo4j:5.15
-  container_name: soldier-neo4j
+  container_name: focal-neo4j
   environment:
     NEO4J_AUTH: neo4j/password
     NEO4J_PLUGINS: '["apoc"]'
@@ -432,7 +432,7 @@ neo4j:
     timeout: 5s
     retries: 10
   networks:
-    - soldier
+    - focal
 
 volumes:
   neo4j_data:
@@ -440,7 +440,7 @@ volumes:
 
 ## Key Architecture Principles
 
-| Aspect | Soldier Approach |
+| Aspect | Focal Approach |
 |--------|------------------|
 | **State** | Redis + PostgreSQL (no in-memory state) |
 | **Config updates** | Hot-reload via pub/sub |

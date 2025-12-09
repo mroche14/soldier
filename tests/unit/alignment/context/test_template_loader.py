@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from jinja2 import TemplateNotFound
 
-from soldier.alignment.context.template_loader import TemplateLoader
+from focal.alignment.context.template_loader import TemplateLoader
 
 
 class TestTemplateLoader:
@@ -141,7 +141,7 @@ Line 2"""
         # Get the actual prompts directory
         templates_dir = (
             Path(__file__).parent.parent.parent.parent.parent
-            / "soldier"
+            / "focal"
             / "alignment"
             / "context"
             / "prompts"

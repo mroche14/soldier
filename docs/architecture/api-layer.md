@@ -1,6 +1,6 @@
 # API Layer
 
-Soldier is a **message processing engine**. It receives messages from upstream services (channel-gateway, message-router) with tenant and channel context already resolved.
+Focal is a **message processing engine**. It receives messages from upstream services (channel-gateway, message-router) with tenant and channel context already resolved.
 
 ## Architecture Position
 
@@ -13,14 +13,14 @@ Message Router (coalescing, interrupts)
        │
        │  Adds: agent_id, routing metadata
        ▼
-    SOLDIER (this service)
+    FOCAL (this service)
        │
        │  Processes message, returns response
        ▼
 Channel Gateway → User
 ```
 
-> **Note:** Authentication, rate limiting, and tenant resolution happen upstream. Soldier trusts the `tenant_id` and `agent_id` in incoming requests.
+> **Note:** Authentication, rate limiting, and tenant resolution happen upstream. Focal trusts the `tenant_id` and `agent_id` in incoming requests.
 
 ## Interface Comparison
 
@@ -152,7 +152,7 @@ If no `Idempotency-Key` is provided, the request is processed without idempotenc
 ```protobuf
 syntax = "proto3";
 
-package soldier.v1;
+package focal.v1;
 
 service ChatService {
   // Unary: single message in, single response out
@@ -205,9 +205,9 @@ message ChatChunk {
 
 ```python
 import grpc
-from soldier.v1 import chat_pb2, chat_pb2_grpc
+from focal.v1 import chat_pb2, chat_pb2_grpc
 
-channel = grpc.secure_channel("soldier.example.com:443", credentials)
+channel = grpc.secure_channel("focal.example.com:443", credentials)
 stub = chat_pb2_grpc.ChatServiceStub(channel)
 
 # Unary call
@@ -226,7 +226,7 @@ for chunk in stub.SendMessageStream(request):
 
 ## MCP Server
 
-MCP (Model Context Protocol) allows LLMs to use Soldier as a tool provider.
+MCP (Model Context Protocol) allows LLMs to use Focal as a tool provider.
 
 ### Exposed Tools
 
@@ -234,8 +234,8 @@ MCP (Model Context Protocol) allows LLMs to use Soldier as a tool provider.
 {
   "tools": [
     {
-      "name": "soldier_chat",
-      "description": "Send a message to the Soldier agent and get a response",
+      "name": "focal_chat",
+      "description": "Send a message to the Focal agent and get a response",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -246,7 +246,7 @@ MCP (Model Context Protocol) allows LLMs to use Soldier as a tool provider.
       }
     },
     {
-      "name": "soldier_search_memory",
+      "name": "focal_search_memory",
       "description": "Search the agent's knowledge graph for relevant information",
       "inputSchema": {
         "type": "object",
@@ -258,7 +258,7 @@ MCP (Model Context Protocol) allows LLMs to use Soldier as a tool provider.
       }
     },
     {
-      "name": "soldier_add_episode",
+      "name": "focal_add_episode",
       "description": "Add a new piece of information to the agent's memory",
       "inputSchema": {
         "type": "object",
@@ -271,7 +271,7 @@ MCP (Model Context Protocol) allows LLMs to use Soldier as a tool provider.
       }
     },
     {
-      "name": "soldier_get_scenario_state",
+      "name": "focal_get_scenario_state",
       "description": "Get the current scenario and state for a session",
       "inputSchema": {
         "type": "object",
@@ -287,19 +287,19 @@ MCP (Model Context Protocol) allows LLMs to use Soldier as a tool provider.
 
 ### Integration Example
 
-With Claude Desktop or Copilot configured to use Soldier's MCP server:
+With Claude Desktop or Copilot configured to use Focal's MCP server:
 
 ```
-User: "What does Soldier know about my last order?"
+User: "What does Focal know about my last order?"
 
-Claude internally calls: soldier_search_memory(query="last order", session_id="...")
+Claude internally calls: focal_search_memory(query="last order", session_id="...")
 
-Claude: "Based on Soldier's memory, your last order was #12345 placed on Jan 10..."
+Claude: "Based on Focal's memory, your last order was #12345 placed on Jan 10..."
 ```
 
 ## Webhook Callbacks
 
-For async operations, Soldier can POST results to a callback URL:
+For async operations, Focal can POST results to a callback URL:
 
 ### Request with Callback
 
@@ -308,7 +308,7 @@ POST /v1/chat
 {
   "session_id": "sess_123",
   "message": "Process my return",
-  "callback_url": "https://your-app.com/soldier-callback",
+  "callback_url": "https://your-app.com/focal-callback",
   "callback_secret": "webhook_secret_xyz"
 }
 ```
@@ -325,8 +325,8 @@ POST /v1/chat
 ### Callback POST
 
 ```json
-POST https://your-app.com/soldier-callback
-X-Soldier-Signature: sha256=...
+POST https://your-app.com/focal-callback
+X-Focal-Signature: sha256=...
 
 {
   "turn_id": "turn_789",
@@ -391,5 +391,5 @@ API versioned via URL path:
 
 Deprecation communicated via header:
 ```
-X-Soldier-Deprecation: v1 deprecated 2025-06-01, use v2
+X-Focal-Deprecation: v1 deprecated 2025-06-01, use v2
 ```

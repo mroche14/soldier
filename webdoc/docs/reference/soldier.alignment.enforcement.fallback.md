@@ -1,10 +1,10 @@
-<a id="soldier.alignment.enforcement.fallback"></a>
+<a id="focal.alignment.enforcement.fallback"></a>
 
-# soldier.alignment.enforcement.fallback
+# focal.alignment.enforcement.fallback
 
 Fallback handler for enforcement failures.
 
-<a id="soldier.alignment.enforcement.fallback.FallbackHandler"></a>
+<a id="focal.alignment.enforcement.fallback.FallbackHandler"></a>
 
 ## FallbackHandler Objects
 
@@ -19,7 +19,7 @@ Used as a last resort when:
 2. Regeneration attempts fail
 3. A safe fallback template is available
 
-<a id="soldier.alignment.enforcement.fallback.FallbackHandler.select_fallback"></a>
+<a id="focal.alignment.enforcement.fallback.FallbackHandler.select_fallback"></a>
 
 #### select\_fallback
 
@@ -38,7 +38,7 @@ Select a fallback template from available templates.
 
   First template with FALLBACK mode, or None
 
-<a id="soldier.alignment.enforcement.fallback.FallbackHandler.apply_fallback"></a>
+<a id="focal.alignment.enforcement.fallback.FallbackHandler.apply_fallback"></a>
 
 #### apply\_fallback
 

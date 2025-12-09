@@ -4,12 +4,12 @@ import pytest
 from uuid import uuid4
 from datetime import datetime, UTC
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.models.intent import Intent
-from soldier.alignment.retrieval.intent_retriever import IntentRetriever
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.config.models.selection import SelectionConfig
-from soldier.providers.embedding import EmbeddingProvider
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.models.intent import Intent
+from focal.alignment.retrieval.intent_retriever import IntentRetriever
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.config.models.selection import SelectionConfig
+from focal.providers.embedding import EmbeddingProvider
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

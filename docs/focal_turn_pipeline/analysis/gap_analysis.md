@@ -50,7 +50,7 @@ The focal pipeline specification uses a **two-part customer data architecture**:
 
 The spec (Section 5) requires each LLM task to have:
 1. Config section in `config/default.toml` under `[pipeline.{task_name}]`
-2. Jinja2 prompt template in `soldier/alignment/{domain}/prompts/{task_name}.jinja2`
+2. Jinja2 prompt template in `focal/alignment/{domain}/prompts/{task_name}.jinja2`
 
 | Task | Config | Template | Loader | Status |
 |------|--------|----------|--------|--------|
@@ -518,7 +518,7 @@ Based on dependencies and impact:
 ## Files to Create
 
 ```
-soldier/alignment/
+focal/alignment/
 ├── context/
 │   └── situational_snapshot.py    # SituationalSnapshot, CandidateVariableInfo
 ├── customer/

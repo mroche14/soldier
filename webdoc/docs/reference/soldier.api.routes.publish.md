@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.publish"></a>
+<a id="focal.api.routes.publish"></a>
 
-# soldier.api.routes.publish
+# focal.api.routes.publish
 
 Publishing and versioning endpoints.
 
-<a id="soldier.api.routes.publish.get_publish_status"></a>
+<a id="focal.api.routes.publish.get_publish_status"></a>
 
 #### get\_publish\_status
 
@@ -17,7 +17,7 @@ async def get_publish_status(
 
 Get current publish status for an agent.
 
-<a id="soldier.api.routes.publish.initiate_publish"></a>
+<a id="focal.api.routes.publish.initiate_publish"></a>
 
 #### initiate\_publish
 
@@ -34,7 +34,7 @@ Initiate a publish operation.
 Returns immediately with job ID. Use GET /publish/{publish_id}
 to check progress.
 
-<a id="soldier.api.routes.publish.get_publish_job"></a>
+<a id="focal.api.routes.publish.get_publish_job"></a>
 
 #### get\_publish\_job
 
@@ -47,7 +47,7 @@ async def get_publish_job(agent_id: UUID, publish_id: UUID,
 
 Get the status of a publish job.
 
-<a id="soldier.api.routes.publish.rollback_to_version"></a>
+<a id="focal.api.routes.publish.rollback_to_version"></a>
 
 #### rollback\_to\_version
 

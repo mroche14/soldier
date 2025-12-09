@@ -1,10 +1,10 @@
-<a id="soldier.memory.models.entity"></a>
+<a id="focal.memory.models.entity"></a>
 
-# soldier.memory.models.entity
+# focal.memory.models.entity
 
 Entity model for memory domain.
 
-<a id="soldier.memory.models.entity.utc_now"></a>
+<a id="focal.memory.models.entity.utc_now"></a>
 
 #### utc\_now
 
@@ -14,7 +14,7 @@ def utc_now() -> datetime
 
 Return current UTC time.
 
-<a id="soldier.memory.models.entity.Entity"></a>
+<a id="focal.memory.models.entity.Entity"></a>
 
 ## Entity Objects
 

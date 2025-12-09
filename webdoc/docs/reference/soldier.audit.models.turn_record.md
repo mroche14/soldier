@@ -1,10 +1,10 @@
-<a id="soldier.audit.models.turn_record"></a>
+<a id="focal.audit.models.turn_record"></a>
 
-# soldier.audit.models.turn\_record
+# focal.audit.models.turn\_record
 
 TurnRecord model for audit domain.
 
-<a id="soldier.audit.models.turn_record.TurnRecord"></a>
+<a id="focal.audit.models.turn_record.TurnRecord"></a>
 
 ## TurnRecord Objects
 

@@ -12,7 +12,7 @@ This document captures research findings and decisions for implementing the proj
 ## 1. Python Package Structure
 
 ### Decision
-Use a flat package structure with domain-aligned subpackages under `soldier/`.
+Use a flat package structure with domain-aligned subpackages under `focal/`.
 
 ### Rationale
 - Follows the documented architecture in `docs/architecture/folder-structure.md`
@@ -36,7 +36,7 @@ Use `tomllib` (Python 3.11+ built-in) for TOML parsing with `pydantic-settings` 
 
 ### Rationale
 - `tomllib` is in the standard library (Python 3.11+) - no external dependency for parsing
-- `pydantic-settings` provides automatic environment variable binding with `SOLDIER_` prefix
+- `pydantic-settings` provides automatic environment variable binding with `FOCAL_` prefix
 - Deep merge strategy allows environment-specific files to override only changed values
 - `@lru_cache` on `get_settings()` ensures single load and consistent access
 
@@ -54,8 +54,8 @@ Use `tomllib` (Python 3.11+ built-in) for TOML parsing with `pydantic-settings` 
 Loading Order:
 1. Pydantic model defaults (in code)
 2. config/default.toml (base configuration)
-3. config/{SOLDIER_ENV}.toml (environment overrides)
-4. SOLDIER_* environment variables (runtime overrides)
+3. config/{FOCAL_ENV}.toml (environment overrides)
+4. FOCAL_* environment variables (runtime overrides)
 ```
 
 ---
@@ -107,7 +107,7 @@ Settings (root)
 ## 4. Environment Variable Override Pattern
 
 ### Decision
-Use `SOLDIER_` prefix with `__` as nested delimiter for environment variable overrides.
+Use `FOCAL_` prefix with `__` as nested delimiter for environment variable overrides.
 
 ### Rationale
 - Standard pydantic-settings pattern
@@ -116,10 +116,10 @@ Use `SOLDIER_` prefix with `__` as nested delimiter for environment variable ove
 
 ### Examples
 ```bash
-SOLDIER_DEBUG=true                    # settings.debug
-SOLDIER_API__PORT=9000                # settings.api.port
-SOLDIER_API__RATE_LIMIT__ENABLED=true # settings.api.rate_limit.enabled
-SOLDIER_STORAGE__SESSION__BACKEND=redis # settings.storage.session.backend
+FOCAL_DEBUG=true                    # settings.debug
+FOCAL_API__PORT=9000                # settings.api.port
+FOCAL_API__RATE_LIMIT__ENABLED=true # settings.api.rate_limit.enabled
+FOCAL_STORAGE__SESSION__BACKEND=redis # settings.storage.session.backend
 ```
 
 ---
@@ -161,7 +161,7 @@ Include standard Python project files with uv as the package manager.
 ### pyproject.toml Structure
 ```toml
 [project]
-name = "soldier"
+name = "focal"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
@@ -200,13 +200,13 @@ strict = true
 Create minimal `__init__.py` files that establish the package structure without implementation.
 
 ### Rationale
-- Allows immediate import verification (`from soldier.alignment import ...`)
+- Allows immediate import verification (`from focal.alignment import ...`)
 - Implementation comes in later phases
 - Clear separation between structure (this phase) and behavior (later phases)
 
 ### Pattern
 ```python
-# soldier/alignment/__init__.py
+# focal/alignment/__init__.py
 """Alignment engine: rules, scenarios, context extraction, response generation."""
 ```
 

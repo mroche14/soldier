@@ -4,13 +4,13 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.conversation.models import Session, Turn
-from soldier.conversation.models.enums import Channel
-from soldier.memory.ingestion.errors import IngestionError
-from soldier.memory.ingestion.ingestor import MemoryIngestor
-from soldier.memory.ingestion.queue import InMemoryTaskQueue
-from soldier.memory.stores.inmemory import InMemoryMemoryStore
-from soldier.providers.embedding.mock import MockEmbeddingProvider
+from focal.conversation.models import Session, Turn
+from focal.conversation.models.enums import Channel
+from focal.memory.ingestion.errors import IngestionError
+from focal.memory.ingestion.ingestor import MemoryIngestor
+from focal.memory.ingestion.queue import InMemoryTaskQueue
+from focal.memory.stores.inmemory import InMemoryMemoryStore
+from focal.providers.embedding.mock import MockEmbeddingProvider
 
 
 @pytest.fixture
@@ -167,7 +167,7 @@ class TestMemoryIngestorAsyncTasks:
         self, memory_store, embedding_provider, task_queue, session, turn
     ):
         """Should queue entity extraction task."""
-        from soldier.config.models.pipeline import MemoryIngestionConfig
+        from focal.config.models.pipeline import MemoryIngestionConfig
 
         config = MemoryIngestionConfig(
             entity_extraction_enabled=True,

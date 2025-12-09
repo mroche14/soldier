@@ -1,18 +1,18 @@
-<a id="soldier.observability.tracing"></a>
+<a id="focal.observability.tracing"></a>
 
-# soldier.observability.tracing
+# focal.observability.tracing
 
 OpenTelemetry distributed tracing setup.
 
 Provides trace context propagation, span creation, and OTLP export.
 Supports W3C Trace Context for cross-service correlation.
 
-<a id="soldier.observability.tracing.setup_tracing"></a>
+<a id="focal.observability.tracing.setup_tracing"></a>
 
 #### setup\_tracing
 
 ```python
-def setup_tracing(service_name: str = "soldier",
+def setup_tracing(service_name: str = "focal",
                   otlp_endpoint: str | None = None,
                   console_export: bool = False,
                   _sample_rate: float = 1.0) -> Tracer
@@ -33,7 +33,7 @@ Initialize OpenTelemetry tracing.
 
   Configured Tracer instance
 
-<a id="soldier.observability.tracing.get_tracer"></a>
+<a id="focal.observability.tracing.get_tracer"></a>
 
 #### get\_tracer
 
@@ -47,7 +47,7 @@ Get the configured tracer, or a no-op tracer if not initialized.
 
   Tracer instance
 
-<a id="soldier.observability.tracing.extract_context"></a>
+<a id="focal.observability.tracing.extract_context"></a>
 
 #### extract\_context
 
@@ -68,7 +68,7 @@ Supports W3C Trace Context (traceparent/tracestate headers).
 
   OpenTelemetry Context with extracted trace info
 
-<a id="soldier.observability.tracing.inject_context"></a>
+<a id="focal.observability.tracing.inject_context"></a>
 
 #### inject\_context
 
@@ -86,7 +86,7 @@ Adds W3C Trace Context headers (traceparent/tracestate).
 - `headers` - HTTP headers dict to inject into
 - `context` - Context to inject (current if not specified)
 
-<a id="soldier.observability.tracing.get_current_trace_id"></a>
+<a id="focal.observability.tracing.get_current_trace_id"></a>
 
 #### get\_current\_trace\_id
 
@@ -100,7 +100,7 @@ Get the current trace ID as a hex string.
 
   Trace ID or None if not in a trace
 
-<a id="soldier.observability.tracing.get_current_span_id"></a>
+<a id="focal.observability.tracing.get_current_span_id"></a>
 
 #### get\_current\_span\_id
 
@@ -114,7 +114,7 @@ Get the current span ID as a hex string.
 
   Span ID or None if not in a span
 
-<a id="soldier.observability.tracing.create_span"></a>
+<a id="focal.observability.tracing.create_span"></a>
 
 #### create\_span
 
@@ -140,7 +140,7 @@ Create a new span as a context manager.
 
   The created span
 
-<a id="soldier.observability.tracing.record_exception"></a>
+<a id="focal.observability.tracing.record_exception"></a>
 
 #### record\_exception
 
@@ -158,7 +158,7 @@ Record an exception on a span.
 - `exception` - The exception that occurred
 - `escaped` - Whether the exception escaped the span scope
 
-<a id="soldier.observability.tracing.set_span_attributes"></a>
+<a id="focal.observability.tracing.set_span_attributes"></a>
 
 #### set\_span\_attributes
 
@@ -173,7 +173,7 @@ Set multiple attributes on a span.
 - `span` - Span to set attributes on
 - `**attributes` - Key-value pairs to set
 
-<a id="soldier.observability.tracing.TracingContext"></a>
+<a id="focal.observability.tracing.TracingContext"></a>
 
 ## TracingContext Objects
 
@@ -185,7 +185,7 @@ Context manager for traced operations with common patterns.
 
 Provides convenient tracing for turn processing and pipeline steps.
 
-<a id="soldier.observability.tracing.TracingContext.__init__"></a>
+<a id="focal.observability.tracing.TracingContext.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -201,7 +201,7 @@ Initialize tracing context.
 - `agent_id` - Agent identifier
 - `session_id` - Session identifier
 
-<a id="soldier.observability.tracing.TracingContext.turn_span"></a>
+<a id="focal.observability.tracing.TracingContext.turn_span"></a>
 
 #### turn\_span
 
@@ -225,7 +225,7 @@ Create a span for a turn.
 
   Turn span
 
-<a id="soldier.observability.tracing.TracingContext.pipeline_step_span"></a>
+<a id="focal.observability.tracing.TracingContext.pipeline_step_span"></a>
 
 #### pipeline\_step\_span
 
@@ -247,7 +247,7 @@ Create a span for a pipeline step.
 
   Pipeline step span
 
-<a id="soldier.observability.tracing.TracingContext.llm_call_span"></a>
+<a id="focal.observability.tracing.TracingContext.llm_call_span"></a>
 
 #### llm\_call\_span
 

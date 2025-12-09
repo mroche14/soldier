@@ -14,17 +14,17 @@ from dotenv import load_dotenv
 # Load .env file
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
-from soldier.conversation.models import Session, SessionStatus, Channel
-from soldier.conversation.stores.inmemory import InMemorySessionStore
-from soldier.customer_data.stores.inmemory import InMemoryCustomerDataStore
-from soldier.observability.logging import setup_logging, get_logger
-from soldier.providers.embedding.jina import JinaEmbeddingProvider
-from soldier.providers.rerank.jina import JinaRerankProvider
-from soldier.providers.llm import create_executor
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
+from focal.conversation.models import Session, SessionStatus, Channel
+from focal.conversation.stores.inmemory import InMemorySessionStore
+from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from focal.observability.logging import setup_logging, get_logger
+from focal.providers.embedding.jina import JinaEmbeddingProvider
+from focal.providers.rerank.jina import JinaRerankProvider
+from focal.providers.llm import create_executor
 
 # Configure logging
 setup_logging(level="INFO")

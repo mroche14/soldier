@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the Soldier API server with proper environment variable export
+# Run the Focal API server with proper environment variable export
 
 set -e
 
@@ -16,8 +16,8 @@ else
 fi
 
 # Default values
-HOST="${SOLDIER_HOST:-0.0.0.0}"
-PORT="${SOLDIER_PORT:-8000}"
+HOST="${FOCAL_HOST:-0.0.0.0}"
+PORT="${FOCAL_PORT:-8000}"
 RELOAD=""
 
 # Parse arguments
@@ -43,5 +43,5 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "Starting Soldier API server on $HOST:$PORT"
-exec uv run uvicorn soldier.api.app:app --host "$HOST" --port "$PORT" $RELOAD
+echo "Starting Focal API server on $HOST:$PORT"
+exec uv run uvicorn focal.api.app:app --host "$HOST" --port "$PORT" $RELOAD

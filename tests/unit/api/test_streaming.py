@@ -2,7 +2,7 @@
 
 import pytest
 
-from soldier.api.models.chat import (
+from focal.api.models.chat import (
     DoneEvent,
     ErrorEvent,
     StreamEvent,

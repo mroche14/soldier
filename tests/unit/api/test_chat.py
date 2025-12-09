@@ -7,19 +7,19 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from soldier.alignment.engine import AlignmentEngine
-from soldier.alignment.result import AlignmentResult
-from soldier.api.dependencies import (
+from focal.alignment.engine import AlignmentEngine
+from focal.alignment.result import AlignmentResult
+from focal.api.dependencies import (
     get_alignment_engine,
     get_session_store,
     get_settings,
     reset_dependencies,
 )
-from soldier.api.middleware.auth import get_tenant_context
-from soldier.api.models.context import TenantContext
-from soldier.api.routes.chat import router
-from soldier.conversation.models import Channel, Session, SessionStatus
-from soldier.conversation.stores.inmemory import InMemorySessionStore
+from focal.api.middleware.auth import get_tenant_context
+from focal.api.models.context import TenantContext
+from focal.api.routes.chat import router
+from focal.conversation.models import Channel, Session, SessionStatus
+from focal.conversation.stores.inmemory import InMemorySessionStore
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ async def app(
     app.include_router(router, prefix="/v1")
 
     # Register exception handlers from app module
-    from soldier.api.app import _register_exception_handlers
+    from focal.api.app import _register_exception_handlers
 
     _register_exception_handlers(app)
 
@@ -194,7 +194,7 @@ class TestChatEndpoint:
         mock_engine: AsyncMock,
     ) -> None:
         """Chat response includes matched rules."""
-        from soldier.alignment.filtering.models import MatchedRule
+        from focal.alignment.filtering.models import MatchedRule
         from tests.factories.alignment import RuleFactory
 
         # Add matched rules to the result

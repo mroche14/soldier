@@ -1,10 +1,10 @@
-<a id="soldier.config.models.agent"></a>
+<a id="focal.config.models.agent"></a>
 
-# soldier.config.models.agent
+# focal.config.models.agent
 
 Agent-level configuration models.
 
-<a id="soldier.config.models.agent.AgentConfig"></a>
+<a id="focal.config.models.agent.AgentConfig"></a>
 
 ## AgentConfig Objects
 

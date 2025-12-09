@@ -10,15 +10,15 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from soldier.conversation.models import Channel
-from soldier.customer_data.enums import VariableSource, VerificationLevel
-from soldier.customer_data.models import (
+from focal.conversation.models import Channel
+from focal.customer_data.enums import VariableSource, VerificationLevel
+from focal.customer_data.models import (
     ChannelIdentity,
     CustomerDataStore,
     ProfileAsset,
     VariableEntry,
 )
-from soldier.customer_data.stores.postgres import PostgresCustomerDataStore
+from focal.customer_data.stores.postgres import PostgresCustomerDataStore
 
 
 @pytest_asyncio.fixture

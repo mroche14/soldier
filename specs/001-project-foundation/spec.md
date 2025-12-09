@@ -17,7 +17,7 @@ A developer clones the repository and wants to start developing. They need a pro
 
 **Acceptance Scenarios**:
 
-1. **Given** a fresh clone of the repository, **When** I run `uv sync`, **Then** all dependencies are installed and the `soldier` package is importable
+1. **Given** a fresh clone of the repository, **When** I run `uv sync`, **Then** all dependencies are installed and the `focal` package is importable
 2. **Given** the project structure exists, **When** I look for a specific domain (e.g., alignment, memory), **Then** I find a corresponding directory with `__init__.py`
 3. **Given** the test structure exists, **When** I run `uv run pytest`, **Then** the test framework initializes successfully (even with no tests yet)
 
@@ -25,23 +25,23 @@ A developer clones the repository and wants to start developing. They need a pro
 
 ### User Story 2 - Developer Configures Application for Local Development (Priority: P2)
 
-A developer wants to configure the Soldier application for local development. They need to set environment-specific configuration values (database URLs, log levels, feature flags) through TOML files, with sensible defaults for development.
+A developer wants to configure the Focal application for local development. They need to set environment-specific configuration values (database URLs, log levels, feature flags) through TOML files, with sensible defaults for development.
 
 **Why this priority**: Configuration loading is required before any runtime component can work. It enables per-environment customization essential for development workflow.
 
-**Independent Test**: Can be tested by setting `SOLDIER_ENV=development`, calling `get_settings()`, and verifying returned values match development TOML overrides.
+**Independent Test**: Can be tested by setting `FOCAL_ENV=development`, calling `get_settings()`, and verifying returned values match development TOML overrides.
 
 **Acceptance Scenarios**:
 
-1. **Given** default.toml and development.toml exist, **When** I load settings with `SOLDIER_ENV=development`, **Then** development values override defaults
+1. **Given** default.toml and development.toml exist, **When** I load settings with `FOCAL_ENV=development`, **Then** development values override defaults
 2. **Given** a Pydantic model with defaults, **When** no TOML file specifies that value, **Then** the Pydantic default is used
-3. **Given** an environment variable `SOLDIER_API__PORT=9000`, **When** I load settings, **Then** the API port is 9000 (overriding TOML)
+3. **Given** an environment variable `FOCAL_API__PORT=9000`, **When** I load settings, **Then** the API port is 9000 (overriding TOML)
 
 ---
 
 ### User Story 3 - Developer Adds New Configuration Section (Priority: P3)
 
-A developer needs to add a new configurable component to Soldier. They want a consistent pattern for defining configuration models with validation, defaults, and environment override support.
+A developer needs to add a new configurable component to Focal. They want a consistent pattern for defining configuration models with validation, defaults, and environment override support.
 
 **Why this priority**: Extensibility of configuration is important but not blocking. Once the base system works, new sections can be added incrementally.
 
@@ -51,7 +51,7 @@ A developer needs to add a new configurable component to Soldier. They want a co
 
 1. **Given** I create a new Pydantic model for configuration, **When** I add it to the Settings class, **Then** it integrates with the loading system automatically
 2. **Given** I define validation rules in my model (e.g., port > 0), **When** invalid TOML values are provided, **Then** a validation error is raised at startup
-3. **Given** I nest configuration sections, **When** I use `SOLDIER_SECTION__SUBSECTION__KEY=value`, **Then** the nested value is overridden
+3. **Given** I nest configuration sections, **When** I use `FOCAL_SECTION__SUBSECTION__KEY=value`, **Then** the nested value is overridden
 
 ---
 
@@ -61,11 +61,11 @@ A developer wants to run tests in isolation with a test-specific configuration (
 
 **Why this priority**: Test isolation is important for reliable development but can use defaults initially. This story ensures proper test configuration.
 
-**Independent Test**: Can be tested by setting `SOLDIER_ENV=test`, loading settings, and verifying storage backends are configured as "inmemory".
+**Independent Test**: Can be tested by setting `FOCAL_ENV=test`, loading settings, and verifying storage backends are configured as "inmemory".
 
 **Acceptance Scenarios**:
 
-1. **Given** test.toml exists, **When** I set `SOLDIER_ENV=test` and load settings, **Then** storage backends use in-memory implementations
+1. **Given** test.toml exists, **When** I set `FOCAL_ENV=test` and load settings, **Then** storage backends use in-memory implementations
 2. **Given** test environment is active, **When** I import configuration, **Then** debug mode is enabled and log level is DEBUG
 
 ---
@@ -76,7 +76,7 @@ A developer wants to run tests in isolation with a test-specific configuration (
 - What happens when TOML syntax is invalid? System raises descriptive parse error with file location.
 - What happens when environment variable format is wrong (missing `__` delimiter)? System ignores malformed variables and logs warning.
 - What happens when required configuration value has no default and is not provided? Pydantic validation fails with clear field error.
-- What happens when SOLDIER_CONFIG_DIR points to non-existent directory? System raises clear error indicating directory not found.
+- What happens when FOCAL_CONFIG_DIR points to non-existent directory? System raises clear error indicating directory not found.
 
 ## Requirements *(mandatory)*
 
@@ -84,9 +84,9 @@ A developer wants to run tests in isolation with a test-specific configuration (
 
 **Project Structure (Phase 0)**
 
-- **FR-001**: System MUST have a `soldier/` Python package with proper `__init__.py` at each level
+- **FR-001**: System MUST have a `focal/` Python package with proper `__init__.py` at each level
 - **FR-002**: System MUST have domain-specific subpackages: `alignment/`, `memory/`, `conversation/`, `audit/`, `observability/`, `providers/`, `api/`, `config/`, `profile/`
-- **FR-003**: System MUST have a `tests/` directory mirroring the `soldier/` structure with `unit/`, `integration/`, and `e2e/` subdirectories
+- **FR-003**: System MUST have a `tests/` directory mirroring the `focal/` structure with `unit/`, `integration/`, and `e2e/` subdirectories
 - **FR-004**: System MUST have a `config/` directory at project root for TOML configuration files
 - **FR-005**: System MUST have a `deploy/` directory with `docker/` and `kubernetes/` subdirectories
 - **FR-006**: System MUST have a `pyproject.toml` with project metadata and dependencies
@@ -99,9 +99,9 @@ A developer wants to run tests in isolation with a test-specific configuration (
 
 - **FR-011**: System MUST load TOML configuration from `config/` directory
 - **FR-012**: System MUST support environment-specific TOML files (default.toml, development.toml, staging.toml, production.toml, test.toml)
-- **FR-013**: System MUST determine environment from `SOLDIER_ENV` variable, defaulting to "development"
+- **FR-013**: System MUST determine environment from `FOCAL_ENV` variable, defaulting to "development"
 - **FR-014**: System MUST deep-merge configuration: defaults -> environment-specific -> environment variables
-- **FR-015**: System MUST support environment variable overrides with `SOLDIER_` prefix and `__` as nested delimiter
+- **FR-015**: System MUST support environment variable overrides with `FOCAL_` prefix and `__` as nested delimiter
 - **FR-016**: System MUST provide a `get_settings()` function returning cached Settings instance
 - **FR-017**: System MUST validate all configuration through Pydantic models at load time
 
@@ -142,7 +142,7 @@ A developer wants to run tests in isolation with a test-specific configuration (
 ### Measurable Outcomes
 
 - **SC-001**: A developer can clone the repository and run `uv sync && uv run pytest` within 60 seconds without errors
-- **SC-002**: All 9 domain subpackages are importable as Python modules (e.g., `from soldier.alignment import ...`)
+- **SC-002**: All 9 domain subpackages are importable as Python modules (e.g., `from focal.alignment import ...`)
 - **SC-003**: Configuration loading completes in under 100 milliseconds
 - **SC-004**: 100% of configuration values have either Pydantic defaults or TOML defaults
 - **SC-005**: Invalid configuration (missing required fields, wrong types) is detected at application startup, not at runtime

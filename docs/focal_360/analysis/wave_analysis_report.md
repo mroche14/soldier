@@ -41,14 +41,14 @@ Wave 1 proposes two parallel tasks that wire existing infrastructure:
 ### What Already Exists
 
 **Idempotency:**
-- `IdempotencyCache` class at `soldier/api/middleware/idempotency.py` (lines 29-130)
-- TODOs at `soldier/api/routes/chat.py` lines 189-193 and 232-234
+- `IdempotencyCache` class at `focal/api/middleware/idempotency.py` (lines 29-130)
+- TODOs at `focal/api/routes/chat.py` lines 189-193 and 232-234
 - `compute_request_fingerprint()` utility (lines 148-165)
 - `idempotency_key` parameter already in chat route (line 152)
 
 **AgentConfig:**
-- `AgentConfig` model at `soldier/config/models/agent.py` (lines 8-41)
-- `Agent` domain model at `soldier/alignment/models/agent.py` with embedded `AgentSettings`
+- `AgentConfig` model at `focal/config/models/agent.py` (lines 8-41)
+- `Agent` domain model at `focal/alignment/models/agent.py` with embedded `AgentSettings`
 - `AgentConfigStore.get_agent()` method already exists (line 189)
 - `StaticConfigLoader` already loads agent in P1.6
 
@@ -58,8 +58,8 @@ Wave 1 proposes two parallel tasks that wire existing infrastructure:
 
 | Model | Location | Purpose |
 |-------|----------|---------|
-| `AgentConfig` | `soldier/config/models/agent.py` | Pipeline configuration overrides |
-| `Agent.settings` | `soldier/alignment/models/agent.py` | Domain model with embedded `AgentSettings` |
+| `AgentConfig` | `focal/config/models/agent.py` | Pipeline configuration overrides |
+| `Agent.settings` | `focal/alignment/models/agent.py` | Domain model with embedded `AgentSettings` |
 
 **The implementation plan doesn't clarify which to use.** This must be resolved before implementation.
 
@@ -88,13 +88,13 @@ Wave 1 proposes two parallel tasks that wire existing infrastructure:
 ### Impact Radius
 
 **Idempotency** (Low Risk):
-- `soldier/api/routes/chat.py` - Add cache logic
-- `soldier/api/middleware/idempotency.py` - Add Redis backend
+- `focal/api/routes/chat.py` - Add cache logic
+- `focal/api/middleware/idempotency.py` - Add Redis backend
 - `config/default.toml` - Add config section
 
 **AgentConfig** (Medium Risk):
-- `soldier/alignment/engine.py` - Add config loading in P1.6
-- `soldier/config/loader.py` - Add merge logic
+- `focal/alignment/engine.py` - Add config loading in P1.6
+- `focal/config/loader.py` - Add merge logic
 - Every pipeline step that uses model/temperature/max_tokens
 
 ### Potential Problems
@@ -189,7 +189,7 @@ The documentation mentions "two or three messages back to back" but doesn't expl
 **Move to background job (not middleware)**:
 
 ```python
-# soldier/jobs/workflows/abuse_detection.py
+# focal/jobs/workflows/abuse_detection.py
 class AbuseDetectionWorkflow:
     """Analyze turn patterns to detect abuse."""
 
@@ -209,14 +209,14 @@ class AbuseDetectionWorkflow:
 ### Impact Radius
 
 **If debouncing implemented (NOT RECOMMENDED):**
-- `soldier/api/middleware/ingress.py` (NEW - 200-300 lines)
+- `focal/api/middleware/ingress.py` (NEW - 200-300 lines)
 - Requires Redis for distributed state
 - Touches 100% of user-facing traffic
 
 **Abuse detection (recommended approach):**
-- `soldier/alignment/models/outcome.py` - Add enum value
-- `soldier/jobs/workflows/abuse_detection.py` (NEW)
-- `soldier/customer_data/models.py` - Add `abuse_risk_score` field
+- `focal/alignment/models/outcome.py` - Add enum value
+- `focal/jobs/workflows/abuse_detection.py` (NEW)
+- `focal/customer_data/models.py` - Add `abuse_risk_score` field
 
 ### Recommendation
 
@@ -244,11 +244,11 @@ Wave 3 proposes:
 **What Already Exists:**
 
 ```python
-# soldier/alignment/generation/formatters/whatsapp.py
+# focal/alignment/generation/formatters/whatsapp.py
 class WhatsAppFormatter(ChannelFormatter):
     MAX_LENGTH = 4096  # Already defined
 
-# soldier/alignment/generation/formatters/sms.py
+# focal/alignment/generation/formatters/sms.py
 class SMSFormatter(ChannelFormatter):
     MAX_LENGTH = 160  # Already defined
 ```
@@ -455,13 +455,13 @@ Wave 5 attempts to deliver two **fundamentally different feature sets**:
 - Goal is a simple model attached to ResponsePlan
 
 **What Exists:**
-- Hatchet framework at `soldier/jobs/` with working workflows
+- Hatchet framework at `focal/jobs/` with working workflows
 - `ResponsePlan` exists (Goal attachment point)
 - `Session` model has appropriate storage hooks
-- Redis patterns in `soldier/conversation/stores/redis.py`
+- Redis patterns in `focal/conversation/stores/redis.py`
 
 **What's Missing:**
-- `soldier/agenda/` module (models, store, workflows)
+- `focal/agenda/` module (models, store, workflows)
 - Outbound message trigger endpoint
 - Follow-up workflow
 
@@ -507,9 +507,9 @@ Invalidating one but not others creates inconsistency.
 ### Impact Radius
 
 **Agenda/Goals (Contained):**
-- New `soldier/agenda/` module
-- `soldier/alignment/planning/models.py` - Add Goal to ResponsePlan
-- `soldier/jobs/workflows/follow_up.py` - New workflow
+- New `focal/agenda/` module
+- `focal/alignment/planning/models.py` - Add Goal to ResponsePlan
+- `focal/jobs/workflows/follow_up.py` - New workflow
 - Risk: LOW
 
 **Hot Reload (Wide):**
@@ -731,16 +731,16 @@ Then build features to address them.
 ## Appendix: Files Referenced in Analysis
 
 ### Core Infrastructure
-- `soldier/api/middleware/idempotency.py` - IdempotencyCache
-- `soldier/api/routes/chat.py` - Chat endpoint with TODOs
-- `soldier/config/models/agent.py` - AgentConfig model
-- `soldier/alignment/models/agent.py` - Agent domain model
-- `soldier/alignment/engine.py` - AlignmentEngine
-- `soldier/alignment/execution/tool_executor.py` - Tool execution
-- `soldier/alignment/models/scenario.py` - ScenarioStep.is_checkpoint
-- `soldier/alignment/generation/formatters/` - Channel formatters
-- `soldier/jobs/workflows/` - Hatchet workflows
-- `soldier/audit/models/turn_record.py` - TurnRecord
+- `focal/api/middleware/idempotency.py` - IdempotencyCache
+- `focal/api/routes/chat.py` - Chat endpoint with TODOs
+- `focal/config/models/agent.py` - AgentConfig model
+- `focal/alignment/models/agent.py` - Agent domain model
+- `focal/alignment/engine.py` - AlignmentEngine
+- `focal/alignment/execution/tool_executor.py` - Tool execution
+- `focal/alignment/models/scenario.py` - ScenarioStep.is_checkpoint
+- `focal/alignment/generation/formatters/` - Channel formatters
+- `focal/jobs/workflows/` - Hatchet workflows
+- `focal/audit/models/turn_record.py` - TurnRecord
 
 ### Documentation
 - `docs/focal_360/README.md` - FOCAL 360 overview
@@ -751,7 +751,7 @@ Then build features to address them.
 
 ### Configuration
 - `config/default.toml` - Default configuration
-- `soldier/config/loader.py` - Config loading
+- `focal/config/loader.py` - Config loading
 
 ---
 

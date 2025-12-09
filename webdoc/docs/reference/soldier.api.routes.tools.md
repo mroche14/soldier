@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.tools"></a>
+<a id="focal.api.routes.tools"></a>
 
-# soldier.api.routes.tools
+# focal.api.routes.tools
 
 Tool activation management endpoints.
 
-<a id="soldier.api.routes.tools.list_tool_activations"></a>
+<a id="focal.api.routes.tools.list_tool_activations"></a>
 
 #### list\_tool\_activations
 
@@ -22,7 +22,7 @@ async def list_tool_activations(
 
 List tool activations for an agent.
 
-<a id="soldier.api.routes.tools.enable_tool"></a>
+<a id="focal.api.routes.tools.enable_tool"></a>
 
 #### enable\_tool
 
@@ -35,7 +35,7 @@ async def enable_tool(agent_id: UUID, request: ToolActivationCreate,
 
 Enable a tool for an agent.
 
-<a id="soldier.api.routes.tools.update_tool_activation"></a>
+<a id="focal.api.routes.tools.update_tool_activation"></a>
 
 #### update\_tool\_activation
 
@@ -49,7 +49,7 @@ async def update_tool_activation(
 
 Update a tool activation (policy override).
 
-<a id="soldier.api.routes.tools.disable_tool"></a>
+<a id="focal.api.routes.tools.disable_tool"></a>
 
 #### disable\_tool
 

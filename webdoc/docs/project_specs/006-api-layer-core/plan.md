@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement the HTTP API layer for Soldier including a FastAPI application factory, middleware for authentication and rate limiting, core endpoints for chat processing (sync and streaming), session management, and health/metrics. The API integrates with the existing AlignmentEngine, SessionStore, and AuditStore to process messages and manage conversation state.
+Implement the HTTP API layer for Focal including a FastAPI application factory, middleware for authentication and rate limiting, core endpoints for chat processing (sync and streaming), session management, and health/metrics. The API integrates with the existing AlignmentEngine, SessionStore, and AuditStore to process messages and manage conversation state.
 
 ## Technical Context
 
@@ -47,7 +47,7 @@ specs/006-api-layer-core/
 ### Source Code (repository root)
 
 ```text
-soldier/
+focal/
 ├── api/
 │   ├── __init__.py
 │   ├── app.py                 # FastAPI application factory
@@ -80,7 +80,7 @@ tests/
         └── test_chat_flow.py
 ```
 
-**Structure Decision**: Extends existing `soldier/api/` structure with stub files already in place. Uses existing test layout under `tests/unit/` and `tests/integration/`.
+**Structure Decision**: Extends existing `focal/api/` structure with stub files already in place. Uses existing test layout under `tests/unit/` and `tests/integration/`.
 
 ## Complexity Tracking
 

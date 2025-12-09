@@ -1,10 +1,10 @@
-<a id="soldier.providers.embedding.base"></a>
+<a id="focal.providers.embedding.base"></a>
 
-# soldier.providers.embedding.base
+# focal.providers.embedding.base
 
 EmbeddingProvider abstract interface.
 
-<a id="soldier.providers.embedding.base.EmbeddingResponse"></a>
+<a id="focal.providers.embedding.base.EmbeddingResponse"></a>
 
 ## EmbeddingResponse Objects
 
@@ -14,7 +14,7 @@ class EmbeddingResponse(BaseModel)
 
 Response from an embedding provider.
 
-<a id="soldier.providers.embedding.base.EmbeddingProvider"></a>
+<a id="focal.providers.embedding.base.EmbeddingProvider"></a>
 
 ## EmbeddingProvider Objects
 
@@ -27,7 +27,7 @@ Abstract interface for text embeddings.
 Provides unified access to various embedding providers
 (OpenAI, Voyage, Cohere, etc.).
 
-<a id="soldier.providers.embedding.base.EmbeddingProvider.provider_name"></a>
+<a id="focal.providers.embedding.base.EmbeddingProvider.provider_name"></a>
 
 #### provider\_name
 
@@ -39,7 +39,7 @@ def provider_name() -> str
 
 Return the provider name.
 
-<a id="soldier.providers.embedding.base.EmbeddingProvider.dimensions"></a>
+<a id="focal.providers.embedding.base.EmbeddingProvider.dimensions"></a>
 
 #### dimensions
 
@@ -51,7 +51,7 @@ def dimensions() -> int
 
 Return the embedding dimensions.
 
-<a id="soldier.providers.embedding.base.EmbeddingProvider.embed"></a>
+<a id="focal.providers.embedding.base.EmbeddingProvider.embed"></a>
 
 #### embed
 
@@ -76,7 +76,7 @@ Generate embeddings for texts.
 
   EmbeddingResponse with embedding vectors
 
-<a id="soldier.providers.embedding.base.EmbeddingProvider.embed_single"></a>
+<a id="focal.providers.embedding.base.EmbeddingProvider.embed_single"></a>
 
 #### embed\_single
 

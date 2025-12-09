@@ -1,1 +1,1 @@
-"""Performance tests for soldier."""
+"""Performance tests for focal."""

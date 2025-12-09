@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 import structlog
 
-from soldier.observability.logging import (
+from focal.observability.logging import (
     PIIRedactor,
     get_logger,
     setup_logging,

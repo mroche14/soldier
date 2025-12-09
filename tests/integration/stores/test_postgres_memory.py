@@ -10,8 +10,8 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from soldier.memory.models import Entity, Episode, Relationship
-from soldier.memory.stores.postgres import PostgresMemoryStore
+from focal.memory.models import Entity, Episode, Relationship
+from focal.memory.stores.postgres import PostgresMemoryStore
 
 
 @pytest_asyncio.fixture

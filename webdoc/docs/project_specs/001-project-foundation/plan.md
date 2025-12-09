@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement the foundational project skeleton and configuration system for the Soldier cognitive engine. This includes:
+Implement the foundational project skeleton and configuration system for the Focal cognitive engine. This includes:
 1. **Phase 0**: Complete folder structure with all domain packages, test directories, and deployment files
 2. **Phase 1**: TOML-based configuration loading with Pydantic validation, including all configuration models for the system
 
@@ -56,7 +56,7 @@ specs/001-project-foundation/
 ### Source Code (repository root)
 
 ```text
-soldier/                        # Project root (already exists)
+focal/                        # Project root (already exists)
 ├── config/                     # TOML configuration files
 │   ├── default.toml           # Base defaults
 │   ├── development.toml       # Dev overrides
@@ -64,7 +64,7 @@ soldier/                        # Project root (already exists)
 │   ├── production.toml        # Production overrides
 │   └── test.toml              # Test configuration
 │
-├── soldier/                    # Main Python package
+├── focal/                    # Main Python package
 │   ├── __init__.py            # Package version, exports
 │   ├── alignment/             # The brain
 │   │   ├── __init__.py

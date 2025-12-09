@@ -1,13 +1,13 @@
-<a id="soldier.api.app"></a>
+<a id="focal.api.app"></a>
 
-# soldier.api.app
+# focal.api.app
 
 FastAPI application factory.
 
 Creates and configures the FastAPI application with middleware,
 exception handlers, and route registration.
 
-<a id="soldier.api.app.create_app"></a>
+<a id="focal.api.app.create_app"></a>
 
 #### create\_app
 

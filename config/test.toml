@@ -1,4 +1,4 @@
-# Soldier Test Configuration
+# Focal Test Configuration
 # All backends use in-memory implementations for isolated testing
 
 debug = true

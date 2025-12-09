@@ -1,4 +1,4 @@
-site_name: Soldier Documentation
+site_name: Focal Documentation
 theme:
   name: material
   logo: logo.svg
@@ -147,186 +147,186 @@ nav:
   - API Reference:
     - Alignment:
       - Core:
-        - Engine: reference/soldier.alignment.engine.md
-        - Result: reference/soldier.alignment.result.md
-        - Templates Loader: reference/soldier.alignment.templates_loader.md
+        - Engine: reference/focal.alignment.engine.md
+        - Result: reference/focal.alignment.result.md
+        - Templates Loader: reference/focal.alignment.templates_loader.md
       - Context:
-        - Extractor: reference/soldier.alignment.context.extractor.md
-        - Models: reference/soldier.alignment.context.models.md
+        - Extractor: reference/focal.alignment.context.extractor.md
+        - Models: reference/focal.alignment.context.models.md
       - Enforcement:
-        - Fallback: reference/soldier.alignment.enforcement.fallback.md
-        - Models: reference/soldier.alignment.enforcement.models.md
-        - Validator: reference/soldier.alignment.enforcement.validator.md
+        - Fallback: reference/focal.alignment.enforcement.fallback.md
+        - Models: reference/focal.alignment.enforcement.models.md
+        - Validator: reference/focal.alignment.enforcement.validator.md
       - Execution:
-        - Models: reference/soldier.alignment.execution.models.md
-        - Tool Executor: reference/soldier.alignment.execution.tool_executor.md
-        - Variable Resolver: reference/soldier.alignment.execution.variable_resolver.md
+        - Models: reference/focal.alignment.execution.models.md
+        - Tool Executor: reference/focal.alignment.execution.tool_executor.md
+        - Variable Resolver: reference/focal.alignment.execution.variable_resolver.md
       - Filtering:
-        - Models: reference/soldier.alignment.filtering.models.md
-        - Rule Filter: reference/soldier.alignment.filtering.rule_filter.md
-        - Scenario Filter: reference/soldier.alignment.filtering.scenario_filter.md
+        - Models: reference/focal.alignment.filtering.models.md
+        - Rule Filter: reference/focal.alignment.filtering.rule_filter.md
+        - Scenario Filter: reference/focal.alignment.filtering.scenario_filter.md
       - Generation:
-        - Generator: reference/soldier.alignment.generation.generator.md
-        - Models: reference/soldier.alignment.generation.models.md
-        - Prompt Builder: reference/soldier.alignment.generation.prompt_builder.md
+        - Generator: reference/focal.alignment.generation.generator.md
+        - Models: reference/focal.alignment.generation.models.md
+        - Prompt Builder: reference/focal.alignment.generation.prompt_builder.md
       - Migration:
-        - Composite: reference/soldier.alignment.migration.composite.md
-        - Diff: reference/soldier.alignment.migration.diff.md
-        - Executor: reference/soldier.alignment.migration.executor.md
-        - Gap Fill: reference/soldier.alignment.migration.gap_fill.md
-        - Models: reference/soldier.alignment.migration.models.md
-        - Planner: reference/soldier.alignment.migration.planner.md
+        - Composite: reference/focal.alignment.migration.composite.md
+        - Diff: reference/focal.alignment.migration.diff.md
+        - Executor: reference/focal.alignment.migration.executor.md
+        - Gap Fill: reference/focal.alignment.migration.gap_fill.md
+        - Models: reference/focal.alignment.migration.models.md
+        - Planner: reference/focal.alignment.migration.planner.md
       - Models:
-        - Agent: reference/soldier.alignment.models.agent.md
-        - Base: reference/soldier.alignment.models.base.md
-        - Context: reference/soldier.alignment.models.context.md
-        - Enums: reference/soldier.alignment.models.enums.md
-        - Publish: reference/soldier.alignment.models.publish.md
-        - Rule: reference/soldier.alignment.models.rule.md
-        - Scenario: reference/soldier.alignment.models.scenario.md
-        - Template: reference/soldier.alignment.models.template.md
-        - Tool Activation: reference/soldier.alignment.models.tool_activation.md
-        - Variable: reference/soldier.alignment.models.variable.md
+        - Agent: reference/focal.alignment.models.agent.md
+        - Base: reference/focal.alignment.models.base.md
+        - Context: reference/focal.alignment.models.context.md
+        - Enums: reference/focal.alignment.models.enums.md
+        - Publish: reference/focal.alignment.models.publish.md
+        - Rule: reference/focal.alignment.models.rule.md
+        - Scenario: reference/focal.alignment.models.scenario.md
+        - Template: reference/focal.alignment.models.template.md
+        - Tool Activation: reference/focal.alignment.models.tool_activation.md
+        - Variable: reference/focal.alignment.models.variable.md
       - Retrieval:
-        - Models: reference/soldier.alignment.retrieval.models.md
-        - Reranker: reference/soldier.alignment.retrieval.reranker.md
-        - Rule Retriever: reference/soldier.alignment.retrieval.rule_retriever.md
-        - Scenario Retriever: reference/soldier.alignment.retrieval.scenario_retriever.md
-        - Selection: reference/soldier.alignment.retrieval.selection.md
+        - Models: reference/focal.alignment.retrieval.models.md
+        - Reranker: reference/focal.alignment.retrieval.reranker.md
+        - Rule Retriever: reference/focal.alignment.retrieval.rule_retriever.md
+        - Scenario Retriever: reference/focal.alignment.retrieval.scenario_retriever.md
+        - Selection: reference/focal.alignment.retrieval.selection.md
       - Stores:
-        - Config Store: reference/soldier.alignment.stores.config_store.md
-        - In-Memory: reference/soldier.alignment.stores.inmemory.md
+        - Config Store: reference/focal.alignment.stores.config_store.md
+        - In-Memory: reference/focal.alignment.stores.inmemory.md
     - API:
       - Core:
-        - App: reference/soldier.api.app.md
-        - Dependencies: reference/soldier.api.dependencies.md
-        - Exceptions: reference/soldier.api.exceptions.md
+        - App: reference/focal.api.app.md
+        - Dependencies: reference/focal.api.dependencies.md
+        - Exceptions: reference/focal.api.exceptions.md
       - gRPC:
-        - Server: reference/soldier.api.grpc.server.md
+        - Server: reference/focal.api.grpc.server.md
       - Middleware:
-        - Auth: reference/soldier.api.middleware.auth.md
-        - Context: reference/soldier.api.middleware.context.md
-        - Idempotency: reference/soldier.api.middleware.idempotency.md
-        - Rate Limit: reference/soldier.api.middleware.rate_limit.md
+        - Auth: reference/focal.api.middleware.auth.md
+        - Context: reference/focal.api.middleware.context.md
+        - Idempotency: reference/focal.api.middleware.idempotency.md
+        - Rate Limit: reference/focal.api.middleware.rate_limit.md
       - Models:
-        - Bulk: reference/soldier.api.models.bulk.md
-        - Chat: reference/soldier.api.models.chat.md
-        - Context: reference/soldier.api.models.context.md
-        - CRUD: reference/soldier.api.models.crud.md
-        - Errors: reference/soldier.api.models.errors.md
-        - Health: reference/soldier.api.models.health.md
-        - Pagination: reference/soldier.api.models.pagination.md
-        - Session: reference/soldier.api.models.session.md
+        - Bulk: reference/focal.api.models.bulk.md
+        - Chat: reference/focal.api.models.chat.md
+        - Context: reference/focal.api.models.context.md
+        - CRUD: reference/focal.api.models.crud.md
+        - Errors: reference/focal.api.models.errors.md
+        - Health: reference/focal.api.models.health.md
+        - Pagination: reference/focal.api.models.pagination.md
+        - Session: reference/focal.api.models.session.md
       - Routes:
-        - Agents: reference/soldier.api.routes.agents.md
-        - Chat: reference/soldier.api.routes.chat.md
-        - Config: reference/soldier.api.routes.config.md
-        - Health: reference/soldier.api.routes.health.md
-        - Migrations: reference/soldier.api.routes.migrations.md
-        - Publish: reference/soldier.api.routes.publish.md
-        - Rules: reference/soldier.api.routes.rules.md
-        - Scenarios: reference/soldier.api.routes.scenarios.md
-        - Sessions: reference/soldier.api.routes.sessions.md
-        - Templates: reference/soldier.api.routes.templates.md
-        - Tools: reference/soldier.api.routes.tools.md
-        - Variables: reference/soldier.api.routes.variables.md
+        - Agents: reference/focal.api.routes.agents.md
+        - Chat: reference/focal.api.routes.chat.md
+        - Config: reference/focal.api.routes.config.md
+        - Health: reference/focal.api.routes.health.md
+        - Migrations: reference/focal.api.routes.migrations.md
+        - Publish: reference/focal.api.routes.publish.md
+        - Rules: reference/focal.api.routes.rules.md
+        - Scenarios: reference/focal.api.routes.scenarios.md
+        - Sessions: reference/focal.api.routes.sessions.md
+        - Templates: reference/focal.api.routes.templates.md
+        - Tools: reference/focal.api.routes.tools.md
+        - Variables: reference/focal.api.routes.variables.md
       - Services:
-        - Embedding: reference/soldier.api.services.embedding.md
-        - Publish: reference/soldier.api.services.publish.md
-        - Scenario Validation: reference/soldier.api.services.scenario_validation.md
+        - Embedding: reference/focal.api.services.embedding.md
+        - Publish: reference/focal.api.services.publish.md
+        - Scenario Validation: reference/focal.api.services.scenario_validation.md
     - Audit:
       - Models:
-        - Event: reference/soldier.audit.models.event.md
-        - Turn Record: reference/soldier.audit.models.turn_record.md
-      - Store: reference/soldier.audit.store.md
+        - Event: reference/focal.audit.models.event.md
+        - Turn Record: reference/focal.audit.models.turn_record.md
+      - Store: reference/focal.audit.store.md
       - Stores:
-        - ClickHouse: reference/soldier.audit.stores.clickhouse.md
-        - In-Memory: reference/soldier.audit.stores.inmemory.md
-        - MongoDB: reference/soldier.audit.stores.mongodb.md
-        - PostgreSQL: reference/soldier.audit.stores.postgres.md
-        - Timescale: reference/soldier.audit.stores.timescale.md
+        - ClickHouse: reference/focal.audit.stores.clickhouse.md
+        - In-Memory: reference/focal.audit.stores.inmemory.md
+        - MongoDB: reference/focal.audit.stores.mongodb.md
+        - PostgreSQL: reference/focal.audit.stores.postgres.md
+        - Timescale: reference/focal.audit.stores.timescale.md
     - Config:
       - Core:
-        - Loader: reference/soldier.config.loader.md
-        - Settings: reference/soldier.config.settings.md
+        - Loader: reference/focal.config.loader.md
+        - Settings: reference/focal.config.settings.md
       - Models:
-        - Agent: reference/soldier.config.models.agent.md
-        - API: reference/soldier.config.models.api.md
-        - Migration: reference/soldier.config.models.migration.md
-        - Observability: reference/soldier.config.models.observability.md
-        - Pipeline: reference/soldier.config.models.pipeline.md
-        - Providers: reference/soldier.config.models.providers.md
-        - Selection: reference/soldier.config.models.selection.md
-        - Storage: reference/soldier.config.models.storage.md
+        - Agent: reference/focal.config.models.agent.md
+        - API: reference/focal.config.models.api.md
+        - Migration: reference/focal.config.models.migration.md
+        - Observability: reference/focal.config.models.observability.md
+        - Pipeline: reference/focal.config.models.pipeline.md
+        - Providers: reference/focal.config.models.providers.md
+        - Selection: reference/focal.config.models.selection.md
+        - Storage: reference/focal.config.models.storage.md
     - Conversation:
       - Core:
-        - Store: reference/soldier.conversation.store.md
+        - Store: reference/focal.conversation.store.md
       - Models:
-        - Enums: reference/soldier.conversation.models.enums.md
-        - Session: reference/soldier.conversation.models.session.md
-        - Turn: reference/soldier.conversation.models.turn.md
+        - Enums: reference/focal.conversation.models.enums.md
+        - Session: reference/focal.conversation.models.session.md
+        - Turn: reference/focal.conversation.models.turn.md
       - Stores:
-        - DynamoDB: reference/soldier.conversation.stores.dynamodb.md
-        - In-Memory: reference/soldier.conversation.stores.inmemory.md
-        - MongoDB: reference/soldier.conversation.stores.mongodb.md
-        - Redis: reference/soldier.conversation.stores.redis.md
+        - DynamoDB: reference/focal.conversation.stores.dynamodb.md
+        - In-Memory: reference/focal.conversation.stores.inmemory.md
+        - MongoDB: reference/focal.conversation.stores.mongodb.md
+        - Redis: reference/focal.conversation.stores.redis.md
     - Memory:
       - Core:
-        - Store: reference/soldier.memory.store.md
+        - Store: reference/focal.memory.store.md
       - Ingestion:
-        - Entity Extractor: reference/soldier.memory.ingestion.entity_extractor.md
-        - Errors: reference/soldier.memory.ingestion.errors.md
-        - Ingestor: reference/soldier.memory.ingestion.ingestor.md
-        - Models: reference/soldier.memory.ingestion.models.md
-        - Queue: reference/soldier.memory.ingestion.queue.md
-        - Summarizer: reference/soldier.memory.ingestion.summarizer.md
-        - Tasks: reference/soldier.memory.ingestion.tasks.md
+        - Entity Extractor: reference/focal.memory.ingestion.entity_extractor.md
+        - Errors: reference/focal.memory.ingestion.errors.md
+        - Ingestor: reference/focal.memory.ingestion.ingestor.md
+        - Models: reference/focal.memory.ingestion.models.md
+        - Queue: reference/focal.memory.ingestion.queue.md
+        - Summarizer: reference/focal.memory.ingestion.summarizer.md
+        - Tasks: reference/focal.memory.ingestion.tasks.md
       - Models:
-        - Entity: reference/soldier.memory.models.entity.md
-        - Episode: reference/soldier.memory.models.episode.md
-        - Relationship: reference/soldier.memory.models.relationship.md
+        - Entity: reference/focal.memory.models.entity.md
+        - Episode: reference/focal.memory.models.episode.md
+        - Relationship: reference/focal.memory.models.relationship.md
       - Retrieval:
-        - Reranker: reference/soldier.memory.retrieval.reranker.md
-        - Retriever: reference/soldier.memory.retrieval.retriever.md
+        - Reranker: reference/focal.memory.retrieval.reranker.md
+        - Retriever: reference/focal.memory.retrieval.retriever.md
       - Stores:
-        - In-Memory: reference/soldier.memory.stores.inmemory.md
-        - MongoDB: reference/soldier.memory.stores.mongodb.md
-        - Neo4j: reference/soldier.memory.stores.neo4j.md
-        - PostgreSQL: reference/soldier.memory.stores.postgres.md
+        - In-Memory: reference/focal.memory.stores.inmemory.md
+        - MongoDB: reference/focal.memory.stores.mongodb.md
+        - Neo4j: reference/focal.memory.stores.neo4j.md
+        - PostgreSQL: reference/focal.memory.stores.postgres.md
     - Observability:
       - Core:
-        - Logging: reference/soldier.observability.logging.md
-        - Metrics: reference/soldier.observability.metrics.md
-        - Middleware: reference/soldier.observability.middleware.md
-        - Tracing: reference/soldier.observability.tracing.md
+        - Logging: reference/focal.observability.logging.md
+        - Metrics: reference/focal.observability.metrics.md
+        - Middleware: reference/focal.observability.middleware.md
+        - Tracing: reference/focal.observability.tracing.md
     - Profile:
       - Core:
-        - Enums: reference/soldier.profile.enums.md
-        - Models: reference/soldier.profile.models.md
-        - Store: reference/soldier.profile.store.md
+        - Enums: reference/focal.profile.enums.md
+        - Models: reference/focal.profile.models.md
+        - Store: reference/focal.profile.store.md
       - Stores:
-        - In-Memory: reference/soldier.profile.stores.inmemory.md
+        - In-Memory: reference/focal.profile.stores.inmemory.md
     - Providers:
       - Embedding:
-        - Base: reference/soldier.providers.embedding.base.md
-        - Cohere: reference/soldier.providers.embedding.cohere.md
-        - Mock: reference/soldier.providers.embedding.mock.md
-        - OpenAI: reference/soldier.providers.embedding.openai.md
-        - Sentence Transformers: reference/soldier.providers.embedding.sentence_transformers.md
-        - Voyage: reference/soldier.providers.embedding.voyage.md
+        - Base: reference/focal.providers.embedding.base.md
+        - Cohere: reference/focal.providers.embedding.cohere.md
+        - Mock: reference/focal.providers.embedding.mock.md
+        - OpenAI: reference/focal.providers.embedding.openai.md
+        - Sentence Transformers: reference/focal.providers.embedding.sentence_transformers.md
+        - Voyage: reference/focal.providers.embedding.voyage.md
       - LLM:
-        - Anthropic: reference/soldier.providers.llm.anthropic.md
-        - Base: reference/soldier.providers.llm.base.md
-        - Bedrock: reference/soldier.providers.llm.bedrock.md
-        - Mock: reference/soldier.providers.llm.mock.md
-        - Ollama: reference/soldier.providers.llm.ollama.md
-        - OpenAI: reference/soldier.providers.llm.openai.md
-        - Vertex: reference/soldier.providers.llm.vertex.md
+        - Anthropic: reference/focal.providers.llm.anthropic.md
+        - Base: reference/focal.providers.llm.base.md
+        - Bedrock: reference/focal.providers.llm.bedrock.md
+        - Mock: reference/focal.providers.llm.mock.md
+        - Ollama: reference/focal.providers.llm.ollama.md
+        - OpenAI: reference/focal.providers.llm.openai.md
+        - Vertex: reference/focal.providers.llm.vertex.md
       - Rerank:
-        - Base: reference/soldier.providers.rerank.base.md
-        - Cohere: reference/soldier.providers.rerank.cohere.md
-        - Cross-Encoder: reference/soldier.providers.rerank.cross_encoder.md
-        - Mock: reference/soldier.providers.rerank.mock.md
-        - Voyage: reference/soldier.providers.rerank.voyage.md
+        - Base: reference/focal.providers.rerank.base.md
+        - Cohere: reference/focal.providers.rerank.cohere.md
+        - Cross-Encoder: reference/focal.providers.rerank.cross_encoder.md
+        - Mock: reference/focal.providers.rerank.mock.md
+        - Voyage: reference/focal.providers.rerank.voyage.md
     - Utils:
-      - Vector: reference/soldier.utils.vector.md
+      - Vector: reference/focal.utils.vector.md

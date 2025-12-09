@@ -1,6 +1,6 @@
 # Alignment Engine
 
-The alignment engine ensures Soldier agents behave according to defined policies. It processes each turn through a multi-step pipeline, matching **Rules** for behavioral control and **Scenarios** for multi-step flows.
+The alignment engine ensures Focal agents behave according to defined policies. It processes each turn through a multi-step pipeline, matching **Rules** for behavioral control and **Scenarios** for multi-step flows.
 
 ## Core Principle
 
@@ -18,7 +18,7 @@ The engine doesn't just inject rules into a prompt—it takes control when neede
 
 ## Full Turn Pipeline
 
-The alignment engine is the **core** of Soldier's turn processing, but operates on text. Multimodal input/output is handled by pre- and post-processing stages:
+The alignment engine is the **core** of Focal's turn processing, but operates on text. Multimodal input/output is handled by pre- and post-processing stages:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -1660,7 +1660,7 @@ rule = Rule(
 
 ## Enforcement
 
-After LLM generation, Soldier validates compliance with hard constraint rules.
+After LLM generation, Focal validates compliance with hard constraint rules.
 
 ### Enforcement Flow
 

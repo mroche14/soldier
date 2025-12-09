@@ -1,12 +1,12 @@
-<a id="soldier.alignment.generation.generator"></a>
+<a id="focal.alignment.generation.generator"></a>
 
-# soldier.alignment.generation.generator
+# focal.alignment.generation.generator
 
 Response generation for alignment pipeline.
 
 Generates responses using LLM with support for template modes.
 
-<a id="soldier.alignment.generation.generator.ResponseGenerator"></a>
+<a id="focal.alignment.generation.generator.ResponseGenerator"></a>
 
 ## ResponseGenerator Objects
 
@@ -21,7 +21,7 @@ Supports multiple generation modes:
 - Template-based generation (EXCLUSIVE mode)
 - Suggested templates included in prompt (SUGGEST mode)
 
-<a id="soldier.alignment.generation.generator.ResponseGenerator.__init__"></a>
+<a id="focal.alignment.generation.generator.ResponseGenerator.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -41,7 +41,7 @@ Initialize the response generator.
 - `default_temperature` - Default sampling temperature
 - `default_max_tokens` - Default max tokens for response
 
-<a id="soldier.alignment.generation.generator.ResponseGenerator.generate"></a>
+<a id="focal.alignment.generation.generator.ResponseGenerator.generate"></a>
 
 #### generate
 

@@ -1,10 +1,10 @@
-<a id="soldier.alignment.enforcement.validator"></a>
+<a id="focal.alignment.enforcement.validator"></a>
 
-# soldier.alignment.enforcement.validator
+# focal.alignment.enforcement.validator
 
 Response enforcement for hard constraints.
 
-<a id="soldier.alignment.enforcement.validator.EnforcementValidator"></a>
+<a id="focal.alignment.enforcement.validator.EnforcementValidator"></a>
 
 ## EnforcementValidator Objects
 
@@ -19,7 +19,7 @@ When violations are detected, the validator can:
 1. Attempt to regenerate the response with stronger instructions
 2. Pass to FallbackHandler for template-based recovery
 
-<a id="soldier.alignment.enforcement.validator.EnforcementValidator.__init__"></a>
+<a id="focal.alignment.enforcement.validator.EnforcementValidator.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -35,7 +35,7 @@ Initialize the enforcement validator.
 - `response_generator` - Generator for response regeneration
 - `max_retries` - Maximum regeneration attempts on violation
 
-<a id="soldier.alignment.enforcement.validator.EnforcementValidator.validate"></a>
+<a id="focal.alignment.enforcement.validator.EnforcementValidator.validate"></a>
 
 #### validate
 

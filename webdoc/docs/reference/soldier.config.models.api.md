@@ -1,10 +1,10 @@
-<a id="soldier.config.models.api"></a>
+<a id="focal.config.models.api"></a>
 
-# soldier.config.models.api
+# focal.config.models.api
 
 API server configuration models.
 
-<a id="soldier.config.models.api.RateLimitConfig"></a>
+<a id="focal.config.models.api.RateLimitConfig"></a>
 
 ## RateLimitConfig Objects
 
@@ -14,7 +14,7 @@ class RateLimitConfig(BaseModel)
 
 Rate limiting configuration.
 
-<a id="soldier.config.models.api.APIConfig"></a>
+<a id="focal.config.models.api.APIConfig"></a>
 
 ## APIConfig Objects
 
@@ -24,7 +24,7 @@ class APIConfig(BaseModel)
 
 Configuration for the HTTP API server.
 
-<a id="soldier.config.models.api.APIConfig.parse_cors_origins"></a>
+<a id="focal.config.models.api.APIConfig.parse_cors_origins"></a>
 
 #### parse\_cors\_origins
 

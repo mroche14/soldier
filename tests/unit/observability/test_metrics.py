@@ -3,7 +3,7 @@
 import pytest
 from prometheus_client import REGISTRY
 
-from soldier.observability.metrics import (
+from focal.observability.metrics import (
     ACTIVE_SESSIONS,
     ERRORS,
     LLM_TOKENS,
@@ -173,6 +173,6 @@ class TestMetricsExport:
         """Should have correctly prefixed metric names."""
         # Check that our metrics are in the registry
         metric_names = [m.name for m in REGISTRY.collect()]
-        assert "soldier_request_count" in metric_names or any(
+        assert "focal_request_count" in metric_names or any(
             "request" in name for name in metric_names
         )

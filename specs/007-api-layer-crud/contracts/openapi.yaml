@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: Soldier CRUD API
-  description: Configuration management endpoints for Soldier cognitive engine
+  title: Focal CRUD API
+  description: Configuration management endpoints for Focal cognitive engine
   version: 1.0.0
 
 servers:

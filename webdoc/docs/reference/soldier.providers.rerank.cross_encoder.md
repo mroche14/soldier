@@ -1,4 +1,4 @@
-<a id="soldier.providers.rerank.cross_encoder"></a>
+<a id="focal.providers.rerank.cross_encoder"></a>
 
-# soldier.providers.rerank.cross\_encoder
+# focal.providers.rerank.cross\_encoder
 

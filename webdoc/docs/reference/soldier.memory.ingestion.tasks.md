@@ -1,10 +1,10 @@
-<a id="soldier.memory.ingestion.tasks"></a>
+<a id="focal.memory.ingestion.tasks"></a>
 
-# soldier.memory.ingestion.tasks
+# focal.memory.ingestion.tasks
 
 Background task handlers for memory ingestion.
 
-<a id="soldier.memory.ingestion.tasks.extract_entities"></a>
+<a id="focal.memory.ingestion.tasks.extract_entities"></a>
 
 #### extract\_entities
 
@@ -25,7 +25,7 @@ Extract entities from an episode asynchronously.
 - `entity_extractor` - Entity extractor service
 - `entity_deduplicator` - Entity deduplicator service
 
-<a id="soldier.memory.ingestion.tasks.check_summarization"></a>
+<a id="focal.memory.ingestion.tasks.check_summarization"></a>
 
 #### check\_summarization
 

@@ -7,14 +7,14 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from soldier.alignment.models import Agent
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.api.dependencies import get_config_store
-from soldier.api.exceptions import SoldierAPIError
-from soldier.api.middleware.auth import get_tenant_context
-from soldier.api.models.context import TenantContext
-from soldier.api.models.errors import ErrorBody, ErrorResponse
-from soldier.api.routes.agents import router
+from focal.alignment.models import Agent
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.api.dependencies import get_config_store
+from focal.api.exceptions import FocalAPIError
+from focal.api.middleware.auth import get_tenant_context
+from focal.api.models.context import TenantContext
+from focal.api.models.errors import ErrorBody, ErrorResponse
+from focal.api.routes.agents import router
 
 
 @pytest.fixture
@@ -50,10 +50,10 @@ def app(config_store: InMemoryAgentConfigStore, tenant_context: TenantContext) -
     app.dependency_overrides[get_config_store] = lambda: config_store
     app.dependency_overrides[get_tenant_context] = lambda: tenant_context
 
-    # Register exception handler for SoldierAPIError
-    @app.exception_handler(SoldierAPIError)
-    async def soldier_api_error_handler(
-        request: Request, exc: SoldierAPIError
+    # Register exception handler for FocalAPIError
+    @app.exception_handler(FocalAPIError)
+    async def focal_api_error_handler(
+        request: Request, exc: FocalAPIError
     ) -> JSONResponse:
         error_body = ErrorBody(code=exc.error_code, message=exc.message)
         response = ErrorResponse(error=error_body)

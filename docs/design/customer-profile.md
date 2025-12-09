@@ -685,11 +685,11 @@ Features:
 ### Observability
 
 Prometheus metrics for monitoring:
-- `soldier_derivation_chain_depth` - Histogram of chain depths
-- `soldier_schema_validation_errors_total` - Validation error counts
-- `soldier_profile_field_status` - Gauge of fields by status
-- `soldier_schema_extraction_success_total` - Extraction successes
-- `soldier_profile_cache_hits_total` - Cache performance
+- `focal_derivation_chain_depth` - Histogram of chain depths
+- `focal_schema_validation_errors_total` - Validation error counts
+- `focal_profile_field_status` - Gauge of fields by status
+- `focal_schema_extraction_success_total` - Extraction successes
+- `focal_profile_cache_hits_total` - Cache performance
 
 Structured log events:
 - `profile_field_superseded` - When a field is replaced

@@ -99,7 +99,7 @@ Tracks publish operation progress.
 
 These models are already implemented in Phase 3. Listed here for reference with CRUD-relevant notes.
 
-### Rule (`soldier/alignment/models/rule.py`)
+### Rule (`focal/alignment/models/rule.py`)
 
 | Key Fields | CRUD Notes |
 |------------|------------|
@@ -119,7 +119,7 @@ These models are already implemented in Phase 3. Listed here for reference with 
 
 ---
 
-### Scenario (`soldier/alignment/models/scenario.py`)
+### Scenario (`focal/alignment/models/scenario.py`)
 
 | Key Fields | CRUD Notes |
 |------------|------------|
@@ -144,7 +144,7 @@ These models are already implemented in Phase 3. Listed here for reference with 
 
 ---
 
-### Template (`soldier/alignment/models/template.py`)
+### Template (`focal/alignment/models/template.py`)
 
 | Key Fields | CRUD Notes |
 |------------|------------|
@@ -159,7 +159,7 @@ These models are already implemented in Phase 3. Listed here for reference with 
 
 ---
 
-### Variable (`soldier/alignment/models/variable.py`)
+### Variable (`focal/alignment/models/variable.py`)
 
 | Key Fields | CRUD Notes |
 |------------|------------|

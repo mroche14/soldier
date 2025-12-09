@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.sessions"></a>
+<a id="focal.api.routes.sessions"></a>
 
-# soldier.api.routes.sessions
+# focal.api.routes.sessions
 
 Session management endpoints.
 
-<a id="soldier.api.routes.sessions.get_session"></a>
+<a id="focal.api.routes.sessions.get_session"></a>
 
 #### get\_session
 
@@ -35,7 +35,7 @@ variables, and turn count.
 
 - `SessionNotFoundError` - If session doesn't exist
 
-<a id="soldier.api.routes.sessions.delete_session"></a>
+<a id="focal.api.routes.sessions.delete_session"></a>
 
 #### delete\_session
 
@@ -65,7 +65,7 @@ Terminate a session and clean up resources.
 
 - `SessionNotFoundError` - If session doesn't exist
 
-<a id="soldier.api.routes.sessions.get_session_turns"></a>
+<a id="focal.api.routes.sessions.get_session_turns"></a>
 
 #### get\_session\_turns
 

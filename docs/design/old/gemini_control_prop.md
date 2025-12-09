@@ -7,7 +7,7 @@
 - **Scenarios are State Containers**, not just loose prompts.
 - **Enforcement is Non-Negotiable**, but optimized for speed where possible.
 
-This document serves as the decision matrix for the Soldier system architecture, reconciling proposals from Claude and Codex.
+This document serves as the decision matrix for the Focal system architecture, reconciling proposals from Claude and Codex.
 
 ---
 

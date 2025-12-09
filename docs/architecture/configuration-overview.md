@@ -1,6 +1,6 @@
 # Configuration Architecture
 
-Soldier uses a **centralized TOML-based configuration** with **Pydantic models** for validation. No hardcoded values in code—only defaults in Pydantic models.
+Focal uses a **centralized TOML-based configuration** with **Pydantic models** for validation. No hardcoded values in code—only defaults in Pydantic models.
 
 ## Philosophy
 
@@ -15,7 +15,7 @@ TOML files override defaults per environment.
 ## Folder Structure
 
 ```
-soldier/
+focal/
 ├── .env                             # Secrets (gitignored, NEVER commit)
 ├── .env.example                     # Template for .env (committed)
 │
@@ -26,7 +26,7 @@ soldier/
 │   ├── production.toml              # Production environment
 │   └── test.toml                    # Test environment
 │
-└── soldier/
+└── focal/
     └── config/                      # Configuration loading code
         ├── __init__.py
         ├── loader.py                # TOML loader + .env loading
@@ -52,7 +52,7 @@ soldier/
 ### Environment Resolution
 
 ```python
-# soldier/config/loader.py
+# focal/config/loader.py
 import os
 from pathlib import Path
 from typing import Any
@@ -63,13 +63,13 @@ from pydantic import BaseModel
 
 def get_config_path() -> Path:
     """Resolve config directory from environment or default."""
-    config_dir = os.getenv("SOLDIER_CONFIG_DIR", "config")
+    config_dir = os.getenv("FOCAL_CONFIG_DIR", "config")
     return Path(config_dir)
 
 
 def get_environment() -> str:
-    """Get current environment from SOLDIER_ENV or default to 'development'."""
-    return os.getenv("SOLDIER_ENV", "development")
+    """Get current environment from FOCAL_ENV or default to 'development'."""
+    return os.getenv("FOCAL_ENV", "development")
 
 
 def load_toml(path: Path) -> dict[str, Any]:
@@ -98,7 +98,7 @@ def load_config() -> dict[str, Any]:
     Resolution order (later overrides earlier):
     1. default.toml (base defaults)
     2. {environment}.toml (environment-specific)
-    3. Environment variables (SOLDIER_*)
+    3. Environment variables (FOCAL_*)
     """
     config_path = get_config_path()
     env = get_environment()
@@ -116,35 +116,35 @@ def load_config() -> dict[str, Any]:
 ### Settings Class
 
 ```python
-# soldier/config/settings.py
+# focal/config/settings.py
 from functools import lru_cache
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from soldier.config.loader import load_config
-from soldier.config.models.api import APIConfig
-from soldier.config.models.pipeline import PipelineConfig
-from soldier.config.models.providers import ProvidersConfig
-from soldier.config.models.storage import StorageConfig
+from focal.config.loader import load_config
+from focal.config.models.api import APIConfig
+from focal.config.models.pipeline import PipelineConfig
+from focal.config.models.providers import ProvidersConfig
+from focal.config.models.storage import StorageConfig
 
 
 class Settings(BaseSettings):
     """
-    Root configuration for Soldier.
+    Root configuration for Focal.
 
     All values have defaults defined here or in nested models.
     TOML files and environment variables override these defaults.
     """
 
     model_config = SettingsConfigDict(
-        env_prefix="SOLDIER_",
+        env_prefix="FOCAL_",
         env_nested_delimiter="__",
         extra="ignore",
     )
 
     # Application metadata
-    app_name: str = Field(default="soldier", description="Application name")
+    app_name: str = Field(default="focal", description="Application name")
     debug: bool = Field(default=False, description="Enable debug mode")
     log_level: str = Field(default="INFO", description="Logging level")
 

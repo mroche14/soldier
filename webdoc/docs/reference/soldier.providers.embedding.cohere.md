@@ -1,4 +1,4 @@
-<a id="soldier.providers.embedding.cohere"></a>
+<a id="focal.providers.embedding.cohere"></a>
 
-# soldier.providers.embedding.cohere
+# focal.providers.embedding.cohere
 

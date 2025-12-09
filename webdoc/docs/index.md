@@ -1,8 +1,8 @@
-# Soldier Documentation
+# Focal Documentation
 
 Production-grade cognitive engine for business-aligned agents. API-first, multi-tenant, fully persistent—built to enforce policy, not just prompt.
 
-## Why Soldier
+## Why Focal
 - Zero in-memory state: any pod can serve any request, everything goes through stores.
 - Explicit policy alignment: scenarios, rules, templates, and enforcement sit in the turn pipeline.
 - Pluggable by design: providers (LLM/embedding/rerank) and stores are interface-first.

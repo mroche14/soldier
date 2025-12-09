@@ -13,7 +13,7 @@ import pytest
 import pytest_asyncio
 import redis.asyncio as redis
 
-from soldier.db.pool import PostgresPool
+from focal.db.pool import PostgresPool
 
 
 def docker_available() -> bool:
@@ -68,7 +68,7 @@ def postgres_dsn() -> str:
     """Get PostgreSQL DSN for tests."""
     return os.environ.get(
         "TEST_DATABASE_URL",
-        "postgresql://soldier:soldier@localhost:5432/soldier",
+        "postgresql://focal:focal@localhost:5432/focal",
     )
 
 

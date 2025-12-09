@@ -6,25 +6,25 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.customer_schema_mask import (
+from focal.alignment.context.customer_schema_mask import (
     CustomerSchemaMask,
     CustomerSchemaMaskEntry,
 )
-from soldier.alignment.context.models import Turn
-from soldier.alignment.context.situation_sensor import SituationSensor
-from soldier.alignment.context.situation_snapshot import (
+from focal.alignment.context.models import Turn
+from focal.alignment.context.situation_sensor import SituationSensor
+from focal.alignment.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from soldier.alignment.models.glossary import GlossaryItem
-from soldier.config.models.pipeline import SituationSensorConfig
-from soldier.customer_data.models import (
+from focal.alignment.models.glossary import GlossaryItem
+from focal.config.models.pipeline import SituationSensorConfig
+from focal.customer_data.models import (
     CustomerDataField,
     CustomerDataStore,
     VariableEntry,
 )
-from soldier.customer_data.enums import VariableSource
-from soldier.providers.llm.base import LLMResponse, TokenUsage
+from focal.customer_data.enums import VariableSource
+from focal.providers.llm.base import LLMResponse, TokenUsage
 
 
 @pytest.fixture

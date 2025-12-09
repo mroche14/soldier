@@ -1,13 +1,13 @@
-<a id="soldier.observability.logging"></a>
+<a id="focal.observability.logging"></a>
 
-# soldier.observability.logging
+# focal.observability.logging
 
 Structured logging configuration using structlog.
 
 Provides JSON logging for production and console logging for development,
 with automatic context binding and PII redaction.
 
-<a id="soldier.observability.logging.PIIRedactor"></a>
+<a id="focal.observability.logging.PIIRedactor"></a>
 
 ## PIIRedactor Objects
 
@@ -21,7 +21,7 @@ Uses two-tier approach:
 1. Key-name lookup via frozenset (O(1)) for known sensitive keys
 2. Regex patterns on string values as fallback for accidental PII
 
-<a id="soldier.observability.logging.PIIRedactor.__call__"></a>
+<a id="focal.observability.logging.PIIRedactor.__call__"></a>
 
 #### \_\_call\_\_
 
@@ -32,7 +32,7 @@ def __call__(_logger: WrappedLogger, _method_name: str,
 
 Redact PII from event dictionary.
 
-<a id="soldier.observability.logging.setup_logging"></a>
+<a id="focal.observability.logging.setup_logging"></a>
 
 #### setup\_logging
 
@@ -52,7 +52,7 @@ Configure structured logging.
 - `redact_pii` - Whether to redact PII from logs
 - `include_trace_id` - Whether to include trace_id in logs
 
-<a id="soldier.observability.logging.get_logger"></a>
+<a id="focal.observability.logging.get_logger"></a>
 
 #### get\_logger
 

@@ -14,7 +14,7 @@ This guide shows how to use the core abstractions implemented in Phases 2-5.
 ### Logging
 
 ```python
-from soldier.observability.logging import setup_logging, get_logger
+from focal.observability.logging import setup_logging, get_logger
 from structlog.contextvars import bind_contextvars
 
 # Configure logging (typically at app startup)
@@ -44,7 +44,7 @@ logger.warning("fallback_triggered", reason="low_confidence")
 ### Metrics
 
 ```python
-from soldier.observability.metrics import (
+from focal.observability.metrics import (
     REQUEST_COUNT,
     REQUEST_LATENCY,
     LLM_TOKENS,
@@ -79,11 +79,11 @@ LLM_TOKENS.labels(
 ### Tracing
 
 ```python
-from soldier.observability.tracing import setup_tracing, span, add_span_attributes
+from focal.observability.tracing import setup_tracing, span, add_span_attributes
 
 # Configure tracing (typically at app startup)
 setup_tracing(
-    service_name="soldier",
+    service_name="focal",
     otlp_endpoint="http://localhost:4317",  # None for console
     sample_rate=1.0,
 )
@@ -111,9 +111,9 @@ with span("process_turn", attributes={"turn_id": "turn-123"}):
 
 ```python
 from uuid import uuid4
-from soldier.alignment.models import Rule, Scope, MatchedRule
-from soldier.memory.models import Episode
-from soldier.conversation.models import Session, Channel, SessionStatus
+from focal.alignment.models import Rule, Scope, MatchedRule
+from focal.memory.models import Episode
+from focal.conversation.models import Session, Channel, SessionStatus
 
 # Create a Rule
 rule = Rule(
@@ -181,8 +181,8 @@ except ValidationError as e:
 ### ConfigStore
 
 ```python
-from soldier.alignment.stores import InMemoryConfigStore
-from soldier.alignment.models import Rule, Scenario, Template
+from focal.alignment.stores import InMemoryConfigStore
+from focal.alignment.models import Rule, Scenario, Template
 
 # Create store
 config_store = InMemoryConfigStore()
@@ -214,8 +214,8 @@ for rule, score in similar_rules:
 ### MemoryStore
 
 ```python
-from soldier.memory.stores import InMemoryMemoryStore
-from soldier.memory.models import Episode, Entity, Relationship
+from focal.memory.stores import InMemoryMemoryStore
+from focal.memory.models import Episode, Entity, Relationship
 
 # Create store
 memory_store = InMemoryMemoryStore()
@@ -264,8 +264,8 @@ related = await memory_store.traverse_from_entities(
 ### SessionStore
 
 ```python
-from soldier.conversation.stores import InMemorySessionStore
-from soldier.conversation.models import Session, Channel
+from focal.conversation.stores import InMemorySessionStore
+from focal.conversation.models import Session, Channel
 
 # Create store
 session_store = InMemorySessionStore()
@@ -304,8 +304,8 @@ sessions = await session_store.list_by_agent(
 ### AuditStore
 
 ```python
-from soldier.audit.stores import InMemoryAuditStore
-from soldier.audit.models import TurnRecord, AuditEvent
+from focal.audit.stores import InMemoryAuditStore
+from focal.audit.models import TurnRecord, AuditEvent
 
 # Create store
 audit_store = InMemoryAuditStore()
@@ -344,8 +344,8 @@ await audit_store.save_event(event)
 ### ProfileStore
 
 ```python
-from soldier.profile.stores import InMemoryProfileStore
-from soldier.profile.models import CustomerProfile, ProfileField, ProfileFieldSource
+from focal.profile.stores import InMemoryProfileStore
+from focal.profile.models import CustomerProfile, ProfileField, ProfileFieldSource
 
 # Create store
 profile_store = InMemoryProfileStore()
@@ -368,7 +368,7 @@ field = ProfileField(
 await profile_store.update_field(tenant_id, profile.id, field)
 
 # Link additional channel
-from soldier.profile.models import ChannelIdentity
+from focal.profile.models import ChannelIdentity
 identity = ChannelIdentity(
     channel=Channel.WHATSAPP,
     channel_user_id="+1234567890",
@@ -384,8 +384,8 @@ await profile_store.link_channel(tenant_id, profile.id, identity)
 ### LLM Provider
 
 ```python
-from soldier.providers.llm import MockLLMProvider
-from soldier.providers.factory import create_llm_provider
+from focal.providers.llm import MockLLMProvider
+from focal.providers.factory import create_llm_provider
 
 # Create mock provider directly
 llm = MockLLMProvider(
@@ -393,7 +393,7 @@ llm = MockLLMProvider(
 )
 
 # Or via factory
-from soldier.config.models import LLMProviderConfig
+from focal.config.models import LLMProviderConfig
 config = LLMProviderConfig(provider="mock", default_response="Test response")
 llm = create_llm_provider(config)
 
@@ -424,7 +424,7 @@ print(f"Intent: {intent.primary} ({intent.confidence:.2f})")
 ### Embedding Provider
 
 ```python
-from soldier.providers.embedding import MockEmbeddingProvider
+from focal.providers.embedding import MockEmbeddingProvider
 
 # Create provider
 embedding = MockEmbeddingProvider(dimensions=384)
@@ -442,7 +442,7 @@ print(f"Embedded {len(vectors)} texts")
 ### Rerank Provider
 
 ```python
-from soldier.providers.rerank import MockRerankProvider
+from focal.providers.rerank import MockRerankProvider
 
 # Create provider
 reranker = MockRerankProvider(score_strategy="position")

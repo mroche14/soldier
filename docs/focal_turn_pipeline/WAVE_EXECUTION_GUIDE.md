@@ -47,7 +47,7 @@ Every agent MUST:
 ```bash
 # Example exploration before implementing
 mgrep "feature you're implementing"
-grep -r "SimilarClassName" soldier/
+grep -r "SimilarClassName" focal/
 ```
 
 **The goal is NO duplicate/parallel implementations.** If something similar exists, extend it.
@@ -125,7 +125,7 @@ As you complete EACH item:
 ```bash
 uv run pytest tests/unit/alignment/models/ -v
 uv run pytest tests/unit/alignment/loaders/ -v
-uv run pytest --cov=soldier/alignment --cov-report=term-missing
+uv run pytest --cov=focal/alignment --cov-report=term-missing
 ```
 
 ## Report Format
@@ -163,10 +163,10 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 5. `docs/focal_turn_pipeline/implementation/phase-02-situational-sensor-checklist.md` - Your checklist
 
 ## Prerequisites Completed (Phase 1)
-- TurnContext model exists at `soldier/alignment/models/turn_context.py`
+- TurnContext model exists at `focal/alignment/models/turn_context.py`
 - CustomerDataField (renamed from ProfileFieldDefinition) has `scope`, `persist`
 - VariableEntry (renamed from ProfileField) has `history`
-- GlossaryItem model exists at `soldier/alignment/models/glossary.py`
+- GlossaryItem model exists at `focal/alignment/models/glossary.py`
 - ConfigStore has glossary and schema methods
 
 ## Your Assignment
@@ -185,14 +185,14 @@ Execute ALL items in the Phase 2 checklist.
 ## Important Notes
 - CustomerDataField, VariableEntry, CustomerDataStore already exist (renamed in P1)
 - Do NOT create duplicate models - use the renamed Profile models
-- Template path: `soldier/alignment/context/prompts/situational_sensor.jinja2`
-- Config model: SituationalSensorConfig in `soldier/config/models/pipeline.py`
+- Template path: `focal/alignment/context/prompts/situational_sensor.jinja2`
+- Config model: SituationalSensorConfig in `focal/config/models/pipeline.py`
 
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/context/ -v
 uv run pytest tests/unit/alignment/models/test_situational_snapshot.py -v
-uv run pytest --cov=soldier/alignment/context --cov-report=term-missing
+uv run pytest --cov=focal/alignment/context --cov-report=term-missing
 ```
 
 ## Report Format
@@ -241,7 +241,7 @@ Execute ALL items in the Phase 4 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/retrieval/ -v
-uv run pytest --cov=soldier/alignment/retrieval --cov-report=term-missing
+uv run pytest --cov=focal/alignment/retrieval --cov-report=term-missing
 ```
 
 ## Report Format
@@ -294,7 +294,7 @@ Execute ALL items in the Phase 3 checklist.
 6. Unit tests with 85%+ coverage
 
 ## Important Notes
-- Use existing validation in `soldier/profile/validation.py` if available
+- Use existing validation in `focal/profile/validation.py` if available
 - candidate_variables comes from SituationalSnapshot (P2 output)
 - Only variables with persist=True should be saved to database
 - History should track: {value, timestamp, source, confidence}
@@ -302,7 +302,7 @@ Execute ALL items in the Phase 3 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/customer/ -v
-uv run pytest --cov=soldier/alignment/customer --cov-report=term-missing
+uv run pytest --cov=focal/alignment/customer --cov-report=term-missing
 ```
 
 ## Report Format
@@ -350,7 +350,7 @@ Execute ALL items in the Phase 5 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/filtering/ -v
-uv run pytest --cov=soldier/alignment/filtering --cov-report=term-missing
+uv run pytest --cov=focal/alignment/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -410,7 +410,7 @@ Execute ALL items in the Phase 6 checklist.
 ```bash
 uv run pytest tests/unit/alignment/filtering/test_scenario_filter.py -v
 uv run pytest tests/unit/alignment/models/test_scenario_*.py -v
-uv run pytest --cov=soldier/alignment/filtering --cov-report=term-missing
+uv run pytest --cov=focal/alignment/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -468,7 +468,7 @@ Execute ALL items in the Phase 7 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/execution/ -v
-uv run pytest --cov=soldier/alignment/execution --cov-report=term-missing
+uv run pytest --cov=focal/alignment/execution --cov-report=term-missing
 ```
 
 ## Report Format
@@ -512,13 +512,13 @@ Execute ALL items in the Phase 8 checklist.
 
 ## Important Notes
 - Phase 8 is currently SKIPPED in pipeline - this is the gap to fill
-- ResponsePlan goes to `soldier/alignment/planning/models.py`
-- ResponsePlanner goes to `soldier/alignment/planning/planner.py`
+- ResponsePlan goes to `focal/alignment/planning/models.py`
+- ResponsePlanner goes to `focal/alignment/planning/planner.py`
 
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/planning/ -v
-uv run pytest --cov=soldier/alignment/planning --cov-report=term-missing
+uv run pytest --cov=focal/alignment/planning --cov-report=term-missing
 ```
 
 ## Report Format
@@ -587,7 +587,7 @@ Execute ALL items in Phases 9, 10, and 11 checklists.
 uv run pytest tests/unit/alignment/generation/ -v
 uv run pytest tests/unit/alignment/enforcement/ -v
 uv run pytest tests/unit/alignment/persistence/ -v
-uv run pytest --cov=soldier/alignment --cov-report=term-missing
+uv run pytest --cov=focal/alignment --cov-report=term-missing
 ```
 
 ## Report Format
@@ -617,14 +617,14 @@ Use the individual phase prompts, running P9 → P10 → P11 in sequence.
 
 ```bash
 # 1. Ruff linting
-uv run ruff check soldier/alignment/
-uv run ruff check --fix soldier/alignment/  # Auto-fix issues
+uv run ruff check focal/alignment/
+uv run ruff check --fix focal/alignment/  # Auto-fix issues
 
 # 2. Ruff formatting
-uv run ruff format soldier/alignment/
+uv run ruff format focal/alignment/
 
 # 3. Mypy type checking
-uv run mypy soldier/alignment/ --ignore-missing-imports
+uv run mypy focal/alignment/ --ignore-missing-imports
 
 # 4. Tests
 uv run pytest tests/unit/alignment/ -v --tb=short
@@ -634,9 +634,9 @@ uv run pytest tests/unit/alignment/ -v --tb=short
 
 ```bash
 echo "=== WAVE QUALITY CHECK ===" && \
-uv run ruff check soldier/alignment/ && \
-uv run ruff format --check soldier/alignment/ && \
-uv run mypy soldier/alignment/ --ignore-missing-imports && \
+uv run ruff check focal/alignment/ && \
+uv run ruff format --check focal/alignment/ && \
+uv run mypy focal/alignment/ --ignore-missing-imports && \
 uv run pytest tests/unit/alignment/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```
@@ -662,7 +662,7 @@ uv run pytest tests/e2e/ -v
 ### Coverage Check
 
 ```bash
-uv run pytest --cov=soldier/alignment --cov-report=html
+uv run pytest --cov=focal/alignment --cov-report=html
 # Open htmlcov/index.html to verify 85%+ coverage
 ```
 
@@ -670,10 +670,10 @@ uv run pytest --cov=soldier/alignment --cov-report=html
 
 ```bash
 # Full quality check on entire alignment module
-uv run ruff check soldier/alignment/ && \
-uv run ruff format --check soldier/alignment/ && \
-uv run mypy soldier/alignment/ --ignore-missing-imports && \
-uv run pytest tests/unit/alignment/ --cov=soldier/alignment --cov-fail-under=85
+uv run ruff check focal/alignment/ && \
+uv run ruff format --check focal/alignment/ && \
+uv run mypy focal/alignment/ --ignore-missing-imports && \
+uv run pytest tests/unit/alignment/ --cov=focal/alignment --cov-fail-under=85
 ```
 
 ### Checklist Audit

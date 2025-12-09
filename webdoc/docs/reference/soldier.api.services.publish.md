@@ -1,10 +1,10 @@
-<a id="soldier.api.services.publish"></a>
+<a id="focal.api.services.publish"></a>
 
-# soldier.api.services.publish
+# focal.api.services.publish
 
 Publish job orchestration service.
 
-<a id="soldier.api.services.publish.PublishService"></a>
+<a id="focal.api.services.publish.PublishService"></a>
 
 ## PublishService Objects
 
@@ -17,7 +17,7 @@ Service for orchestrating publish operations.
 Manages the lifecycle of publish jobs and executes
 the multi-stage publish process.
 
-<a id="soldier.api.services.publish.PublishService.__init__"></a>
+<a id="focal.api.services.publish.PublishService.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -31,7 +31,7 @@ Initialize publish service.
 
 - `config_store` - Store for configuration data
 
-<a id="soldier.api.services.publish.PublishService.get_publish_status"></a>
+<a id="focal.api.services.publish.PublishService.get_publish_status"></a>
 
 #### get\_publish\_status
 
@@ -46,7 +46,7 @@ Get current publish status for an agent.
 
   Dict with current_version, draft_version, has_unpublished_changes, etc.
 
-<a id="soldier.api.services.publish.PublishService.create_publish_job"></a>
+<a id="focal.api.services.publish.PublishService.create_publish_job"></a>
 
 #### create\_publish\_job
 
@@ -69,7 +69,7 @@ Create a new publish job.
 
   Created publish job
 
-<a id="soldier.api.services.publish.PublishService.get_job"></a>
+<a id="focal.api.services.publish.PublishService.get_job"></a>
 
 #### get\_job
 
@@ -89,7 +89,7 @@ Get a publish job by ID.
 
   Publish job if found and owned by tenant
 
-<a id="soldier.api.services.publish.PublishService.execute_publish"></a>
+<a id="focal.api.services.publish.PublishService.execute_publish"></a>
 
 #### execute\_publish
 
@@ -112,7 +112,7 @@ error handling and rollback.
 
   Updated job with final status
 
-<a id="soldier.api.services.publish.PublishService.rollback_to_version"></a>
+<a id="focal.api.services.publish.PublishService.rollback_to_version"></a>
 
 #### rollback\_to\_version
 

@@ -24,14 +24,14 @@ from uuid import uuid4
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from soldier.vector.stores.base import EntityType, VectorDocument, VectorMetadata
-from soldier.vector.stores.inmemory import InMemoryVectorStore
-from soldier.vector.stores.qdrant import QdrantVectorStore
+from focal.vector.stores.base import EntityType, VectorDocument, VectorMetadata
+from focal.vector.stores.inmemory import InMemoryVectorStore
+from focal.vector.stores.qdrant import QdrantVectorStore
 
 
 async def get_jina_embedding(text: str) -> list[float]:
     """Get embedding from Jina API."""
-    from soldier.providers.embedding.jina import JinaEmbeddingProvider
+    from focal.providers.embedding.jina import JinaEmbeddingProvider
 
     api_key = os.environ.get("JINA_API_KEY")
     if not api_key:
@@ -157,7 +157,7 @@ async def test_qdrant(embedding: list[float]) -> bool:
     store = QdrantVectorStore(
         url=url,
         api_key=api_key,
-        collection_prefix="test_soldier",
+        collection_prefix="test_focal",
         timeout=30.0,
     )
     return await test_store("QdrantVectorStore", store, embedding)
@@ -165,10 +165,10 @@ async def test_qdrant(embedding: list[float]) -> bool:
 
 async def test_pgvector(embedding: list[float]) -> bool:
     """Test PgVectorStore."""
-    from soldier.db.pool import PostgresPool
-    from soldier.vector.stores.pgvector import PgVectorStore
+    from focal.db.pool import PostgresPool
+    from focal.vector.stores.pgvector import PgVectorStore
 
-    dsn = os.environ.get("DATABASE_URL") or os.environ.get("SOLDIER_DATABASE_URL")
+    dsn = os.environ.get("DATABASE_URL") or os.environ.get("FOCAL_DATABASE_URL")
 
     if not dsn:
         print("\n⚠️  DATABASE_URL not set, skipping pgvector test")
@@ -177,12 +177,12 @@ async def test_pgvector(embedding: list[float]) -> bool:
     pool = PostgresPool(dsn=dsn)
     try:
         await pool.connect()
-        store = PgVectorStore(pool=pool, table_prefix="test_soldier")
+        store = PgVectorStore(pool=pool, table_prefix="test_focal")
         result = await test_store("PgVectorStore", store, embedding)
 
         # Cleanup: drop the test table
         async with pool.acquire() as conn:
-            await conn.execute("DROP TABLE IF EXISTS test_soldier_test_collection_vectors")
+            await conn.execute("DROP TABLE IF EXISTS test_focal_test_collection_vectors")
 
         return result
     finally:

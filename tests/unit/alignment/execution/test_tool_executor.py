@@ -4,10 +4,10 @@ import asyncio
 
 import pytest
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.execution.tool_executor import ToolExecutor
-from soldier.alignment.filtering.models import MatchedRule
-from soldier.alignment.models import Rule
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.execution.tool_executor import ToolExecutor
+from focal.alignment.filtering.models import MatchedRule
+from focal.alignment.models import Rule
 from tests.factories.alignment import RuleFactory
 
 

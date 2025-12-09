@@ -1,6 +1,6 @@
 # Scenario Update Methods
 
-This document describes how Soldier handles scenario updates while customers have active sessions. The core challenge: **WhatsApp and other long-lived sessions can span days or weeks, and scenario changes may be urgent.**
+This document describes how Focal handles scenario updates while customers have active sessions. The core challenge: **WhatsApp and other long-lived sessions can span days or weeks, and scenario changes may be urgent.**
 
 ## Problem Statement
 

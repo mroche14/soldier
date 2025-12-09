@@ -1,10 +1,10 @@
-<a id="soldier.providers.rerank.base"></a>
+<a id="focal.providers.rerank.base"></a>
 
-# soldier.providers.rerank.base
+# focal.providers.rerank.base
 
 RerankProvider abstract interface.
 
-<a id="soldier.providers.rerank.base.RerankResult"></a>
+<a id="focal.providers.rerank.base.RerankResult"></a>
 
 ## RerankResult Objects
 
@@ -14,7 +14,7 @@ class RerankResult(BaseModel)
 
 A single reranked result.
 
-<a id="soldier.providers.rerank.base.RerankResponse"></a>
+<a id="focal.providers.rerank.base.RerankResponse"></a>
 
 ## RerankResponse Objects
 
@@ -24,7 +24,7 @@ class RerankResponse(BaseModel)
 
 Response from a rerank provider.
 
-<a id="soldier.providers.rerank.base.RerankProvider"></a>
+<a id="focal.providers.rerank.base.RerankProvider"></a>
 
 ## RerankProvider Objects
 
@@ -37,7 +37,7 @@ Abstract interface for reranking.
 Provides unified access to various reranking providers
 (Cohere, Voyage, cross-encoders, etc.).
 
-<a id="soldier.providers.rerank.base.RerankProvider.provider_name"></a>
+<a id="focal.providers.rerank.base.RerankProvider.provider_name"></a>
 
 #### provider\_name
 
@@ -49,7 +49,7 @@ def provider_name() -> str
 
 Return the provider name.
 
-<a id="soldier.providers.rerank.base.RerankProvider.rerank"></a>
+<a id="focal.providers.rerank.base.RerankProvider.rerank"></a>
 
 #### rerank
 

@@ -3,13 +3,13 @@
 import pytest
 from uuid import uuid4
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.models import Rule, Scope
-from soldier.alignment.retrieval.rule_retriever import RuleRetriever
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.config.models.pipeline import HybridRetrievalConfig
-from soldier.config.models.selection import SelectionConfig
-from soldier.providers.embedding import EmbeddingProvider
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.models import Rule, Scope
+from focal.alignment.retrieval.rule_retriever import RuleRetriever
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.config.models.pipeline import HybridRetrievalConfig
+from focal.config.models.selection import SelectionConfig
+from focal.providers.embedding import EmbeddingProvider
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

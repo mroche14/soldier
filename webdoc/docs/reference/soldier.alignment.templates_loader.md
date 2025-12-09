@@ -1,10 +1,10 @@
-<a id="soldier.alignment.templates_loader"></a>
+<a id="focal.alignment.templates_loader"></a>
 
-# soldier.alignment.templates\_loader
+# focal.alignment.templates\_loader
 
 Helpers for loading templates for matched rules.
 
-<a id="soldier.alignment.templates_loader.load_templates_for_rules"></a>
+<a id="focal.alignment.templates_loader.load_templates_for_rules"></a>
 
 #### load\_templates\_for\_rules
 

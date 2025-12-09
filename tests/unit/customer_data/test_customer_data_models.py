@@ -3,8 +3,8 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from soldier.conversation.models import Channel
-from soldier.customer_data import (
+from focal.conversation.models import Channel
+from focal.customer_data import (
     ChannelIdentity,
     Consent,
     CustomerDataStore,
@@ -13,14 +13,14 @@ from soldier.customer_data import (
     VariableSource,
     VerificationLevel,
 )
-from soldier.customer_data.enums import (
+from focal.customer_data.enums import (
     FallbackAction,
     ItemStatus,
     RequiredLevel,
     SourceType,
     ValidationMode,
 )
-from soldier.customer_data.models import (
+from focal.customer_data.models import (
     CustomerDataField,
     ScenarioFieldRequirement,
 )

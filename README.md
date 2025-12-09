@@ -1,10 +1,10 @@
-# Soldier
+# Focal
 
-![Soldier](docs/pic.png)
+![Focal](docs/pic.png)
 
 **Production-grade cognitive engine for business-aligned AI support agents**
 
-Soldier is purpose-built for creating AI support agents that follow business rules, not just prompts. It's an API-first, multi-tenant, fully persistent architecture where agent behavior is defined through explicit business policies—scenarios, rules, and enforcement—ensuring your AI agents consistently align with company guidelines, compliance requirements, and support workflows. No more hoping the LLM follows instructions; Soldier enforces business alignment at runtime.
+Focal is purpose-built for creating AI support agents that follow business rules, not just prompts. It's an API-first, multi-tenant, fully persistent architecture where agent behavior is defined through explicit business policies—scenarios, rules, and enforcement—ensuring your AI agents consistently align with company guidelines, compliance requirements, and support workflows. No more hoping the LLM follows instructions; Focal enforces business alignment at runtime.
 
 ---
 
@@ -43,7 +43,7 @@ Building production-grade conversational AI agents is hard. Current frameworks f
 
 ### The Solution
 
-Soldier shifts from *hoping* the LLM follows instructions to *explicitly enforcing* them at runtime:
+Focal shifts from *hoping* the LLM follows instructions to *explicitly enforcing* them at runtime:
 
 | Principle | Implementation |
 |-----------|----------------|
@@ -145,7 +145,7 @@ Post-generation validation:
 ### Project Structure
 
 ```
-soldier/
+focal/
 ├── alignment/          # The "brain" - turn pipeline processing
 │   ├── context/        # Context extraction from user messages
 │   ├── retrieval/      # Rule, scenario, and memory retrieval
@@ -188,8 +188,8 @@ soldier/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/soldier.git
-cd soldier
+git clone https://github.com/your-org/focal.git
+cd focal
 
 # Install dependencies
 uv sync
@@ -198,7 +198,7 @@ uv sync
 uv sync --dev
 
 # Verify installation
-uv run python -c "from soldier.config import get_settings; print('OK')"
+uv run python -c "from focal.config import get_settings; print('OK')"
 ```
 
 ### Run Tests
@@ -216,7 +216,7 @@ docker-compose up -d
 # Run the application
 make run
 # or
-uv run python -m soldier.api
+uv run python -m focal.api
 ```
 
 ---
@@ -237,14 +237,14 @@ uv sync --dev
 
 ```bash
 # Build the image
-docker build -t soldier .
+docker build -t focal .
 
 # Run with environment variables
-docker run -e SOLDIER_ENV=production \
+docker run -e FOCAL_ENV=production \
            -e ANTHROPIC_API_KEY=your-key \
            -e DATABASE_URL=postgresql://... \
            -p 8000:8000 \
-           soldier
+           focal
 ```
 
 ### From Source
@@ -257,13 +257,13 @@ pip install -e .
 
 ## Configuration
 
-Soldier uses TOML configuration files with Pydantic validation. Configuration is loaded in layers:
+Focal uses TOML configuration files with Pydantic validation. Configuration is loaded in layers:
 
 ```
 1. Pydantic model defaults (code)
 2. config/default.toml (base configuration)
-3. config/{SOLDIER_ENV}.toml (environment-specific)
-4. Environment variables (SOLDIER_* prefix)
+3. config/{FOCAL_ENV}.toml (environment-specific)
+4. Environment variables (FOCAL_* prefix)
 ```
 
 ### Configuration Files
@@ -280,23 +280,23 @@ config/
 ### Environment Selection
 
 ```bash
-export SOLDIER_ENV=development  # or production, staging, test
+export FOCAL_ENV=development  # or production, staging, test
 ```
 
 ### Environment Variable Overrides
 
-Override any setting with `SOLDIER_` prefix using double underscores for nesting:
+Override any setting with `FOCAL_` prefix using double underscores for nesting:
 
 ```bash
 # API settings
-export SOLDIER_API__PORT=9000
-export SOLDIER_API__RATE_LIMIT__REQUESTS_PER_MINUTE=100
+export FOCAL_API__PORT=9000
+export FOCAL_API__RATE_LIMIT__REQUESTS_PER_MINUTE=100
 
 # Pipeline settings
-export SOLDIER_PIPELINE__GENERATION__LLM_PROVIDER=anthropic
+export FOCAL_PIPELINE__GENERATION__LLM_PROVIDER=anthropic
 
 # Storage settings
-export SOLDIER_STORAGE__SESSION__BACKEND=redis
+export FOCAL_STORAGE__SESSION__BACKEND=redis
 ```
 
 ### Secrets Management
@@ -312,7 +312,7 @@ export SOLDIER_STORAGE__SESSION__BACKEND=redis
 ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
 COHERE_API_KEY=...
-DATABASE_URL=postgresql://soldier:password@localhost:5432/soldier
+DATABASE_URL=postgresql://focal:password@localhost:5432/focal
 REDIS_URL=redis://localhost:6379/0
 ```
 
@@ -420,7 +420,7 @@ Extracted:
 
 All data is bi-temporal:
 - `valid_from` / `valid_to`: When the fact was true
-- `recorded_at`: When Soldier learned it
+- `recorded_at`: When Focal learned it
 
 ---
 
@@ -429,7 +429,7 @@ All data is bi-temporal:
 ### Base URL
 
 ```
-https://soldier.example.com/v1
+https://focal.example.com/v1
 ```
 
 ### Authentication
@@ -463,7 +463,7 @@ JWT Claims:
 ### Chat Request
 
 ```bash
-curl -X POST https://soldier.example.com/v1/chat \
+curl -X POST https://focal.example.com/v1/chat \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -612,7 +612,7 @@ class AlignmentEngine:
 uv run pytest
 
 # With coverage
-uv run pytest --cov=soldier --cov-report=html
+uv run pytest --cov=focal --cov-report=html
 
 # Specific file
 uv run pytest tests/unit/test_rules.py -v
@@ -654,7 +654,7 @@ def llm_provider():
 
 ### Deployment Modes
 
-**Standalone Mode** (Default): Soldier is the source of truth for configuration.
+**Standalone Mode** (Default): Focal is the source of truth for configuration.
 
 ```toml
 [deployment]
@@ -665,27 +665,27 @@ mode = "standalone"
 
 ```bash
 # Required
-SOLDIER_ENV=production
+FOCAL_ENV=production
 ANTHROPIC_API_KEY=sk-ant-...
 DATABASE_URL=postgresql://...
 REDIS_URL=redis://...
 
 # Optional
 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-SOLDIER_API__PORT=8000
-SOLDIER_API__WORKERS=4
+FOCAL_API__PORT=8000
+FOCAL_API__WORKERS=4
 ```
 
 ### Docker Compose
 
 ```yaml
 services:
-  soldier:
+  focal:
     build: .
     environment:
-      - SOLDIER_ENV=production
+      - FOCAL_ENV=production
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - DATABASE_URL=postgresql://soldier:password@postgres:5432/soldier
+      - DATABASE_URL=postgresql://focal:password@postgres:5432/focal
       - REDIS_URL=redis://redis:6379/0
     ports:
       - "8000:8000"
@@ -696,9 +696,9 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: soldier
+      POSTGRES_USER: focal
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: soldier
+      POSTGRES_DB: focal
 
   redis:
     image: redis:7-alpine
@@ -749,13 +749,13 @@ GET /metrics        # Prometheus metrics
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `soldier_requests_total` | Counter | Total requests by endpoint/status |
-| `soldier_request_duration_seconds` | Histogram | Request latency |
-| `soldier_pipeline_step_duration_seconds` | Histogram | Per-step latency |
-| `soldier_llm_calls_total` | Counter | LLM provider calls |
-| `soldier_llm_tokens_total` | Counter | Token consumption |
-| `soldier_rules_matched` | Histogram | Rules matched per turn |
-| `soldier_errors_total` | Counter | Error counts |
+| `focal_requests_total` | Counter | Total requests by endpoint/status |
+| `focal_request_duration_seconds` | Histogram | Request latency |
+| `focal_pipeline_step_duration_seconds` | Histogram | Per-step latency |
+| `focal_llm_calls_total` | Counter | LLM provider calls |
+| `focal_llm_tokens_total` | Counter | Token consumption |
+| `focal_rules_matched` | Histogram | Rules matched per turn |
+| `focal_errors_total` | Counter | Error counts |
 
 ### Trace Structure
 

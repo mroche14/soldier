@@ -1,13 +1,13 @@
-<a id="soldier.alignment.context.extractor"></a>
+<a id="focal.alignment.context.extractor"></a>
 
-# soldier.alignment.context.extractor
+# focal.alignment.context.extractor
 
 Context extraction for alignment pipeline.
 
 Extracts structured context from user messages including intent,
 entities, sentiment, and scenario navigation signals.
 
-<a id="soldier.alignment.context.extractor.ContextExtractor"></a>
+<a id="focal.alignment.context.extractor.ContextExtractor"></a>
 
 ## ContextExtractor Objects
 
@@ -22,7 +22,7 @@ Supports three extraction modes:
 - embedding_only: Vector embedding only (fast, no semantic analysis)
 - disabled: Pass-through (fastest, message only)
 
-<a id="soldier.alignment.context.extractor.ContextExtractor.__init__"></a>
+<a id="focal.alignment.context.extractor.ContextExtractor.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -40,7 +40,7 @@ Initialize the context extractor.
 - `embedding_provider` - Provider for generating embeddings
 - `prompt_template` - Optional custom prompt template
 
-<a id="soldier.alignment.context.extractor.ContextExtractor.extract"></a>
+<a id="focal.alignment.context.extractor.ContextExtractor.extract"></a>
 
 #### extract
 

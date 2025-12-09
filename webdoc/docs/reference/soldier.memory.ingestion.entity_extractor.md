@@ -1,10 +1,10 @@
-<a id="soldier.memory.ingestion.entity_extractor"></a>
+<a id="focal.memory.ingestion.entity_extractor"></a>
 
-# soldier.memory.ingestion.entity\_extractor
+# focal.memory.ingestion.entity\_extractor
 
 Entity and relationship extraction from episodes.
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityExtractor"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityExtractor"></a>
 
 ## EntityExtractor Objects
 
@@ -14,7 +14,7 @@ class EntityExtractor()
 
 Extract entities and relationships from episode content using LLM.
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityExtractor.__init__"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityExtractor.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -29,7 +29,7 @@ Initialize entity extractor.
 - `llm_provider` - LLM provider for extraction
 - `config` - Extraction configuration
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityExtractor.extract"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityExtractor.extract"></a>
 
 #### extract
 
@@ -59,7 +59,7 @@ Uses LLMProvider with structured output to identify:
 
 - `ExtractionError` - If LLM call fails or returns invalid structure
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityExtractor.extract_batch"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityExtractor.extract_batch"></a>
 
 #### extract\_batch
 
@@ -79,7 +79,7 @@ Extract from multiple episodes in parallel.
 
   List of EntityExtractionResult in same order as input
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityDeduplicator"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityDeduplicator"></a>
 
 ## EntityDeduplicator Objects
 
@@ -89,7 +89,7 @@ class EntityDeduplicator()
 
 Find and merge duplicate entities using multi-stage matching.
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityDeduplicator.__init__"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityDeduplicator.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -104,7 +104,7 @@ Initialize entity deduplicator.
 - `memory_store` - Store for querying existing entities
 - `config` - Deduplication configuration
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityDeduplicator.find_duplicate"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityDeduplicator.find_duplicate"></a>
 
 #### find\_duplicate
 
@@ -130,7 +130,7 @@ Stages (in order, stops at first match):
 
 - `Entity` - Existing duplicate if found, None otherwise
 
-<a id="soldier.memory.ingestion.entity_extractor.EntityDeduplicator.merge_entities"></a>
+<a id="focal.memory.ingestion.entity_extractor.EntityDeduplicator.merge_entities"></a>
 
 #### merge\_entities
 
@@ -153,7 +153,7 @@ preserves temporal timestamps.
 
 - `Entity` - Merged entity (NOT automatically persisted)
 
-<a id="soldier.memory.ingestion.entity_extractor.update_relationship_temporal"></a>
+<a id="focal.memory.ingestion.entity_extractor.update_relationship_temporal"></a>
 
 #### update\_relationship\_temporal
 

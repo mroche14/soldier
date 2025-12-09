@@ -1,10 +1,10 @@
-<a id="soldier.api.models.session"></a>
+<a id="focal.api.models.session"></a>
 
-# soldier.api.models.session
+# focal.api.models.session
 
 Session response models.
 
-<a id="soldier.api.models.session.SessionResponse"></a>
+<a id="focal.api.models.session.SessionResponse"></a>
 
 ## SessionResponse Objects
 
@@ -14,7 +14,7 @@ class SessionResponse(BaseModel)
 
 Session state response for GET /v1/sessions/{id}.
 
-<a id="soldier.api.models.session.TurnResponse"></a>
+<a id="focal.api.models.session.TurnResponse"></a>
 
 ## TurnResponse Objects
 
@@ -24,7 +24,7 @@ class TurnResponse(BaseModel)
 
 Single turn in conversation history.
 
-<a id="soldier.api.models.session.TurnListResponse"></a>
+<a id="focal.api.models.session.TurnListResponse"></a>
 
 ## TurnListResponse Objects
 

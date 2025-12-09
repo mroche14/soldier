@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.memory.models import Entity, Episode, Relationship
-from soldier.memory.stores import InMemoryMemoryStore
+from focal.memory.models import Entity, Episode, Relationship
+from focal.memory.stores import InMemoryMemoryStore
 
 
 @pytest.fixture

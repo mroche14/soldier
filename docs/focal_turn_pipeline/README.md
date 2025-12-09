@@ -1,8 +1,8 @@
-# Soldier Turn Pipeline Specification
+# Focal Turn Pipeline Specification
 
 ## 1. Overview
 
-This document specifies the **turn pipeline** for Soldier – a production-grade cognitive engine for conversational AI. The pipeline processes a single user message through 11 phases, transforming it into a validated, policy-compliant response.
+This document specifies the **turn pipeline** for Focal – a production-grade cognitive engine for conversational AI. The pipeline processes a single user message through 11 phases, transforming it into a validated, policy-compliant response.
 
 ### 1.1 Design Principles
 
@@ -18,7 +18,7 @@ This document specifies the **turn pipeline** for Soldier – a production-grade
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              SOLDIER TURN PIPELINE                                   │
+│                              FOCAL TURN PIPELINE                                   │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                     │
 │  ┌─────────────┐                                                                    │

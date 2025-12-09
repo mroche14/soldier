@@ -6,11 +6,11 @@ from uuid import uuid4
 
 import pytest
 
-from soldier.alignment.context.situation_snapshot import SituationSnapshot
-from soldier.alignment.filtering.models import RuleApplicability, RuleFilterResult
-from soldier.alignment.filtering.rule_filter import RuleFilter
-from soldier.alignment.models import Rule, Scope
-from soldier.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from focal.alignment.context.situation_snapshot import SituationSnapshot
+from focal.alignment.filtering.models import RuleApplicability, RuleFilterResult
+from focal.alignment.filtering.rule_filter import RuleFilter
+from focal.alignment.models import Rule, Scope
+from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

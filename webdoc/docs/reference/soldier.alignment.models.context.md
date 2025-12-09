@@ -1,10 +1,10 @@
-<a id="soldier.alignment.models.context"></a>
+<a id="focal.alignment.models.context"></a>
 
-# soldier.alignment.models.context
+# focal.alignment.models.context
 
 Context models for alignment domain.
 
-<a id="soldier.alignment.models.context.UserIntent"></a>
+<a id="focal.alignment.models.context.UserIntent"></a>
 
 ## UserIntent Objects
 
@@ -14,7 +14,7 @@ class UserIntent(BaseModel)
 
 Classified user intent.
 
-<a id="soldier.alignment.models.context.ExtractedEntities"></a>
+<a id="focal.alignment.models.context.ExtractedEntities"></a>
 
 ## ExtractedEntities Objects
 
@@ -24,7 +24,7 @@ class ExtractedEntities(BaseModel)
 
 Named entities from message.
 
-<a id="soldier.alignment.models.context.Context"></a>
+<a id="focal.alignment.models.context.Context"></a>
 
 ## Context Objects
 

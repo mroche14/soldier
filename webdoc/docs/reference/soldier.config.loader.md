@@ -1,10 +1,10 @@
-<a id="soldier.config.loader"></a>
+<a id="focal.config.loader"></a>
 
-# soldier.config.loader
+# focal.config.loader
 
 TOML configuration loader with deep merge support.
 
-<a id="soldier.config.loader.get_config_dir"></a>
+<a id="focal.config.loader.get_config_dir"></a>
 
 #### get\_config\_dir
 
@@ -14,10 +14,10 @@ def get_config_dir() -> Path
 
 Get the configuration directory path.
 
-The config directory can be overridden with SOLDIER_CONFIG_DIR env var.
+The config directory can be overridden with FOCAL_CONFIG_DIR env var.
 Defaults to 'config/' relative to the project root.
 
-<a id="soldier.config.loader.get_environment"></a>
+<a id="focal.config.loader.get_environment"></a>
 
 #### get\_environment
 
@@ -25,11 +25,11 @@ Defaults to 'config/' relative to the project root.
 def get_environment() -> str
 ```
 
-Get the current environment from SOLDIER_ENV.
+Get the current environment from FOCAL_ENV.
 
 Defaults to 'development' if not set.
 
-<a id="soldier.config.loader.load_toml"></a>
+<a id="focal.config.loader.load_toml"></a>
 
 #### load\_toml
 
@@ -54,7 +54,7 @@ Load a TOML file and return its contents as a dictionary.
 - `FileNotFoundError` - If the file doesn't exist
 - `tomllib.TOMLDecodeError` - If the TOML syntax is invalid
 
-<a id="soldier.config.loader.deep_merge"></a>
+<a id="focal.config.loader.deep_merge"></a>
 
 #### deep\_merge
 
@@ -78,7 +78,7 @@ For other values, override replaces base.
 
   Merged dictionary
 
-<a id="soldier.config.loader.load_config"></a>
+<a id="focal.config.loader.load_config"></a>
 
 #### load\_config
 
@@ -90,7 +90,7 @@ Load configuration from TOML files.
 
 Loading order:
 1. config/default.toml (required)
-2. config/{SOLDIER_ENV}.toml (optional)
+2. config/{FOCAL_ENV}.toml (optional)
 
 **Returns**:
 

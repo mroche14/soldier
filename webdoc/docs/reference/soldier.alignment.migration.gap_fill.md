@@ -1,6 +1,6 @@
-<a id="soldier.alignment.migration.gap_fill"></a>
+<a id="focal.alignment.migration.gap_fill"></a>
 
-# soldier.alignment.migration.gap\_fill
+# focal.alignment.migration.gap\_fill
 
 Gap fill service for retrieving missing field values.
 
@@ -9,19 +9,19 @@ Attempts to fill missing data without asking the customer:
 2. Check session variables (current conversation)
 3. Extract from conversation history (LLM-based)
 
-<a id="soldier.alignment.migration.gap_fill.USE_THRESHOLD"></a>
+<a id="focal.alignment.migration.gap_fill.USE_THRESHOLD"></a>
 
 #### USE\_THRESHOLD
 
 Minimum confidence to use extracted value
 
-<a id="soldier.alignment.migration.gap_fill.NO_CONFIRM_THRESHOLD"></a>
+<a id="focal.alignment.migration.gap_fill.NO_CONFIRM_THRESHOLD"></a>
 
 #### NO\_CONFIRM\_THRESHOLD
 
 Confidence above which no confirmation needed
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService"></a>
 
 ## GapFillService Objects
 
@@ -36,7 +36,7 @@ Implements a tiered approach:
 2. Session variables (current conversation data)
 3. Conversation extraction (LLM-based, lower confidence)
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService.__init__"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -52,7 +52,7 @@ Initialize the gap fill service.
 - `profile_store` - Store for customer profiles
 - `llm_provider` - LLM provider for conversation extraction
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService.fill_gap"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService.fill_gap"></a>
 
 #### fill\_gap
 
@@ -77,7 +77,7 @@ Try to fill a missing field without asking the user.
 
   GapFillResult with fill status and value
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService.try_profile_fill"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService.try_profile_fill"></a>
 
 #### try\_profile\_fill
 
@@ -98,7 +98,7 @@ Try to fill from customer profile.
 
   GapFillResult from profile or not found
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService.try_session_fill"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService.try_session_fill"></a>
 
 #### try\_session\_fill
 
@@ -118,7 +118,7 @@ Try to fill from session variables.
 
   GapFillResult from session or not found
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService.try_conversation_extraction"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService.try_conversation_extraction"></a>
 
 #### try\_conversation\_extraction
 
@@ -148,7 +148,7 @@ conversation turns.
 
   GapFillResult with extraction or not found
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService.persist_extracted_values"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService.persist_extracted_values"></a>
 
 #### persist\_extracted\_values
 
@@ -169,7 +169,7 @@ Persist extracted values to profile for future use.
 
   Number of values persisted
 
-<a id="soldier.alignment.migration.gap_fill.GapFillService.fill_multiple"></a>
+<a id="focal.alignment.migration.gap_fill.GapFillService.fill_multiple"></a>
 
 #### fill\_multiple
 

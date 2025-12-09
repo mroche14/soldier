@@ -7,7 +7,7 @@
 # Base configuration - all values have sensible defaults
 # Override in environment-specific files
 
-app_name = "soldier"
+app_name = "focal"
 debug = false
 log_level = "INFO"
 
@@ -22,7 +22,7 @@ log_include_trace_id = true       # Add trace_id from OpenTelemetry
 log_redact_pii = true             # Auto-redact email, phone, SSN patterns
 
 tracing_enabled = true
-tracing_service_name = "soldier"
+tracing_service_name = "focal"
 tracing_sample_rate = 1.0         # 1.0 = 100% sampling
 
 metrics_enabled = true
@@ -326,8 +326,8 @@ backend = "postgres"
 [storage.config.postgres]
 host = "localhost"
 port = 5432
-database = "soldier"
-user = "soldier"
+database = "focal"
+user = "focal"
 pool_size = 10
 
 [storage.memory]
@@ -439,9 +439,9 @@ backend = "postgres"
 [storage.config.postgres]
 host = "${POSTGRES_HOST}"
 port = 5432
-database = "soldier"
+database = "focal"
 user = "${POSTGRES_USER}"
-# password via SOLDIER_STORAGE__CONFIG__POSTGRES__PASSWORD env var
+# password via FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD env var
 pool_size = 20
 max_overflow = 40
 
@@ -451,7 +451,7 @@ backend = "neo4j"
 [storage.memory.neo4j]
 uri = "${NEO4J_URI}"
 user = "${NEO4J_USER}"
-database = "soldier"
+database = "focal"
 
 [storage.session]
 cache_backend = "redis"

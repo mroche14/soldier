@@ -6,10 +6,10 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from soldier.alignment.engine import AlignmentResult
-from soldier.alignment.stores.inmemory import InMemoryAgentConfigStore
-from soldier.api.app import create_app
-from soldier.api.dependencies import (
+from focal.alignment.engine import AlignmentResult
+from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from focal.api.app import create_app
+from focal.api.dependencies import (
     get_alignment_engine,
     get_audit_store,
     get_config_store,
@@ -17,10 +17,10 @@ from soldier.api.dependencies import (
     get_settings,
     reset_dependencies,
 )
-from soldier.api.middleware.auth import get_tenant_context
-from soldier.api.models.context import TenantContext
-from soldier.audit.stores.inmemory import InMemoryAuditStore
-from soldier.conversation.stores.inmemory import InMemorySessionStore
+from focal.api.middleware.auth import get_tenant_context
+from focal.api.models.context import TenantContext
+from focal.audit.stores.inmemory import InMemoryAuditStore
+from focal.conversation.stores.inmemory import InMemorySessionStore
 
 
 @pytest.fixture

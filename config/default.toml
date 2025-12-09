@@ -1,8 +1,8 @@
-# Soldier Default Configuration
+# Focal Default Configuration
 # This file contains sensible defaults for all configuration options.
 # Environment-specific files override these values.
 
-app_name = "soldier"
+app_name = "focal"
 debug = false
 log_level = "INFO"
 
@@ -46,7 +46,7 @@ pool_timeout = 30
 
 [storage.vector]
 backend = "qdrant"
-collection_prefix = "soldier"
+collection_prefix = "focal"
 dimensions = 1024
 distance_metric = "cosine"
 timeout = 60.0
@@ -343,7 +343,7 @@ include_trace_id = true
 
 [observability.tracing]
 enabled = true
-service_name = "soldier"
+service_name = "focal"
 sample_rate = 1.0
 
 [observability.metrics]

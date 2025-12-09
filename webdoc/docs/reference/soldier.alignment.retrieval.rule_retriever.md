@@ -1,10 +1,10 @@
-<a id="soldier.alignment.retrieval.rule_retriever"></a>
+<a id="focal.alignment.retrieval.rule_retriever"></a>
 
-# soldier.alignment.retrieval.rule\_retriever
+# focal.alignment.retrieval.rule\_retriever
 
 Rule retrieval with scope hierarchy and business filters.
 
-<a id="soldier.alignment.retrieval.rule_retriever.RuleRetriever"></a>
+<a id="focal.alignment.retrieval.rule_retriever.RuleRetriever"></a>
 
 ## RuleRetriever Objects
 
@@ -20,7 +20,7 @@ Supports:
 - Adaptive selection strategies
 - Optional reranking for improved precision
 
-<a id="soldier.alignment.retrieval.rule_retriever.RuleRetriever.__init__"></a>
+<a id="focal.alignment.retrieval.rule_retriever.RuleRetriever.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -40,7 +40,7 @@ Initialize the rule retriever.
 - `selection_config` - Configuration for selection strategy
 - `reranker` - Optional reranker for result refinement
 
-<a id="soldier.alignment.retrieval.rule_retriever.RuleRetriever.retrieve"></a>
+<a id="focal.alignment.retrieval.rule_retriever.RuleRetriever.retrieve"></a>
 
 #### retrieve
 

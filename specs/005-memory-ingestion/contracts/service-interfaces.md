@@ -12,7 +12,7 @@ This document defines the Python service interfaces (contracts) for the Memory I
 
 ## MemoryIngestor Interface
 
-**Module**: `soldier.memory.ingestion.ingestor`
+**Module**: `focal.memory.ingestion.ingestor`
 **Purpose**: Main orchestrator for episode creation and async task dispatching
 
 ### Methods
@@ -98,7 +98,7 @@ async def ingest_event(
 
 ## EntityExtractor Interface
 
-**Module**: `soldier.memory.ingestion.entity_extractor`
+**Module**: `focal.memory.ingestion.entity_extractor`
 **Purpose**: Extract entities and relationships from episode content using LLM
 
 ### Methods
@@ -173,7 +173,7 @@ async def extract_batch(
 
 ## EntityDeduplicator Interface
 
-**Module**: `soldier.memory.ingestion.entity_extractor` (helper class)
+**Module**: `focal.memory.ingestion.entity_extractor` (helper class)
 **Purpose**: Find and merge duplicate entities
 
 ### Methods
@@ -244,7 +244,7 @@ async def merge_entities(
 
 ## ConversationSummarizer Interface
 
-**Module**: `soldier.memory.ingestion.summarizer`
+**Module**: `focal.memory.ingestion.summarizer`
 **Purpose**: Generate hierarchical conversation summaries
 
 ### Methods
@@ -354,7 +354,7 @@ async def check_and_summarize_if_needed(
 
 ### MemoryIngestionConfig
 
-**Module**: `soldier.config.models.pipeline`
+**Module**: `focal.config.models.pipeline`
 
 ```python
 class MemoryIngestionConfig(BaseModel):
@@ -612,13 +612,13 @@ ACTIVE_SESSIONS.set(count)
 ```
 
 **Required metrics**:
-- `soldier_episodes_created_total{content_type, source}`
-- `soldier_entities_extracted_total{entity_type}`
-- `soldier_relationships_created_total{relation_type}`
-- `soldier_summaries_created_total{summary_type}`
-- `soldier_ingestion_latency_milliseconds{operation}`
-- `soldier_extraction_latency_milliseconds{operation}`
-- `soldier_deduplication_matches_total{stage}` (exact, fuzzy, embedding, rule)
+- `focal_episodes_created_total{content_type, source}`
+- `focal_entities_extracted_total{entity_type}`
+- `focal_relationships_created_total{relation_type}`
+- `focal_summaries_created_total{summary_type}`
+- `focal_ingestion_latency_milliseconds{operation}`
+- `focal_extraction_latency_milliseconds{operation}`
+- `focal_deduplication_matches_total{stage}` (exact, fuzzy, embedding, rule)
 
 ---
 

@@ -5,7 +5,7 @@
 
 ## Overview
 
-This document defines the data models for the anchor-based scenario migration system. Models follow existing Soldier patterns: Pydantic BaseModel, UUID identifiers, tenant scoping, and soft deletes where applicable.
+This document defines the data models for the anchor-based scenario migration system. Models follow existing Focal patterns: Pydantic BaseModel, UUID identifiers, tenant scoping, and soft deletes where applicable.
 
 ---
 

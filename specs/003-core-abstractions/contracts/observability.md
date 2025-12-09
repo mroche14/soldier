@@ -21,7 +21,7 @@ def setup_logging(
     redact_pii: bool = True,
     redact_patterns: list[str] | None = None,
 ) -> None:
-    """Configure structured logging for Soldier.
+    """Configure structured logging for Focal.
 
     Args:
         level: Log level (DEBUG, INFO, WARNING, ERROR)
@@ -98,7 +98,7 @@ Every log entry must include:
   "timestamp": "2024-01-15T10:30:45.123456Z",
   "level": "info",
   "event": "event_name",
-  "logger": "soldier.module.name",
+  "logger": "focal.module.name",
 
   "tenant_id": "uuid",
   "agent_id": "uuid",
@@ -135,17 +135,17 @@ Every log entry must include:
 from prometheus_client import Counter, Histogram, Gauge, Info
 
 # Service info
-SERVICE_INFO = Info("soldier", "Soldier service information")
+SERVICE_INFO = Info("focal", "Focal service information")
 
 # Request metrics
 REQUEST_COUNT = Counter(
-    "soldier_requests_total",
+    "focal_requests_total",
     "Total number of requests",
     ["tenant_id", "agent_id", "endpoint", "status"],
 )
 
 REQUEST_LATENCY = Histogram(
-    "soldier_request_duration_seconds",
+    "focal_request_duration_seconds",
     "Request latency in seconds",
     ["tenant_id", "agent_id", "endpoint"],
     buckets=[0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
@@ -153,7 +153,7 @@ REQUEST_LATENCY = Histogram(
 
 # Pipeline metrics
 PIPELINE_STEP_LATENCY = Histogram(
-    "soldier_pipeline_step_duration_seconds",
+    "focal_pipeline_step_duration_seconds",
     "Pipeline step latency in seconds",
     ["step", "tenant_id"],
     buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0],
@@ -161,19 +161,19 @@ PIPELINE_STEP_LATENCY = Histogram(
 
 # Provider metrics
 LLM_CALL_COUNT = Counter(
-    "soldier_llm_calls_total",
+    "focal_llm_calls_total",
     "Total LLM provider calls",
     ["provider", "model", "step", "status"],
 )
 
 LLM_TOKENS = Counter(
-    "soldier_llm_tokens_total",
+    "focal_llm_tokens_total",
     "Total LLM tokens consumed",
     ["provider", "model", "direction"],  # direction: input/output
 )
 
 LLM_LATENCY = Histogram(
-    "soldier_llm_call_duration_seconds",
+    "focal_llm_call_duration_seconds",
     "LLM call latency in seconds",
     ["provider", "model", "step"],
     buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0],
@@ -181,7 +181,7 @@ LLM_LATENCY = Histogram(
 
 # Rule matching metrics
 RULES_MATCHED = Histogram(
-    "soldier_rules_matched",
+    "focal_rules_matched",
     "Number of rules matched per turn",
     ["tenant_id", "agent_id"],
     buckets=[0, 1, 2, 3, 5, 10, 20],
@@ -189,14 +189,14 @@ RULES_MATCHED = Histogram(
 
 # Session metrics
 ACTIVE_SESSIONS = Gauge(
-    "soldier_active_sessions",
+    "focal_active_sessions",
     "Number of active sessions",
     ["tenant_id", "agent_id"],
 )
 
 # Error metrics
 ERRORS = Counter(
-    "soldier_errors_total",
+    "focal_errors_total",
     "Total errors",
     ["tenant_id", "error_type", "component"],
 )
@@ -241,7 +241,7 @@ def get_metrics_app() -> ASGIApplication:
 
 ```python
 def setup_tracing(
-    service_name: str = "soldier",
+    service_name: str = "focal",
     service_version: str = "0.1.0",
     otlp_endpoint: str | None = None,
     sample_rate: float = 1.0,

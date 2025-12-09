@@ -1,12 +1,12 @@
-<a id="soldier.api.middleware.idempotency"></a>
+<a id="focal.api.middleware.idempotency"></a>
 
-# soldier.api.middleware.idempotency
+# focal.api.middleware.idempotency
 
 Idempotency middleware for preventing duplicate request processing.
 
 Implements idempotency via the Idempotency-Key header with a 5-minute cache.
 
-<a id="soldier.api.middleware.idempotency.CachedResponse"></a>
+<a id="focal.api.middleware.idempotency.CachedResponse"></a>
 
 ## CachedResponse Objects
 
@@ -17,7 +17,7 @@ class CachedResponse()
 
 Cached response for idempotent requests.
 
-<a id="soldier.api.middleware.idempotency.IdempotencyCache"></a>
+<a id="focal.api.middleware.idempotency.IdempotencyCache"></a>
 
 ## IdempotencyCache Objects
 
@@ -32,7 +32,7 @@ expiration after 5 minutes.
 
 For production use with multiple instances, use Redis-backed storage.
 
-<a id="soldier.api.middleware.idempotency.IdempotencyCache.__init__"></a>
+<a id="focal.api.middleware.idempotency.IdempotencyCache.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -46,7 +46,7 @@ Initialize the cache.
 
 - `ttl_seconds` - Time-to-live for cached responses
 
-<a id="soldier.api.middleware.idempotency.IdempotencyCache.get"></a>
+<a id="focal.api.middleware.idempotency.IdempotencyCache.get"></a>
 
 #### get
 
@@ -66,7 +66,7 @@ Get cached response for an idempotency key.
 
   Cached response if found and not expired, None otherwise
 
-<a id="soldier.api.middleware.idempotency.IdempotencyCache.set"></a>
+<a id="focal.api.middleware.idempotency.IdempotencyCache.set"></a>
 
 #### set
 
@@ -88,7 +88,7 @@ Cache a response for an idempotency key.
 - `body` - Response body as dict
 - `headers` - Optional response headers to cache
 
-<a id="soldier.api.middleware.idempotency.IdempotencyCache.clear"></a>
+<a id="focal.api.middleware.idempotency.IdempotencyCache.clear"></a>
 
 #### clear
 
@@ -98,7 +98,7 @@ def clear() -> None
 
 Clear all cached responses.
 
-<a id="soldier.api.middleware.idempotency.get_idempotency_cache"></a>
+<a id="focal.api.middleware.idempotency.get_idempotency_cache"></a>
 
 #### get\_idempotency\_cache
 
@@ -112,7 +112,7 @@ Get the global idempotency cache instance.
 
   IdempotencyCache instance
 
-<a id="soldier.api.middleware.idempotency.compute_request_fingerprint"></a>
+<a id="focal.api.middleware.idempotency.compute_request_fingerprint"></a>
 
 #### compute\_request\_fingerprint
 

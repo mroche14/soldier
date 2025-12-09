@@ -1,10 +1,10 @@
-<a id="soldier.memory.ingestion.summarizer"></a>
+<a id="focal.memory.ingestion.summarizer"></a>
 
-# soldier.memory.ingestion.summarizer
+# focal.memory.ingestion.summarizer
 
 Conversation summarization for long conversations.
 
-<a id="soldier.memory.ingestion.summarizer.ConversationSummarizer"></a>
+<a id="focal.memory.ingestion.summarizer.ConversationSummarizer"></a>
 
 ## ConversationSummarizer Objects
 
@@ -14,7 +14,7 @@ class ConversationSummarizer()
 
 Generate hierarchical conversation summaries.
 
-<a id="soldier.memory.ingestion.summarizer.ConversationSummarizer.__init__"></a>
+<a id="focal.memory.ingestion.summarizer.ConversationSummarizer.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -31,7 +31,7 @@ Initialize conversation summarizer.
 - `memory_store` - Memory store
 - `config` - Summarization configuration
 
-<a id="soldier.memory.ingestion.summarizer.ConversationSummarizer.summarize_window"></a>
+<a id="focal.memory.ingestion.summarizer.ConversationSummarizer.summarize_window"></a>
 
 #### summarize\_window
 
@@ -59,7 +59,7 @@ Summary is returned as Episode with content_type="summary".
 
 - `SummarizationError` - If LLM call fails
 
-<a id="soldier.memory.ingestion.summarizer.ConversationSummarizer.create_meta_summary"></a>
+<a id="focal.memory.ingestion.summarizer.ConversationSummarizer.create_meta_summary"></a>
 
 #### create\_meta\_summary
 
@@ -88,7 +88,7 @@ summaries into higher-level overview.
 
 - `SummarizationError` - If LLM call fails
 
-<a id="soldier.memory.ingestion.summarizer.ConversationSummarizer.check_and_summarize_if_needed"></a>
+<a id="focal.memory.ingestion.summarizer.ConversationSummarizer.check_and_summarize_if_needed"></a>
 
 #### check\_and\_summarize\_if\_needed
 

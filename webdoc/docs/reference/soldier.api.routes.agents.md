@@ -1,10 +1,10 @@
-<a id="soldier.api.routes.agents"></a>
+<a id="focal.api.routes.agents"></a>
 
-# soldier.api.routes.agents
+# focal.api.routes.agents
 
 Agent management endpoints.
 
-<a id="soldier.api.routes.agents.list_agents"></a>
+<a id="focal.api.routes.agents.list_agents"></a>
 
 #### list\_agents
 
@@ -42,7 +42,7 @@ Retrieve a paginated list of agents with optional filtering and sorting.
 
   Paginated list of agents
 
-<a id="soldier.api.routes.agents.create_agent"></a>
+<a id="focal.api.routes.agents.create_agent"></a>
 
 #### create\_agent
 
@@ -65,7 +65,7 @@ Create a new agent.
 
   Created agent
 
-<a id="soldier.api.routes.agents.get_agent"></a>
+<a id="focal.api.routes.agents.get_agent"></a>
 
 #### get\_agent
 
@@ -99,7 +99,7 @@ Get an agent by ID.
 
 - `AgentNotFoundError` - If agent doesn't exist or belongs to different tenant
 
-<a id="soldier.api.routes.agents.update_agent"></a>
+<a id="focal.api.routes.agents.update_agent"></a>
 
 #### update\_agent
 
@@ -129,7 +129,7 @@ Update an agent.
 
 - `AgentNotFoundError` - If agent doesn't exist or belongs to different tenant
 
-<a id="soldier.api.routes.agents.delete_agent"></a>
+<a id="focal.api.routes.agents.delete_agent"></a>
 
 #### delete\_agent
 

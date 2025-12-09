@@ -1,13 +1,13 @@
-<a id="soldier.alignment.retrieval.selection"></a>
+<a id="focal.alignment.retrieval.selection"></a>
 
-# soldier.alignment.retrieval.selection
+# focal.alignment.retrieval.selection
 
 Selection strategies for dynamic k-selection after similarity search.
 
 Selection strategies analyze score distributions to dynamically determine
 the optimal number of results to keep, rather than using a fixed top-k.
 
-<a id="soldier.alignment.retrieval.selection.ScoredItem"></a>
+<a id="focal.alignment.retrieval.selection.ScoredItem"></a>
 
 ## ScoredItem Objects
 
@@ -23,7 +23,7 @@ An item with its similarity score.
 - `item` - The item being scored
 - `score` - Similarity score between 0.0 and 1.0
 
-<a id="soldier.alignment.retrieval.selection.SelectionResult"></a>
+<a id="focal.alignment.retrieval.selection.SelectionResult"></a>
 
 ## SelectionResult Objects
 
@@ -41,7 +41,7 @@ Result of selection with metadata.
 - `method` - Name of the strategy used
 - `metadata` - Strategy-specific metadata for logging/debugging
 
-<a id="soldier.alignment.retrieval.selection.SelectionStrategy"></a>
+<a id="focal.alignment.retrieval.selection.SelectionStrategy"></a>
 
 ## SelectionStrategy Objects
 
@@ -61,7 +61,7 @@ Contract guarantees:
     - Items in result.selected are sorted by score descending
     - All items in result.selected have score >= cutoff_score
 
-<a id="soldier.alignment.retrieval.selection.SelectionStrategy.name"></a>
+<a id="focal.alignment.retrieval.selection.SelectionStrategy.name"></a>
 
 #### name
 
@@ -73,7 +73,7 @@ def name() -> str
 
 Return strategy identifier for logging.
 
-<a id="soldier.alignment.retrieval.selection.SelectionStrategy.select"></a>
+<a id="focal.alignment.retrieval.selection.SelectionStrategy.select"></a>
 
 #### select
 
@@ -103,7 +103,7 @@ Select items based on score distribution.
 - `ValueError` - If items is not sorted by score descending
 - `ValueError` - If min_k > max_k
 
-<a id="soldier.alignment.retrieval.selection.FixedKSelectionStrategy"></a>
+<a id="focal.alignment.retrieval.selection.FixedKSelectionStrategy"></a>
 
 ## FixedKSelectionStrategy Objects
 
@@ -116,7 +116,7 @@ Simple top-k selection strategy.
 Always returns exactly k items (or fewer if not enough items available).
 Used as baseline/fallback when dynamic selection is not needed.
 
-<a id="soldier.alignment.retrieval.selection.FixedKSelectionStrategy.__init__"></a>
+<a id="focal.alignment.retrieval.selection.FixedKSelectionStrategy.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -131,7 +131,7 @@ Initialize fixed-k strategy.
 - `k` - Number of items to select
 - `min_score` - Minimum score threshold (items below are excluded)
 
-<a id="soldier.alignment.retrieval.selection.ElbowSelectionStrategy"></a>
+<a id="focal.alignment.retrieval.selection.ElbowSelectionStrategy"></a>
 
 ## ElbowSelectionStrategy Objects
 
@@ -145,7 +145,7 @@ Finds the point where scores drop significantly relative to previous
 scores. Best for cases with clear separations between relevant and
 irrelevant items.
 
-<a id="soldier.alignment.retrieval.selection.ElbowSelectionStrategy.__init__"></a>
+<a id="focal.alignment.retrieval.selection.ElbowSelectionStrategy.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -160,7 +160,7 @@ Initialize elbow strategy.
 - `drop_threshold` - Relative drop threshold to detect elbow (0-1)
 - `min_score` - Minimum absolute score threshold
 
-<a id="soldier.alignment.retrieval.selection.AdaptiveKSelectionStrategy"></a>
+<a id="focal.alignment.retrieval.selection.AdaptiveKSelectionStrategy"></a>
 
 ## AdaptiveKSelectionStrategy Objects
 
@@ -173,7 +173,7 @@ Selection using curvature analysis of score distribution.
 Analyzes the second derivative of the score curve to find optimal
 cutoff points. Works well for general-purpose retrieval.
 
-<a id="soldier.alignment.retrieval.selection.AdaptiveKSelectionStrategy.__init__"></a>
+<a id="focal.alignment.retrieval.selection.AdaptiveKSelectionStrategy.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -188,7 +188,7 @@ Initialize adaptive-k strategy.
 - `alpha` - Curvature sensitivity multiplier (higher = more selective)
 - `min_score` - Minimum absolute score threshold
 
-<a id="soldier.alignment.retrieval.selection.EntropySelectionStrategy"></a>
+<a id="focal.alignment.retrieval.selection.EntropySelectionStrategy"></a>
 
 ## EntropySelectionStrategy Objects
 
@@ -202,7 +202,7 @@ When entropy is low (scores concentrated), select fewer items.
 When entropy is high (scores spread), select more items.
 Best for ambiguous queries where confidence varies.
 
-<a id="soldier.alignment.retrieval.selection.EntropySelectionStrategy.__init__"></a>
+<a id="focal.alignment.retrieval.selection.EntropySelectionStrategy.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -222,7 +222,7 @@ Initialize entropy strategy.
 - `entropy_threshold` - Normalized entropy threshold (0-1)
 - `min_score` - Minimum absolute score threshold
 
-<a id="soldier.alignment.retrieval.selection.ClusterSelectionStrategy"></a>
+<a id="focal.alignment.retrieval.selection.ClusterSelectionStrategy"></a>
 
 ## ClusterSelectionStrategy Objects
 
@@ -235,7 +235,7 @@ Selection using DBSCAN clustering on scores.
 Groups items by score similarity and selects top items from each cluster.
 Best for multi-topic queries where there are distinct groups of results.
 
-<a id="soldier.alignment.retrieval.selection.ClusterSelectionStrategy.__init__"></a>
+<a id="focal.alignment.retrieval.selection.ClusterSelectionStrategy.__init__"></a>
 
 #### \_\_init\_\_
 
@@ -255,7 +255,7 @@ Initialize clustering strategy.
 - `top_per_cluster` - How many items to take from each cluster
 - `min_score` - Minimum absolute score threshold
 
-<a id="soldier.alignment.retrieval.selection.create_selection_strategy"></a>
+<a id="focal.alignment.retrieval.selection.create_selection_strategy"></a>
 
 #### create\_selection\_strategy
 

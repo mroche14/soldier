@@ -1,4 +1,4 @@
-<a id="soldier.audit.stores.clickhouse"></a>
+<a id="focal.audit.stores.clickhouse"></a>
 
-# soldier.audit.stores.clickhouse
+# focal.audit.stores.clickhouse
 

@@ -1,1 +1,1 @@
-"""Integration tests for Soldier with real backends."""
+"""Integration tests for Focal with real backends."""

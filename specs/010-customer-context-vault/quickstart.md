@@ -45,7 +45,7 @@ worker_concurrency = 10
 ### 1. Define Profile Field Schemas
 
 ```python
-from soldier.profile import ProfileFieldDefinition
+from focal.profile import ProfileFieldDefinition
 
 # Create field definition for email
 email_def = ProfileFieldDefinition(
@@ -65,7 +65,7 @@ await profile_store.save_field_definition(email_def)
 ### 2. Define Scenario Requirements
 
 ```python
-from soldier.profile import ScenarioFieldRequirement, RequiredLevel, FallbackAction
+from focal.profile import ScenarioFieldRequirement, RequiredLevel, FallbackAction
 
 # Require email for onboarding scenario
 requirement = ScenarioFieldRequirement(
@@ -83,7 +83,7 @@ await profile_store.save_scenario_requirement(requirement)
 ### 3. Save Profile Fields with Lineage
 
 ```python
-from soldier.profile import ProfileField, ItemStatus, SourceType
+from focal.profile import ProfileField, ItemStatus, SourceType
 
 # Field extracted from uploaded document
 extracted_name = ProfileField(
@@ -135,7 +135,7 @@ for req in missing:
 ### 6. Use GapFillService with Schema
 
 ```python
-from soldier.alignment.migration import GapFillService
+from focal.alignment.migration import GapFillService
 
 gap_fill = GapFillService(
     profile_store=profile_store,
@@ -165,10 +165,10 @@ for result in results:
 
 ```bash
 # In development
-uv run python -m soldier.jobs.worker
+uv run python -m focal.jobs.worker
 
 # In production
-docker run soldier-worker
+docker run focal-worker
 ```
 
 ### Manual Expiry (Admin)
@@ -184,7 +184,7 @@ curl -X POST http://localhost:8000/admin/profiles/expire-stale \
 ### Check Cache Status
 
 ```python
-from soldier.profile.stores import CachedProfileStore
+from focal.profile.stores import CachedProfileStore
 
 cached_store = CachedProfileStore(
     backend=postgres_store,
@@ -212,7 +212,7 @@ profile = await cached_store.get_by_customer_id(tenant_id, customer_id)
 ## Validation Modes
 
 ```python
-from soldier.profile import SchemaValidationService, ValidationMode
+from focal.profile import SchemaValidationService, ValidationMode
 
 # Strict: Reject invalid values (production)
 strict_validator = SchemaValidationService(mode=ValidationMode.STRICT)
@@ -240,7 +240,7 @@ await config_store.save_scenario(new_scenario)
 ### Manual Extraction
 
 ```python
-from soldier.profile import ProfileItemSchemaExtractor
+from focal.profile import ProfileItemSchemaExtractor
 
 extractor = ProfileItemSchemaExtractor(
     llm_executor=llm_executor,

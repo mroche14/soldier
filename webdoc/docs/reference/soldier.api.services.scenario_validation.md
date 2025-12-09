@@ -1,10 +1,10 @@
-<a id="soldier.api.services.scenario_validation"></a>
+<a id="focal.api.services.scenario_validation"></a>
 
-# soldier.api.services.scenario\_validation
+# focal.api.services.scenario\_validation
 
 Scenario validation service.
 
-<a id="soldier.api.services.scenario_validation.detect_unreachable_steps"></a>
+<a id="focal.api.services.scenario_validation.detect_unreachable_steps"></a>
 
 #### detect\_unreachable\_steps
 
@@ -26,7 +26,7 @@ then returns any steps that weren't visited.
 
   List of unreachable step IDs
 
-<a id="soldier.api.services.scenario_validation.validate_scenario_graph"></a>
+<a id="focal.api.services.scenario_validation.validate_scenario_graph"></a>
 
 #### validate\_scenario\_graph
 

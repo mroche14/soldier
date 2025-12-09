@@ -1,10 +1,10 @@
-<a id="soldier.memory.ingestion.models"></a>
+<a id="focal.memory.ingestion.models"></a>
 
-# soldier.memory.ingestion.models
+# focal.memory.ingestion.models
 
 Structured output models for entity extraction.
 
-<a id="soldier.memory.ingestion.models.ExtractedEntity"></a>
+<a id="focal.memory.ingestion.models.ExtractedEntity"></a>
 
 ## ExtractedEntity Objects
 
@@ -14,7 +14,7 @@ class ExtractedEntity(BaseModel)
 
 Pydantic model for LLM structured output during entity extraction.
 
-<a id="soldier.memory.ingestion.models.ExtractedRelationship"></a>
+<a id="focal.memory.ingestion.models.ExtractedRelationship"></a>
 
 ## ExtractedRelationship Objects
 
@@ -24,7 +24,7 @@ class ExtractedRelationship(BaseModel)
 
 Pydantic model for LLM structured output during relationship extraction.
 
-<a id="soldier.memory.ingestion.models.EntityExtractionResult"></a>
+<a id="focal.memory.ingestion.models.EntityExtractionResult"></a>
 
 ## EntityExtractionResult Objects
 

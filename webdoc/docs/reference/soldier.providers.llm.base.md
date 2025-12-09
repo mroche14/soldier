@@ -1,10 +1,10 @@
-<a id="soldier.providers.llm.base"></a>
+<a id="focal.providers.llm.base"></a>
 
-# soldier.providers.llm.base
+# focal.providers.llm.base
 
 LLMProvider abstract interface.
 
-<a id="soldier.providers.llm.base.LLMMessage"></a>
+<a id="focal.providers.llm.base.LLMMessage"></a>
 
 ## LLMMessage Objects
 
@@ -14,7 +14,7 @@ class LLMMessage(BaseModel)
 
 A message in a conversation.
 
-<a id="soldier.providers.llm.base.LLMResponse"></a>
+<a id="focal.providers.llm.base.LLMResponse"></a>
 
 ## LLMResponse Objects
 
@@ -24,7 +24,7 @@ class LLMResponse(BaseModel)
 
 Response from an LLM provider.
 
-<a id="soldier.providers.llm.base.LLMProvider"></a>
+<a id="focal.providers.llm.base.LLMProvider"></a>
 
 ## LLMProvider Objects
 
@@ -37,7 +37,7 @@ Abstract interface for LLM text generation.
 Provides unified access to various LLM providers
 (Anthropic, OpenAI, etc.) with streaming support.
 
-<a id="soldier.providers.llm.base.LLMProvider.provider_name"></a>
+<a id="focal.providers.llm.base.LLMProvider.provider_name"></a>
 
 #### provider\_name
 
@@ -49,7 +49,7 @@ def provider_name() -> str
 
 Return the provider name.
 
-<a id="soldier.providers.llm.base.LLMProvider.generate"></a>
+<a id="focal.providers.llm.base.LLMProvider.generate"></a>
 
 #### generate
 
@@ -80,7 +80,7 @@ Generate text from messages.
 
   LLMResponse with generated content
 
-<a id="soldier.providers.llm.base.LLMProvider.generate_stream"></a>
+<a id="focal.providers.llm.base.LLMProvider.generate_stream"></a>
 
 #### generate\_stream
 
@@ -111,7 +111,7 @@ Stream generated text.
 
   Text chunks as they are generated
 
-<a id="soldier.providers.llm.base.LLMProvider.count_tokens"></a>
+<a id="focal.providers.llm.base.LLMProvider.count_tokens"></a>
 
 #### count\_tokens
 

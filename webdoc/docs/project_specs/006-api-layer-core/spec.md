@@ -9,9 +9,9 @@
 
 ### User Story 1 - Process Chat Message (Priority: P1)
 
-An upstream service (channel gateway or message router) sends a user message to Soldier for processing. The system processes the message through the alignment engine and returns a response with metadata about the turn.
+An upstream service (channel gateway or message router) sends a user message to Focal for processing. The system processes the message through the alignment engine and returns a response with metadata about the turn.
 
-**Why this priority**: This is the core functionality of Soldier - processing conversational messages. Without this, the system has no purpose.
+**Why this priority**: This is the core functionality of Focal - processing conversational messages. Without this, the system has no purpose.
 
 **Independent Test**: Can be fully tested by sending a POST request to `/v1/chat` with valid tenant_id, agent_id, channel, user_channel_id, and message, then verifying a response is returned with session_id, turn_id, and response text.
 
@@ -42,7 +42,7 @@ An upstream service requests a streaming response where tokens are delivered inc
 
 ### User Story 3 - Health Check and Metrics (Priority: P2)
 
-Operations teams need to monitor Soldier's health status and collect Prometheus metrics for observability dashboards and alerting.
+Operations teams need to monitor Focal's health status and collect Prometheus metrics for observability dashboards and alerting.
 
 **Why this priority**: Essential for production operations but not required for core message processing functionality.
 
