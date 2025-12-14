@@ -20,8 +20,8 @@ The focal pipeline specification uses a **two-part customer data architecture**:
 | **InterlocutorDataField** | Schema definition (what fields exist) | `InterlocutorDataField` exists (includes `scope` and `persist`) |
 | **InterlocutorDataStore** | Runtime values per customer | `InterlocutorDataStore` exists (loaded as a per-turn snapshot) |
 | **VariableEntry** | Per-variable metadata with history | `VariableEntry` exists (includes `history`; no explicit `scope` field) |
-| **InterlocutorSchemaMask** | Privacy-safe LLM view | Implemented (`ruche/pipelines/focal/context/interlocutor_schema_mask.py`) |
-| **CandidateVariableInfo** | LLM extraction intermediate | Implemented (`ruche/pipelines/focal/context/situation_snapshot.py`) |
+| **InterlocutorSchemaMask** | Privacy-safe LLM view | Implemented (`ruche/brain/focal/context/interlocutor_schema_mask.py`) |
+| **CandidateVariableInfo** | LLM extraction intermediate | Implemented (`ruche/brain/focal/context/situation_snapshot.py`) |
 
 **Architecture Mismatch**: Customer data is stored persistently, but the pipeline requires a **runtime per-turn snapshot** that's loaded (P1.5), mutated in-memory (P3.3), and persisted selectively (P11.3).
 
@@ -515,7 +515,7 @@ Based on dependencies and impact:
 ## Files to Create
 
 ```
-ruche/pipelines/focal/
+ruche/brain/focal/
 ├── context/
 │   └── situational_snapshot.py    # SituationalSnapshot, CandidateVariableInfo
 ├── planning/

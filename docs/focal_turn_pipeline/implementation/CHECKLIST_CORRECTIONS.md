@@ -61,11 +61,11 @@ These models ARE new and should be created:
 
 | Model | Location | Phase |
 |-------|----------|-------|
-| `InterlocutorSchemaMask` | `ruche/pipelines/focal/context/customer_schema_mask.py` | P2 |
-| `CandidateVariableInfo` | `ruche/pipelines/focal/context/situational_snapshot.py` | P2 |
-| `SituationalSnapshot` | `ruche/pipelines/focal/context/situational_snapshot.py` | P2 |
-| `GlossaryItem` | `ruche/pipelines/focal/models/glossary.py` | P1 |
-| `TurnContext` | `ruche/pipelines/focal/models/turn_context.py` | P1 |
+| `InterlocutorSchemaMask` | `ruche/brain/focal/context/customer_schema_mask.py` | P2 |
+| `CandidateVariableInfo` | `ruche/brain/focal/context/situational_snapshot.py` | P2 |
+| `SituationalSnapshot` | `ruche/brain/focal/context/situational_snapshot.py` | P2 |
+| `GlossaryItem` | `ruche/brain/focal/models/glossary.py` | P1 |
+| `TurnContext` | `ruche/brain/focal/models/turn_context.py` | P1 |
 
 ---
 
@@ -99,7 +99,7 @@ Gap analysis identified these hardcoded prompts NOT addressed in any checklist:
 ### Scenario Filter
 
 - [ ] **Create scenario_filter.jinja2 template**
-  - File: `ruche/pipelines/focal/filtering/prompts/scenario_filter.jinja2`
+  - File: `ruche/brain/focal/filtering/prompts/scenario_filter.jinja2`
   - Action: Currently `.txt` unused - implement LLM-based scenario filtering
   - Note: Gap analysis says "Deterministic only" - need to add LLM path
 
@@ -142,23 +142,23 @@ All checklists must use these paths:
 | `InterlocutorDataField` | `ruche/domain/interlocutor/models.py` (renamed from ProfileFieldDefinition) |
 | `VariableEntry` | `ruche/domain/interlocutor/models.py` (renamed from ProfileField) |
 | `InterlocutorDataStore` | `ruche/domain/interlocutor/models.py` (renamed from CustomerProfile) |
-| `InterlocutorSchemaMask` | `ruche/pipelines/focal/context/customer_schema_mask.py` |
-| `CandidateVariableInfo` | `ruche/pipelines/focal/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `ruche/pipelines/focal/context/situational_snapshot.py` |
-| `GlossaryItem` | `ruche/pipelines/focal/models/glossary.py` |
-| `TurnContext` | `ruche/pipelines/focal/models/turn_context.py` |
-| `ResponsePlan` | `ruche/pipelines/focal/planning/models.py` |
-| `TurnOutcome` | `ruche/pipelines/focal/models/outcome.py` |
+| `InterlocutorSchemaMask` | `ruche/brain/focal/context/customer_schema_mask.py` |
+| `CandidateVariableInfo` | `ruche/brain/focal/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `ruche/brain/focal/context/situational_snapshot.py` |
+| `GlossaryItem` | `ruche/brain/focal/models/glossary.py` |
+| `TurnContext` | `ruche/brain/focal/models/turn_context.py` |
+| `ResponsePlan` | `ruche/brain/focal/planning/models.py` |
+| `TurnOutcome` | `ruche/brain/focal/models/outcome.py` |
 
 ### Templates
 
 | Template | Canonical Path |
 |----------|---------------|
-| Situational Sensor | `ruche/pipelines/focal/context/prompts/situational_sensor.jinja2` |
-| Rule Filter | `ruche/pipelines/focal/filtering/prompts/rule_filter.jinja2` |
-| Scenario Filter | `ruche/pipelines/focal/filtering/prompts/scenario_filter.jinja2` |
-| Generation | `ruche/pipelines/focal/generation/prompts/generation.jinja2` |
-| Enforcement | `ruche/pipelines/focal/enforcement/prompts/llm_judge.jinja2` |
+| Situational Sensor | `ruche/brain/focal/context/prompts/situational_sensor.jinja2` |
+| Rule Filter | `ruche/brain/focal/filtering/prompts/rule_filter.jinja2` |
+| Scenario Filter | `ruche/brain/focal/filtering/prompts/scenario_filter.jinja2` |
+| Generation | `ruche/brain/focal/generation/prompts/generation.jinja2` |
+| Enforcement | `ruche/brain/focal/enforcement/prompts/llm_judge.jinja2` |
 | Entity Extraction | `ruche/memory/ingestion/prompts/entity_extraction.jinja2` |
 | Summarization | `ruche/memory/ingestion/prompts/summarization.jinja2` |
 

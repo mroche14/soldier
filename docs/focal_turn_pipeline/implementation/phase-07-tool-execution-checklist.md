@@ -53,7 +53,7 @@
 ### 1.1 ToolBinding Model
 
 - [x] **Create ToolBinding model**
-  - File: `ruche/pipelines/focal/models/tool_binding.py`
+  - File: `ruche/brain/focal/models/tool_binding.py`
   - Action: Created
   - **Implemented**: Created with fields `tool_id`, `when`, `required_variables`, `depends_on`
   - Details:
@@ -79,19 +79,19 @@
     ```
 
 - [x] **Export ToolBinding from models**
-  - File: `ruche/pipelines/focal/models/__init__.py`
+  - File: `ruche/brain/focal/models/__init__.py`
   - Action: Modified
   - **Implemented**: Added ToolBinding import and export
-  - Details: Add `from ruche.pipelines.focal.models.tool_binding import ToolBinding`
+  - Details: Add `from ruche.brain.focal.models.tool_binding import ToolBinding`
 
 ### 1.2 Update Rule Model
 
 - [x] **Add tool_bindings field to Rule**
-  - File: `ruche/pipelines/focal/models/rule.py`
+  - File: `ruche/brain/focal/models/rule.py`
   - Action: Modified
   - **Implemented**: Added `tool_bindings: list[ToolBinding]` field, marked `attached_tool_ids` as deprecated
   - Details:
-    - Import `ToolBinding` from `ruche.pipelines.focal.models.tool_binding`
+    - Import `ToolBinding` from `ruche.brain.focal.models.tool_binding`
     - Add field: `tool_bindings: list[ToolBinding] = Field(default_factory=list)`
     - Keep `attached_tool_ids` for backward compatibility (deprecated)
     - Add migration note in docstring about deprecating `attached_tool_ids`
@@ -99,11 +99,11 @@
 ### 1.3 Update ScenarioStep Model
 
 - [x] **Add tool_bindings field to ScenarioStep**
-  - File: `ruche/pipelines/focal/models/scenario.py`
+  - File: `ruche/brain/focal/models/scenario.py`
   - Action: Modified
   - **Implemented**: Added `tool_bindings: list[ToolBinding]` field, marked `tool_ids` as deprecated
   - Details:
-    - Import `ToolBinding` from `ruche.pipelines.focal.models.tool_binding`
+    - Import `ToolBinding` from `ruche.brain.focal.models.tool_binding`
     - Add field: `tool_bindings: list[ToolBinding] = Field(default_factory=list)`
     - Keep `tool_ids` for backward compatibility (deprecated)
     - Add migration note in docstring about deprecating `tool_ids`
@@ -111,7 +111,7 @@
 ### 1.4 Tool Execution Models
 
 - [x] **Enhance ToolResult model**
-  - File: `ruche/pipelines/focal/execution/models.py`
+  - File: `ruche/brain/focal/execution/models.py`
   - Action: Modified
   - **Implemented**: Added `when`, `variables_filled`, `tool_binding` fields. Created `ToolExecutionResult` model
   - Details:
@@ -126,7 +126,7 @@
 ### 2.1 Tool Binding Collector
 
 - [x] **Create ToolBindingCollector class**
-  - File: `ruche/pipelines/focal/execution/tool_binding_collector.py`
+  - File: `ruche/brain/focal/execution/tool_binding_collector.py`
   - Action: Created
   - **Implemented**: Created with support for collecting from rules and scenario steps, deduplication, and legacy fallback
   - Details:
@@ -174,7 +174,7 @@
 ### 3.1 Variable Requirement Analyzer
 
 - [x] **Create VariableRequirementAnalyzer class**
-  - File: `ruche/pipelines/focal/execution/variable_requirement_analyzer.py`
+  - File: `ruche/brain/focal/execution/variable_requirement_analyzer.py`
   - Action: Created
   - **Implemented**: Created with regex-based variable extraction from rules and templates
   - Details:
@@ -223,7 +223,7 @@
 ### 4.1 Variable Resolution Service
 
 - [x] **Enhance VariableResolver for multi-source resolution**
-  - File: `ruche/pipelines/focal/execution/variable_resolver.py`
+  - File: `ruche/brain/focal/execution/variable_resolver.py`
   - Action: Modified
   - **Implemented**: Added `resolve_variables()` method with InterlocutorDataStore → Session priority resolution
   - Details:
@@ -277,7 +277,7 @@
 ### 5.1 Tool Scheduler
 
 - [x] **Create ToolScheduler class**
-  - File: `ruche/pipelines/focal/execution/tool_scheduler.py`
+  - File: `ruche/brain/focal/execution/tool_scheduler.py`
   - Action: Created
   - **Implemented**: Created with phase filtering, dependency ordering via topological sort, and variable-based scheduling
   - Details:
@@ -312,7 +312,7 @@
 ### 5.2 Future Tool Queue
 
 - [x] **Create FutureToolQueue class**
-  - File: `ruche/pipelines/focal/execution/tool_scheduler.py`
+  - File: `ruche/brain/focal/execution/tool_scheduler.py`
   - Action: Created (same file as ToolScheduler)
   - **Implemented**: Created with session-based queuing for AFTER_STEP tools
   - Details:
@@ -362,7 +362,7 @@
 ### 6.1 Enhance ToolExecutor
 
 - [ ] **Update ToolExecutor for new ToolBinding model**
-  - File: `ruche/pipelines/focal/execution/tool_executor.py`
+  - File: `ruche/brain/focal/execution/tool_executor.py`
   - Action: Modify
   - Details:
     - Update `execute()` signature:
@@ -382,7 +382,7 @@
     - Update logging to include timing phase
 
 - [ ] **Add dependency execution support**
-  - File: `ruche/pipelines/focal/execution/tool_executor.py`
+  - File: `ruche/brain/focal/execution/tool_executor.py`
   - Action: Modify
   - Details:
     - Build dependency graph from `scheduled_tools`
@@ -409,7 +409,7 @@
 ### 7.1 Variable Merger
 
 - [x] **Create VariableMerger class**
-  - File: `ruche/pipelines/focal/execution/variable_merger.py`
+  - File: `ruche/brain/focal/execution/variable_merger.py`
   - Action: Created
   - **Implemented**: Created with conflict detection and provenance tracking
   - Details:
@@ -459,7 +459,7 @@
 ### 8.1 ToolExecutionOrchestrator
 
 - [x] **Create orchestrator for full P7 flow**
-  - File: `ruche/pipelines/focal/execution/tool_execution_orchestrator.py`
+  - File: `ruche/brain/focal/execution/tool_execution_orchestrator.py`
   - Action: Created
   - **Implemented**: Created orchestrator coordinating all P7.1-P7.7 substeps
   - Details:
@@ -503,7 +503,7 @@
     ```
 
 - [x] **Create ToolExecutionResult model**
-  - File: `ruche/pipelines/focal/execution/models.py`
+  - File: `ruche/brain/focal/execution/models.py`
   - Action: Modified
   - **Implemented**: Created ToolExecutionResult with all required fields
   - Details:
@@ -520,7 +520,7 @@
 ### 8.2 FocalCognitivePipeline Integration
 
 - [ ] **Add tool execution to FocalCognitivePipeline**
-  - File: `ruche/pipelines/focal/engine.py`
+  - File: `ruche/brain/focal/engine.py`
   - Action: Modify
   - Details:
     - Add `tool_orchestrator: ToolExecutionOrchestrator` to `__init__`
@@ -540,7 +540,7 @@
     - Store `tool_result` in `AlignmentResult`
 
 - [ ] **Update AlignmentResult model**
-  - File: `ruche/pipelines/focal/result.py`
+  - File: `ruche/brain/focal/result.py`
   - Action: Modify
   - Details:
     - Add `tool_execution_result: ToolExecutionResult | None` field
@@ -698,7 +698,7 @@
 ### 12.1 Backward Compatibility
 
 - [x] **Support legacy attached_tool_ids**
-  - File: `ruche/pipelines/focal/execution/tool_binding_collector.py`
+  - File: `ruche/brain/focal/execution/tool_binding_collector.py`
   - Action: Implemented
   - **Implemented**: Added fallback to attached_tool_ids with deprecation warnings
   - Details:
@@ -707,7 +707,7 @@
     - Log deprecation warning
 
 - [x] **Support legacy tool_ids on ScenarioStep**
-  - File: `ruche/pipelines/focal/execution/tool_binding_collector.py`
+  - File: `ruche/brain/focal/execution/tool_binding_collector.py`
   - Action: Implemented
   - **Implemented**: Added fallback to tool_ids with deprecation warnings
   - Details:

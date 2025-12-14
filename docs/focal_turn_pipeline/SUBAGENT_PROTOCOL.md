@@ -195,13 +195,13 @@ The existing `ruche/customer_data/` module IS the CustomerDataStore. Do NOT crea
 
 | Model | Location |
 |-------|----------|
-| `InterlocutorSchemaMask` | `ruche/pipelines/focal/context/interlocutor_schema_mask.py` |
-| `CandidateVariableInfo` | `ruche/pipelines/focal/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `ruche/pipelines/focal/context/situational_snapshot.py` |
-| `GlossaryItem` | `ruche/pipelines/focal/models/glossary.py` |
-| `TurnContext` | `ruche/pipelines/focal/models/turn_context.py` |
-| `ResponsePlan` | `ruche/pipelines/focal/planning/models.py` |
-| `TurnOutcome` | `ruche/pipelines/focal/models/outcome.py` |
+| `InterlocutorSchemaMask` | `ruche/brain/focal/context/interlocutor_schema_mask.py` |
+| `CandidateVariableInfo` | `ruche/brain/focal/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `ruche/brain/focal/context/situational_snapshot.py` |
+| `GlossaryItem` | `ruche/brain/focal/models/glossary.py` |
+| `TurnContext` | `ruche/brain/focal/models/turn_context.py` |
+| `ResponsePlan` | `ruche/brain/focal/planning/models.py` |
+| `TurnOutcome` | `ruche/brain/focal/models/outcome.py` |
 
 ---
 
@@ -210,7 +210,7 @@ The existing `ruche/customer_data/` module IS the CustomerDataStore. Do NOT crea
 ### Adding a New Model
 
 ```python
-# ruche/pipelines/focal/models/my_model.py
+# ruche/brain/focal/models/my_model.py
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
@@ -233,7 +233,7 @@ class MyModel(BaseModel):
     updated_at: datetime
 
 # Export in __init__.py
-# ruche/pipelines/focal/models/__init__.py
+# ruche/brain/focal/models/__init__.py
 from .my_model import MyModel
 ```
 
@@ -303,7 +303,7 @@ my_operation_duration = Histogram(
 ### Adding a Store Interface
 
 ```python
-# ruche/pipelines/focal/stores/my_store.py
+# ruche/brain/focal/stores/my_store.py
 from abc import ABC, abstractmethod
 
 class MyStore(ABC):
@@ -319,7 +319,7 @@ class MyStore(ABC):
         """Save item."""
         pass
 
-# ruche/pipelines/focal/stores/inmemory.py
+# ruche/brain/focal/stores/inmemory.py
 class InMemoryMyStore(MyStore):
     """In-memory implementation for testing."""
 
@@ -336,7 +336,7 @@ class InMemoryMyStore(MyStore):
 ### Adding Jinja2 Templates
 
 ```jinja2
-{# ruche/pipelines/focal/context/prompts/my_task.jinja2 #}
+{# ruche/brain/focal/context/prompts/my_task.jinja2 #}
 You are analyzing a customer conversation.
 
 {% if context %}
@@ -355,7 +355,7 @@ Respond with JSON:
 
 ```python
 # Loading templates
-from ruche.pipelines.focal.context.template_loader import TemplateLoader
+from ruche.brain.focal.context.template_loader import TemplateLoader
 from pathlib import Path
 
 loader = TemplateLoader(Path(__file__).parent / "prompts")
@@ -481,21 +481,21 @@ Always add a brief note about:
 uv run pytest
 
 # Run specific phase tests
-uv run pytest tests/unit/pipelines/focal/models/ -v
+uv run pytest tests/unit/brain/focal/models/ -v
 
 # Run with coverage
-uv run pytest --cov=ruche/pipelines/focal --cov-report=term-missing
+uv run pytest --cov=ruche/brain/focal --cov-report=term-missing
 
 # Run only your phase's tests
-uv run pytest tests/unit/pipelines/focal/context/ -v --cov=ruche/pipelines/focal/context
+uv run pytest tests/unit/brain/focal/context/ -v --cov=ruche/brain/focal/context
 ```
 
 ### Test Patterns
 
 ```python
-# tests/unit/pipelines/focal/models/test_my_model.py
+# tests/unit/brain/focal/models/test_my_model.py
 import pytest
-from ruche.pipelines.focal.models.my_model import MyModel
+from ruche.brain.focal.models.my_model import MyModel
 
 class TestMyModel:
     """Test suite for MyModel."""
@@ -522,7 +522,7 @@ class TestMyModel:
 
 ```python
 # tests/factories.py
-from ruche.pipelines.focal.models.my_model import MyModel
+from ruche.brain.focal.models.my_model import MyModel
 
 class MyModelFactory:
     @staticmethod
@@ -554,7 +554,7 @@ At the end of your work, provide this report:
 - **Coverage**: XX%
 
 ## Completed Items
-1. Created `MyModel` in `ruche/pipelines/focal/models/my_model.py`
+1. Created `MyModel` in `ruche/brain/focal/models/my_model.py`
 2. Added config section `[pipeline.my_feature]` to `config/default.toml`
 3. Implemented `MyStore` interface and `InMemoryMyStore`
 4. ... (list all)
@@ -571,17 +571,17 @@ At the end of your work, provide this report:
 - Added extra validation for X because Y
 
 ## Tests Created
-- `tests/unit/pipelines/focal/models/test_my_model.py` (8 tests)
-- `tests/unit/pipelines/focal/stores/test_my_store.py` (5 tests)
+- `tests/unit/brain/focal/models/test_my_model.py` (8 tests)
+- `tests/unit/brain/focal/stores/test_my_store.py` (5 tests)
 
 ## Files Created/Modified
 ### Created
-- `ruche/pipelines/focal/models/my_model.py`
-- `ruche/pipelines/focal/stores/my_store.py`
-- `tests/unit/pipelines/focal/models/test_my_model.py`
+- `ruche/brain/focal/models/my_model.py`
+- `ruche/brain/focal/stores/my_store.py`
+- `tests/unit/brain/focal/models/test_my_model.py`
 
 ### Modified
-- `ruche/pipelines/focal/models/__init__.py` (added export)
+- `ruche/brain/focal/models/__init__.py` (added export)
 - `config/default.toml` (added section)
 - `ruche/config/models/pipeline.py` (added config model)
 
@@ -605,12 +605,12 @@ logger = get_logger(__name__)
 from ruche.infrastructure.observability.metrics import my_metric
 
 # Models
-from ruche.pipelines.focal.models import MyModel
-from ruche.pipelines.focal.models.rule import Rule, MatchedRule
+from ruche.brain.focal.models import MyModel
+from ruche.brain.focal.models.rule import Rule, MatchedRule
 
 # Stores
-from ruche.pipelines.focal.stores.config_store import ConfigStore
-from ruche.pipelines.focal.stores.inmemory import InMemoryConfigStore
+from ruche.brain.focal.stores.config_store import ConfigStore
+from ruche.brain.focal.stores.inmemory import InMemoryConfigStore
 
 # Config
 from ruche.config.loader import get_settings
@@ -626,12 +626,12 @@ from datetime import datetime, UTC
 
 | Type | Location Pattern |
 |------|------------------|
-| Models | `ruche/pipelines/focal/models/{name}.py` |
-| Stores | `ruche/pipelines/focal/stores/{name}.py` |
+| Models | `ruche/brain/focal/models/{name}.py` |
+| Stores | `ruche/brain/focal/stores/{name}.py` |
 | Config Models | `ruche/config/models/{domain}.py` |
-| Templates | `ruche/pipelines/focal/{domain}/prompts/{name}.jinja2` |
-| Unit Tests | `tests/unit/pipelines/focal/{mirror_of_src}/test_{name}.py` |
-| Integration Tests | `tests/integration/pipelines/focal/test_{feature}.py` |
+| Templates | `ruche/brain/focal/{domain}/prompts/{name}.jinja2` |
+| Unit Tests | `tests/unit/brain/focal/{mirror_of_src}/test_{name}.py` |
+| Integration Tests | `tests/integration/brain/focal/test_{feature}.py` |
 
 ---
 
@@ -662,13 +662,13 @@ Before marking your phase complete:
 
 ```bash
 # Check for linting issues
-uv run ruff check ruche/pipelines/focal/
+uv run ruff check ruche/brain/focal/
 
 # Auto-fix what can be fixed
-uv run ruff check --fix ruche/pipelines/focal/
+uv run ruff check --fix ruche/brain/focal/
 
 # Format code
-uv run ruff format ruche/pipelines/focal/
+uv run ruff format ruche/brain/focal/
 ```
 
 **All ruff errors MUST be fixed** before marking phase complete.
@@ -677,10 +677,10 @@ uv run ruff format ruche/pipelines/focal/
 
 ```bash
 # Run type checking on your changes
-uv run mypy ruche/pipelines/focal/ --ignore-missing-imports
+uv run mypy ruche/brain/focal/ --ignore-missing-imports
 
 # Or check specific files you modified
-uv run mypy ruche/pipelines/focal/models/my_new_model.py
+uv run mypy ruche/brain/focal/models/my_new_model.py
 ```
 
 **Target**: No new type errors introduced. Pre-existing errors are acceptable but don't add more.
@@ -691,10 +691,10 @@ Run this at the end of each phase:
 
 ```bash
 # Full quality check
-echo "=== RUFF CHECK ===" && uv run ruff check ruche/pipelines/focal/ && \
-echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check ruche/pipelines/focal/ && \
-echo "=== MYPY ===" && uv run mypy ruche/pipelines/focal/ --ignore-missing-imports && \
-echo "=== TESTS ===" && uv run pytest tests/unit/pipelines/focal/ -v --tb=short && \
+echo "=== RUFF CHECK ===" && uv run ruff check ruche/brain/focal/ && \
+echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check ruche/brain/focal/ && \
+echo "=== MYPY ===" && uv run mypy ruche/brain/focal/ --ignore-missing-imports && \
+echo "=== TESTS ===" && uv run pytest tests/unit/brain/focal/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```
 

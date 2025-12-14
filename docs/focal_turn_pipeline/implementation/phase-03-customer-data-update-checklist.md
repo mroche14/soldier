@@ -47,13 +47,13 @@
   - Methods: Use existing get/set patterns from InterlocutorDataStore
 
 - [x] **InterlocutorSchemaMask** (created in Phase 2)
-  - File: `ruche/pipelines/focal/context/customer_schema_mask.py`
+  - File: `ruche/brain/focal/context/customer_schema_mask.py`
   - Created in Phase 2 for Situational Sensor
 
 ### 1.1 Create `CustomerDataUpdate` Delta Model (NEW)
 
 - [x] **Create `CustomerDataUpdate` model**
-  - File: `ruche/pipelines/focal/customer/models.py`
+  - File: `ruche/brain/focal/customer/models.py`
   - Action: Created new file with CustomerDataUpdate model
   - Details:
     ```python
@@ -72,20 +72,20 @@
 ### 1.2 Import CandidateVariableInfo (from Phase 2)
 
 - [x] **CandidateVariableInfo** (created in Phase 2)
-  - File: `ruche/pipelines/focal/context/situational_snapshot.py`
+  - File: `ruche/brain/focal/context/situational_snapshot.py`
   - Note: Should already exist from Phase 2
 
 ### 1.3 Add Module Init Files
 
-- [x] **Create `ruche/pipelines/focal/customer/__init__.py`**
-  - File: `ruche/pipelines/focal/customer/__init__.py`
+- [x] **Create `ruche/brain/focal/customer/__init__.py`**
+  - File: `ruche/brain/focal/customer/__init__.py`
   - Action: Create
   - Details:
     ```python
     """Customer data management for alignment pipeline."""
 
-    from ruche.pipelines.focal.customer.data_store_loader import InterlocutorDataStoreLoader
-    from ruche.pipelines.focal.customer.models import (
+    from ruche.brain.focal.customer.data_store_loader import InterlocutorDataStoreLoader
+    from ruche.brain.focal.customer.models import (
         CandidateVariableInfo,
         InterlocutorDataStore,
         CustomerDataUpdate,
@@ -93,7 +93,7 @@
         InterlocutorSchemaMaskEntry,
         VariableEntry,
     )
-    from ruche.pipelines.focal.customer.updater import CustomerDataUpdater
+    from ruche.brain.focal.customer.updater import CustomerDataUpdater
 
     __all__ = [
         "InterlocutorDataStore",
@@ -151,7 +151,7 @@
 ### 3.1 Create InterlocutorDataStoreLoader
 
 - [x] **Create `InterlocutorDataStoreLoader` class**
-  - File: `ruche/pipelines/focal/customer/data_store_loader.py` (NEW FILE)
+  - File: `ruche/brain/focal/customer/data_store_loader.py` (NEW FILE)
   - Action: Created
   - **Implemented**: Created with load() method that loads from InterlocutorDataStoreInterface
   - Details:
@@ -228,7 +228,7 @@
 ### 3.2 Create InterlocutorSchemaMask Builder
 
 - [x] **Create `build_customer_schema_mask()` function**
-  - File: `ruche/pipelines/focal/customer/data_store_loader.py`
+  - File: `ruche/brain/focal/customer/data_store_loader.py`
   - Action: Added
   - **Implemented**: Created function that builds privacy-safe schema view
   - Details:
@@ -266,7 +266,7 @@
 ### 4.1 Create CustomerDataUpdater Class
 
 - [x] **Create `CustomerDataUpdater` class**
-  - File: `ruche/pipelines/focal/customer/updater.py` (NEW FILE)
+  - File: `ruche/brain/focal/customer/updater.py` (NEW FILE)
   - Action: Create
   - Details:
     ```python
@@ -316,7 +316,7 @@
 ### 4.2 Implement P3.1 - Match Candidates to Fields
 
 - [x] **Add `_match_candidates_to_fields()` method**
-  - File: `ruche/pipelines/focal/customer/updater.py`
+  - File: `ruche/brain/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -359,7 +359,7 @@
 ### 4.3 Implement P3.2 - Validate & Coerce Types
 
 - [x] **Add `_validate_and_coerce()` method**
-  - File: `ruche/pipelines/focal/customer/updater.py`
+  - File: `ruche/brain/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -393,7 +393,7 @@
 ### 4.4 Implement P3.3 - Apply Updates In-Memory
 
 - [x] **Add `_apply_updates_in_memory()` method**
-  - File: `ruche/pipelines/focal/customer/updater.py`
+  - File: `ruche/brain/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -433,7 +433,7 @@
 ### 4.5 Implement P3.4 - Mark for Persistence
 
 - [x] **Add `_mark_for_persistence()` method**
-  - File: `ruche/pipelines/focal/customer/updater.py`
+  - File: `ruche/brain/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -483,7 +483,7 @@
 ### 5.1 Create InterlocutorDataStore Persister
 
 - [x] **Create `InterlocutorDataStorePersister` class**
-  - File: `ruche/pipelines/focal/customer/persister.py` (NEW FILE)
+  - File: `ruche/brain/focal/customer/persister.py` (NEW FILE)
   - Action: Created
   - **Implemented**: Created with persist() method for Phase 11
   - Details:
@@ -574,7 +574,7 @@
 ### 6.1 Update FocalCognitivePipeline for Phase 3
 
 - [x] **Add CustomerDataUpdater to FocalCognitivePipeline**
-  - File: `ruche/pipelines/focal/engine.py`
+  - File: `ruche/brain/focal/engine.py`
   - Action: Modified
   - **Implemented**: Added CustomerDataUpdater initialization in __init__
   - Details: Added to `__init__`:
@@ -585,7 +585,7 @@
     ```
 
 - [x] **Add Phase 3 execution to `process_turn()`**
-  - File: `ruche/pipelines/focal/engine.py`
+  - File: `ruche/brain/focal/engine.py`
   - Action: Modified
   - **Implemented**: Added Phase 3 execution after Phase 2, includes error handling and timing
   - Details: Added after Phase 2 (situational sensor):
@@ -605,7 +605,7 @@
 ### 6.2 Update AlignmentResult Model
 
 - [x] **Add `persistent_customer_updates` field**
-  - File: `ruche/pipelines/focal/result.py`
+  - File: `ruche/brain/focal/result.py`
   - Action: Modified
   - **Implemented**: Added persistent_customer_updates field to AlignmentResult
   - Details: Add field to `AlignmentResult`:
@@ -786,7 +786,7 @@
 ### 9.2 Add Structured Logging
 
 - [x] **Add Phase 3 log events**
-  - File: `ruche/pipelines/focal/customer/updater.py`
+  - File: `ruche/brain/focal/customer/updater.py`
   - Action: Completed - all key events are logged:
     - `candidate_variable_no_definition`
     - `candidate_variable_validation_failed`
@@ -807,7 +807,7 @@
 ### 10.2 Add Inline Documentation
 
 - [x] **Add docstrings to all new classes/methods**
-  - Files: All new files in `ruche/pipelines/focal/customer/`
+  - Files: All new files in `ruche/brain/focal/customer/`
   - Action: Completed
   - **Implemented**: All classes and methods have docstrings with Args/Returns
 

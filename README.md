@@ -151,7 +151,7 @@ ruche/
 │   ├── agent/             # AgentRuntime (lifecycle, caching, invalidation)
 │   └── agenda/            # Task scheduling (bypasses ACF for proactive tasks)
 │
-├── pipelines/             # CognitivePipeline implementations
+├── brain/             # CognitivePipeline implementations
 │   ├── protocol.py        # CognitivePipeline abstract interface
 │   └── ruche/             # FOCAL alignment mechanic (12-phase pipeline)
 │       ├── pipeline.py    # FocalCognitivePipeline
