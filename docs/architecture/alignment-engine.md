@@ -1,6 +1,6 @@
 # Alignment Engine
 
-> **Note**: The alignment engine is the conceptual core of Focal's turn processing. The implementation class is `FocalCognitivePipeline` located in `ruche/mechanics/focal/pipeline.py`.
+> **Note**: The alignment engine is the conceptual core of Focal's turn processing. The implementation class is `FocalCognitivePipeline` located in `ruche/pipelines/focal/pipeline.py`.
 
 The alignment engine ensures Focal agents behave according to defined policies. It processes each turn through a multi-step pipeline, matching **Rules** for behavioral control and **Scenarios** for multi-step flows.
 

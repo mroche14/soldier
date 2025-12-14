@@ -21,8 +21,8 @@ This document provides concrete guidance for writing unit tests in the Focal cod
 Test files mirror the source structure:
 
 ```
-ruche/mechanics/focal/retrieval/rule_retriever.py
-    → tests/unit/mechanics/focal/retrieval/test_rule_retriever.py
+ruche/pipelines/focal/retrieval/rule_retriever.py
+    → tests/unit/pipelines/focal/retrieval/test_rule_retriever.py
 
 ruche/memory/stores/inmemory.py
     → tests/unit/memory/stores/test_inmemory.py
@@ -34,14 +34,14 @@ ruche/infrastructure/providers/llm/base.py
 ### File Layout
 
 ```python
-# tests/unit/mechanics/focal/retrieval/test_rule_retriever.py
+# tests/unit/pipelines/focal/retrieval/test_rule_retriever.py
 """Unit tests for RuleRetriever."""
 
 import pytest
 from uuid import uuid4
 
-from ruche.mechanics.focal.retrieval.rule_retriever import RuleRetriever
-from ruche.mechanics.focal.models import Rule, Context
+from ruche.pipelines.focal.retrieval.rule_retriever import RuleRetriever
+from ruche.pipelines.focal.models import Rule, Context
 from tests.factories import RuleFactory, ContextFactory
 
 
@@ -386,7 +386,7 @@ from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from ruche.mechanics.focal.models import Rule, RuleScope
+from ruche.pipelines.focal.models import Rule, RuleScope
 
 
 @dataclass

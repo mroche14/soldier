@@ -27,7 +27,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 1.1 Convert Sequential to Parallel
 
 - [ ] **Refactor FocalCognitivePipeline persistence to use asyncio.gather**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Modify
   - Current code (lines ~446-460):
     ```python
@@ -77,7 +77,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
   - Details: Run all persistence operations in parallel. Use `return_exceptions=True` to avoid one failure blocking others.
 
 - [ ] **Add error handling for parallel persistence failures**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Add
   - Details: Check for exceptions in gather results, log failures separately
     ```python
@@ -107,7 +107,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Update engine to record persistence metrics**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Modify
   - Details: Wrap persistence in timing context
     ```python
@@ -124,7 +124,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 2.1 Implement Scope-Based Persistence
 
 - [ ] **Create _persist_customer_data method**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Add
   - Details: Filter and persist only non-SESSION scoped fields
     ```python
@@ -203,7 +203,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Add CustomerDataUpdate model**
-  - File: `ruche/mechanics/focal/models/customer_data.py`
+  - File: `ruche/pipelines/focal/models/customer_data.py`
   - Action: Create
   - Details: Lightweight model for Phase 3 → Phase 11 handoff
     ```python
@@ -304,7 +304,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 3.1 Integrate Task Queue
 
 - [ ] **Add memory ingestion task to engine**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Modify
   - Details: Fire-and-forget memory ingestion after response sent
     ```python
@@ -327,7 +327,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Add TaskQueue to FocalCognitivePipeline constructor**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Modify
   - Details: Add optional task_queue parameter
     ```python
@@ -491,16 +491,16 @@ Phase 11 handles the final persistence and audit trail creation after response g
 > This phase only adds the outcome field to TurnRecord for persistence.
 
 **Prerequisites from Phase 9** (must be complete first):
-- [x] `OutcomeCategory` model - `ruche/mechanics/focal/models/outcome.py`
-- [x] `TurnOutcome` model - `ruche/mechanics/focal/models/outcome.py`
-- [x] `build_turn_outcome()` helper - `ruche/mechanics/focal/generation/resolution.py`
+- [x] `OutcomeCategory` model - `ruche/pipelines/focal/models/outcome.py`
+- [x] `TurnOutcome` model - `ruche/pipelines/focal/models/outcome.py`
+- [x] `build_turn_outcome()` helper - `ruche/pipelines/focal/generation/resolution.py`
 
 - [ ] **Add outcome field to TurnRecord**
   - File: `ruche/audit/models/turn_record.py`
   - Action: Modify
   - Details: Add TurnOutcome field
     ```python
-    from ruche.mechanics.focal.models.outcome import TurnOutcome
+    from ruche.pipelines.focal.models.outcome import TurnOutcome
 
     class TurnRecord(BaseModel):
         # ... existing fields ...
@@ -556,7 +556,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 4.3 Populate Outcome in Engine
 
 - [ ] **Compute TurnOutcome in FocalCognitivePipeline**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Add method
   - Details: Determine resolution and categories from pipeline state
     ```python
@@ -632,7 +632,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Call _compute_turn_outcome in process_turn**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Modify
   - Details: Compute outcome before persistence
     ```python
@@ -649,7 +649,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Update _persist_turn_record to include outcome**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Modify
   - Details: Add outcome to TurnRecord
     ```python
@@ -1005,7 +1005,7 @@ This phase requires:
 ### 9.2 Add Structured Logging
 
 - [ ] **Log persistence timing details**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Add
   - Details: Log parallel persistence metrics
     ```python

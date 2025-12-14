@@ -9,8 +9,8 @@ Available mechanics:
 - ReAct: Reasoning and acting loop (future)
 """
 
-from ruche.mechanics.protocol import CognitivePipeline, PipelineResult, ResponseSegment
-from ruche.mechanics.focal import FocalCognitivePipeline
+from ruche.pipelines.protocol import CognitivePipeline, PipelineResult, ResponseSegment
+from ruche.pipelines.focal import FocalCognitivePipeline
 
 __all__ = [
     "CognitivePipeline",

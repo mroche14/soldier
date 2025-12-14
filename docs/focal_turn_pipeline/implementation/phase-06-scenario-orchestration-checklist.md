@@ -41,7 +41,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
 ### 1. Models - Lifecycle and Contribution (P6.2, P6.4)
 
 - [x] **Create ScenarioLifecycleDecision model**
-  - File: `ruche/mechanics/focal/filtering/models.py`
+  - File: `ruche/pipelines/focal/filtering/models.py`
   - Action: Add new model
   - Details:
     ```python
@@ -66,7 +66,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [x] **Create ScenarioStepTransitionDecision model**
-  - File: `ruche/mechanics/focal/filtering/models.py`
+  - File: `ruche/pipelines/focal/filtering/models.py`
   - Action: Add new model
   - Details:
     ```python
@@ -82,7 +82,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [x] **Create ScenarioContribution model** (P6.4)
-  - File: `ruche/mechanics/focal/planning/__init__.py` (new directory)
+  - File: `ruche/pipelines/focal/planning/__init__.py` (new directory)
   - Action: Create directory and model file
   - Details:
     ```python
@@ -114,7 +114,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [x] **Create ScenarioContributionPlan model** (P6.4)
-  - File: `ruche/mechanics/focal/planning/models.py`
+  - File: `ruche/pipelines/focal/planning/models.py`
   - Action: Add to planning models
   - Details:
     ```python
@@ -134,7 +134,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [x] **Create ScenarioSelectionContext model** (P6.1)
-  - File: `ruche/mechanics/focal/filtering/models.py`
+  - File: `ruche/pipelines/focal/filtering/models.py`
   - Action: Add new model
   - Details:
     ```python
@@ -191,7 +191,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
 ### 2. Lifecycle Actions - PAUSE, COMPLETE, CANCEL (P6.2)
 
 - [x] **Add PAUSE action to ScenarioAction enum**
-  - File: `ruche/mechanics/focal/filtering/models.py`
+  - File: `ruche/pipelines/focal/filtering/models.py`
   - Action: Modify ScenarioAction enum
   - Details:
     ```python
@@ -208,22 +208,22 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [x] **Implement PAUSE detection logic**
-  - File: `ruche/mechanics/focal/orchestration/orchestrator.py`
+  - File: `ruche/pipelines/focal/orchestration/orchestrator.py`
   - Action: Add method to ScenarioOrchestrator
   - Details: Implemented in `_should_pause_scenario()` with loop detection and user signal handling
 
 - [x] **Implement COMPLETE detection logic**
-  - File: `ruche/mechanics/focal/orchestration/orchestrator.py`
+  - File: `ruche/pipelines/focal/orchestration/orchestrator.py`
   - Action: Add method to ScenarioOrchestrator
   - Details: Implemented in `_should_complete_scenario()` with terminal step detection
 
 - [x] **Implement CANCEL detection logic**
-  - File: `ruche/mechanics/focal/orchestration/orchestrator.py`
+  - File: `ruche/pipelines/focal/orchestration/orchestrator.py`
   - Action: Add method to ScenarioOrchestrator
   - Details: Implemented in `_should_cancel_scenario()` with user signal handling
 
 - [x] **Add ScenarioSignal.PAUSE and ScenarioSignal.CANCEL**
-  - File: `ruche/mechanics/focal/context/models.py`
+  - File: `ruche/pipelines/focal/context/models.py`
   - Action: Extend ScenarioSignal enum
   - Details:
     ```python
@@ -239,7 +239,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
 ### 3. Step Transition Logic - Step Skipping (P6.3)
 
 - [x] **Implement step skipping detection**
-  - File: `ruche/mechanics/focal/filtering/scenario_filter.py`
+  - File: `ruche/pipelines/focal/filtering/scenario_filter.py`
   - Action: Add new method
   - Details:
     ```python
@@ -326,12 +326,12 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [x] **Integrate step skipping into evaluate()**
-  - File: `ruche/mechanics/focal/filtering/scenario_filter.py`
+  - File: `ruche/pipelines/focal/filtering/scenario_filter.py`
   - Action: Modify evaluate() method
   - Details: Integrated step skipping logic after checking profile requirements
 
 - [x] **Add skipped_steps field to ScenarioFilterResult**
-  - File: `ruche/mechanics/focal/filtering/models.py`
+  - File: `ruche/pipelines/focal/filtering/models.py`
   - Action: Modify ScenarioFilterResult
   - Details:
     ```python
@@ -348,7 +348,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
 ### 4. Multi-Scenario Support (P6.1, P6.2)
 
 - [x] **Create ScenarioOrchestrator class** (new)
-  - File: `ruche/mechanics/focal/orchestration/__init__.py` (new directory)
+  - File: `ruche/pipelines/focal/orchestration/__init__.py` (new directory)
   - Action: Create new orchestrator for multi-scenario handling
   - Details:
     ```python
@@ -430,7 +430,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [x] **Implement contribution determination** (P6.4)
-  - File: `ruche/mechanics/focal/orchestration/orchestrator.py`
+  - File: `ruche/pipelines/focal/orchestration/orchestrator.py`
   - Action: Add method to ScenarioOrchestrator
   - Details:
     ```python
@@ -540,12 +540,12 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
 ### 5. FocalCognitivePipeline Integration
 
 - [ ] **Update FocalCognitivePipeline to use ScenarioOrchestrator**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Replace ScenarioFilter with ScenarioOrchestrator
   - Details:
     ```python
     # In __init__:
-    from ruche.mechanics.focal.orchestration import ScenarioOrchestrator
+    from ruche.pipelines.focal.orchestration import ScenarioOrchestrator
 
     self._scenario_orchestrator = ScenarioOrchestrator(
         config_store=config_store,
@@ -582,7 +582,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [ ] **Add ScenarioContributionPlan to AlignmentResult**
-  - File: `ruche/mechanics/focal/result.py`
+  - File: `ruche/pipelines/focal/result.py`
   - Action: Modify AlignmentResult
   - Details:
     ```python
@@ -594,7 +594,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [ ] **Update session state persistence**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Modify _update_and_persist_session() method
   - Details:
     ```python
@@ -753,7 +753,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
   - Details: Added all scenario orchestration metrics including lifecycle decisions, steps skipped, contributions, and active scenarios
 
 - [x] **Add structured logging for orchestration**
-  - File: `ruche/mechanics/focal/orchestration/orchestrator.py`
+  - File: `ruche/pipelines/focal/orchestration/orchestrator.py`
   - Action: Add logging throughout
   - Details: Added structured logging for lifecycle decisions, contributions, and step skipping
 
@@ -765,7 +765,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
 > The current implementation is deterministic-only. If LLM-based scenario filtering is needed, add Jinja2 template.
 
 - [ ] **Create scenario_filter.jinja2 template (if LLM filtering needed)**
-  - File: `ruche/mechanics/focal/filtering/prompts/scenario_filter.jinja2`
+  - File: `ruche/pipelines/focal/filtering/prompts/scenario_filter.jinja2`
   - Action: Create new file
   - Details: Template for LLM-based scenario relevance judgment
     ```jinja2
@@ -794,7 +794,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
     ```
 
 - [ ] **Add LLM-based scenario evaluation option**
-  - File: `ruche/mechanics/focal/filtering/scenario_filter.py`
+  - File: `ruche/pipelines/focal/filtering/scenario_filter.py`
   - Action: Add optional LLM path
   - Details: Allow LLM-based evaluation for complex scenario decisions
     ```python
@@ -916,6 +916,6 @@ Phase 6 is complete when:
 
 - **Specification**: `docs/focal_turn_pipeline/README.md` (Phase 6, lines 371-416)
 - **Gap Analysis**: `docs/focal_turn_pipeline/analysis/gap_analysis.md` (P6.1-P6.4, lines 240-256)
-- **Current Implementation**: `ruche/mechanics/focal/filtering/scenario_filter.py`
-- **Models**: `ruche/mechanics/focal/models/scenario.py`, `ruche/mechanics/focal/filtering/models.py`
+- **Current Implementation**: `ruche/pipelines/focal/filtering/scenario_filter.py`
+- **Models**: `ruche/pipelines/focal/models/scenario.py`, `ruche/pipelines/focal/filtering/models.py`
 - **Session Tracking**: `ruche/runtime/models/session.py`

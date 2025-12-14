@@ -58,7 +58,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 1.1 Add enforcement_expression Field
 
 - [ ] **Add enforcement_expression field to Rule model**
-  - File: `ruche/mechanics/focal/models/rule.py`
+  - File: `ruche/pipelines/focal/models/rule.py`
   - Action: Add field after `is_hard_constraint`
   - Details:
     ```python
@@ -81,7 +81,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 1.3 Update ConfigStore Interface
 
 - [ ] **Add enforcement_expression to ConfigStore queries**
-  - File: `ruche/mechanics/focal/stores/config_store.py`
+  - File: `ruche/pipelines/focal/stores/config_store.py`
   - Action: Verify interface supports new field
   - Details: No changes needed - ConfigStore already loads full Rule models
   - Why: Ensure stores handle the new field
@@ -93,7 +93,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 2.1 Add get_global_hard_constraints to ConfigStore
 
 - [x] **Add method to fetch GLOBAL hard constraints**
-  - File: `ruche/mechanics/focal/stores/agent_config_store.py`
+  - File: `ruche/pipelines/focal/stores/agent_config_store.py`
   - Action: Method already exists - get_rules() with scope=GLOBAL parameter
   - **Implemented**: Can use get_rules(scope=Scope.GLOBAL, enabled_only=True) to fetch GLOBAL hard constraints
   - Details:
@@ -111,14 +111,14 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 2.2 Implement in InMemoryConfigStore
 
 - [ ] **Implement get_global_hard_constraints**
-  - File: `ruche/mechanics/focal/stores/inmemory.py`
+  - File: `ruche/pipelines/focal/stores/inmemory.py`
   - Action: Add implementation
   - Details: Filter rules by `scope=GLOBAL` and `is_hard_constraint=True` and `enabled=True`
 
 ### 2.3 Implement in PostgresConfigStore
 
 - [ ] **Implement get_global_hard_constraints**
-  - File: `ruche/mechanics/focal/stores/postgres.py`
+  - File: `ruche/pipelines/focal/stores/postgres.py`
   - Action: Add implementation
   - Details: SQL query with WHERE clause for scope, is_hard_constraint, enabled
 
@@ -129,7 +129,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 3.1 Create VariableExtractor Class
 
 - [ ] **Create variable extraction service**
-  - File: `ruche/mechanics/focal/enforcement/variable_extractor.py`
+  - File: `ruche/pipelines/focal/enforcement/variable_extractor.py`
   - Action: Create new file
   - Details:
     - Class: `VariableExtractor`
@@ -144,7 +144,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 3.2 Implement Regex Pattern Extraction
 
 - [ ] **Add regex extraction methods**
-  - File: `ruche/mechanics/focal/enforcement/variable_extractor.py`
+  - File: `ruche/pipelines/focal/enforcement/variable_extractor.py`
   - Action: Add to VariableExtractor class
   - Details:
     - `_extract_amounts(text: str) -> dict`: Match `$50`, `USD 50`, `50.00`
@@ -155,7 +155,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 3.3 Implement LLM Extraction (Optional)
 
 - [ ] **Add LLM-based extraction for complex cases**
-  - File: `ruche/mechanics/focal/enforcement/variable_extractor.py`
+  - File: `ruche/pipelines/focal/enforcement/variable_extractor.py`
   - Action: Add method
   - Details:
     - Method: `_extract_with_llm(response: str, required_fields: list[str]) -> dict[str, Any]`
@@ -167,7 +167,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 3.4 Merge with Session and Profile Variables
 
 - [ ] **Merge extracted variables with context**
-  - File: `ruche/mechanics/focal/enforcement/variable_extractor.py`
+  - File: `ruche/pipelines/focal/enforcement/variable_extractor.py`
   - Action: Implement in extract_variables method
   - Details:
     - Priority: response vars > session vars > profile vars
@@ -191,7 +191,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 4.2 Create DeterministicEnforcer Class
 
 - [ ] **Create deterministic enforcement service**
-  - File: `ruche/mechanics/focal/enforcement/deterministic_enforcer.py`
+  - File: `ruche/pipelines/focal/enforcement/deterministic_enforcer.py`
   - Action: Create new file
   - Details:
     - Class: `DeterministicEnforcer`
@@ -203,7 +203,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 4.3 Define Safe Functions Whitelist
 
 - [ ] **Add safe function whitelist**
-  - File: `ruche/mechanics/focal/enforcement/deterministic_enforcer.py`
+  - File: `ruche/pipelines/focal/enforcement/deterministic_enforcer.py`
   - Action: Add class constant
   - Details:
     ```python
@@ -221,7 +221,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 4.4 Implement Expression Evaluation
 
 - [ ] **Implement safe expression evaluation**
-  - File: `ruche/mechanics/focal/enforcement/deterministic_enforcer.py`
+  - File: `ruche/pipelines/focal/enforcement/deterministic_enforcer.py`
   - Action: Implement evaluate method
   - Details:
     - Create `EvalWithCompoundTypes` with variables and safe functions
@@ -237,7 +237,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 4.5 Add Expression Validation Utility
 
 - [ ] **Add expression syntax validator**
-  - File: `ruche/mechanics/focal/enforcement/deterministic_enforcer.py`
+  - File: `ruche/pipelines/focal/enforcement/deterministic_enforcer.py`
   - Action: Add static method
   - Details:
     - Method: `validate_syntax(expression: str) -> tuple[bool, str | None]`
@@ -252,7 +252,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 5.1 Create SubjectiveEnforcer Class
 
 - [ ] **Create LLM-based enforcement service**
-  - File: `ruche/mechanics/focal/enforcement/subjective_enforcer.py`
+  - File: `ruche/pipelines/focal/enforcement/subjective_enforcer.py`
   - Action: Create new file
   - Details:
     - Class: `SubjectiveEnforcer`
@@ -264,7 +264,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 5.2 Create LLM Judge Prompt Template
 
 - [ ] **Create Jinja2 prompt template**
-  - File: `ruche/mechanics/focal/enforcement/prompts/judge_rule_compliance.jinja2`
+  - File: `ruche/pipelines/focal/enforcement/prompts/judge_rule_compliance.jinja2`
   - Action: Create new file
   - Details:
     ```jinja2
@@ -286,7 +286,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 5.3 Implement LLM Judgment
 
 - [ ] **Implement subjective rule evaluation**
-  - File: `ruche/mechanics/focal/enforcement/subjective_enforcer.py`
+  - File: `ruche/pipelines/focal/enforcement/subjective_enforcer.py`
   - Action: Implement evaluate method
   - Details:
     - Load template, render with rule and response
@@ -305,7 +305,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 6.1 Update EnforcementValidator Constructor
 
 - [ ] **Add new dependencies to constructor**
-  - File: `ruche/mechanics/focal/enforcement/validator.py`
+  - File: `ruche/pipelines/focal/enforcement/validator.py`
   - Action: Modify `__init__`
   - Details:
     - Add: `config_store: ConfigStore`
@@ -319,7 +319,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 6.2 Implement get_rules_to_enforce
 
 - [x] **Add method to collect all rules for enforcement**
-  - File: `ruche/mechanics/focal/enforcement/validator.py`
+  - File: `ruche/pipelines/focal/enforcement/validator.py`
   - Action: Add private method
   - **Implemented**: Added _get_rules_to_enforce() that fetches GLOBAL hard constraints and merges with matched rules
   - Details:
@@ -351,7 +351,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 6.3 Update validate Method - Add Variable Extraction
 
 - [ ] **Extract variables before enforcement**
-  - File: `ruche/mechanics/focal/enforcement/validator.py`
+  - File: `ruche/pipelines/focal/enforcement/validator.py`
   - Action: Update validate method
   - Details:
     - Call `_get_rules_to_enforce()` instead of using `hard_rules` parameter
@@ -362,7 +362,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 6.4 Update validate Method - Two-Lane Evaluation
 
 - [ ] **Implement two-lane enforcement logic**
-  - File: `ruche/mechanics/focal/enforcement/validator.py`
+  - File: `ruche/pipelines/focal/enforcement/validator.py`
   - Action: Replace `_detect_violations` with two-lane logic
   - Details:
     ```python
@@ -396,7 +396,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 6.5 Keep Existing Regeneration Logic
 
 - [ ] **Preserve regeneration and fallback behavior**
-  - File: `ruche/mechanics/focal/enforcement/validator.py`
+  - File: `ruche/pipelines/focal/enforcement/validator.py`
   - Action: Keep existing `_regenerate` method
   - Details:
     - Regeneration already works correctly
@@ -410,7 +410,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 7.1 Create RelevanceVerifier Class (Optional)
 
 - [ ] **Create relevance checking service**
-  - File: `ruche/mechanics/focal/enforcement/relevance_verifier.py`
+  - File: `ruche/pipelines/focal/enforcement/relevance_verifier.py`
   - Action: Create new file (optional feature)
   - Details:
     - Class: `RelevanceVerifier`
@@ -422,7 +422,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 7.2 Implement Refusal Detection
 
 - [ ] **Add refusal phrase detection**
-  - File: `ruche/mechanics/focal/enforcement/relevance_verifier.py`
+  - File: `ruche/pipelines/focal/enforcement/relevance_verifier.py`
   - Action: Add method
   - Details:
     ```python
@@ -440,7 +440,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 7.3 Create GroundingVerifier Class (Optional)
 
 - [ ] **Create grounding checking service**
-  - File: `ruche/mechanics/focal/enforcement/grounding_verifier.py`
+  - File: `ruche/pipelines/focal/enforcement/grounding_verifier.py`
   - Action: Create new file (optional feature)
   - Details:
     - Class: `GroundingVerifier`
@@ -453,7 +453,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 7.4 Integrate Optional Checks into Validator
 
 - [ ] **Add optional checks to validate method**
-  - File: `ruche/mechanics/focal/enforcement/validator.py`
+  - File: `ruche/pipelines/focal/enforcement/validator.py`
   - Action: Add after two-lane evaluation
   - Details:
     ```python
@@ -569,7 +569,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 9.1 Update Engine Constructor
 
 - [ ] **Add enforcement components to engine DI**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Update `__init__` or factory
   - Details:
     - Instantiate `VariableExtractor`
@@ -581,7 +581,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 9.2 Update Engine process_turn - Pass Session and Profile
 
 - [ ] **Pass session and profile to validator**
-  - File: `ruche/mechanics/focal/engine.py`
+  - File: `ruche/pipelines/focal/engine.py`
   - Action: Update enforcement call in `process_turn`
   - Details:
     - Add `session` parameter to `validator.validate()`
@@ -763,7 +763,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
 ### 12.2 Add Structured Logging
 
 - [ ] **Log enforcement decisions**
-  - File: `ruche/mechanics/focal/enforcement/validator.py`
+  - File: `ruche/pipelines/focal/enforcement/validator.py`
   - Action: Add log statements
   - Details:
     ```python
@@ -865,7 +865,7 @@ Phase 10 is complete when:
 ### Existing Dependencies
 
   - `ruche.infrastructure.providers.llm.LLMExecutor` - For LLM-as-Judge (Lane 2)
-  - `ruche.mechanics.focal.stores.config_store.ConfigStore` - Fetch GLOBAL rules
+  - `ruche.pipelines.focal.stores.config_store.ConfigStore` - Fetch GLOBAL rules
   - `ruche.runtime.models.session.Session` - Session variables
   - `ruche.domain.interlocutor.models.InterlocutorDataStore` - Customer fields
 

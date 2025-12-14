@@ -296,7 +296,7 @@ pytest tests/e2e/ --e2e-base-url=https://staging.ruche.example.com
 
 | Module | Line Coverage | Branch Coverage |
 |--------|---------------|-----------------|
-| `ruche/mechanics/focal/` | 85% | 80% |
+| `ruche/pipelines/focal/` | 85% | 80% |
 | `ruche/memory/` | 85% | 80% |
 | `ruche/runtime/acf/` | 80% | 75% |
 | `ruche/audit/` | 80% | 75% |
