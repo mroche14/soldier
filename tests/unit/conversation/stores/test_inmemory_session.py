@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from focal.conversation.models import Channel, Session, SessionStatus
-from focal.conversation.stores import InMemorySessionStore
+from ruche.conversation.models import Channel, Session, SessionStatus
+from ruche.conversation.stores import InMemorySessionStore
 
 
 @pytest.fixture

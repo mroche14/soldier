@@ -62,7 +62,7 @@ def env_override() -> Generator[Callable[[dict[str, str]], EnvOverrideContext], 
 
     Usage:
         def test_something(env_override):
-            with env_override({"FOCAL_DEBUG": "true"}):
+            with env_override({"RUCHE_DEBUG": "true"}):
                 # test code here
     """
 
@@ -78,7 +78,7 @@ def clear_settings_cache() -> Generator[None, None, None]:
 
     This ensures test isolation for configuration tests.
     """
-    from focal.config import get_settings
+    from ruche.config import get_settings
 
     get_settings.cache_clear()
     yield

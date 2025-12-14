@@ -375,7 +375,7 @@ thread tenant/session info straight into Agno’s session state.
 
 Instead of your OpenRouterProvider, you define something like:
 
-# focal/providers/llm/agno.py  (conceptual)
+# ruche/providers/llm/agno.py  (conceptual)
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat   # or Anthropic, etc.
@@ -480,7 +480,7 @@ results = await self._tool_executor.execute(
 
 You can define ToolExecutor to operate on Agno tools that accept run_context: RunContext exactly like in the Agno multi-tenant doc you pasted earlier:
 
-# focal/alignment/execution/agno_tool_executor.py (conceptual)
+# ruche/alignment/execution/agno_tool_executor.py (conceptual)
 
 from agno.run import RunContext
 

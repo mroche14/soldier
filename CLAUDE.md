@@ -159,14 +159,14 @@ All AI capabilities are accessed through abstract interfaces:
 config/default.toml      → Base defaults (committed)
 config/{env}.toml        → Environment overrides (committed)
 .env                     → Secrets (gitignored, never committed)
-FOCAL_* env vars       → Runtime overrides
+RUCHE_* env vars       → Runtime overrides
 ```
 
 **Configuration Loading Order** (later overrides earlier):
 1. Pydantic model defaults
 2. `config/default.toml`
-3. `config/{FOCAL_ENV}.toml` (development, staging, production)
-4. Environment variables (`FOCAL_*`)
+3. `config/{RUCHE_ENV}.toml` (development, staging, production)
+4. Environment variables (`RUCHE_*`)
 
 **Implications**:
 - No magic numbers in code
@@ -181,7 +181,7 @@ FOCAL_* env vars       → Runtime overrides
 **Secret Resolution Order**:
 1. Secret Manager (production) - AWS Secrets Manager, HashiCorp Vault
 2. Standard env vars - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc.
-3. Focal-prefixed env vars - `FOCAL_PIPELINE__GENERATION__MODELS`
+3. Focal-prefixed env vars - `RUCHE_PIPELINE__GENERATION__MODELS`
 4. `.env` file (development only, gitignored)
 
 **Common Provider Env Vars**:
@@ -397,14 +397,14 @@ except ImportError:
 
 # BAD - Same problem with conditional behavior
 try:
-    from focal.memory.stores.neo4j import Neo4jMemoryStore
+    from ruche.memory.stores.neo4j import Neo4jMemoryStore
     HAS_NEO4J = True
 except ImportError:
     HAS_NEO4J = False
 
 # GOOD - Let it crash immediately with clear error
 import anthropic
-from focal.memory.stores.neo4j import Neo4jMemoryStore
+from ruche.memory.stores.neo4j import Neo4jMemoryStore
 ```
 
 **Why**: Missing dependencies should crash immediately at import time with a clear `ModuleNotFoundError`, not fail unpredictably later when the code tries to use the missing module.
@@ -426,12 +426,12 @@ Answer: In the folder named after X.
 
 | Looking for... | Location |
 |----------------|----------|
-| Rule matching logic | `focal/alignment/retrieval/` |
-| Memory storage | `focal/memory/stores/` |
-| Session management | `focal/conversation/` |
-| API endpoints | `focal/api/routes/` |
-| Configuration models | `focal/config/models/` |
-| Logging setup | `focal/observability/` |
+| Rule matching logic | `ruche/alignment/retrieval/` |
+| Memory storage | `ruche/memory/stores/` |
+| Session management | `ruche/conversation/` |
+| API endpoints | `ruche/api/routes/` |
+| Configuration models | `ruche/config/models/` |
+| Logging setup | `ruche/observability/` |
 
 ### No Duplication
 
@@ -476,7 +476,7 @@ class PostgresNewStore(NewStore):
 All logging uses `structlog` with JSON output. Every log entry includes context:
 
 ```python
-from focal.observability.logging import get_logger
+from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -779,7 +779,7 @@ All LLM task prompts use Jinja2 templates, not string formatting:
 
 ```python
 # Good: Jinja2 template
-from focal.alignment.context.template_loader import TemplateLoader
+from ruche.alignment.context.template_loader import TemplateLoader
 from pathlib import Path
 
 loader = TemplateLoader(Path(__file__).parent / "prompts")
@@ -791,13 +791,13 @@ prompt = loader.render(
 )
 ```
 
-Template location: `focal/alignment/{module}/prompts/{task}.jinja2`
+Template location: `ruche/alignment/{module}/prompts/{task}.jinja2`
 
 ### CustomerDataStore Pattern
 
 **CustomerDataStore** (formerly CustomerProfile) is the runtime variable storage:
 
-- **Where**: `focal/customer_data/models.py`
+- **Where**: `ruche/customer_data/models.py`
 - **Contains**: `fields: dict[str, VariableEntry]` - current variable values
 - **Scopes**: IDENTITY, BUSINESS, CASE, SESSION
 - **Access**: `ProfileStore.get_by_customer_id()` / `.save()`
@@ -817,7 +817,7 @@ Template location: `focal/alignment/{module}/prompts/{task}.jinja2`
 Never expose actual customer data values to LLMs. Use CustomerSchemaMask:
 
 ```python
-from focal.alignment.context.customer_schema_mask import build_customer_schema_mask
+from ruche.alignment.context.customer_schema_mask import build_customer_schema_mask
 
 # Show LLM what fields exist, not their values
 schema_mask = build_customer_schema_mask(
@@ -908,7 +908,7 @@ This project uses speckit for feature implementation. When implementing features
 
 ## Scenario Migration Module
 
-The migration module (`focal/alignment/migration/`) handles version transitions when scenarios are updated while customers are mid-conversation.
+The migration module (`ruche/alignment/migration/`) handles version transitions when scenarios are updated while customers are mid-conversation.
 
 ### Key Components
 
@@ -966,14 +966,14 @@ The FOCAL alignment pipeline processes a user message through 11 phases. Phase 1
 
 | Model | Location | Purpose |
 |-------|----------|---------|
-| `TurnContext` | `focal/alignment/models/turn_context.py` | Aggregated context for a turn |
-| `TurnInput` | `focal/alignment/models/turn_input.py` | Inbound event format |
-| `GlossaryItem` | `focal/alignment/models/glossary.py` | Domain terminology for LLM |
-| `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` | Privacy-safe schema view |
+| `TurnContext` | `ruche/alignment/models/turn_context.py` | Aggregated context for a turn |
+| `TurnInput` | `ruche/alignment/models/turn_input.py` | Inbound event format |
+| `GlossaryItem` | `ruche/alignment/models/glossary.py` | Domain terminology for LLM |
+| `CustomerSchemaMask` | `ruche/alignment/context/customer_schema_mask.py` | Privacy-safe schema view |
 
 ### Customer Data Module
 
-The `focal/customer_data/` module (renamed from `profile/`) contains:
+The `ruche/customer_data/` module (renamed from `profile/`) contains:
 
 | Class | Purpose |
 |-------|---------|
@@ -986,8 +986,8 @@ The `focal/customer_data/` module (renamed from `profile/`) contains:
 
 | Loader | Location | Purpose |
 |--------|----------|---------|
-| `CustomerDataLoader` | `focal/alignment/loaders/customer_data_loader.py` | Loads customer variables |
-| `StaticConfigLoader` | `focal/alignment/loaders/static_config_loader.py` | Loads glossary and schema |
+| `CustomerDataLoader` | `ruche/alignment/loaders/customer_data_loader.py` | Loads customer variables |
+| `StaticConfigLoader` | `ruche/alignment/loaders/static_config_loader.py` | Loads glossary and schema |
 
 ### Usage in AlignmentEngine
 

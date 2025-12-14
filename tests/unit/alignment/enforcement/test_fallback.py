@@ -2,10 +2,10 @@
 
 from uuid import uuid4
 
-from focal.alignment.enforcement.fallback import FallbackHandler
-from focal.alignment.enforcement.models import EnforcementResult
-from focal.alignment.models import Template
-from focal.alignment.models.enums import Scope, TemplateResponseMode
+from ruche.alignment.enforcement.fallback import FallbackHandler
+from ruche.alignment.enforcement.models import EnforcementResult
+from ruche.alignment.models import Template
+from ruche.alignment.models.enums import Scope, TemplateResponseMode
 
 
 def _template(mode: TemplateResponseMode) -> Template:

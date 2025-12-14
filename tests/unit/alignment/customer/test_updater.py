@@ -4,16 +4,16 @@ import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from focal.alignment.context.situation_snapshot import CandidateVariableInfo
-from focal.alignment.customer.models import CustomerDataUpdate
-from focal.alignment.customer.updater import CustomerDataUpdater
-from focal.customer_data.models import (
+from ruche.alignment.context.situation_snapshot import CandidateVariableInfo
+from ruche.alignment.customer.models import CustomerDataUpdate
+from ruche.alignment.customer.updater import CustomerDataUpdater
+from ruche.customer_data.models import (
     CustomerDataField,
     CustomerDataStore,
     VariableEntry,
 )
-from focal.customer_data.validation import CustomerDataFieldValidator
-from focal.customer_data.enums import ValidationMode, VariableSource
+from ruche.customer_data.validation import CustomerDataFieldValidator
+from ruche.customer_data.enums import ValidationMode, VariableSource
 
 
 def utc_now():

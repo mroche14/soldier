@@ -49,7 +49,7 @@ Every agent MUST:
 ```bash
 # Example exploration before implementing
 mgrep "feature you're implementing"
-grep -r "SimilarClassName" focal/
+grep -r "SimilarClassName" ruche/
 ```
 
 **The goal is NO duplicate/parallel implementations.** If something similar exists, extend it.
@@ -109,7 +109,7 @@ These wire existing infrastructure that the gap analysis identified as "partial"
 5. `docs/focal_360/implementation/idempotency-checklist.md` - Your checklist (if exists)
 
 ## Context from Gap Analysis
-- `IdempotencyCache` exists at `focal/api/middleware/idempotency.py`
+- `IdempotencyCache` exists at `ruche/api/middleware/idempotency.py`
 - Chat route has TODOs at lines 189-193 and 232-234
 - Infrastructure is ready, just NOT CONNECTED
 
@@ -141,7 +141,7 @@ As you complete EACH item:
 ```bash
 uv run pytest tests/unit/api/middleware/test_idempotency.py -v
 uv run pytest tests/unit/api/routes/test_chat.py -v
-uv run pytest --cov=focal/api --cov-report=term-missing
+uv run pytest --cov=ruche/api --cov-report=term-missing
 ```
 
 ## Report Format
@@ -174,8 +174,8 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 5. `docs/focal_360/implementation/agent-config-checklist.md` - Your checklist (if exists)
 
 ## Context from Gap Analysis
-- `AgentConfig` model exists at `focal/config/models/agent.py`
-- Config loading is at `focal/config/loader.py`
+- `AgentConfig` model exists at `ruche/config/models/agent.py`
+- Config loading is at `ruche/config/loader.py`
 - P1.6 loads static config but doesn't merge agent overrides
 - Model is defined but NOT integrated into pipeline
 
@@ -197,9 +197,9 @@ Execute ALL items related to AgentConfig integration.
 - Follow async patterns for all loaders
 
 ## Files to Modify
-- `focal/config/loader.py` - Add merge logic
-- `focal/alignment/engine.py` - Use merged config in P1.6
-- `focal/alignment/stores/agent_config_store.py` - Add method if needed
+- `ruche/config/loader.py` - Add merge logic
+- `ruche/alignment/engine.py` - Use merged config in P1.6
+- `ruche/alignment/stores/agent_config_store.py` - Add method if needed
 
 ## CRITICAL: Checkbox Updates
 As you complete EACH item:
@@ -212,7 +212,7 @@ As you complete EACH item:
 ```bash
 uv run pytest tests/unit/config/ -v
 uv run pytest tests/unit/alignment/test_engine.py -v
-uv run pytest --cov=focal/config --cov-report=term-missing
+uv run pytest --cov=ruche/config --cov-report=term-missing
 ```
 
 ## Report Format
@@ -248,7 +248,7 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 
 ## Context from Gap Analysis
 - `burst_size` config exists but is UNUSED
-- Rate limiting exists at `focal/api/middleware/rate_limit.py`
+- Rate limiting exists at `ruche/api/middleware/rate_limit.py`
 - No debouncing/coalescing logic exists
 
 ## Your Assignment
@@ -279,7 +279,7 @@ As you complete EACH item:
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/api/middleware/test_ingress.py -v
-uv run pytest --cov=focal/api/middleware --cov-report=term-missing
+uv run pytest --cov=ruche/api/middleware --cov-report=term-missing
 ```
 
 ## Report Format
@@ -341,7 +341,7 @@ As you complete EACH item:
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/api/middleware/test_abuse.py -v
-uv run pytest --cov=focal/api/middleware --cov-report=term-missing
+uv run pytest --cov=ruche/api/middleware --cov-report=term-missing
 ```
 
 ## Report Format
@@ -401,12 +401,12 @@ Execute ALL items related to channel capabilities.
 ## Important Notes
 - Use existing Channel enum - do NOT create duplicates
 - Extend existing formatters rather than replacing them
-- Follow the pattern in `focal/alignment/generation/formatters/`
+- Follow the pattern in `ruche/alignment/generation/formatters/`
 
 ## Files to Create/Modify
-- `focal/alignment/models/channel.py` (new)
-- `focal/alignment/context/` (extend TurnContext)
-- `focal/alignment/generation/formatters/` (use capabilities)
+- `ruche/alignment/models/channel.py` (new)
+- `ruche/alignment/context/` (extend TurnContext)
+- `ruche/alignment/generation/formatters/` (use capabilities)
 - `config/default.toml` (add section)
 
 ## CRITICAL: Checkbox Updates
@@ -420,7 +420,7 @@ As you complete EACH item:
 ```bash
 uv run pytest tests/unit/alignment/models/test_channel.py -v
 uv run pytest tests/unit/alignment/generation/formatters/ -v
-uv run pytest --cov=focal/alignment/models --cov-report=term-missing
+uv run pytest --cov=ruche/alignment/models --cov-report=term-missing
 ```
 
 ## Report Format
@@ -481,7 +481,7 @@ As you complete EACH item:
 ```bash
 uv run pytest tests/unit/config/ -v
 uv run pytest tests/unit/alignment/test_engine.py -v
-uv run pytest --cov=focal/config --cov-report=term-missing
+uv run pytest --cov=ruche/config --cov-report=term-missing
 ```
 
 ## Report Format
@@ -552,7 +552,7 @@ As you complete EACH item:
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/execution/test_side_effect.py -v
-uv run pytest --cov=focal/alignment/execution --cov-report=term-missing
+uv run pytest --cov=ruche/alignment/execution --cov-report=term-missing
 ```
 
 ## Report Format
@@ -613,7 +613,7 @@ As you complete EACH item:
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/test_cancellation.py -v
-uv run pytest --cov=focal/alignment --cov-report=term-missing
+uv run pytest --cov=ruche/alignment --cov-report=term-missing
 ```
 
 ## Report Format
@@ -670,11 +670,11 @@ Execute ALL items related to agenda and goals.
 
 ## Important Notes
 - Files to create:
-  - `focal/agenda/models.py`
-  - `focal/agenda/store.py`
-  - `focal/agenda/stores/inmemory.py`
-  - `focal/jobs/workflows/follow_up.py`
-- Use existing Hatchet patterns from `focal/jobs/`
+  - `ruche/agenda/models.py`
+  - `ruche/agenda/store.py`
+  - `ruche/agenda/stores/inmemory.py`
+  - `ruche/jobs/workflows/follow_up.py`
+- Use existing Hatchet patterns from `ruche/jobs/`
 
 ## CRITICAL: Checkbox Updates
 As you complete EACH item:
@@ -686,7 +686,7 @@ As you complete EACH item:
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/agenda/ -v
-uv run pytest --cov=focal/agenda --cov-report=term-missing
+uv run pytest --cov=ruche/agenda --cov-report=term-missing
 ```
 
 ## Report Format
@@ -880,14 +880,14 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 
 ```bash
 # 1. Ruff linting
-uv run ruff check focal/
-uv run ruff check --fix focal/  # Auto-fix issues
+uv run ruff check ruche/
+uv run ruff check --fix ruche/  # Auto-fix issues
 
 # 2. Ruff formatting
-uv run ruff format focal/
+uv run ruff format ruche/
 
 # 3. Mypy type checking
-uv run mypy focal/ --ignore-missing-imports
+uv run mypy ruche/ --ignore-missing-imports
 
 # 4. Tests
 uv run pytest tests/unit/ -v --tb=short
@@ -897,9 +897,9 @@ uv run pytest tests/unit/ -v --tb=short
 
 ```bash
 echo "=== WAVE QUALITY CHECK ===" && \
-uv run ruff check focal/ && \
-uv run ruff format --check focal/ && \
-uv run mypy focal/ --ignore-missing-imports && \
+uv run ruff check ruche/ && \
+uv run ruff format --check ruche/ && \
+uv run mypy ruche/ --ignore-missing-imports && \
 uv run pytest tests/unit/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```
@@ -933,9 +933,9 @@ uv run pytest --cov=focal --cov-report=html
 
 ```bash
 # Full quality check on entire focal module
-uv run ruff check focal/ && \
-uv run ruff format --check focal/ && \
-uv run mypy focal/ --ignore-missing-imports && \
+uv run ruff check ruche/ && \
+uv run ruff format --check ruche/ && \
+uv run mypy ruche/ --ignore-missing-imports && \
 uv run pytest tests/unit/ --cov=focal --cov-fail-under=85
 ```
 

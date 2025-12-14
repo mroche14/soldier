@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from jinja2 import TemplateNotFound
 
-from focal.alignment.context.template_loader import TemplateLoader
+from ruche.alignment.context.template_loader import TemplateLoader
 
 
 class TestTemplateLoader:

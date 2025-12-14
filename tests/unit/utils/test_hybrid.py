@@ -2,7 +2,7 @@
 
 import pytest
 
-from focal.utils.hybrid import HybridScorer
+from ruche.utils.hybrid import HybridScorer
 
 
 class TestHybridScorer:

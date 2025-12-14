@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from focal.providers.embedding import EmbeddingResponse, JinaEmbeddingProvider, MockEmbeddingProvider
+from ruche.providers.embedding import EmbeddingResponse, JinaEmbeddingProvider, MockEmbeddingProvider
 
 
 class TestMockEmbeddingProvider:

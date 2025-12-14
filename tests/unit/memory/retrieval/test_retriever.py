@@ -5,12 +5,12 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.config.models.selection import SelectionConfig
-from focal.memory.models.episode import Episode
-from focal.memory.retrieval.retriever import MemoryRetriever
-from focal.memory.stores.inmemory import InMemoryMemoryStore
-from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.config.models.selection import SelectionConfig
+from ruche.memory.models.episode import Episode
+from ruche.memory.retrieval.retriever import MemoryRetriever
+from ruche.memory.stores.inmemory import InMemoryMemoryStore
+from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):

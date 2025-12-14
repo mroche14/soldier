@@ -3,10 +3,10 @@
 import pytest
 from uuid import uuid4
 
-from focal.alignment.filtering.models import MatchedRule
-from focal.alignment.filtering.relationship_expander import RelationshipExpander
-from focal.alignment.models import Rule, RuleRelationship, RuleRelationshipKind, Scope
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.alignment.filtering.models import MatchedRule
+from ruche.alignment.filtering.relationship_expander import RelationshipExpander
+from ruche.alignment.models import Rule, RuleRelationship, RuleRelationshipKind, Scope
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
 
 
 @pytest.fixture

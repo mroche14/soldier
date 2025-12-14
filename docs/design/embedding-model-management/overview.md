@@ -330,18 +330,18 @@ Step 5: Pods can now start successfully
 ### Detailed File List
 
 **Models to modify**:
-- `focal/alignment/models/rule.py` - Remove `embedding_model` field
-- `focal/alignment/models/intent.py` - Remove `embedding_model` field
-- `focal/memory/models/episode.py` - Remove `embedding_model` field
+- `ruche/alignment/models/rule.py` - Remove `embedding_model` field
+- `ruche/alignment/models/intent.py` - Remove `embedding_model` field
+- `ruche/memory/models/episode.py` - Remove `embedding_model` field
 
 **Stores to modify**:
-- `focal/alignment/stores/postgres.py` - Remove from all queries
-- `focal/memory/stores/postgres.py` - Remove from episode queries
+- `ruche/alignment/stores/postgres.py` - Remove from all queries
+- `ruche/memory/stores/postgres.py` - Remove from episode queries
 
 **New components**:
-- `focal/vector/validation.py` - Startup validation
-- `focal/cli/migrate.py` - Migration command
-- `focal/config/models/embedding.py` - Embedding config models
+- `ruche/vector/validation.py` - Startup validation
+- `ruche/cli/migrate.py` - Migration command
+- `ruche/config/models/embedding.py` - Embedding config models
 
 ## Migration Strategy
 

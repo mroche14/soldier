@@ -10,16 +10,16 @@ from uuid import uuid4
 import pytest
 import redis.asyncio as redis
 
-from focal.config.models.storage import RedisProfileCacheConfig
-from focal.conversation.models import Channel
-from focal.customer_data.enums import ItemStatus, VariableSource
-from focal.customer_data.models import (
+from ruche.config.models.storage import RedisProfileCacheConfig
+from ruche.conversation.models import Channel
+from ruche.customer_data.enums import ItemStatus, VariableSource
+from ruche.customer_data.models import (
     ChannelIdentity,
     CustomerDataStore,
     VariableEntry,
 )
-from focal.customer_data.stores.cached import CustomerDataStoreCacheLayer
-from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.customer_data.stores.cached import CustomerDataStoreCacheLayer
+from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
 
 
 @pytest.fixture
@@ -248,7 +248,7 @@ class TestCacheInvalidation:
         self, cached_store, backend_store, mock_redis, sample_profile, tenant_id
     ):
         """Test that add_asset invalidates profile cache."""
-        from focal.customer_data.models import ProfileAsset
+        from ruche.customer_data.models import ProfileAsset
 
         await backend_store.save(sample_profile)
 
@@ -409,8 +409,8 @@ class TestFieldDefinitionCaching:
         self, cached_store, backend_store, mock_redis, tenant_id, agent_id
     ):
         """Test that field definitions are cached."""
-        from focal.customer_data.models import CustomerDataField
-        from focal.customer_data.enums import ValidationMode
+        from ruche.customer_data.models import CustomerDataField
+        from ruche.customer_data.enums import ValidationMode
 
         mock_redis.get.return_value = None
 
@@ -434,8 +434,8 @@ class TestFieldDefinitionCaching:
         self, cached_store, backend_store, mock_redis, tenant_id, agent_id
     ):
         """Test that save_field_definition invalidates cache."""
-        from focal.customer_data.models import CustomerDataField
-        from focal.customer_data.enums import ValidationMode
+        from ruche.customer_data.models import CustomerDataField
+        from ruche.customer_data.enums import ValidationMode
 
         definition = CustomerDataField(
             id=uuid4(),
@@ -460,8 +460,8 @@ class TestScenarioRequirementCaching:
         self, cached_store, backend_store, mock_redis, tenant_id, agent_id
     ):
         """Test that scenario requirements are cached."""
-        from focal.customer_data.models import ScenarioFieldRequirement
-        from focal.customer_data.enums import RequiredLevel, FallbackAction
+        from ruche.customer_data.models import ScenarioFieldRequirement
+        from ruche.customer_data.enums import RequiredLevel, FallbackAction
 
         mock_redis.get.return_value = None
         scenario_id = uuid4()

@@ -2,7 +2,7 @@
 
 import pytest
 
-from focal.alignment.context.customer_schema_mask import (
+from ruche.alignment.context.customer_schema_mask import (
     CustomerSchemaMask,
     CustomerSchemaMaskEntry,
 )

@@ -5,10 +5,10 @@ from uuid import uuid4
 
 import pytest
 
-from focal.memory.ingestion.summarizer import ConversationSummarizer
-from focal.memory.models.episode import Episode
-from focal.memory.stores.inmemory import InMemoryMemoryStore
-from focal.providers.llm.mock import MockLLMProvider
+from ruche.memory.ingestion.summarizer import ConversationSummarizer
+from ruche.memory.models.episode import Episode
+from ruche.memory.stores.inmemory import InMemoryMemoryStore
+from ruche.providers.llm.mock import MockLLMProvider
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ class TestConversationSummarizerWindow:
         self, memory_store, llm_provider, group_id
     ):
         """Should generate summary from episode window."""
-        from focal.config.models.pipeline import SummarizationConfig
+        from ruche.config.models.pipeline import SummarizationConfig
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
@@ -69,7 +69,7 @@ class TestConversationSummarizerWindow:
         self, memory_store, llm_provider, group_id
     ):
         """Should include summary metadata."""
-        from focal.config.models.pipeline import SummarizationConfig
+        from ruche.config.models.pipeline import SummarizationConfig
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
@@ -103,7 +103,7 @@ class TestConversationSummarizerMeta:
         self, memory_store, llm_provider, group_id
     ):
         """Should create meta-summary from summaries."""
-        from focal.config.models.pipeline import SummarizationConfig
+        from ruche.config.models.pipeline import SummarizationConfig
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
@@ -141,7 +141,7 @@ class TestConversationSummarizerThreshold:
         self, memory_store, llm_provider, group_id
     ):
         """Should only summarize when threshold reached."""
-        from focal.config.models.pipeline import SummarizationConfig
+        from ruche.config.models.pipeline import SummarizationConfig
 
         config = SummarizationConfig()
         config.window.turns_per_summary = 10
@@ -170,7 +170,7 @@ class TestConversationSummarizerThreshold:
         self, memory_store, llm_provider, group_id
     ):
         """Should trigger summarization when threshold reached."""
-        from focal.config.models.pipeline import SummarizationConfig
+        from ruche.config.models.pipeline import SummarizationConfig
 
         config = SummarizationConfig()
         config.window.turns_per_summary = 10
@@ -204,7 +204,7 @@ class TestConversationSummarizerCompression:
         self, memory_store, llm_provider, group_id
     ):
         """Should compress content in summary."""
-        from focal.config.models.pipeline import SummarizationConfig
+        from ruche.config.models.pipeline import SummarizationConfig
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(
@@ -248,7 +248,7 @@ class TestConversationSummarizerErrorHandling:
                 await asyncio.sleep(0.1)  # Simulate slow LLM
                 return await super().generate(*args, **kwargs)
 
-        from focal.config.models.pipeline import SummarizationConfig
+        from ruche.config.models.pipeline import SummarizationConfig
 
         config = SummarizationConfig()
         summarizer = ConversationSummarizer(

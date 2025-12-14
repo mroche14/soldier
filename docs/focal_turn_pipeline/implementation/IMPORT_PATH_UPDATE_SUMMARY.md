@@ -17,14 +17,14 @@ Updated 6 phase checklist files with new import paths following the focal mechan
 
 | Old Path/Name | New Path/Name | Count |
 |---------------|---------------|-------|
-| `focal/alignment/` | `focal/mechanics/focal/` | ~250 |
-| `focal.alignment.` | `focal.mechanics.focal.` | ~50 |
-| `focal/providers/` | `focal/infrastructure/providers/` | ~15 |
-| `focal.providers.` | `focal.infrastructure.providers.` | ~10 |
-| `focal/conversation/` | `focal/runtime/` | ~20 |
-| `focal.conversation.` | `focal.runtime.` | ~10 |
-| `focal/customer_data/` | `focal/domain/interlocutor/` | ~150 |
-| `focal.customer_data.` | `focal.domain.interlocutor.` | ~30 |
+| `ruche/alignment/` | `ruche/mechanics/focal/` | ~250 |
+| `ruche.alignment.` | `ruche.mechanics.focal.` | ~50 |
+| `ruche/providers/` | `ruche/infrastructure/providers/` | ~15 |
+| `ruche.providers.` | `ruche.infrastructure.providers.` | ~10 |
+| `ruche/conversation/` | `ruche/runtime/` | ~20 |
+| `ruche.conversation.` | `ruche.runtime.` | ~10 |
+| `ruche/customer_data/` | `ruche/domain/interlocutor/` | ~150 |
+| `ruche.customer_data.` | `ruche.domain.interlocutor.` | ~30 |
 | `AlignmentEngine` | `FocalCognitivePipeline` | ~30 |
 | `CustomerDataStore` | `InterlocutorDataStore` | ~80 |
 | `CustomerDataField` | `InterlocutorDataField` | ~60 |
@@ -34,14 +34,14 @@ Updated 6 phase checklist files with new import paths following the focal mechan
 
 ### Module Paths
 ```diff
-- File: `focal/alignment/models/turn_context.py`
-+ File: `focal/mechanics/focal/models/turn_context.py`
+- File: `ruche/alignment/models/turn_context.py`
++ File: `ruche/mechanics/focal/models/turn_context.py`
 
-- File: `focal/customer_data/models.py`
-+ File: `focal/domain/interlocutor/models.py`
+- File: `ruche/customer_data/models.py`
++ File: `ruche/domain/interlocutor/models.py`
 
-- File: `focal/conversation/models/session.py`
-+ File: `focal/runtime/models/session.py`
+- File: `ruche/conversation/models/session.py`
++ File: `ruche/runtime/models/session.py`
 ```
 
 ### Class Names
@@ -58,10 +58,10 @@ Updated 6 phase checklist files with new import paths following the focal mechan
 ### Engine References
 ```diff
 - **Add explicit customer resolution method to AlignmentEngine**
--   - File: `focal/alignment/engine.py`
+-   - File: `ruche/alignment/engine.py`
 
 + **Add explicit customer resolution method to FocalCognitivePipeline**
-+   - File: `focal/mechanics/focal/engine.py`
++   - File: `ruche/mechanics/focal/engine.py`
 ```
 
 ## Verification
@@ -86,10 +86,10 @@ done
 
 The phase checklist files now align with the new focal mechanics folder structure. When implementing features from these checklists:
 
-1. Use the updated paths in `focal/mechanics/focal/` for alignment/cognitive pipeline code
-2. Use `focal/domain/interlocutor/` for customer data models
-3. Use `focal/infrastructure/providers/` for LLM/embedding/rerank providers
-4. Use `focal/runtime/` for session/conversation management
+1. Use the updated paths in `ruche/mechanics/focal/` for alignment/cognitive pipeline code
+2. Use `ruche/domain/interlocutor/` for customer data models
+3. Use `ruche/infrastructure/providers/` for LLM/embedding/rerank providers
+4. Use `ruche/runtime/` for session/conversation management
 5. Reference `FocalCognitivePipeline` instead of `AlignmentEngine`
 6. Use `InterlocutorDataStore/InterlocutorDataField/InterlocutorSchemaMask` for customer data
 

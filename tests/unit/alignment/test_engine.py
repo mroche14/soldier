@@ -5,14 +5,14 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.models import Turn
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.engine import AlignmentEngine
-from focal.alignment.models import Rule
-from focal.alignment.result import AlignmentResult, PipelineStepTiming
-from focal.alignment.stores import AgentConfigStore
-from focal.config.models.pipeline import PipelineConfig
-from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.alignment.context.models import Turn
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.engine import AlignmentEngine
+from ruche.alignment.models import Rule
+from ruche.alignment.result import AlignmentResult, PipelineStepTiming
+from ruche.alignment.stores import AgentConfigStore
+from ruche.config.models.pipeline import PipelineConfig
+from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

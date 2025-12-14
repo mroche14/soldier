@@ -29,10 +29,10 @@ Search for similar implementations before creating new code:
 ```bash
 # Search for related classes/functions
 mgrep "your feature name"
-grep -r "RelatedClassName" focal/
+grep -r "RelatedClassName" ruche/
 
 # Check if the mechanism already exists somewhere
-grep -r "def method_you_plan_to_add" focal/
+grep -r "def method_you_plan_to_add" ruche/
 ```
 
 ### 2. Modify, Don't Duplicate
@@ -155,7 +155,7 @@ import anthropic
 print(f"Processing {user_id}")  # WRONG!
 
 # CORRECT: structlog
-from focal.observability.logging import get_logger
+from ruche.observability.logging import get_logger
 logger = get_logger(__name__)
 logger.info("processing_user", user_id=str(user_id))
 
@@ -179,7 +179,7 @@ MAX_RETRIES = 3  # WRONG!
 
 ## Naming Corrections (CRITICAL)
 
-The existing `focal/customer_data/` module IS the CustomerDataStore. Do NOT create duplicate models.
+The existing `ruche/customer_data/` module IS the CustomerDataStore. Do NOT create duplicate models.
 
 ### Rename Map (from CHECKLIST_CORRECTIONS.md)
 
@@ -195,13 +195,13 @@ The existing `focal/customer_data/` module IS the CustomerDataStore. Do NOT crea
 
 | Model | Location |
 |-------|----------|
-| `InterlocutorSchemaMask` | `focal/mechanics/focal/context/interlocutor_schema_mask.py` |
-| `CandidateVariableInfo` | `focal/mechanics/focal/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `focal/mechanics/focal/context/situational_snapshot.py` |
-| `GlossaryItem` | `focal/mechanics/focal/models/glossary.py` |
-| `TurnContext` | `focal/mechanics/focal/models/turn_context.py` |
-| `ResponsePlan` | `focal/mechanics/focal/planning/models.py` |
-| `TurnOutcome` | `focal/mechanics/focal/models/outcome.py` |
+| `InterlocutorSchemaMask` | `ruche/mechanics/focal/context/interlocutor_schema_mask.py` |
+| `CandidateVariableInfo` | `ruche/mechanics/focal/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `ruche/mechanics/focal/context/situational_snapshot.py` |
+| `GlossaryItem` | `ruche/mechanics/focal/models/glossary.py` |
+| `TurnContext` | `ruche/mechanics/focal/models/turn_context.py` |
+| `ResponsePlan` | `ruche/mechanics/focal/planning/models.py` |
+| `TurnOutcome` | `ruche/mechanics/focal/models/outcome.py` |
 
 ---
 
@@ -210,7 +210,7 @@ The existing `focal/customer_data/` module IS the CustomerDataStore. Do NOT crea
 ### Adding a New Model
 
 ```python
-# focal/mechanics/focal/models/my_model.py
+# ruche/mechanics/focal/models/my_model.py
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
@@ -233,7 +233,7 @@ class MyModel(BaseModel):
     updated_at: datetime
 
 # Export in __init__.py
-# focal/mechanics/focal/models/__init__.py
+# ruche/mechanics/focal/models/__init__.py
 from .my_model import MyModel
 ```
 
@@ -248,7 +248,7 @@ timeout_seconds = 30
 ```
 
 ```python
-# focal/config/models/pipeline.py
+# ruche/config/models/pipeline.py
 class MyFeatureConfig(BaseModel):
     """Configuration for my feature."""
     enabled: bool = True
@@ -264,7 +264,7 @@ class PipelineConfig(BaseModel):
 ### Adding Structured Logging
 
 ```python
-from focal.infrastructure.observability.logging import get_logger
+from ruche.infrastructure.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -284,7 +284,7 @@ logger.info(f"Completed processing {count} items in {elapsed}ms")  # WRONG!
 ### Adding Metrics
 
 ```python
-# focal/infrastructure/observability/metrics.py
+# ruche/infrastructure/observability/metrics.py
 from prometheus_client import Counter, Histogram
 
 my_operation_total = Counter(
@@ -303,7 +303,7 @@ my_operation_duration = Histogram(
 ### Adding a Store Interface
 
 ```python
-# focal/mechanics/focal/stores/my_store.py
+# ruche/mechanics/focal/stores/my_store.py
 from abc import ABC, abstractmethod
 
 class MyStore(ABC):
@@ -319,7 +319,7 @@ class MyStore(ABC):
         """Save item."""
         pass
 
-# focal/mechanics/focal/stores/inmemory.py
+# ruche/mechanics/focal/stores/inmemory.py
 class InMemoryMyStore(MyStore):
     """In-memory implementation for testing."""
 
@@ -336,7 +336,7 @@ class InMemoryMyStore(MyStore):
 ### Adding Jinja2 Templates
 
 ```jinja2
-{# focal/mechanics/focal/context/prompts/my_task.jinja2 #}
+{# ruche/mechanics/focal/context/prompts/my_task.jinja2 #}
 You are analyzing a customer conversation.
 
 {% if context %}
@@ -355,7 +355,7 @@ Respond with JSON:
 
 ```python
 # Loading templates
-from focal.mechanics.focal.context.template_loader import TemplateLoader
+from ruche.mechanics.focal.context.template_loader import TemplateLoader
 from pathlib import Path
 
 loader = TemplateLoader(Path(__file__).parent / "prompts")
@@ -418,12 +418,12 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before (in the checklist file)
 - [ ] **Create MyModel model**
-  - File: `focal/alignment/models/my_model.py`
+  - File: `ruche/alignment/models/my_model.py`
   - Action: Create new file
 
 # After (edit the checklist file to show)
 - [x] **Create MyModel model**
-  - File: `focal/alignment/models/my_model.py`
+  - File: `ruche/alignment/models/my_model.py`
   - Action: Created new file
   - **Implemented**: Created with fields `tenant_id`, `id`, `name`, `enabled`. Added export to `__init__.py`.
 ```
@@ -447,11 +447,11 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before
 - [ ] **Integrate with SituationalSnapshot**
-  - File: `focal/alignment/engine.py`
+  - File: `ruche/alignment/engine.py`
 
 # After
 - [ ] ⏸️ BLOCKED: SituationalSnapshot model not yet created (Phase 2 prerequisite)
-  - File: `focal/alignment/engine.py`
+  - File: `ruche/alignment/engine.py`
 ```
 
 ### Adding Implementation Notes
@@ -471,8 +471,8 @@ Always add a brief note about:
 | Module | Required Coverage |
 |--------|-------------------|
 | Overall | 85% line, 80% branch |
-| `focal/alignment/` | 85% minimum |
-| `focal/memory/` | 85% minimum |
+| `ruche/alignment/` | 85% minimum |
+| `ruche/memory/` | 85% minimum |
 
 ### Running Tests
 
@@ -484,10 +484,10 @@ uv run pytest
 uv run pytest tests/unit/mechanics/focal/models/ -v
 
 # Run with coverage
-uv run pytest --cov=focal/mechanics/focal --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal --cov-report=term-missing
 
 # Run only your phase's tests
-uv run pytest tests/unit/mechanics/focal/context/ -v --cov=focal/mechanics/focal/context
+uv run pytest tests/unit/mechanics/focal/context/ -v --cov=ruche/mechanics/focal/context
 ```
 
 ### Test Patterns
@@ -495,7 +495,7 @@ uv run pytest tests/unit/mechanics/focal/context/ -v --cov=focal/mechanics/focal
 ```python
 # tests/unit/mechanics/focal/models/test_my_model.py
 import pytest
-from focal.mechanics.focal.models.my_model import MyModel
+from ruche.mechanics.focal.models.my_model import MyModel
 
 class TestMyModel:
     """Test suite for MyModel."""
@@ -522,7 +522,7 @@ class TestMyModel:
 
 ```python
 # tests/factories.py
-from focal.mechanics.focal.models.my_model import MyModel
+from ruche.mechanics.focal.models.my_model import MyModel
 
 class MyModelFactory:
     @staticmethod
@@ -554,7 +554,7 @@ At the end of your work, provide this report:
 - **Coverage**: XX%
 
 ## Completed Items
-1. Created `MyModel` in `focal/mechanics/focal/models/my_model.py`
+1. Created `MyModel` in `ruche/mechanics/focal/models/my_model.py`
 2. Added config section `[pipeline.my_feature]` to `config/default.toml`
 3. Implemented `MyStore` interface and `InMemoryMyStore`
 4. ... (list all)
@@ -576,14 +576,14 @@ At the end of your work, provide this report:
 
 ## Files Created/Modified
 ### Created
-- `focal/mechanics/focal/models/my_model.py`
-- `focal/mechanics/focal/stores/my_store.py`
+- `ruche/mechanics/focal/models/my_model.py`
+- `ruche/mechanics/focal/stores/my_store.py`
 - `tests/unit/mechanics/focal/models/test_my_model.py`
 
 ### Modified
-- `focal/mechanics/focal/models/__init__.py` (added export)
+- `ruche/mechanics/focal/models/__init__.py` (added export)
 - `config/default.toml` (added section)
-- `focal/config/models/pipeline.py` (added config model)
+- `ruche/config/models/pipeline.py` (added config model)
 
 ## Notes for Next Phase
 - The `MyStore` interface is ready for Phase N+1 to use
@@ -598,22 +598,22 @@ At the end of your work, provide this report:
 
 ```python
 # Logging
-from focal.infrastructure.observability.logging import get_logger
+from ruche.infrastructure.observability.logging import get_logger
 logger = get_logger(__name__)
 
 # Metrics
-from focal.infrastructure.observability.metrics import my_metric
+from ruche.infrastructure.observability.metrics import my_metric
 
 # Models
-from focal.mechanics.focal.models import MyModel
-from focal.mechanics.focal.models.rule import Rule, MatchedRule
+from ruche.mechanics.focal.models import MyModel
+from ruche.mechanics.focal.models.rule import Rule, MatchedRule
 
 # Stores
-from focal.mechanics.focal.stores.config_store import ConfigStore
-from focal.mechanics.focal.stores.inmemory import InMemoryConfigStore
+from ruche.mechanics.focal.stores.config_store import ConfigStore
+from ruche.mechanics.focal.stores.inmemory import InMemoryConfigStore
 
 # Config
-from focal.config.loader import get_settings
+from ruche.config.loader import get_settings
 settings = get_settings()
 
 # Pydantic
@@ -626,10 +626,10 @@ from datetime import datetime, UTC
 
 | Type | Location Pattern |
 |------|------------------|
-| Models | `focal/mechanics/focal/models/{name}.py` |
-| Stores | `focal/mechanics/focal/stores/{name}.py` |
-| Config Models | `focal/config/models/{domain}.py` |
-| Templates | `focal/mechanics/focal/{domain}/prompts/{name}.jinja2` |
+| Models | `ruche/mechanics/focal/models/{name}.py` |
+| Stores | `ruche/mechanics/focal/stores/{name}.py` |
+| Config Models | `ruche/config/models/{domain}.py` |
+| Templates | `ruche/mechanics/focal/{domain}/prompts/{name}.jinja2` |
 | Unit Tests | `tests/unit/mechanics/focal/{mirror_of_src}/test_{name}.py` |
 | Integration Tests | `tests/integration/mechanics/focal/test_{feature}.py` |
 
@@ -662,13 +662,13 @@ Before marking your phase complete:
 
 ```bash
 # Check for linting issues
-uv run ruff check focal/mechanics/focal/
+uv run ruff check ruche/mechanics/focal/
 
 # Auto-fix what can be fixed
-uv run ruff check --fix focal/mechanics/focal/
+uv run ruff check --fix ruche/mechanics/focal/
 
 # Format code
-uv run ruff format focal/mechanics/focal/
+uv run ruff format ruche/mechanics/focal/
 ```
 
 **All ruff errors MUST be fixed** before marking phase complete.
@@ -677,10 +677,10 @@ uv run ruff format focal/mechanics/focal/
 
 ```bash
 # Run type checking on your changes
-uv run mypy focal/mechanics/focal/ --ignore-missing-imports
+uv run mypy ruche/mechanics/focal/ --ignore-missing-imports
 
 # Or check specific files you modified
-uv run mypy focal/mechanics/focal/models/my_new_model.py
+uv run mypy ruche/mechanics/focal/models/my_new_model.py
 ```
 
 **Target**: No new type errors introduced. Pre-existing errors are acceptable but don't add more.
@@ -691,9 +691,9 @@ Run this at the end of each phase:
 
 ```bash
 # Full quality check
-echo "=== RUFF CHECK ===" && uv run ruff check focal/mechanics/focal/ && \
-echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check focal/mechanics/focal/ && \
-echo "=== MYPY ===" && uv run mypy focal/mechanics/focal/ --ignore-missing-imports && \
+echo "=== RUFF CHECK ===" && uv run ruff check ruche/mechanics/focal/ && \
+echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check ruche/mechanics/focal/ && \
+echo "=== MYPY ===" && uv run mypy ruche/mechanics/focal/ --ignore-missing-imports && \
 echo "=== TESTS ===" && uv run pytest tests/unit/mechanics/focal/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```

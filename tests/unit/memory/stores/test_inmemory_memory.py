@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from focal.memory.models import Entity, Episode, Relationship
-from focal.memory.stores import InMemoryMemoryStore
+from ruche.memory.models import Entity, Episode, Relationship
+from ruche.memory.stores import InMemoryMemoryStore
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@
 import pytest
 from prometheus_client import REGISTRY
 
-from focal.observability.metrics import (
+from ruche.observability.metrics import (
     ACTIVE_SESSIONS,
     ERRORS,
     LLM_TOKENS,

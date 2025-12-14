@@ -427,12 +427,12 @@ Use environment-specific overrides: `config/development.toml`, `config/staging.t
 
 ### Environment Variable Overrides
 
-Override any configuration via `FOCAL_*` environment variables:
+Override any configuration via `RUCHE_*` environment variables:
 
 ```bash
-export FOCAL_API__PORT=9000
-export FOCAL_PIPELINE__GENERATION__MODEL=openrouter/openai/gpt-oss-120b
-export FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
+export RUCHE_API__PORT=9000
+export RUCHE_PIPELINE__GENERATION__MODEL=openrouter/openai/gpt-oss-120b
+export RUCHE_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
 ```
 
 ---

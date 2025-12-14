@@ -1319,10 +1319,10 @@ class LogicalTurnWorkflow:
 
 ### Phase 1: Internal Module
 
-Implement ACF as `focal/acf/` module within FOCAL:
+Implement ACF as `ruche/acf/` module within FOCAL:
 
 ```
-focal/
+ruche/
 ├── acf/
 │   ├── __init__.py
 │   ├── types.py           # Core types
@@ -1344,7 +1344,7 @@ focal/
 Make FOCAL implement CognitivePipeline:
 
 ```python
-# focal/alignment/acf_adapter.py
+# ruche/alignment/acf_adapter.py
 
 class FocalCognitivePipeline(
     CognitivePipeline,

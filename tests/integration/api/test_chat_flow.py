@@ -6,10 +6,10 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from focal.alignment.engine import AlignmentResult
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.api.app import create_app
-from focal.api.dependencies import (
+from ruche.alignment.engine import AlignmentResult
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.api.app import create_app
+from ruche.api.dependencies import (
     get_alignment_engine,
     get_audit_store,
     get_config_store,
@@ -17,10 +17,10 @@ from focal.api.dependencies import (
     get_settings,
     reset_dependencies,
 )
-from focal.api.middleware.auth import get_tenant_context
-from focal.api.models.context import TenantContext
-from focal.audit.stores.inmemory import InMemoryAuditStore
-from focal.conversation.stores.inmemory import InMemorySessionStore
+from ruche.api.middleware.auth import get_tenant_context
+from ruche.api.models.context import TenantContext
+from ruche.audit.stores.inmemory import InMemoryAuditStore
+from ruche.conversation.stores.inmemory import InMemorySessionStore
 
 
 @pytest.fixture

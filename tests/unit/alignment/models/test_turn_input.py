@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.models.turn_input import TurnInput
-from focal.conversation.models.enums import Channel
+from ruche.alignment.models.turn_input import TurnInput
+from ruche.conversation.models.enums import Channel
 
 
 class TestTurnInput:

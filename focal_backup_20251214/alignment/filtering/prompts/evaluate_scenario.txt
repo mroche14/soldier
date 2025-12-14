@@ -1,9 +1,0 @@
-You are deciding how to navigate a scenario.
-
-Consider the user's latest message, the current step, and possible transitions.
-Return JSON with:
-{
-  "action": "start|continue|transition|exit|relocalize",
-  "target_step_id": "<uuid or null>",
-  "reasoning": "short explanation"
-}

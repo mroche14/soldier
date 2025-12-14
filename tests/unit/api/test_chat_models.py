@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from focal.api.models.chat import (
+from ruche.api.models.chat import (
     ChatRequest,
     ChatResponse,
     DoneEvent,

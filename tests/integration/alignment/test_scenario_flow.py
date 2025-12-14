@@ -6,13 +6,13 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.engine import AlignmentEngine
-from focal.alignment.models import Scope
-from focal.alignment.models.scenario import Scenario, ScenarioStep
-from focal.alignment.stores import InMemoryAgentConfigStore
-from focal.config.models.pipeline import PipelineConfig
-from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.alignment.engine import AlignmentEngine
+from ruche.alignment.models import Scope
+from ruche.alignment.models.scenario import Scenario, ScenarioStep
+from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.config.models.pipeline import PipelineConfig
+from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 

@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from focal.api.models.chat import ScenarioState
-from focal.api.models.session import (
+from ruche.api.models.chat import ScenarioState
+from ruche.api.models.session import (
     SessionResponse,
     TurnListResponse,
     TurnResponse,

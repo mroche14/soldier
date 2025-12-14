@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from focal.vector import (
+from ruche.vector import (
     EntityType,
     InMemoryVectorStore,
     VectorDocument,

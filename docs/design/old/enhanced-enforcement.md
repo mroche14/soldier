@@ -84,7 +84,7 @@ Rules fall into two categories that require different verification approaches:
 ### New Field: `enforcement_expression`
 
 ```python
-# focal/alignment/models/rule.py
+# ruche/alignment/models/rule.py
 
 class Rule(AgentScopedModel):
     """Behavioral policy: when X, then Y."""
@@ -571,7 +571,7 @@ Output ONE word: ENTAILMENT, NEUTRAL, or CONTRADICTION"""
 ### Pipeline Configuration (Extended)
 
 ```python
-# focal/config/models/pipeline.py
+# ruche/config/models/pipeline.py
 
 class EnforcementConfig(BaseModel):
     """Configuration for enforcement step."""
@@ -707,7 +707,7 @@ Rule(
 ### Extended EnforcementValidator
 
 ```python
-# focal/alignment/enforcement/validator.py
+# ruche/alignment/enforcement/validator.py
 
 class EnforcementValidator:
     """Validate responses against hard constraint rules."""

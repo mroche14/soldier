@@ -47,7 +47,7 @@ Every agent MUST:
 ```bash
 # Example exploration before implementing
 mgrep "feature you're implementing"
-grep -r "SimilarClassName" focal/
+grep -r "SimilarClassName" ruche/
 ```
 
 **The goal is NO duplicate/parallel implementations.** If something similar exists, extend it.
@@ -125,7 +125,7 @@ As you complete EACH item:
 ```bash
 uv run pytest tests/unit/mechanics/focal/models/ -v
 uv run pytest tests/unit/mechanics/focal/loaders/ -v
-uv run pytest --cov=focal/mechanics/focal --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal --cov-report=term-missing
 ```
 
 ## Report Format
@@ -163,10 +163,10 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 5. `docs/focal_turn_pipeline/implementation/phase-02-situational-sensor-checklist.md` - Your checklist
 
 ## Prerequisites Completed (Phase 1)
-- TurnContext model exists at `focal/mechanics/focal/models/turn_context.py`
+- TurnContext model exists at `ruche/mechanics/focal/models/turn_context.py`
 - InterlocutorDataField (renamed from ProfileFieldDefinition) has `scope`, `persist`
 - VariableEntry (renamed from ProfileField) has `history`
-- GlossaryItem model exists at `focal/mechanics/focal/models/glossary.py`
+- GlossaryItem model exists at `ruche/mechanics/focal/models/glossary.py`
 - ConfigStore has glossary and schema methods
 
 ## Your Assignment
@@ -185,14 +185,14 @@ Execute ALL items in the Phase 2 checklist.
 ## Important Notes
 - InterlocutorDataField, VariableEntry, InterlocutorDataStore already exist (renamed in P1)
 - Do NOT create duplicate models - use the renamed Profile models
-- Template path: `focal/mechanics/focal/context/prompts/situational_sensor.jinja2`
-- Config model: SituationalSensorConfig in `focal/config/models/pipeline.py`
+- Template path: `ruche/mechanics/focal/context/prompts/situational_sensor.jinja2`
+- Config model: SituationalSensorConfig in `ruche/config/models/pipeline.py`
 
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/mechanics/focal/context/ -v
 uv run pytest tests/unit/mechanics/focal/models/test_situational_snapshot.py -v
-uv run pytest --cov=focal/mechanics/focal/context --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal/context --cov-report=term-missing
 ```
 
 ## Report Format
@@ -241,7 +241,7 @@ Execute ALL items in the Phase 4 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/mechanics/focal/retrieval/ -v
-uv run pytest --cov=focal/mechanics/focal/retrieval --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal/retrieval --cov-report=term-missing
 ```
 
 ## Report Format
@@ -294,7 +294,7 @@ Execute ALL items in the Phase 3 checklist.
 6. Unit tests with 85%+ coverage
 
 ## Important Notes
-- Use existing validation in `focal/domain/interlocutor/validation.py` if available
+- Use existing validation in `ruche/domain/interlocutor/validation.py` if available
 - candidate_variables comes from SituationalSnapshot (P2 output)
 - Only variables with persist=True should be saved to database
 - History should track: {value, timestamp, source, confidence}
@@ -302,7 +302,7 @@ Execute ALL items in the Phase 3 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/domain/interlocutor/ -v
-uv run pytest --cov=focal/domain/interlocutor --cov-report=term-missing
+uv run pytest --cov=ruche/domain/interlocutor --cov-report=term-missing
 ```
 
 ## Report Format
@@ -350,7 +350,7 @@ Execute ALL items in the Phase 5 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/mechanics/focal/filtering/ -v
-uv run pytest --cov=focal/mechanics/focal/filtering --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -410,7 +410,7 @@ Execute ALL items in the Phase 6 checklist.
 ```bash
 uv run pytest tests/unit/mechanics/focal/filtering/test_scenario_filter.py -v
 uv run pytest tests/unit/mechanics/focal/models/test_scenario_*.py -v
-uv run pytest --cov=focal/mechanics/focal/filtering --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -468,7 +468,7 @@ Execute ALL items in the Phase 7 checklist.
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/mechanics/focal/execution/ -v
-uv run pytest --cov=focal/mechanics/focal/execution --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal/execution --cov-report=term-missing
 ```
 
 ## Report Format
@@ -512,13 +512,13 @@ Execute ALL items in the Phase 8 checklist.
 
 ## Important Notes
 - Phase 8 is currently SKIPPED in pipeline - this is the gap to fill
-- ResponsePlan goes to `focal/mechanics/focal/planning/models.py`
-- ResponsePlanner goes to `focal/mechanics/focal/planning/planner.py`
+- ResponsePlan goes to `ruche/mechanics/focal/planning/models.py`
+- ResponsePlanner goes to `ruche/mechanics/focal/planning/planner.py`
 
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/mechanics/focal/planning/ -v
-uv run pytest --cov=focal/mechanics/focal/planning --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal/planning --cov-report=term-missing
 ```
 
 ## Report Format
@@ -587,7 +587,7 @@ Execute ALL items in Phases 9, 10, and 11 checklists.
 uv run pytest tests/unit/mechanics/focal/generation/ -v
 uv run pytest tests/unit/mechanics/focal/enforcement/ -v
 uv run pytest tests/unit/mechanics/focal/persistence/ -v
-uv run pytest --cov=focal/mechanics/focal --cov-report=term-missing
+uv run pytest --cov=ruche/mechanics/focal --cov-report=term-missing
 ```
 
 ## Report Format
@@ -617,14 +617,14 @@ Use the individual phase prompts, running P9 → P10 → P11 in sequence.
 
 ```bash
 # 1. Ruff linting
-uv run ruff check focal/mechanics/focal/
-uv run ruff check --fix focal/mechanics/focal/  # Auto-fix issues
+uv run ruff check ruche/mechanics/focal/
+uv run ruff check --fix ruche/mechanics/focal/  # Auto-fix issues
 
 # 2. Ruff formatting
-uv run ruff format focal/mechanics/focal/
+uv run ruff format ruche/mechanics/focal/
 
 # 3. Mypy type checking
-uv run mypy focal/mechanics/focal/ --ignore-missing-imports
+uv run mypy ruche/mechanics/focal/ --ignore-missing-imports
 
 # 4. Tests
 uv run pytest tests/unit/mechanics/focal/ -v --tb=short
@@ -634,9 +634,9 @@ uv run pytest tests/unit/mechanics/focal/ -v --tb=short
 
 ```bash
 echo "=== WAVE QUALITY CHECK ===" && \
-uv run ruff check focal/mechanics/focal/ && \
-uv run ruff format --check focal/mechanics/focal/ && \
-uv run mypy focal/mechanics/focal/ --ignore-missing-imports && \
+uv run ruff check ruche/mechanics/focal/ && \
+uv run ruff format --check ruche/mechanics/focal/ && \
+uv run mypy ruche/mechanics/focal/ --ignore-missing-imports && \
 uv run pytest tests/unit/mechanics/focal/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```
@@ -662,7 +662,7 @@ uv run pytest tests/e2e/ -v
 ### Coverage Check
 
 ```bash
-uv run pytest --cov=focal/mechanics/focal --cov-report=html
+uv run pytest --cov=ruche/mechanics/focal --cov-report=html
 # Open htmlcov/index.html to verify 85%+ coverage
 ```
 
@@ -670,10 +670,10 @@ uv run pytest --cov=focal/mechanics/focal --cov-report=html
 
 ```bash
 # Full quality check on entire mechanics/focal module
-uv run ruff check focal/mechanics/focal/ && \
-uv run ruff format --check focal/mechanics/focal/ && \
-uv run mypy focal/mechanics/focal/ --ignore-missing-imports && \
-uv run pytest tests/unit/mechanics/focal/ --cov=focal/mechanics/focal --cov-fail-under=85
+uv run ruff check ruche/mechanics/focal/ && \
+uv run ruff format --check ruche/mechanics/focal/ && \
+uv run mypy ruche/mechanics/focal/ --ignore-missing-imports && \
+uv run pytest tests/unit/mechanics/focal/ --cov=ruche/mechanics/focal --cov-fail-under=85
 ```
 
 ### Checklist Audit

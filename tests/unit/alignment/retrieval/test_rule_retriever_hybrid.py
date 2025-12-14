@@ -3,13 +3,13 @@
 import pytest
 from uuid import uuid4
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.models import Rule, Scope
-from focal.alignment.retrieval.rule_retriever import RuleRetriever
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.config.models.pipeline import HybridRetrievalConfig
-from focal.config.models.selection import SelectionConfig
-from focal.providers.embedding import EmbeddingProvider
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.models import Rule, Scope
+from ruche.alignment.retrieval.rule_retriever import RuleRetriever
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.config.models.pipeline import HybridRetrievalConfig
+from ruche.config.models.selection import SelectionConfig
+from ruche.providers.embedding import EmbeddingProvider
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

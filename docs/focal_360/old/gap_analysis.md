@@ -42,14 +42,14 @@ The FOCAL 360 document proposes 9 major platform additions around the existing 1
 
 **Rate Limiting** (Full):
 
-- `focal/api/middleware/rate_limit.py` (387 lines)
+- `ruche/api/middleware/rate_limit.py` (387 lines)
 - Tier-based: Free (60/min), Pro (600/min), Enterprise (6000/min)
 - Backends: `SlidingWindowRateLimiter` (in-memory), `RedisRateLimiter`
 - Headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
 
 **Idempotency** (Partial):
 
-- `focal/api/middleware/idempotency.py` (166 lines)
+- `ruche/api/middleware/idempotency.py` (166 lines)
 - 5-minute TTL cache, SHA256 fingerprinting
 - **GAP**: Chat route has TODOs at lines 189-193 and 232-234
 
@@ -91,8 +91,8 @@ The FOCAL 360 document proposes 9 major platform additions around the existing 1
 
 **Tool Scheduling** (Full):
 
-- `focal/alignment/models/tool_binding.py` (25 lines)
-- `focal/alignment/execution/tool_scheduler.py` (162 lines)
+- `ruche/alignment/models/tool_binding.py` (25 lines)
+- `ruche/alignment/execution/tool_scheduler.py` (162 lines)
 - Topological sorting via Kahn's algorithm
 - `FutureToolQueue` for AFTER_STEP tools
 
@@ -104,7 +104,7 @@ The FOCAL 360 document proposes 9 major platform additions around the existing 1
 
 **Tool Execution** (Full):
 
-- `focal/alignment/execution/tool_executor.py` (131 lines)
+- `ruche/alignment/execution/tool_executor.py` (131 lines)
 - Parallel execution, per-tool timeout, fail-fast mode
 - `ToolResult` with success/failure tracking
 
@@ -140,7 +140,7 @@ The FOCAL 360 document proposes 9 major platform additions around the existing 1
 
 ### Existing Implementation Details
 
-**Channel Enum** (`focal/conversation/models/enums.py`):
+**Channel Enum** (`ruche/conversation/models/enums.py`):
 
 ```python
 class Channel(str, Enum):
@@ -152,13 +152,13 @@ class Channel(str, Enum):
     API = "api"
 ```
 
-**Channel Identity** (`focal/customer_data/models.py`):
+**Channel Identity** (`ruche/customer_data/models.py`):
 
 - `ChannelIdentity(channel, channel_user_id, verified, verified_at, primary)`
 - `CustomerDataStore.channel_identities: list[ChannelIdentity]`
 - `get_by_channel_identity()` method on stores
 
-**Channel Formatters** (`focal/alignment/generation/formatters/`):
+**Channel Formatters** (`ruche/alignment/generation/formatters/`):
 
 - WhatsApp: Max 4096 chars, markdown conversion
 - Email: Greeting/signature injection
@@ -196,14 +196,14 @@ class Channel(str, Enum):
 
 ### Existing Implementation Details
 
-**Configuration Loading** (`focal/config/loader.py`):
+**Configuration Loading** (`ruche/config/loader.py`):
 
 1. Pydantic model defaults
 2. `config/default.toml`
-3. `config/{FOCAL_ENV}.toml`
-4. `FOCAL_*` environment variables
+3. `config/{RUCHE_ENV}.toml`
+4. `RUCHE_*` environment variables
 
-**AgentConfig Model** (`focal/config/models/agent.py`):
+**AgentConfig Model** (`ruche/config/models/agent.py`):
 
 ```python
 class AgentConfig(BaseModel):
@@ -258,19 +258,19 @@ class AgentConfig(BaseModel):
 
 ### Existing Implementation Details
 
-**Hatchet Job Framework** (`focal/jobs/`):
+**Hatchet Job Framework** (`ruche/jobs/`):
 
 - `HatchetClient` wrapper with health checking
 - Existing workflows: `orphan_detection`, `profile_expiry`, `schema_extraction`
 - Configurable cron schedules and worker pools
 
-**Scenario Lifecycle** (`focal/conversation/models/session.py`):
+**Scenario Lifecycle** (`ruche/conversation/models/session.py`):
 
 - `ScenarioInstance`: current_step_id, status, timestamps
 - `StepVisit`: transition history with checkpoints
 - Multi-scenario support via `Session.active_scenarios`
 
-**Outcome Categories** (`focal/alignment/models/outcome.py`):
+**Outcome Categories** (`ruche/alignment/models/outcome.py`):
 
 ```python
 class OutcomeCategory(str, Enum):
@@ -320,7 +320,7 @@ class OutcomeCategory(str, Enum):
 
 ### Existing Implementation Details
 
-**Admin CRUD APIs** (`focal/api/routes/`):
+**Admin CRUD APIs** (`ruche/api/routes/`):
 
 - `agents.py`: Agent CRUD
 - `rules.py`: Rule management (17KB)
@@ -368,13 +368,13 @@ class OutcomeCategory(str, Enum):
 
 ### Existing Implementation Details
 
-**Template System** (`focal/alignment/models/template.py`):
+**Template System** (`ruche/alignment/models/template.py`):
 
 - Response templates with `{placeholders}`
 - Modes: SUGGEST, MANDATE
 - Scopes: GLOBAL, SCENARIO, STEP
 
-**Entity Extraction** (`focal/memory/ingestion/entity_extractor.py`):
+**Entity Extraction** (`ruche/memory/ingestion/entity_extractor.py`):
 
 - Extracts "product" as entity type from conversations
 - Used for memory, not catalog management
@@ -425,7 +425,7 @@ class OutcomeCategory(str, Enum):
 | CustomerDataStore | PostgreSQL, InMemory, Cached decorator                 |
 | VectorStore       | pgvector, Qdrant, InMemory                             |
 
-**Connection Pooling**: `focal/db/pool.py` (asyncpg)
+**Connection Pooling**: `ruche/db/pool.py` (asyncpg)
 **Contract Tests**: `tests/contract/test_customer_data_store_contract.py`
 **Documentation**: ADR-001, `alignment_engine_persistence_abstraction.md`
 
@@ -516,20 +516,20 @@ To avoid confusion, recommend these standard terms:
 
 | Component          | Primary File                                                 |
 | ------------------ | ------------------------------------------------------------ |
-| Rate Limiting      | `focal/api/middleware/rate_limit.py`                       |
-| Idempotency        | `focal/api/middleware/idempotency.py`                      |
-| Tool Scheduling    | `focal/alignment/execution/tool_scheduler.py`              |
-| Tool Execution     | `focal/alignment/execution/tool_executor.py`               |
-| Channel Enum       | `focal/conversation/models/enums.py`                       |
-| Channel Identity   | `focal/customer_data/models.py`                            |
-| Channel Formatters | `focal/alignment/generation/formatters/`                   |
-| Agent Config       | `focal/config/models/agent.py`                             |
-| Config Loading     | `focal/config/loader.py`                                   |
-| Hatchet Jobs       | `focal/jobs/`                                              |
-| Session Model      | `focal/conversation/models/session.py`                     |
-| Outcome Model      | `focal/alignment/models/outcome.py`                        |
-| Admin APIs         | `focal/api/routes/`                                        |
-| Store Interfaces   | `focal/alignment/stores/`, `focal/memory/store.py`, etc. |
+| Rate Limiting      | `ruche/api/middleware/rate_limit.py`                       |
+| Idempotency        | `ruche/api/middleware/idempotency.py`                      |
+| Tool Scheduling    | `ruche/alignment/execution/tool_scheduler.py`              |
+| Tool Execution     | `ruche/alignment/execution/tool_executor.py`               |
+| Channel Enum       | `ruche/conversation/models/enums.py`                       |
+| Channel Identity   | `ruche/customer_data/models.py`                            |
+| Channel Formatters | `ruche/alignment/generation/formatters/`                   |
+| Agent Config       | `ruche/config/models/agent.py`                             |
+| Config Loading     | `ruche/config/loader.py`                                   |
+| Hatchet Jobs       | `ruche/jobs/`                                              |
+| Session Model      | `ruche/conversation/models/session.py`                     |
+| Outcome Model      | `ruche/alignment/models/outcome.py`                        |
+| Admin APIs         | `ruche/api/routes/`                                        |
+| Store Interfaces   | `ruche/alignment/stores/`, `ruche/memory/store.py`, etc. |
 
 ### Documentation References
 

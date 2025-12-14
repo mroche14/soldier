@@ -29,10 +29,10 @@ The gap analysis identifies many partial implementations. Search before creating
 ```bash
 # Search for related classes/functions
 mgrep "your feature name"
-grep -r "RelatedClassName" focal/
+grep -r "RelatedClassName" ruche/
 
 # Check if the mechanism already exists somewhere
-grep -r "def method_you_plan_to_add" focal/
+grep -r "def method_you_plan_to_add" ruche/
 ```
 
 ### 2. Modify, Don't Duplicate
@@ -153,7 +153,7 @@ import anthropic
 print(f"Processing {user_id}")  # WRONG!
 
 # CORRECT: structlog
-from focal.observability.logging import get_logger
+from ruche.observability.logging import get_logger
 logger = get_logger(__name__)
 logger.info("processing_user", user_id=str(user_id))
 
@@ -195,9 +195,9 @@ The gap analysis (`docs/focal_360/gap_analysis.md`) identifies what already exis
 
 | Category | Description | Example Files |
 |----------|-------------|---------------|
-| **Category A: Pre-Pipeline** | Wraps the turn pipeline | `focal/api/middleware/` |
-| **Category B: Pipeline Extensions** | Extends existing phases | `focal/alignment/`, `focal/config/` |
-| **Category C: New Systems** | Entirely new subsystems | `focal/agenda/`, `focal/meta_agents/` |
+| **Category A: Pre-Pipeline** | Wraps the turn pipeline | `ruche/api/middleware/` |
+| **Category B: Pipeline Extensions** | Extends existing phases | `ruche/alignment/`, `ruche/config/` |
+| **Category C: New Systems** | Entirely new subsystems | `ruche/agenda/`, `ruche/meta_agents/` |
 
 ---
 
@@ -206,9 +206,9 @@ The gap analysis (`docs/focal_360/gap_analysis.md`) identifies what already exis
 ### Adding Middleware (Category A)
 
 ```python
-# focal/api/middleware/ingress.py
+# ruche/api/middleware/ingress.py
 from starlette.middleware.base import BaseHTTPMiddleware
-from focal.observability.logging import get_logger
+from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -236,7 +236,7 @@ abuse_threshold = 5
 ```
 
 ```python
-# focal/config/models/api.py
+# ruche/config/models/api.py
 class IngressConfig(BaseModel):
     """Configuration for ingress control."""
     enabled: bool = True
@@ -253,7 +253,7 @@ class APIConfig(BaseModel):
 ### Adding Structured Logging
 
 ```python
-from focal.observability.logging import get_logger
+from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -273,7 +273,7 @@ logger.info(f"Coalesced {count} messages in {elapsed}ms")  # WRONG!
 ### Adding Metrics
 
 ```python
-# focal/observability/metrics.py
+# ruche/observability/metrics.py
 from prometheus_client import Counter, Histogram
 
 ingress_coalesced_total = Counter(
@@ -292,7 +292,7 @@ ingress_debounce_duration = Histogram(
 ### Adding a Store Interface (Category C)
 
 ```python
-# focal/agenda/store.py
+# ruche/agenda/store.py
 from abc import ABC, abstractmethod
 from uuid import UUID
 
@@ -311,7 +311,7 @@ class AgendaStore(ABC):
         """Save an agenda task."""
         pass
 
-# focal/agenda/stores/inmemory.py
+# ruche/agenda/stores/inmemory.py
 class InMemoryAgendaStore(AgendaStore):
     """In-memory implementation for testing."""
 
@@ -386,12 +386,12 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before (in the checklist file)
 - [ ] **Create IngressConfig model**
-  - File: `focal/config/models/api.py`
+  - File: `ruche/config/models/api.py`
   - Action: Add config model
 
 # After (edit the checklist file to show)
 - [x] **Create IngressConfig model**
-  - File: `focal/config/models/api.py`
+  - File: `ruche/config/models/api.py`
   - Action: Added config model
   - **Implemented**: Created with `debounce_window_ms`, `coalesce_enabled`, `abuse_threshold`. Added to APIConfig.
 ```
@@ -415,11 +415,11 @@ When you complete an item, **immediately edit the checklist file**:
 ```markdown
 # Before
 - [ ] **Integrate with SideEffectRegistry**
-  - File: `focal/api/middleware/ingress.py`
+  - File: `ruche/api/middleware/ingress.py`
 
 # After
 - [ ] ⏸️ BLOCKED: SideEffectRegistry not yet created (Wave 4 prerequisite)
-  - File: `focal/api/middleware/ingress.py`
+  - File: `ruche/api/middleware/ingress.py`
 ```
 
 ### Adding Implementation Notes
@@ -451,10 +451,10 @@ uv run pytest
 uv run pytest tests/unit/api/middleware/test_ingress.py -v
 
 # Run with coverage
-uv run pytest --cov=focal/api/middleware --cov-report=term-missing
+uv run pytest --cov=ruche/api/middleware --cov-report=term-missing
 
 # Run only your feature's tests
-uv run pytest tests/unit/agenda/ -v --cov=focal/agenda
+uv run pytest tests/unit/agenda/ -v --cov=ruche/agenda
 ```
 
 ### Test Patterns
@@ -462,7 +462,7 @@ uv run pytest tests/unit/agenda/ -v --cov=focal/agenda
 ```python
 # tests/unit/api/middleware/test_ingress.py
 import pytest
-from focal.api.middleware.ingress import IngressControlMiddleware
+from ruche.api.middleware.ingress import IngressControlMiddleware
 
 class TestIngressControlMiddleware:
     """Test suite for IngressControlMiddleware."""
@@ -488,7 +488,7 @@ class TestIngressControlMiddleware:
 
 ```python
 # tests/factories/focal_360.py
-from focal.agenda.models import AgendaTask
+from ruche.agenda.models import AgendaTask
 
 class AgendaTaskFactory:
     @staticmethod
@@ -519,7 +519,7 @@ At the end of your work, provide this report:
 - **Coverage**: XX%
 
 ## Completed Items
-1. Created `IngressControlMiddleware` in `focal/api/middleware/ingress.py`
+1. Created `IngressControlMiddleware` in `ruche/api/middleware/ingress.py`
 2. Added config section `[api.ingress]` to `config/default.toml`
 3. Extended `RateLimiter` with debouncing capability
 4. ... (list all)
@@ -541,15 +541,15 @@ At the end of your work, provide this report:
 
 ## Files Created/Modified
 ### Created
-- `focal/api/middleware/ingress.py`
-- `focal/config/models/ingress.py`
+- `ruche/api/middleware/ingress.py`
+- `ruche/config/models/ingress.py`
 - `tests/unit/api/middleware/test_ingress.py`
 
 ### Modified
-- `focal/api/app.py` (added middleware registration)
-- `focal/api/middleware/rate_limit.py` (added debounce support)
+- `ruche/api/app.py` (added middleware registration)
+- `ruche/api/middleware/rate_limit.py` (added debounce support)
 - `config/default.toml` (added [api.ingress] section)
-- `focal/config/models/api.py` (added IngressConfig)
+- `ruche/config/models/api.py` (added IngressConfig)
 
 ## Notes for Next Wave
 - The IngressControl is ready for SideEffectRegistry integration
@@ -564,39 +564,39 @@ At the end of your work, provide this report:
 
 ```python
 # Logging
-from focal.observability.logging import get_logger
+from ruche.observability.logging import get_logger
 logger = get_logger(__name__)
 
 # Metrics
-from focal.observability.metrics import my_metric
+from ruche.observability.metrics import my_metric
 
 # Models
-from focal.alignment.models import Rule, MatchedRule
+from ruche.alignment.models import Rule, MatchedRule
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime, UTC
 
 # Stores
-from focal.alignment.stores.config_store import ConfigStore
-from focal.alignment.stores.inmemory import InMemoryConfigStore
+from ruche.alignment.stores.config_store import ConfigStore
+from ruche.alignment.stores.inmemory import InMemoryConfigStore
 
 # Config
-from focal.config.loader import get_settings
+from ruche.config.loader import get_settings
 settings = get_settings()
 
 # Existing middleware
-from focal.api.middleware.rate_limit import RateLimiter
+from ruche.api.middleware.rate_limit import RateLimiter
 ```
 
 ### File Locations
 
 | Type | Location Pattern |
 |------|------------------|
-| Middleware | `focal/api/middleware/{name}.py` |
-| Models (alignment) | `focal/alignment/models/{name}.py` |
-| Models (new system) | `focal/{system}/models.py` |
-| Stores | `focal/{system}/store.py` + `focal/{system}/stores/` |
-| Config Models | `focal/config/models/{domain}.py` |
+| Middleware | `ruche/api/middleware/{name}.py` |
+| Models (alignment) | `ruche/alignment/models/{name}.py` |
+| Models (new system) | `ruche/{system}/models.py` |
+| Stores | `ruche/{system}/store.py` + `ruche/{system}/stores/` |
+| Config Models | `ruche/config/models/{domain}.py` |
 | Unit Tests | `tests/unit/{mirror_of_src}/test_{name}.py` |
 | Integration Tests | `tests/integration/{feature}/test_{name}.py` |
 
@@ -610,13 +610,13 @@ from focal.api.middleware.rate_limit import RateLimiter
 
 ```bash
 # Check for linting issues
-uv run ruff check focal/
+uv run ruff check ruche/
 
 # Auto-fix what can be fixed
-uv run ruff check --fix focal/
+uv run ruff check --fix ruche/
 
 # Format code
-uv run ruff format focal/
+uv run ruff format ruche/
 ```
 
 **All ruff errors MUST be fixed** before marking feature complete.
@@ -625,10 +625,10 @@ uv run ruff format focal/
 
 ```bash
 # Run type checking on your changes
-uv run mypy focal/ --ignore-missing-imports
+uv run mypy ruche/ --ignore-missing-imports
 
 # Or check specific files you modified
-uv run mypy focal/api/middleware/ingress.py
+uv run mypy ruche/api/middleware/ingress.py
 ```
 
 **Target**: No new type errors introduced. Pre-existing errors are acceptable but don't add more.
@@ -639,9 +639,9 @@ Run this at the end of each feature:
 
 ```bash
 # Full quality check
-echo "=== RUFF CHECK ===" && uv run ruff check focal/ && \
-echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check focal/ && \
-echo "=== MYPY ===" && uv run mypy focal/ --ignore-missing-imports && \
+echo "=== RUFF CHECK ===" && uv run ruff check ruche/ && \
+echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check ruche/ && \
+echo "=== MYPY ===" && uv run mypy ruche/ --ignore-missing-imports && \
 echo "=== TESTS ===" && uv run pytest tests/unit/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```

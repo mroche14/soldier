@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from focal.config.models import (
+from ruche.config.models import (
     APIConfig,
     EmbeddingProviderConfig,
     GenerationConfig,
@@ -21,7 +21,7 @@ from focal.config.models import (
     StoreBackendConfig,
     TracingConfig,
 )
-from focal.config.models.pipeline import SituationSensorConfig
+from ruche.config.models.pipeline import SituationSensorConfig
 
 
 class TestRateLimitConfig:

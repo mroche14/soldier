@@ -4,18 +4,18 @@ import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.context.models import ScenarioSignal
-from focal.alignment.filtering.models import (
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.context.models import ScenarioSignal
+from ruche.alignment.filtering.models import (
     ScenarioLifecycleAction,
     ScenarioLifecycleDecision,
 )
-from focal.alignment.models import Rule
-from focal.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
-from focal.alignment.orchestration.orchestrator import ScenarioOrchestrator
-from focal.alignment.retrieval.models import ScoredScenario
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.conversation.models.session import ScenarioInstance
+from ruche.alignment.models import Rule
+from ruche.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
+from ruche.alignment.orchestration.orchestrator import ScenarioOrchestrator
+from ruche.alignment.retrieval.models import ScoredScenario
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.conversation.models.session import ScenarioInstance
 
 
 @pytest.fixture

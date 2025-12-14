@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from focal.alignment.models.turn_context import TurnContext
+from ruche.alignment.models.turn_context import TurnContext
 
 
 class TestTurnContext:

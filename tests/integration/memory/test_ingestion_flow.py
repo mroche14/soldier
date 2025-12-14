@@ -6,22 +6,22 @@ from uuid import uuid4
 
 import pytest
 
-from focal.config.models.pipeline import (
+from ruche.config.models.pipeline import (
     EntityDeduplicationConfig,
     EntityExtractionConfig,
     MemoryIngestionConfig,
     SummarizationConfig,
 )
-from focal.conversation.models.enums import Channel
-from focal.conversation.models.session import Session
-from focal.conversation.models.turn import Turn
-from focal.memory.ingestion.entity_extractor import EntityDeduplicator, EntityExtractor
-from focal.memory.ingestion.ingestor import MemoryIngestor
-from focal.memory.ingestion.queue import InMemoryTaskQueue
-from focal.memory.ingestion.summarizer import ConversationSummarizer
-from focal.memory.stores.inmemory import InMemoryMemoryStore
-from focal.providers.embedding.mock import MockEmbeddingProvider
-from focal.providers.llm.mock import MockLLMProvider
+from ruche.conversation.models.enums import Channel
+from ruche.conversation.models.session import Session
+from ruche.conversation.models.turn import Turn
+from ruche.memory.ingestion.entity_extractor import EntityDeduplicator, EntityExtractor
+from ruche.memory.ingestion.ingestor import MemoryIngestor
+from ruche.memory.ingestion.queue import InMemoryTaskQueue
+from ruche.memory.ingestion.summarizer import ConversationSummarizer
+from ruche.memory.stores.inmemory import InMemoryMemoryStore
+from ruche.providers.embedding.mock import MockEmbeddingProvider
+from ruche.providers.llm.mock import MockLLMProvider
 
 
 @pytest.fixture
@@ -134,8 +134,8 @@ class TestTemporalRelationshipUpdates:
         """Should invalidate old and create new relationship."""
         from datetime import UTC
 
-        from focal.memory.models.entity import Entity
-        from focal.memory.models.relationship import Relationship
+        from ruche.memory.models.entity import Entity
+        from ruche.memory.models.relationship import Relationship
 
         group_id = f"{uuid4()}:{uuid4()}"
 
@@ -176,7 +176,7 @@ class TestTemporalRelationshipUpdates:
         await memory_store.add_relationship(rel1)
 
         # Update relationship (person moved)
-        from focal.memory.ingestion.entity_extractor import update_relationship_temporal
+        from ruche.memory.ingestion.entity_extractor import update_relationship_temporal
 
         rel2 = await update_relationship_temporal(
             from_entity_id=person.id,
@@ -209,7 +209,7 @@ class TestDeduplicationAccuracy:
         group_id = f"{uuid4()}:{uuid4()}"
 
         # Add original entity
-        from focal.memory.models.entity import Entity
+        from ruche.memory.models.entity import Entity
 
         original = Entity(
             group_id=group_id,
@@ -257,7 +257,7 @@ class TestSummarizationQuality:
         group_id = f"{uuid4()}:{uuid4()}"
 
         # Create episodes with key information
-        from focal.memory.models.episode import Episode
+        from ruche.memory.models.episode import Episode
 
         episodes = [
             Episode(

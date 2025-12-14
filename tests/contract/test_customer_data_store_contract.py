@@ -10,8 +10,8 @@ from uuid import uuid4
 
 import pytest
 
-from focal.conversation.models import Channel
-from focal.customer_data.enums import (
+from ruche.conversation.models import Channel
+from ruche.customer_data.enums import (
     FallbackAction,
     ItemStatus,
     VariableSource,
@@ -19,7 +19,7 @@ from focal.customer_data.enums import (
     SourceType,
     ValidationMode,
 )
-from focal.customer_data.models import (
+from ruche.customer_data.models import (
     ChannelIdentity,
     CustomerDataStore,
     ProfileAsset,
@@ -27,7 +27,7 @@ from focal.customer_data.models import (
     CustomerDataField,
     ScenarioFieldRequirement,
 )
-from focal.customer_data.stores import InMemoryCustomerDataStore
+from ruche.customer_data.stores import InMemoryCustomerDataStore
 
 
 class CustomerDataStoreInterfaceContract(ABC):

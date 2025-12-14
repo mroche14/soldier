@@ -7,14 +7,14 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from focal.api.dependencies import get_settings, reset_dependencies
-from focal.api.middleware.context import (
+from ruche.api.dependencies import get_settings, reset_dependencies
+from ruche.api.middleware.context import (
     RequestContextMiddleware,
     get_request_context,
     set_request_context,
     update_request_context,
 )
-from focal.api.models.context import RequestContext
+from ruche.api.models.context import RequestContext
 
 
 @pytest.fixture

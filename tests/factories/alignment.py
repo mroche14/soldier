@@ -4,19 +4,19 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from focal.alignment.context.models import (
+from ruche.alignment.context.models import (
     ExtractedEntity,
     ScenarioSignal,
     Sentiment,
     Turn,
     Urgency,
 )
-from focal.alignment.context.situation_snapshot import (
+from ruche.alignment.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from focal.alignment.models import Rule, Scope
-from focal.alignment.models.tool_binding import ToolBinding
+from ruche.alignment.models import Rule, Scope
+from ruche.alignment.models.tool_binding import ToolBinding
 
 
 class RuleFactory:

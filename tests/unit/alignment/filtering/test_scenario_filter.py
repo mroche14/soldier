@@ -4,13 +4,13 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.context.models import ScenarioSignal
-from focal.alignment.filtering.models import ScenarioAction
-from focal.alignment.filtering.scenario_filter import ScenarioFilter
-from focal.alignment.models.scenario import Scenario, ScenarioStep
-from focal.alignment.retrieval.models import ScoredScenario
-from focal.alignment.stores import InMemoryAgentConfigStore
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.context.models import ScenarioSignal
+from ruche.alignment.filtering.models import ScenarioAction
+from ruche.alignment.filtering.scenario_filter import ScenarioFilter
+from ruche.alignment.models.scenario import Scenario, ScenarioStep
+from ruche.alignment.retrieval.models import ScoredScenario
+from ruche.alignment.stores import InMemoryAgentConfigStore
 
 
 @pytest.mark.asyncio

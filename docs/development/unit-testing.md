@@ -21,13 +21,13 @@ This document provides concrete guidance for writing unit tests in the Focal cod
 Test files mirror the source structure:
 
 ```
-focal/mechanics/focal/retrieval/rule_retriever.py
+ruche/mechanics/focal/retrieval/rule_retriever.py
     → tests/unit/mechanics/focal/retrieval/test_rule_retriever.py
 
-focal/memory/stores/inmemory.py
+ruche/memory/stores/inmemory.py
     → tests/unit/memory/stores/test_inmemory.py
 
-focal/infrastructure/providers/llm/base.py
+ruche/infrastructure/providers/llm/base.py
     → tests/unit/infrastructure/providers/llm/test_base.py
 ```
 
@@ -40,8 +40,8 @@ focal/infrastructure/providers/llm/base.py
 import pytest
 from uuid import uuid4
 
-from focal.mechanics.focal.retrieval.rule_retriever import RuleRetriever
-from focal.mechanics.focal.models import Rule, Context
+from ruche.mechanics.focal.retrieval.rule_retriever import RuleRetriever
+from ruche.mechanics.focal.models import Rule, Context
 from tests.factories import RuleFactory, ContextFactory
 
 
@@ -386,7 +386,7 @@ from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from focal.mechanics.focal.models import Rule, RuleScope
+from ruche.mechanics.focal.models import Rule, RuleScope
 
 
 @dataclass
@@ -963,7 +963,7 @@ def __repr__(self) -> str:  # pragma: no cover
 
 # Or for type checking blocks
 if TYPE_CHECKING:  # Automatically excluded
-    from focal.types import SomeType
+    from ruche.types import SomeType
 ```
 
 ---

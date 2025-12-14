@@ -53,9 +53,9 @@ This doc re-states the intended end-state architecture in your current terms (**
 - If you still want the repo/service to be named "focal", that's compatible with Option B — you just keep docs careful: "Focal runtime" vs "FOCAL alignment pipeline".
 
 > **🔮 OPUS Analysis (§1):**
-> The vision is sound, but I'd push harder on one clarification: the document says "Not all CognitivePipelines will use rules/scenarios" — this is critical. The current codebase (`focal/alignment/`) is **deeply coupled to rules/scenarios**. I examined `rule_retriever.py`, `scenario_filter.py`, and the entire filtering module. When you add ReAct or other mechanics, you'll need to: (1) extract the rule/scenario primitives into a FOCAL-specific subpackage, or (2) make them optional at the engine level. The current `AlignmentEngine.process_turn()` assumes rules/scenarios exist — it queries `config_store.get_rules()` unconditionally. This isn't a blocker, but **document the refactoring path now** so the decision on "Focal = alignment pipeline only" doesn't surprise you when implementing mechanics that don't use these primitives.
+> The vision is sound, but I'd push harder on one clarification: the document says "Not all CognitivePipelines will use rules/scenarios" — this is critical. The current codebase (`ruche/alignment/`) is **deeply coupled to rules/scenarios**. I examined `rule_retriever.py`, `scenario_filter.py`, and the entire filtering module. When you add ReAct or other mechanics, you'll need to: (1) extract the rule/scenario primitives into a FOCAL-specific subpackage, or (2) make them optional at the engine level. The current `AlignmentEngine.process_turn()` assumes rules/scenarios exist — it queries `config_store.get_rules()` unconditionally. This isn't a blocker, but **document the refactoring path now** so the decision on "Focal = alignment pipeline only" doesn't surprise you when implementing mechanics that don't use these primitives.
 >
-> **Codebase evidence**: `focal/alignment/engine.py` (77KB) is the brain. The package structure already reflects "alignment" as a domain concept. Option B is strongly supported by code reality.
+> **Codebase evidence**: `ruche/alignment/engine.py` (77KB) is the brain. The package structure already reflects "alignment" as a domain concept. Option B is strongly supported by code reality.
 
 ---
 
@@ -79,9 +79,9 @@ This doc re-states the intended end-state architecture in your current terms (**
 > **🔮 OPUS Analysis (§2):**
 > These five invariants are excellent and match what I see implemented. However:
 >
-> **Invariant #2 ("API addresses Agents, not pipelines") is NOT yet implemented.** Current API (`/v1/chat`) talks to the `AlignmentEngine` directly without an Agent abstraction layer. The `focal/alignment/engine.py` receives `tenant_id`, `agent_id`, `session_id` but there's no `AgentRuntime` or `AgentContext` wrapper yet (Phase 6.5 in `IMPLEMENTATION_PLAN.md` is incomplete). This is fine — just be aware that implementing the agent-centric API is a **precondition** for the vision in this doc.
+> **Invariant #2 ("API addresses Agents, not pipelines") is NOT yet implemented.** Current API (`/v1/chat`) talks to the `AlignmentEngine` directly without an Agent abstraction layer. The `ruche/alignment/engine.py` receives `tenant_id`, `agent_id`, `session_id` but there's no `AgentRuntime` or `AgentContext` wrapper yet (Phase 6.5 in `IMPLEMENTATION_PLAN.md` is incomplete). This is fine — just be aware that implementing the agent-centric API is a **precondition** for the vision in this doc.
 >
-> **Invariant #5 (LLMExecutor as reusable primitive)** is already solid — see `focal/providers/llm/executor.py` with Agno integration, fallback chains, and model string routing.
+> **Invariant #5 (LLMExecutor as reusable primitive)** is already solid — see `ruche/providers/llm/executor.py` with Agno integration, fallback chains, and model string routing.
 >
 > **Codebase stats**: 258 Python files, 44,138 LOC. The four-store pattern (ConfigStore, SessionStore, CustomerDataStore, AuditStore) plus MemoryStore are all implemented with in-memory and PostgreSQL backends. Multi-tenancy is enforced throughout.
 
@@ -279,7 +279,7 @@ This is *intentionally* a three-layer split and, in my view, it reduces confusio
 **Important:** a mechanic can be *rule/scenario-driven* (FOCAL alignment) or *rule-free* (e.g., ReAct). Rules/scenarios are not universal platform concepts; they are part of specific mechanics.
 
 > **🔮 OPUS Analysis (§4.1 Terminology):**
-> The three-layer split is excellent and matches my mental model. However, the document uses "CognitivePipeline" as the protocol name, but the codebase uses `AlignmentEngine` (see `focal/alignment/engine.py`). **Reconcile this terminology.** Either:
+> The three-layer split is excellent and matches my mental model. However, the document uses "CognitivePipeline" as the protocol name, but the codebase uses `AlignmentEngine` (see `ruche/alignment/engine.py`). **Reconcile this terminology.** Either:
 > 1. Rename `AlignmentEngine` to `FocalCognitivePipeline` (implementing `CognitivePipeline` protocol), or
 > 2. Document clearly that `AlignmentEngine` IS the FOCAL-specific implementation of the abstract protocol.
 >
@@ -537,7 +537,7 @@ ASA does not need to be in the runtime path for every turn.
 - Prefer **Option A**: blueprint packs can be versioned/upgraded and are easy for ASA to edit safely.
 
 > **🔮 OPUS Analysis (§5 - Missing: Blueprint Version Propagation):**
-> This section introduces important concepts (skeletons, blueprints, agent instances) but is **missing one critical piece**: how scenarios/rules/templates get versioned and upgraded when a blueprint changes. You already have scenario migration (Phase 15 complete in `focal/alignment/migration/`), but blueprint updates cascade differently.
+> This section introduces important concepts (skeletons, blueprints, agent instances) but is **missing one critical piece**: how scenarios/rules/templates get versioned and upgraded when a blueprint changes. You already have scenario migration (Phase 15 complete in `ruche/alignment/migration/`), but blueprint updates cascade differently.
 >
 > When "Ruche blueprint v2" adds a new scenario to an existing agent type, what happens to existing tenant agents? Options:
 > 1. **Opt-in migration**: Tenant explicitly upgrades
@@ -681,7 +681,7 @@ Resolution algorithm:
 > 2. **Batch lookups when accumulating** (reduce round-trips for multi-message LogicalTurns)
 > 3. **Accept the latency** (identity resolution is fast, ~5-10ms with PostgreSQL)
 >
-> The current codebase has `CustomerDataLoader` in `focal/alignment/loaders/customer_data_loader.py` but it works differently — it loads customer data AFTER `customer_id` is resolved. The identity resolution step itself isn't implemented yet. Plan for the caching layer.
+> The current codebase has `CustomerDataLoader` in `ruche/alignment/loaders/customer_data_loader.py` but it works differently — it loads customer data AFTER `customer_id` is resolved. The identity resolution step itself isn't implemented yet. Plan for the caching layer.
 
 ### 🆔 6.4 Decision: what does "session" mean with multiple agents?
 
@@ -790,7 +790,7 @@ Typical lifecycle:
 4) When definitions/activations change, the runtime invalidates cached agent runtime bundles and rebuilds them
 
 > **🔮 OPUS Analysis (§7 - Toolbox Gap):**
-> The Toolbox → ToolGateway → Provider model is clean, but there's a **tension with the existing codebase**. The current `focal/alignment/execution/tool_executor.py` is a simple executor without the policy enforcement layer described in `TOOLBOX_SPEC.md`. The proposed Toolbox has:
+> The Toolbox → ToolGateway → Provider model is clean, but there's a **tension with the existing codebase**. The current `ruche/alignment/execution/tool_executor.py` is a simple executor without the policy enforcement layer described in `TOOLBOX_SPEC.md`. The proposed Toolbox has:
 > - `SideEffectPolicy` checking
 > - `requires_confirmation` enforcement
 > - Idempotency key extraction

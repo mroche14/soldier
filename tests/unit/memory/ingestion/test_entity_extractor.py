@@ -5,13 +5,13 @@ from uuid import uuid4
 
 import pytest
 
-from focal.memory.ingestion.entity_extractor import EntityDeduplicator, EntityExtractor
-from focal.memory.ingestion.errors import ExtractionError
-from focal.memory.ingestion.models import EntityExtractionResult
-from focal.memory.models.entity import Entity
-from focal.memory.models.episode import Episode
-from focal.memory.stores.inmemory import InMemoryMemoryStore
-from focal.providers.llm.mock import MockLLMProvider
+from ruche.memory.ingestion.entity_extractor import EntityDeduplicator, EntityExtractor
+from ruche.memory.ingestion.errors import ExtractionError
+from ruche.memory.ingestion.models import EntityExtractionResult
+from ruche.memory.models.entity import Entity
+from ruche.memory.models.episode import Episode
+from ruche.memory.stores.inmemory import InMemoryMemoryStore
+from ruche.providers.llm.mock import MockLLMProvider
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ class TestEntityExtractorParsing:
     @pytest.mark.asyncio
     async def test_extract_parses_llm_output(self, llm_provider, episode):
         """Should parse LLM structured output."""
-        from focal.config.models.pipeline import EntityExtractionConfig
+        from ruche.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(min_confidence="medium")
         extractor = EntityExtractor(llm_executor=llm_provider, config=config)
@@ -57,7 +57,7 @@ class TestEntityExtractorParsing:
     @pytest.mark.asyncio
     async def test_extract_filters_by_confidence(self, llm_provider, episode):
         """Should filter entities by min_confidence."""
-        from focal.config.models.pipeline import EntityExtractionConfig
+        from ruche.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(min_confidence="high")
         extractor = EntityExtractor(llm_executor=llm_provider, config=config)
@@ -75,7 +75,7 @@ class TestEntityExtractorBatch:
     @pytest.mark.asyncio
     async def test_extract_batch_processes_parallel(self, llm_provider):
         """Should process multiple episodes in parallel."""
-        from focal.config.models.pipeline import EntityExtractionConfig
+        from ruche.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(batch_size=5)
         extractor = EntityExtractor(llm_executor=llm_provider, config=config)
@@ -111,7 +111,7 @@ class TestEntityExtractorErrorHandling:
                 await asyncio.sleep(5)  # Simulate timeout
                 return await super().generate(*args, **kwargs)
 
-        from focal.config.models.pipeline import EntityExtractionConfig
+        from ruche.config.models.pipeline import EntityExtractionConfig
 
         config = EntityExtractionConfig(timeout_ms=100)
         extractor = EntityExtractor(llm_executor=TimeoutLLMProvider(), config=config)
@@ -127,7 +127,7 @@ class TestEntityDeduplicatorExactMatch:
     @pytest.mark.asyncio
     async def test_find_duplicate_exact_match(self, memory_store):
         """Should find duplicate by exact normalized name."""
-        from focal.config.models.pipeline import EntityDeduplicationConfig
+        from ruche.config.models.pipeline import EntityDeduplicationConfig
 
         config = EntityDeduplicationConfig()
         deduplicator = EntityDeduplicator(
@@ -165,7 +165,7 @@ class TestEntityDeduplicatorFuzzyMatch:
     @pytest.mark.asyncio
     async def test_find_duplicate_fuzzy_match(self, memory_store):
         """Should find duplicate by fuzzy string matching."""
-        from focal.config.models.pipeline import EntityDeduplicationConfig
+        from ruche.config.models.pipeline import EntityDeduplicationConfig
 
         config = EntityDeduplicationConfig(fuzzy_threshold=0.85)
         deduplicator = EntityDeduplicator(
@@ -203,7 +203,7 @@ class TestEntityDeduplicatorEmbeddingMatch:
     @pytest.mark.asyncio
     async def test_find_duplicate_embedding_similarity(self, memory_store):
         """Should find duplicate by embedding similarity."""
-        from focal.config.models.pipeline import EntityDeduplicationConfig
+        from ruche.config.models.pipeline import EntityDeduplicationConfig
 
         config = EntityDeduplicationConfig(embedding_threshold=0.80)
         _deduplicator = EntityDeduplicator(
@@ -241,7 +241,7 @@ class TestEntityDeduplicatorRuleBased:
     @pytest.mark.asyncio
     async def test_find_duplicate_rule_based(self, memory_store):
         """Should find duplicate by rule-based matching."""
-        from focal.config.models.pipeline import EntityDeduplicationConfig
+        from ruche.config.models.pipeline import EntityDeduplicationConfig
 
         config = EntityDeduplicationConfig()
         deduplicator = EntityDeduplicator(
@@ -281,7 +281,7 @@ class TestEntityDeduplicatorMerge:
     @pytest.mark.asyncio
     async def test_merge_entities_combines_attributes(self, memory_store):
         """Should merge attributes from new entity."""
-        from focal.config.models.pipeline import EntityDeduplicationConfig
+        from ruche.config.models.pipeline import EntityDeduplicationConfig
 
         config = EntityDeduplicationConfig()
         deduplicator = EntityDeduplicator(
@@ -320,7 +320,7 @@ class TestTemporalRelationshipUpdates:
         """Should invalidate old relationship and create new one."""
         from datetime import UTC
 
-        from focal.memory.models.relationship import Relationship
+        from ruche.memory.models.relationship import Relationship
 
         group_id = f"{uuid4()}:{uuid4()}"
         entity1_id = uuid4()

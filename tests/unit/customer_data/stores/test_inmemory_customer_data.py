@@ -4,15 +4,15 @@ from uuid import uuid4
 
 import pytest
 
-from focal.conversation.models import Channel
-from focal.customer_data.enums import VariableSource
-from focal.customer_data.models import (
+from ruche.conversation.models import Channel
+from ruche.customer_data.enums import VariableSource
+from ruche.customer_data.models import (
     ChannelIdentity,
     CustomerDataStore,
     ProfileAsset,
     VariableEntry,
 )
-from focal.customer_data.stores import InMemoryCustomerDataStore
+from ruche.customer_data.stores import InMemoryCustomerDataStore
 
 
 @pytest.fixture
@@ -377,7 +377,7 @@ class TestLineageOperations:
         assert len(history) == 2
 
         # Current field should be the new one
-        from focal.customer_data.enums import ItemStatus
+        from ruche.customer_data.enums import ItemStatus
         current = await store.get_field(tenant_id, sample_profile.id, "email")
         assert current.value == "new@example.com"
         assert current.status == ItemStatus.ACTIVE
@@ -403,7 +403,7 @@ class TestLineageOperations:
         assert count == 1
 
         # Verify field is now expired
-        from focal.customer_data.enums import ItemStatus
+        from ruche.customer_data.enums import ItemStatus
         expired_field = await store.get_field(
             tenant_id, sample_profile.id, "temp_code", status=ItemStatus.EXPIRED
         )
@@ -417,7 +417,7 @@ class TestSchemaOperations:
     @pytest.mark.asyncio
     async def test_save_and_get_field_definition(self, store, tenant_id):
         """Should save and retrieve field definition."""
-        from focal.customer_data.models import CustomerDataField
+        from ruche.customer_data.models import CustomerDataField
 
         agent_id = uuid4()
         definition = CustomerDataField(
@@ -436,7 +436,7 @@ class TestSchemaOperations:
     @pytest.mark.asyncio
     async def test_get_field_definitions(self, store, tenant_id):
         """Should get all field definitions for agent."""
-        from focal.customer_data.models import CustomerDataField
+        from ruche.customer_data.models import CustomerDataField
 
         agent_id = uuid4()
         for name in ["email", "phone", "name"]:
@@ -455,7 +455,7 @@ class TestSchemaOperations:
     @pytest.mark.asyncio
     async def test_save_and_get_scenario_requirement(self, store, tenant_id):
         """Should save and retrieve scenario requirement."""
-        from focal.customer_data.models import ScenarioFieldRequirement
+        from ruche.customer_data.models import ScenarioFieldRequirement
 
         agent_id = uuid4()
         scenario_id = uuid4()

@@ -5,18 +5,18 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.migration.diff import compute_node_content_hash
-from focal.alignment.migration.models import (
+from ruche.alignment.migration.diff import compute_node_content_hash
+from ruche.alignment.migration.models import (
     AnchorMigrationPolicy,
     MigrationPlanStatus,
     ScopeFilter,
 )
-from focal.alignment.migration.planner import MigrationDeployer, MigrationPlanner
-from focal.alignment.models import Scenario, ScenarioStep, StepTransition
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.config.models.migration import ScenarioMigrationConfig
-from focal.conversation.models import Channel, PendingMigration, Session, StepVisit
-from focal.conversation.stores.inmemory import InMemorySessionStore
+from ruche.alignment.migration.planner import MigrationDeployer, MigrationPlanner
+from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.config.models.migration import ScenarioMigrationConfig
+from ruche.conversation.models import Channel, PendingMigration, Session, StepVisit
+from ruche.conversation.stores.inmemory import InMemorySessionStore
 
 
 @pytest.fixture

@@ -4,11 +4,11 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.enforcement.validator import EnforcementValidator
-from focal.alignment.filtering.models import MatchedRule
-from focal.alignment.generation.generator import ResponseGenerator
-from focal.alignment.models import Rule
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.enforcement.validator import EnforcementValidator
+from ruche.alignment.filtering.models import MatchedRule
+from ruche.alignment.generation.generator import ResponseGenerator
+from ruche.alignment.models import Rule
 
 
 class DummyConfigStore:

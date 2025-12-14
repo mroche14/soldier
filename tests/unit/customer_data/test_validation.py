@@ -4,9 +4,9 @@ from uuid import uuid4
 
 import pytest
 
-from focal.customer_data.enums import VariableSource, ValidationMode
-from focal.customer_data.models import VariableEntry, CustomerDataField
-from focal.customer_data.validation import CustomerDataFieldValidator, ValidationError
+from ruche.customer_data.enums import VariableSource, ValidationMode
+from ruche.customer_data.models import VariableEntry, CustomerDataField
+from ruche.customer_data.validation import CustomerDataFieldValidator, ValidationError
 
 
 @pytest.fixture

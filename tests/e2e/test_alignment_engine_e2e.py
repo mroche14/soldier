@@ -17,16 +17,16 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 import pytest
 
-from focal.alignment.engine import AlignmentEngine
-from focal.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.config.models.pipeline import PipelineConfig
-from focal.conversation.models import Session, SessionStatus, Channel
-from focal.conversation.stores.inmemory import InMemorySessionStore
-from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
-from focal.observability.logging import setup_logging, get_logger
-from focal.providers.embedding.mock import MockEmbeddingProvider
-from focal.providers.llm import create_executor
+from ruche.alignment.engine import AlignmentEngine
+from ruche.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.config.models.pipeline import PipelineConfig
+from ruche.conversation.models import Session, SessionStatus, Channel
+from ruche.conversation.stores.inmemory import InMemorySessionStore
+from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.observability.logging import setup_logging, get_logger
+from ruche.providers.embedding.mock import MockEmbeddingProvider
+from ruche.providers.llm import create_executor
 
 # Configure logging for test visibility
 setup_logging(level="DEBUG")
@@ -488,7 +488,7 @@ class TestAlignmentEngineWithRealLLM:
             },
         })
 
-        from focal.providers.llm import create_executors_from_pipeline_config
+        from ruche.providers.llm import create_executors_from_pipeline_config
         executors = create_executors_from_pipeline_config(pipeline_config)
 
         engine = AlignmentEngine(

@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from focal.api.middleware.idempotency import (
+from ruche.api.middleware.idempotency import (
     IDEMPOTENCY_TTL_SECONDS,
     CachedResponse,
     IdempotencyCache,
@@ -207,7 +207,7 @@ class TestGetIdempotencyCache:
     def test_returns_singleton(self) -> None:
         """Returns the same instance on multiple calls."""
         # Reset the global
-        import focal.api.middleware.idempotency as idem_module
+        import ruche.api.middleware.idempotency as idem_module
         idem_module._idempotency_cache = None
 
         cache1 = get_idempotency_cache()
@@ -217,7 +217,7 @@ class TestGetIdempotencyCache:
 
     def test_creates_cache_if_none(self) -> None:
         """Creates new cache if none exists."""
-        import focal.api.middleware.idempotency as idem_module
+        import ruche.api.middleware.idempotency as idem_module
         idem_module._idempotency_cache = None
 
         cache = get_idempotency_cache()

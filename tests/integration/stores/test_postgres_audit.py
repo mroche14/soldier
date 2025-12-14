@@ -10,9 +10,9 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from focal.audit.models import AuditEvent, TurnRecord
-from focal.audit.stores.postgres import PostgresAuditStore
-from focal.conversation.models.turn import ToolCall
+from ruche.audit.models import AuditEvent, TurnRecord
+from ruche.audit.stores.postgres import PostgresAuditStore
+from ruche.conversation.models.turn import ToolCall
 
 
 @pytest_asyncio.fixture

@@ -1,6 +1,6 @@
 # TOML Configuration Files
 
-> **Source of truth:** `config/*.toml`. This document shows conventions and excerpts; if something conflicts, follow the TOML files and `focal/config/models/`.
+> **Source of truth:** `config/*.toml`. This document shows conventions and excerpts; if something conflicts, follow the TOML files and `ruche/config/models/`.
 
 ## Files and precedence
 
@@ -8,8 +8,8 @@ Configuration values are resolved in this order (later overrides earlier):
 
 1. Pydantic defaults
 2. `config/default.toml`
-3. `config/{FOCAL_ENV}.toml` (`development`, `staging`, `production`)
-4. Environment variables (`FOCAL_*`)
+3. `config/{RUCHE_ENV}.toml` (`development`, `staging`, `production`)
+4. Environment variables (`RUCHE_*`)
 
 ## Model strings (LLMExecutor)
 

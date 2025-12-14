@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.migration.composite import CompositeMapper
-from focal.alignment.migration.models import (
+from ruche.alignment.migration.composite import CompositeMapper
+from ruche.alignment.migration.models import (
     AnchorTransformation,
     InsertedNode,
     MigrationPlan,
@@ -15,9 +15,9 @@ from focal.alignment.migration.models import (
     TransformationMap,
     UpstreamChanges,
 )
-from focal.alignment.models import Scenario, ScenarioStep, StepTransition
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.conversation.models import Channel, Session
+from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.conversation.models import Channel, Session
 
 
 @pytest.fixture

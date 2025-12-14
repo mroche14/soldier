@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 import redis
 
-from focal.api.middleware.rate_limit import (
+from ruche.api.middleware.rate_limit import (
     RedisRateLimiter,
     reset_rate_limiter,
 )

@@ -4,10 +4,10 @@ import asyncio
 
 import pytest
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.execution.tool_executor import ToolExecutor
-from focal.alignment.filtering.models import MatchedRule
-from focal.alignment.models import Rule
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.execution.tool_executor import ToolExecutor
+from ruche.alignment.filtering.models import MatchedRule
+from ruche.alignment.models import Rule
 from tests.factories.alignment import RuleFactory
 
 

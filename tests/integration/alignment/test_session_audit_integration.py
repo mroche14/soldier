@@ -7,17 +7,17 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.models import Turn
-from focal.alignment.engine import AlignmentEngine
-from focal.alignment.filtering.models import ScenarioAction, ScenarioFilterResult
-from focal.alignment.stores import InMemoryAgentConfigStore
-from focal.audit.models import TurnRecord
-from focal.audit.stores.inmemory import InMemoryAuditStore
-from focal.config.models.pipeline import PipelineConfig
-from focal.conversation.models import Channel, Session
-from focal.conversation.stores.inmemory import InMemorySessionStore
-from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.alignment.context.models import Turn
+from ruche.alignment.engine import AlignmentEngine
+from ruche.alignment.filtering.models import ScenarioAction, ScenarioFilterResult
+from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.audit.models import TurnRecord
+from ruche.audit.stores.inmemory import InMemoryAuditStore
+from ruche.config.models.pipeline import PipelineConfig
+from ruche.conversation.models import Channel, Session
+from ruche.conversation.stores.inmemory import InMemorySessionStore
+from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 
@@ -569,7 +569,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_start(self, stores) -> None:
         """Scenario start updates session state."""
-        from focal.alignment.engine import AlignmentEngine
+        from ruche.alignment.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -610,7 +610,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_exit(self, stores) -> None:
         """Scenario exit clears session state."""
-        from focal.alignment.engine import AlignmentEngine
+        from ruche.alignment.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -647,7 +647,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_relocalize_increments_count(self, stores) -> None:
         """Relocalization increments the counter."""
-        from focal.alignment.engine import AlignmentEngine
+        from ruche.alignment.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -767,7 +767,7 @@ class TestStepHistoryTrimming:
         # Create session with 100 steps already
         from datetime import UTC, datetime
 
-        from focal.conversation.models import StepVisit
+        from ruche.conversation.models import StepVisit
 
         session = Session(
             tenant_id=tenant_id,
@@ -815,10 +815,10 @@ class TestToolOutputVariables:
     @pytest.mark.asyncio
     async def test_tool_outputs_update_session_variables(self, stores) -> None:
         """Tool outputs are stored in session variables."""
-        from focal.alignment.context.situation_snapshot import SituationSnapshot
-        from focal.alignment.execution import ToolExecutor
-        from focal.alignment.filtering.models import MatchedRule
-        from focal.config.models.pipeline import PipelineConfig, ToolExecutionConfig
+        from ruche.alignment.context.situation_snapshot import SituationSnapshot
+        from ruche.alignment.execution import ToolExecutor
+        from ruche.alignment.filtering.models import MatchedRule
+        from ruche.config.models.pipeline import PipelineConfig, ToolExecutionConfig
 
         tenant_id = uuid4()
         agent_id = uuid4()
@@ -912,8 +912,8 @@ class TestMemoryRetrieverIntegration:
         """Memory episodes are retrieved when memory_store provided."""
         from datetime import UTC, datetime
 
-        from focal.memory.models import Episode
-        from focal.memory.stores.inmemory import InMemoryMemoryStore
+        from ruche.memory.models import Episode
+        from ruche.memory.stores.inmemory import InMemoryMemoryStore
 
         memory_store = InMemoryMemoryStore()
         tenant_id = uuid4()
@@ -968,7 +968,7 @@ class TestScenarioFilteringDisabled:
     @pytest.mark.asyncio
     async def test_scenario_filtering_disabled_returns_none(self, stores) -> None:
         """Scenario result is None when filtering disabled."""
-        from focal.config.models.pipeline import (
+        from ruche.config.models.pipeline import (
             PipelineConfig,
             ScenarioFilteringConfig,
         )
@@ -1011,8 +1011,8 @@ class TestRerankerCreation:
     @pytest.mark.asyncio
     async def test_reranker_created_when_provider_and_config_enabled(self, stores) -> None:
         """Reranker is created when rerank_provider provided and enabled."""
-        from focal.config.models.pipeline import PipelineConfig, RerankingConfig, RetrievalConfig
-        from focal.providers.rerank.mock import MockRerankProvider
+        from ruche.config.models.pipeline import PipelineConfig, RerankingConfig, RetrievalConfig
+        from ruche.providers.rerank.mock import MockRerankProvider
 
         rerank_provider = MockRerankProvider()
 
@@ -1085,11 +1085,11 @@ class TestEnforcementFallback:
     @pytest.mark.asyncio
     async def test_fallback_handler_used_when_enforcement_fails(self, stores) -> None:
         """Fallback handler is invoked when enforcement validation fails."""
-        from focal.alignment.enforcement import EnforcementValidator, FallbackHandler
-        from focal.alignment.generation import PromptBuilder, ResponseGenerator
-        from focal.alignment.models.enums import TemplateResponseMode
-        from focal.alignment.models import Template
-        from focal.config.models.pipeline import EnforcementConfig, PipelineConfig
+        from ruche.alignment.enforcement import EnforcementValidator, FallbackHandler
+        from ruche.alignment.generation import PromptBuilder, ResponseGenerator
+        from ruche.alignment.models.enums import TemplateResponseMode
+        from ruche.alignment.models import Template
+        from ruche.config.models.pipeline import EnforcementConfig, PipelineConfig
 
         tenant_id = uuid4()
         agent_id = uuid4()
@@ -1240,10 +1240,10 @@ class TestEngineWithoutAuditStore:
     @pytest.mark.asyncio
     async def test_persist_turn_record_without_audit_store_returns(self, stores) -> None:
         """_persist_turn_record is no-op when no audit_store."""
-        from focal.alignment.context.situation_snapshot import SituationSnapshot
-        from focal.alignment.generation.models import GenerationResult
-        from focal.alignment.result import AlignmentResult
-        from focal.alignment.retrieval.models import RetrievalResult
+        from ruche.alignment.context.situation_snapshot import SituationSnapshot
+        from ruche.alignment.generation.models import GenerationResult
+        from ruche.alignment.result import AlignmentResult
+        from ruche.alignment.retrieval.models import RetrievalResult
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -1305,7 +1305,7 @@ class TestMemoryContextBuilding:
             pipeline_config=PipelineConfig(),
         )
 
-        from focal.alignment.retrieval.models import ScoredEpisode
+        from ruche.alignment.retrieval.models import ScoredEpisode
 
         episodes = [
             ScoredEpisode(

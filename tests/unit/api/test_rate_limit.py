@@ -3,7 +3,7 @@
 import time
 from datetime import datetime, timedelta
 
-from focal.api.middleware.rate_limit import (
+from ruche.api.middleware.rate_limit import (
     TIER_LIMITS,
     SlidingWindowRateLimiter,
     get_tenant_limit,

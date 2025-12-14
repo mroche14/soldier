@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel
 
-from focal.providers.llm import (
+from ruche.providers.llm import (
     AuthenticationError,
     ContentFilterError,
     LLMMessage,

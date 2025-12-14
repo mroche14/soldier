@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from focal.memory.models import Entity, Episode, Relationship
+from ruche.memory.models import Entity, Episode, Relationship
 
 
 class TestEpisode:

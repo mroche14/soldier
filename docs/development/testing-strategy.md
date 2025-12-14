@@ -285,7 +285,7 @@ docker-compose -f docker-compose.yml up -d
 pytest tests/e2e/ --e2e-base-url=http://localhost:8000
 
 # Or against staging
-pytest tests/e2e/ --e2e-base-url=https://staging.focal.example.com
+pytest tests/e2e/ --e2e-base-url=https://staging.ruche.example.com
 ```
 
 ---
@@ -296,13 +296,13 @@ pytest tests/e2e/ --e2e-base-url=https://staging.focal.example.com
 
 | Module | Line Coverage | Branch Coverage |
 |--------|---------------|-----------------|
-| `focal/mechanics/focal/` | 85% | 80% |
-| `focal/memory/` | 85% | 80% |
-| `focal/runtime/acf/` | 80% | 75% |
-| `focal/audit/` | 80% | 75% |
-| `focal/infrastructure/providers/` | 80% | 75% |
-| `focal/config/` | 90% | 85% |
-| `focal/api/` | 80% | 75% |
+| `ruche/mechanics/focal/` | 85% | 80% |
+| `ruche/memory/` | 85% | 80% |
+| `ruche/runtime/acf/` | 80% | 75% |
+| `ruche/audit/` | 80% | 75% |
+| `ruche/infrastructure/providers/` | 80% | 75% |
+| `ruche/config/` | 90% | 85% |
+| `ruche/api/` | 80% | 75% |
 | **Overall** | **85%** | **80%** |
 
 ### Coverage Enforcement
@@ -315,8 +315,8 @@ Coverage is enforced in CI:
 source = ["focal"]
 branch = true
 omit = [
-    "focal/__main__.py",
-    "focal/api/grpc/protos/*",
+    "ruche/__main__.py",
+    "ruche/api/grpc/protos/*",
 ]
 
 [tool.coverage.report]
@@ -384,9 +384,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff mypy
-      - run: ruff check focal/ tests/
-      - run: ruff format --check focal/ tests/
-      - run: mypy focal/
+      - run: ruff check ruche/ tests/
+      - run: ruff format --check ruche/ tests/
+      - run: mypy ruche/
 
   unit:
     runs-on: ubuntu-latest
@@ -464,7 +464,7 @@ From the architecture docs, these are the latency targets to validate:
 ```python
 # tests/performance/test_pipeline_latency.py
 import pytest
-from focal.testing.performance import measure_latency, LatencyReport
+from ruche.testing.performance import measure_latency, LatencyReport
 
 @pytest.mark.performance
 async def test_context_extraction_latency(context_extractor, benchmark_messages):
@@ -527,7 +527,7 @@ Every `Store` implementation must pass the same contract tests:
 # tests/contracts/test_config_store_contract.py
 import pytest
 from abc import ABC
-from focal.infrastructure.stores.config import ConfigStore
+from ruche.infrastructure.stores.config import ConfigStore
 
 class ConfigStoreContract(ABC):
     """Contract tests that all ConfigStore implementations must pass."""
@@ -632,8 +632,8 @@ Use factories to create test data with sensible defaults:
 
 ```python
 # tests/factories.py
-from focal.alignment.models import Rule, Scenario, ScenarioStep
-from focal.conversation.models import Session
+from ruche.alignment.models import Rule, Scenario, ScenarioStep
+from ruche.conversation.models import Session
 from uuid import uuid4
 
 class RuleFactory:

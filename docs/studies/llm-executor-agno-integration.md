@@ -174,7 +174,7 @@ async def generate(self, messages: list[LLMMessage], ...) -> LLMResponse:
 ### New LLMExecutor Structure
 
 ```python
-# focal/providers/llm/executor.py
+# ruche/providers/llm/executor.py
 
 from agno.agent import Agent, RunResponse
 from agno.models.openrouter import OpenRouter
@@ -359,16 +359,16 @@ uv add agno
 5. Keep fallback chain logic
 
 ### Phase 3: Remove Old Provider Classes
-1. Delete `focal/providers/llm/anthropic.py`
-2. Delete `focal/providers/llm/openai.py`
-3. Delete `focal/providers/llm/openrouter.py`
-4. Delete `focal/providers/llm/mock.py` (keep mock logic in executor)
+1. Delete `ruche/providers/llm/anthropic.py`
+2. Delete `ruche/providers/llm/openai.py`
+3. Delete `ruche/providers/llm/openrouter.py`
+4. Delete `ruche/providers/llm/mock.py` (keep mock logic in executor)
 5. Remove `LLMProvider` from `base.py`
 
 ### Phase 4: Update Exports
 ```python
-# focal/providers/llm/__init__.py
-from focal.providers.llm.base import (
+# ruche/providers/llm/__init__.py
+from ruche.providers.llm.base import (
     LLMMessage,
     LLMResponse,
     TokenUsage,
@@ -376,7 +376,7 @@ from focal.providers.llm.base import (
     RateLimitError,
     # ... other error types
 )
-from focal.providers.llm.executor import (
+from ruche.providers.llm.executor import (
     LLMExecutor,
     ExecutionContext,
     set_execution_context,

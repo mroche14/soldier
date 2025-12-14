@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from focal.config import get_settings, reload_settings
-from focal.config.settings import Settings, set_toml_config
+from ruche.config import get_settings, reload_settings
+from ruche.config.settings import Settings, set_toml_config
 
 
 class TestSettings:
@@ -72,8 +72,8 @@ class TestGetSettings:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("app_name = 'test'")
 
-        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
+        monkeypatch.setenv("RUCHE_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("RUCHE_ENV", "nonexistent")
 
         # Clear any cached settings
         get_settings.cache_clear()
@@ -91,8 +91,8 @@ class TestGetSettings:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("app_name = 'cached'")
 
-        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
+        monkeypatch.setenv("RUCHE_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("RUCHE_ENV", "nonexistent")
 
         get_settings.cache_clear()
 
@@ -109,8 +109,8 @@ class TestGetSettings:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("app_name = 'original'")
 
-        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
+        monkeypatch.setenv("RUCHE_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("RUCHE_ENV", "nonexistent")
 
         get_settings.cache_clear()
         settings1 = get_settings()
@@ -136,9 +136,9 @@ class TestEnvironmentVariableOverrides:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("debug = false")
 
-        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
-        monkeypatch.setenv("FOCAL_DEBUG", "true")
+        monkeypatch.setenv("RUCHE_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("RUCHE_ENV", "nonexistent")
+        monkeypatch.setenv("RUCHE_DEBUG", "true")
 
         get_settings.cache_clear()
         settings = get_settings()
@@ -153,9 +153,9 @@ class TestEnvironmentVariableOverrides:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("[api]\nport = 8000")
 
-        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
-        monkeypatch.setenv("FOCAL_API__PORT", "9000")
+        monkeypatch.setenv("RUCHE_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("RUCHE_ENV", "nonexistent")
+        monkeypatch.setenv("RUCHE_API__PORT", "9000")
 
         get_settings.cache_clear()
         settings = get_settings()
@@ -170,9 +170,9 @@ class TestEnvironmentVariableOverrides:
         default_toml = config_dir / "default.toml"
         default_toml.write_text("[api.rate_limit]\nenabled = true")
 
-        monkeypatch.setenv("FOCAL_CONFIG_DIR", str(config_dir))
-        monkeypatch.setenv("FOCAL_ENV", "nonexistent")
-        monkeypatch.setenv("FOCAL_API__RATE_LIMIT__ENABLED", "false")
+        monkeypatch.setenv("RUCHE_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("RUCHE_ENV", "nonexistent")
+        monkeypatch.setenv("RUCHE_API__RATE_LIMIT__ENABLED", "false")
 
         get_settings.cache_clear()
         settings = get_settings()

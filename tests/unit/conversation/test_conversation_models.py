@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from focal.conversation.models import (
+from ruche.conversation.models import (
     Channel,
     Session,
     SessionStatus,

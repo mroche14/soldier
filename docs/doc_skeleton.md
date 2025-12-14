@@ -6,7 +6,7 @@ This document provides a summary of all the documentation files in the `docs` di
 
 ---
 
-### `/home/marvin/Projects/focal/docs/design/scenario-update-methods.md`
+### `/home/marvin/Projects/ruche/docs/design/scenario-update-methods.md`
 
 This document tackles the problem of updating scenarios (conversation flows) while users are in the middle of them. The key solution is to pre-compute a "Migration Plan" whenever a scenario is updated. This plan defines exactly how to handle users at each step of the old scenario, specifying actions like continuing, collecting new data, or "teleporting" them to a different part of the flow. This approach is performant, reviewable by operators, and auditable. The document details the data models for migration plans, the workflow for generating and applying them, and how the system handles "gap fills" by trying to find required information from conversation history before asking the user. It also covers edge cases like very old sessions and provides a "Composite Migration" strategy to prevent a bad user experience when multiple updates happen in a row.
 
@@ -189,7 +189,7 @@ The key configuration models defined are:
 
 This document outlines the folder structure of the Focal codebase, which is organized by conceptual domains rather than technical layers.
 
-The main directories within the `focal/` package are:
+The main directories within the `ruche/` package are:
 
 *   **`alignment/`**: The "brain" of the agent, containing the logic for the entire turn pipeline, from context extraction to response generation and enforcement. It's further subdivided by pipeline stage.
 *   **`memory/`**: Manages the agent's long-term memory, including the `MemoryStore` interface and its various database implementations (e.g., Neo4j, PostgreSQL).
@@ -220,8 +220,8 @@ This document provides an overview of Focal's configuration architecture, which 
 
 Key aspects of the architecture are:
 
-*   **Folder Structure:** Configuration is split between `config/` for TOML files and `focal/config/` for the Python code that loads and models the configuration. Secrets are handled separately in a `.env` file at the project root.
-*   **Loading Mechanism:** The system uses a hierarchical loading mechanism. It starts with `default.toml`, overrides it with an environment-specific file (e.g., `development.toml`), and finally applies any environment variables (prefixed with `FOCAL_`). This provides a clear and flexible way to manage settings across different environments.
+*   **Folder Structure:** Configuration is split between `config/` for TOML files and `ruche/config/` for the Python code that loads and models the configuration. Secrets are handled separately in a `.env` file at the project root.
+*   **Loading Mechanism:** The system uses a hierarchical loading mechanism. It starts with `default.toml`, overrides it with an environment-specific file (e.g., `development.toml`), and finally applies any environment variables (prefixed with `RUCHE_`). This provides a clear and flexible way to manage settings across different environments.
 *   **`Settings` Class:** A central Pydantic `Settings` class serves as the root of the configuration structure. It composes other Pydantic models for different parts of the system (API, pipeline, storage, etc.) and provides a single, type-safe entry point for accessing all configuration values.
 *   **Best Practice:** The document reinforces the principle of separating configuration from code and managing secrets securely outside of version control.
 
@@ -254,7 +254,7 @@ The key principles and mechanisms are:
 *   **Secret Resolution Order:** Secrets are resolved in a specific order of precedence:
     1.  A dedicated secret manager (like AWS Secrets Manager or HashiCorp Vault) in production.
     2.  Standard environment variables (e.g., `ANTHROPIC_API_KEY`).
-    3.  Focal-prefixed environment variables (e.g., `FOCAL_PIPELINE__GENERATION__MODELS`).
+    3.  Focal-prefixed environment variables (e.g., `RUCHE_PIPELINE__GENERATION__MODELS`).
     4.  A local `.env` file for development (which is gitignored).
 
 *   **Development Workflow:** For local development, a `.env` file at the project root is used to store secrets. An `.env.example` file is committed as a template for other developers.

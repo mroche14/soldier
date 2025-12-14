@@ -18,7 +18,7 @@
 
 ### Expected Timing (Based on Code Analysis)
 
-From `focal/alignment/engine.py` (lines 746-778), sequential retrieval:
+From `ruche/alignment/engine.py` (lines 746-778), sequential retrieval:
 
 ```python
 # Sequential - 3 awaits
@@ -126,4 +126,4 @@ logger.info("sequential_retrieval_baseline", duration_ms=total_duration)
 
 - **Implementation Plan**: `IMPLEMENTATION_PLAN.md` (Phase 8)
 - **Gap Analysis**: `docs/focal_turn_pipeline/analysis/gap_analysis.md` (Phase 4)
-- **Current Code**: `focal/alignment/engine.py` (lines 746-778)
+- **Current Code**: `ruche/alignment/engine.py` (lines 746-778)

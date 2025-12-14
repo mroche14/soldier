@@ -1,13 +1,13 @@
 ## Pydantic Models
 
-> **Status:** PARTIALLY STALE. The authoritative configuration models live in `focal/config/models/`, and the canonical defaults live in `config/*.toml`. Treat the code as the source of truth and validate any snippet here against it.
+> **Status:** PARTIALLY STALE. The authoritative configuration models live in `ruche/config/models/`, and the canonical defaults live in `config/*.toml`. Treat the code as the source of truth and validate any snippet here against it.
 
 ### Deployment Configuration
 
 Focal supports two deployment modes to accommodate different integration patterns. See [overview.md](./overview.md#deployment-modes) for architectural details.
 
 ```python
-# focal/config/models/deployment.py
+# ruche/config/models/deployment.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -74,8 +74,8 @@ class DeploymentConfig(BaseModel):
 The Settings class includes deployment configuration:
 
 ```python
-# In focal/config/settings.py
-from focal.config.models.deployment import DeploymentConfig
+# In ruche/config/settings.py
+from ruche.config.models.deployment import DeploymentConfig
 
 class Settings(BaseSettings):
     # ... existing fields ...
@@ -85,7 +85,7 @@ class Settings(BaseSettings):
 ### API Configuration
 
 ```python
-# focal/config/models/api.py
+# ruche/config/models/api.py
 from pydantic import BaseModel, Field
 
 
@@ -205,7 +205,7 @@ Focal supports multiple AI modalities through a unified provider configuration s
 | **Rerank** | Text pairs | Scores | Result reordering |
 
 ```python
-# focal/config/models/providers.py
+# ruche/config/models/providers.py
 from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr
@@ -666,8 +666,8 @@ class ProvidersConfig(BaseModel):
 LLM calls are executed via `LLMExecutor`, which uses Agno model classes internally and implements the fallback chain itself.
 
 ```python
-from focal.config.settings import get_settings
-from focal.providers.llm import LLMMessage, create_executor_from_step_config
+from ruche.config.settings import get_settings
+from ruche.providers.llm import LLMMessage, create_executor_from_step_config
 
 settings = get_settings()
 executor = create_executor_from_step_config(settings.pipeline.generation, "generation")
@@ -680,7 +680,7 @@ response = await executor.generate(
 ### Selection Strategy Configuration
 
 ```python
-# focal/config/models/selection.py
+# ruche/config/models/selection.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -810,12 +810,12 @@ The pipeline configuration defines which model/provider is used at each step. Th
 - Cost optimization (cheaper models for simple tasks)
 
 ```python
-# focal/config/models/pipeline.py
+# ruche/config/models/pipeline.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from focal.config.models.selection import (
+from ruche.config.models.selection import (
     AdaptiveKSelectionConfig,
     ClusterSelectionConfig,
     EntropySelectionConfig,
@@ -1504,7 +1504,7 @@ Each pipeline step has its own model fallback chain configured directly. No indi
 ### Storage Configuration
 
 ```python
-# focal/config/models/storage.py
+# ruche/config/models/storage.py
 from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr
@@ -1655,7 +1655,7 @@ class StorageConfig(BaseModel):
 See [observability.md](./observability.md) for detailed architecture. The Pydantic model below defines the configuration schema.
 
 ```python
-# focal/config/models/observability.py
+# ruche/config/models/observability.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -1737,8 +1737,8 @@ class ObservabilityConfig(BaseModel):
 The Settings class includes observability configuration:
 
 ```python
-# In focal/config/settings.py
-from focal.config.models.observability import ObservabilityConfig
+# In ruche/config/settings.py
+from ruche.config.models.observability import ObservabilityConfig
 
 class Settings(BaseSettings):
     # ... existing fields ...

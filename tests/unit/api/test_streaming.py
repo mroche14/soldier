@@ -2,7 +2,7 @@
 
 import pytest
 
-from focal.api.models.chat import (
+from ruche.api.models.chat import (
     DoneEvent,
     ErrorEvent,
     StreamEvent,

@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
-from focal.alignment.context.extractor import ContextExtractor
-from focal.alignment.context.models import (
+from ruche.alignment.context.extractor import ContextExtractor
+from ruche.alignment.context.models import (
     Context,
     ExtractedEntity,
     ScenarioSignal,
@@ -15,8 +15,8 @@ from focal.alignment.context.models import (
     Turn,
     Urgency,
 )
-from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

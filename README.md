@@ -145,7 +145,7 @@ Post-generation validation:
 ### Project Structure
 
 ```
-focal/
+ruche/
 ├── runtime/                # Conversation runtime infrastructure
 │   ├── acf/               # Agent Conversation Fabric (mutex, turns, supersede)
 │   ├── agent/             # AgentRuntime (lifecycle, caching, invalidation)
@@ -153,7 +153,7 @@ focal/
 │
 ├── mechanics/             # CognitivePipeline implementations
 │   ├── protocol.py        # CognitivePipeline abstract interface
-│   └── focal/             # FOCAL alignment mechanic (12-phase pipeline)
+│   └── ruche/             # FOCAL alignment mechanic (12-phase pipeline)
 │       ├── pipeline.py    # FocalCognitivePipeline
 │       ├── phases/        # Pipeline phases (p01-p12)
 │       ├── models/        # TurnContext, SituationalSnapshot, etc.
@@ -219,7 +219,7 @@ uv sync
 uv sync --dev
 
 # Verify installation
-uv run python -c "from focal.config import get_settings; print('OK')"
+uv run python -c "from ruche.config import get_settings; print('OK')"
 ```
 
 ### Run Tests
@@ -261,7 +261,7 @@ uv sync --dev
 docker build -t focal .
 
 # Run with environment variables
-docker run -e FOCAL_ENV=production \
+docker run -e RUCHE_ENV=production \
            -e ANTHROPIC_API_KEY=your-key \
            -e DATABASE_URL=postgresql://... \
            -p 8000:8000 \
@@ -283,8 +283,8 @@ Focal uses TOML configuration files with Pydantic validation. Configuration is l
 ```
 1. Pydantic model defaults (code)
 2. config/default.toml (base configuration)
-3. config/{FOCAL_ENV}.toml (environment-specific)
-4. Environment variables (FOCAL_* prefix)
+3. config/{RUCHE_ENV}.toml (environment-specific)
+4. Environment variables (RUCHE_* prefix)
 ```
 
 ### Configuration Files
@@ -301,23 +301,23 @@ config/
 ### Environment Selection
 
 ```bash
-export FOCAL_ENV=development  # or production, staging, test
+export RUCHE_ENV=development  # or production, staging, test
 ```
 
 ### Environment Variable Overrides
 
-Override any setting with `FOCAL_` prefix using double underscores for nesting:
+Override any setting with `RUCHE_` prefix using double underscores for nesting:
 
 ```bash
 # API settings
-export FOCAL_API__PORT=9000
-export FOCAL_API__RATE_LIMIT__REQUESTS_PER_MINUTE=100
+export RUCHE_API__PORT=9000
+export RUCHE_API__RATE_LIMIT__REQUESTS_PER_MINUTE=100
 
 # Pipeline settings
-export FOCAL_PIPELINE__GENERATION__LLM_PROVIDER=anthropic
+export RUCHE_PIPELINE__GENERATION__LLM_PROVIDER=anthropic
 
 # Storage settings
-export FOCAL_STORAGE__SESSION__BACKEND=redis
+export RUCHE_STORAGE__SESSION__BACKEND=redis
 ```
 
 ### Secrets Management
@@ -686,15 +686,15 @@ mode = "standalone"
 
 ```bash
 # Required
-FOCAL_ENV=production
+RUCHE_ENV=production
 ANTHROPIC_API_KEY=sk-ant-...
 DATABASE_URL=postgresql://...
 REDIS_URL=redis://...
 
 # Optional
 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-FOCAL_API__PORT=8000
-FOCAL_API__WORKERS=4
+RUCHE_API__PORT=8000
+RUCHE_API__WORKERS=4
 ```
 
 ### Docker Compose
@@ -704,7 +704,7 @@ services:
   focal:
     build: .
     environment:
-      - FOCAL_ENV=production
+      - RUCHE_ENV=production
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - DATABASE_URL=postgresql://focal:password@postgres:5432/focal
       - REDIS_URL=redis://redis:6379/0

@@ -97,15 +97,15 @@ Before launching each phase:
 
 | Component | ACF Role | Files | Notes |
 |-----------|----------|-------|-------|
-| `LogicalTurn` + `SupersedeDecision` + `turn_group_id` | Core abstraction | `focal/alignment/models/logical_turn.py` | turn_group_id for idempotency scoping |
-| Session Mutex | Concurrency | `focal/alignment/gateway/session_lock.py` | **CRITICAL**: No context manager - hold across steps |
-| Turn Gateway (ACF ingress) | Entry point | `focal/alignment/gateway/turn_gateway.py` | Message queue with overflow strategy |
-| Adaptive Accumulation + Pipeline Hints | Aggregation | `focal/alignment/gateway/accumulator.py` | Hints from PREVIOUS turn |
-| `LogicalTurnWorkflow` | ACF runtime | `focal/jobs/workflows/logical_turn.py` | Single workflow: acquire → accumulate → run_pipeline → commit |
-| `PhaseArtifact` + ReusePolicy | Optimization | `focal/alignment/models/phase_artifact.py` | `input_fp`, `dep_fp` fingerprints |
-| `SideEffectPolicy` + Toolbox | Commit gating | `focal/alignment/models/side_effect.py` | Toolbox enforces policy inline |
-| `ChannelModel` (facts + policies) | Channel model | `focal/alignment/models/channel.py` | Consolidated: ChannelFacts + ChannelPolicy |
-| Three-Layer Idempotency | Safety | `focal/alignment/idempotency.py` | API (5min), Beat (60s), Tool (24h) |
+| `LogicalTurn` + `SupersedeDecision` + `turn_group_id` | Core abstraction | `ruche/alignment/models/logical_turn.py` | turn_group_id for idempotency scoping |
+| Session Mutex | Concurrency | `ruche/alignment/gateway/session_lock.py` | **CRITICAL**: No context manager - hold across steps |
+| Turn Gateway (ACF ingress) | Entry point | `ruche/alignment/gateway/turn_gateway.py` | Message queue with overflow strategy |
+| Adaptive Accumulation + Pipeline Hints | Aggregation | `ruche/alignment/gateway/accumulator.py` | Hints from PREVIOUS turn |
+| `LogicalTurnWorkflow` | ACF runtime | `ruche/jobs/workflows/logical_turn.py` | Single workflow: acquire → accumulate → run_pipeline → commit |
+| `PhaseArtifact` + ReusePolicy | Optimization | `ruche/alignment/models/phase_artifact.py` | `input_fp`, `dep_fp` fingerprints |
+| `SideEffectPolicy` + Toolbox | Commit gating | `ruche/alignment/models/side_effect.py` | Toolbox enforces policy inline |
+| `ChannelModel` (facts + policies) | Channel model | `ruche/alignment/models/channel.py` | Consolidated: ChannelFacts + ChannelPolicy |
+| Three-Layer Idempotency | Safety | `ruche/alignment/idempotency.py` | API (5min), Beat (60s), Tool (24h) |
 
 ### Agent 1A: LogicalTurn Model + SupersedeDecision + Session Mutex
 
@@ -137,7 +137,7 @@ ACF owns the LogicalTurn lifecycle; CognitivePipeline operates on it to produce 
 
 ### Part 1: LogicalTurn Model
 
-Create `focal/alignment/models/logical_turn.py`:
+Create `ruche/alignment/models/logical_turn.py`:
 
 ```python
 from datetime import datetime
@@ -200,7 +200,7 @@ class LogicalTurn(BaseModel):
 
 ### Part 2: Session Mutex
 
-Create `focal/alignment/gateway/session_lock.py`:
+Create `ruche/alignment/gateway/session_lock.py`:
 
 ```python
 import asyncio
@@ -250,7 +250,7 @@ class SessionLock:
 
 ### Part 3: PhaseArtifact Model
 
-Create `focal/alignment/models/phase_artifact.py`:
+Create `ruche/alignment/models/phase_artifact.py`:
 
 ```python
 from datetime import datetime
@@ -275,7 +275,7 @@ class PhaseArtifact(BaseModel):
 
 ### Part 4: Data Model Reservations
 
-Update `focal/audit/models/turn_record.py` to reserve fields:
+Update `ruche/audit/models/turn_record.py` to reserve fields:
 
 ```python
 class TurnRecord(BaseModel):
@@ -296,14 +296,14 @@ class TurnRecord(BaseModel):
 4. `PhaseArtifact` for checkpoint reuse with `ReusePolicy`
 5. TurnRecord field reservations
 6. Unit tests for all models
-7. Export all new models from `focal/alignment/models/__init__.py`
+7. Export all new models from `ruche/alignment/models/__init__.py`
 
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/models/test_logical_turn.py -v
 uv run pytest tests/unit/alignment/gateway/test_session_lock.py -v
-uv run ruff check focal/alignment/models/ focal/alignment/gateway/
-uv run mypy focal/alignment/models/ focal/alignment/gateway/
+uv run ruff check ruche/alignment/models/ ruche/alignment/gateway/
+uv run mypy ruche/alignment/models/ ruche/alignment/gateway/
 ```
 
 ## Report Format
@@ -341,7 +341,7 @@ It decides whether to:
 
 ### Part 1: Turn Gateway
 
-Create `focal/alignment/gateway/turn_gateway.py`:
+Create `ruche/alignment/gateway/turn_gateway.py`:
 
 ```python
 from datetime import datetime
@@ -468,7 +468,7 @@ class TurnGateway:
 
 ### Part 2: Adaptive Accumulator
 
-Create `focal/alignment/gateway/accumulator.py`:
+Create `ruche/alignment/gateway/accumulator.py`:
 
 ```python
 class AdaptiveAccumulator:
@@ -576,8 +576,8 @@ class TurnDecision(BaseModel):
 ## Testing Commands
 ```bash
 uv run pytest tests/unit/alignment/gateway/ -v
-uv run ruff check focal/alignment/gateway/
-uv run mypy focal/alignment/gateway/
+uv run ruff check ruche/alignment/gateway/
+uv run mypy ruche/alignment/gateway/
 ```
 
 ## Report Format
@@ -600,7 +600,7 @@ Provide a final implementation summary with files changed, tests added, and any 
 2. `docs/focal_360/architecture/TOOLBOX_SPEC.md` - Tool execution spec
 3. `CLAUDE.md` - Project conventions
 4. Agent 1A and 1B's completed code
-5. Existing Hatchet patterns in `focal/jobs/workflows/`
+5. Existing Hatchet patterns in `ruche/jobs/workflows/`
 
 ## ACF Context
 
@@ -616,7 +616,7 @@ This replaces sticky sessions with Hatchet's durable state.
 
 ## Your Assignment
 
-Create `focal/jobs/workflows/logical_turn.py`:
+Create `ruche/jobs/workflows/logical_turn.py`:
 
 ```python
 from hatchet_sdk import Hatchet, Context
@@ -797,7 +797,7 @@ class LogicalTurnWorkflow:
 4. Interrupt-aware pipeline execution
 5. Atomic scenario commits
 6. Tests using Hatchet test utilities
-7. Register workflow in `focal/jobs/__init__.py`
+7. Register workflow in `ruche/jobs/__init__.py`
 
 ## Integration Points
 - `AlignmentEngine.process_logical_turn()` - New method (modify engine.py)
@@ -838,8 +838,8 @@ Provide a final implementation summary with files changed, tests added, and any 
 uv run pytest tests/unit/alignment/models/test_logical_turn.py -v
 uv run pytest tests/unit/alignment/gateway/ -v
 uv run pytest tests/unit/jobs/workflows/test_logical_turn.py -v
-uv run ruff check focal/alignment/ focal/jobs/
-uv run mypy focal/alignment/ focal/jobs/
+uv run ruff check ruche/alignment/ ruche/jobs/
+uv run mypy ruche/alignment/ ruche/jobs/
 ```
 
 ---
@@ -904,7 +904,7 @@ to decide if a turn can be superseded.
 
 ### Part 1: SideEffectPolicy Enum
 
-Create/update `focal/alignment/models/side_effect.py`:
+Create/update `ruche/alignment/models/side_effect.py`:
 
 ```python
 from enum import Enum
@@ -1107,9 +1107,9 @@ This ensures follow-ups reference the correct conversational context.
 ```bash
 # After EVERY wave
 echo "=== WAVE QUALITY CHECK ===" && \
-uv run ruff check focal/ && \
-uv run ruff format --check focal/ && \
-uv run mypy focal/ --ignore-missing-imports && \
+uv run ruff check ruche/ && \
+uv run ruff format --check ruche/ && \
+uv run mypy ruche/ --ignore-missing-imports && \
 uv run pytest tests/unit/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```

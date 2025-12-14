@@ -8,12 +8,12 @@ from uuid import uuid4
 
 import pytest
 
-from focal.customer_data.extraction import (
+from ruche.customer_data.extraction import (
     ExtractionResult,
     FieldDefinitionSuggestion,
     CustomerDataSchemaExtractor,
 )
-from focal.customer_data.enums import RequiredLevel
+from ruche.customer_data.enums import RequiredLevel
 
 
 @pytest.fixture

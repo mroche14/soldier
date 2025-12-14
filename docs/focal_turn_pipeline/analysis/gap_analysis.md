@@ -1,7 +1,7 @@
 # Focal Turn Pipeline: Gap Analysis
 
 > **Generated**: 2024-12-08
-> **Status**: STALE. This file is not automatically re-generated; verify against `IMPLEMENTATION_PLAN.md`, `docs/focal_360/`, and the current `focal/` code.
+> **Status**: STALE. This file is not automatically re-generated; verify against `IMPLEMENTATION_PLAN.md`, `docs/focal_360/`, and the current `ruche/` code.
 > **Reference**: `docs/focal_turn_pipeline/README.md`
 > **Purpose**: Identify implementation gaps between the focal pipeline specification and the current codebase.
 
@@ -13,15 +13,15 @@
 
 The focal pipeline specification uses a **two-part customer data architecture**:
 
-> **Note:** Since this analysis was generated, naming has been consolidated in `focal/domain/interlocutor/` (`CustomerProfile` → `InterlocutorDataStore`, `ProfileField` → `VariableEntry`, etc.). Treat legacy names below as historical references.
+> **Note:** Since this analysis was generated, naming has been consolidated in `ruche/domain/interlocutor/` (`CustomerProfile` → `InterlocutorDataStore`, `ProfileField` → `VariableEntry`, etc.). Treat legacy names below as historical references.
 
 | Component | Purpose | Current Implementation |
 |-----------|---------|------------------------|
 | **InterlocutorDataField** | Schema definition (what fields exist) | `InterlocutorDataField` exists (includes `scope` and `persist`) |
 | **InterlocutorDataStore** | Runtime values per customer | `InterlocutorDataStore` exists (loaded as a per-turn snapshot) |
 | **VariableEntry** | Per-variable metadata with history | `VariableEntry` exists (includes `history`; no explicit `scope` field) |
-| **InterlocutorSchemaMask** | Privacy-safe LLM view | Implemented (`focal/mechanics/focal/context/interlocutor_schema_mask.py`) |
-| **CandidateVariableInfo** | LLM extraction intermediate | Implemented (`focal/mechanics/focal/context/situation_snapshot.py`) |
+| **InterlocutorSchemaMask** | Privacy-safe LLM view | Implemented (`ruche/mechanics/focal/context/interlocutor_schema_mask.py`) |
+| **CandidateVariableInfo** | LLM extraction intermediate | Implemented (`ruche/mechanics/focal/context/situation_snapshot.py`) |
 
 **Architecture Mismatch**: Customer data is stored persistently, but the pipeline requires a **runtime per-turn snapshot** that's loaded (P1.5), mutated in-memory (P3.3), and persisted selectively (P11.3).
 
@@ -47,7 +47,7 @@ The focal pipeline specification uses a **two-part customer data architecture**:
 
 The spec (Section 5) requires each LLM task to have:
 1. Config section in `config/default.toml` under `[pipeline.{task_name}]`
-2. Jinja2 prompt template in `focal/alignment/{domain}/prompts/{task_name}.jinja2`
+2. Jinja2 prompt template in `ruche/alignment/{domain}/prompts/{task_name}.jinja2`
 
 | Task | Config | Template | Loader | Status |
 |------|--------|----------|--------|--------|
@@ -515,7 +515,7 @@ Based on dependencies and impact:
 ## Files to Create
 
 ```
-focal/mechanics/focal/
+ruche/mechanics/focal/
 ├── context/
 │   └── situational_snapshot.py    # SituationalSnapshot, CandidateVariableInfo
 ├── planning/
@@ -530,7 +530,7 @@ focal/mechanics/focal/
 └── models/
     └── outcome.py                 # TurnOutcome, OutcomeCategory
 
-focal/domain/interlocutor/
+ruche/domain/interlocutor/
 └── data_store.py                  # InterlocutorDataStore, InterlocutorDataUpdate
 ```
 

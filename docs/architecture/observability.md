@@ -55,7 +55,7 @@ Every log entry includes these fields:
   "timestamp": "2024-01-15T10:30:45.123456Z",
   "level": "info",
   "event": "turn_processed",
-  "logger": "focal.alignment.pipeline",
+  "logger": "ruche.alignment.pipeline",
 
   "tenant_id": "tenant_abc123",
   "agent_id": "agent_xyz789",
@@ -111,7 +111,7 @@ format = "console"           # Pretty-printed for local development
 ### Implementation
 
 ```python
-# focal/observability/logging.py
+# ruche/observability/logging.py
 import logging
 import os
 from typing import Literal
@@ -195,11 +195,11 @@ def get_logger(name: str) -> structlog.stdlib.BoundLogger:
 ### Request Context Middleware
 
 ```python
-# focal/api/middleware/logging.py
+# ruche/api/middleware/logging.py
 from fastapi import Request
 from structlog.contextvars import bind_contextvars, clear_contextvars
 
-from focal.observability.logging import get_logger
+from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -249,7 +249,7 @@ def _extract_trace_id(traceparent: str | None) -> str | None:
 Focal reuses the OpenTelemetry setup from `libs/observability` in kernel_agent:
 
 ```python
-# focal/observability/tracing.py
+# ruche/observability/tracing.py
 import os
 from typing import Optional
 
@@ -360,7 +360,7 @@ propagators = ["tracecontext", "baggage"]  # W3C standard
 Focal exposes a `/metrics` endpoint compatible with Prometheus scraping:
 
 ```python
-# focal/observability/metrics.py
+# ruche/observability/metrics.py
 from prometheus_client import Counter, Histogram, Gauge, Info
 
 # Service info
@@ -639,12 +639,12 @@ tracing_sample_rate = 0.1         # 10% sampling in production
 
 ```bash
 # Root-level logging (existing pattern)
-export FOCAL_LOG_LEVEL=DEBUG
-export FOCAL_DEBUG=true
+export RUCHE_LOG_LEVEL=DEBUG
+export RUCHE_DEBUG=true
 
 # Observability section
-export FOCAL_OBSERVABILITY__LOG_FORMAT=console
-export FOCAL_OBSERVABILITY__TRACING_ENABLED=true
+export RUCHE_OBSERVABILITY__LOG_FORMAT=console
+export RUCHE_OBSERVABILITY__TRACING_ENABLED=true
 
 # Standard OpenTelemetry environment variables (used by kernel_agent)
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317

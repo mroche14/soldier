@@ -6,25 +6,25 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.customer_schema_mask import (
+from ruche.alignment.context.customer_schema_mask import (
     CustomerSchemaMask,
     CustomerSchemaMaskEntry,
 )
-from focal.alignment.context.models import Turn
-from focal.alignment.context.situation_sensor import SituationSensor
-from focal.alignment.context.situation_snapshot import (
+from ruche.alignment.context.models import Turn
+from ruche.alignment.context.situation_sensor import SituationSensor
+from ruche.alignment.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from focal.alignment.models.glossary import GlossaryItem
-from focal.config.models.pipeline import SituationSensorConfig
-from focal.customer_data.models import (
+from ruche.alignment.models.glossary import GlossaryItem
+from ruche.config.models.pipeline import SituationSensorConfig
+from ruche.customer_data.models import (
     CustomerDataField,
     CustomerDataStore,
     VariableEntry,
 )
-from focal.customer_data.enums import VariableSource
-from focal.providers.llm.base import LLMResponse, TokenUsage
+from ruche.customer_data.enums import VariableSource
+from ruche.providers.llm.base import LLMResponse, TokenUsage
 
 
 @pytest.fixture

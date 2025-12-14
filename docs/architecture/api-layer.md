@@ -189,7 +189,7 @@ If no `Idempotency-Key` is provided, the request is processed without idempotenc
 ```protobuf
 syntax = "proto3";
 
-package focal.v1;
+package ruche.v1;
 
 service ChatService {
   // Unary: single message in, single response out
@@ -242,9 +242,9 @@ message ChatChunk {
 
 ```python
 import grpc
-from focal.v1 import chat_pb2, chat_pb2_grpc
+from ruche.v1 import chat_pb2, chat_pb2_grpc
 
-channel = grpc.secure_channel("focal.example.com:443", credentials)
+channel = grpc.secure_channel("ruche.example.com:443", credentials)
 stub = chat_pb2_grpc.ChatServiceStub(channel)
 
 # Unary call
@@ -365,7 +365,7 @@ These are exposed via MCP for external LLM clients to interact with Focal's inte
 {
   "mcpServers": {
     "focal": {
-      "url": "https://focal.example.com/mcp/v1",
+      "url": "https://ruche.example.com/mcp/v1",
       "auth": {
         "type": "bearer",
         "token": "tenant_api_key_xyz"

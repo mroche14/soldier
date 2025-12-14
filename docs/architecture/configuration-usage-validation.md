@@ -3,7 +3,7 @@
 ### Accessing Configuration
 
 ```python
-from focal.config.settings import get_settings
+from ruche.config.settings import get_settings
 
 # Get cached settings (loads once, reuses)
 settings = get_settings()
@@ -24,8 +24,8 @@ if settings.debug:
 ```python
 from fastapi import Depends
 
-from focal.config.settings import Settings, get_settings
-from focal.providers.llm import LLMExecutor, create_executor_from_step_config
+from ruche.config.settings import Settings, get_settings
+from ruche.providers.llm import LLMExecutor, create_executor_from_step_config
 
 
 def get_generation_executor(
@@ -45,8 +45,8 @@ def get_rule_filtering_executor(
 ### Creating Selection Strategies from Config
 
 ```python
-from focal.config.models.selection import SelectionStrategyConfig
-from focal.alignment.retrieval.selection import (
+from ruche.config.models.selection import SelectionStrategyConfig
+from ruche.alignment.retrieval.selection import (
     SelectionStrategy,
     ElbowSelectionStrategy,
     AdaptiveKSelectionStrategy,
@@ -156,7 +156,7 @@ api_key = "sk-ant-..."
 
 # ✅ Good: reference env var or leave empty
 [providers.default_llm]
-# api_key loaded from ANTHROPIC_API_KEY or FOCAL_PROVIDERS__DEFAULT_LLM__API_KEY
+# api_key loaded from ANTHROPIC_API_KEY or RUCHE_PROVIDERS__DEFAULT_LLM__API_KEY
 ```
 
 ### 3. Environment-Specific Overrides Only
@@ -171,7 +171,7 @@ api_key = "sk-ant-..."
 
 ```python
 # main.py
-from focal.config.settings import get_settings
+from ruche.config.settings import get_settings
 
 def main():
     # Validate config at startup, fail fast

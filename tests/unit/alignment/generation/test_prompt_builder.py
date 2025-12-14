@@ -4,15 +4,15 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.models import Turn
-from focal.alignment.context.situation_snapshot import (
+from ruche.alignment.context.models import Turn
+from ruche.alignment.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from focal.alignment.execution.models import ToolResult
-from focal.alignment.filtering.models import MatchedRule
-from focal.alignment.generation.prompt_builder import PromptBuilder
-from focal.alignment.models import Rule
+from ruche.alignment.execution.models import ToolResult
+from ruche.alignment.filtering.models import MatchedRule
+from ruche.alignment.generation.prompt_builder import PromptBuilder
+from ruche.alignment.models import Rule
 
 
 def create_rule(

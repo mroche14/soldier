@@ -9,18 +9,18 @@
 
 ### Changes Implemented
 
-1. **Parallel Retrieval** (`focal/alignment/engine.py`)
+1. **Parallel Retrieval** (`ruche/alignment/engine.py`)
    - Converted sequential retrieval to `asyncio.gather()`
    - Rules, scenarios, memory, and intents retrieved concurrently
    - Exception handling for graceful degradation
 
 2. **BM25 Hybrid Retrieval**
-   - `focal/alignment/retrieval/rule_retriever.py` - BM25 + vector hybrid
-   - `focal/alignment/retrieval/scenario_retriever.py` - BM25 + vector hybrid
-   - `focal/memory/retrieval/retriever.py` - BM25 + vector hybrid
+   - `ruche/alignment/retrieval/rule_retriever.py` - BM25 + vector hybrid
+   - `ruche/alignment/retrieval/scenario_retriever.py` - BM25 + vector hybrid
+   - `ruche/memory/retrieval/retriever.py` - BM25 + vector hybrid
 
 3. **Intent Retrieval**
-   - `focal/alignment/retrieval/intent_retriever.py` - Intent catalog lookup
+   - `ruche/alignment/retrieval/intent_retriever.py` - Intent catalog lookup
    - `decide_canonical_intent()` - LLM sensor + hybrid merging
 
 4. **Metrics**
@@ -205,4 +205,4 @@ normalization = "softmax"
 - **Baseline**: `docs/focal_turn_pipeline/implementation/results/phase-04-performance-baseline.md`
 - **Implementation Plan**: `IMPLEMENTATION_PLAN.md` (Phase 8)
 - **Checklist**: `docs/focal_turn_pipeline/implementation/phase-04-retrieval-selection-checklist.md`
-- **Metrics Code**: `focal/observability/metrics.py` (lines 189-215)
+- **Metrics Code**: `ruche/observability/metrics.py` (lines 189-215)

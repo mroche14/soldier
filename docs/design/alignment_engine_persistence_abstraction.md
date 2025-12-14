@@ -1,9 +1,9 @@
 
 # Persistence Abstraction for the Alignment Engine (SQL / NoSQL Agnostic)
 
-> **Status:** HISTORICAL. This document predates `docs/focal_360/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses stores in `focal/stores/` (including `MemoryStore`, `SessionStore`, `AuditStore`, plus `InterlocutorDataStoreInterface`) with UUIDs.
+> **Status:** HISTORICAL. This document predates `docs/focal_360/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses stores in `ruche/stores/` (including `MemoryStore`, `SessionStore`, `AuditStore`, plus `InterlocutorDataStoreInterface`) with UUIDs.
 >
-> The alignment engine implementation is now `FocalCognitivePipeline` in `focal/mechanics/focal/pipeline.py`.
+> The alignment engine implementation is now `FocalCognitivePipeline` in `ruche/mechanics/focal/pipeline.py`.
 >
 > For the current approach, see: `docs/design/decisions/001-storage-choice.md` and `docs/architecture/overview.md`.
 
@@ -764,7 +764,7 @@ Schema changes:
 - The domain models evolve (e.g. new field on `Rule`),
 - You update:
   - DB schema (SQL migrations or Mongo schema migration script),
-  - `Postgres*Store` and `Mongo*Store` mapping code (now in `focal/stores/`),
+  - `Postgres*Store` and `Mongo*Store` mapping code (now in `ruche/stores/`),
 - Domain logic remains unchanged.
 
 ---

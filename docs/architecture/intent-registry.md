@@ -202,7 +202,7 @@ CREATE INDEX ix_intents_tenant_agent_enabled ON intents (tenant_id, agent_id, en
 ### Creating Intents
 
 ```python
-from focal.mechanics.focal.models.intent import Intent
+from ruche.mechanics.focal.models.intent import Intent
 from datetime import datetime, UTC
 from uuid import uuid4
 
@@ -232,7 +232,7 @@ await config_store.save_intent(intent)
 ### Retrieving Intents
 
 ```python
-from focal.mechanics.focal.retrieval.intent_retriever import IntentRetriever
+from ruche.mechanics.focal.retrieval.intent_retriever import IntentRetriever
 
 retriever = IntentRetriever(
     config_store=config_store,
@@ -256,7 +256,7 @@ candidates = await retriever.retrieve(
 ### Canonical Intent Decision
 
 ```python
-from focal.mechanics.focal.retrieval.intent_retriever import decide_canonical_intent
+from ruche.mechanics.focal.retrieval.intent_retriever import decide_canonical_intent
 
 # Merge LLM sensor with hybrid retrieval
 canonical, confidence = decide_canonical_intent(
@@ -279,7 +279,7 @@ canonical, confidence = decide_canonical_intent(
 Track which intents are matched most frequently:
 
 ```python
-from focal.observability.metrics import Counter
+from ruche.observability.metrics import Counter
 
 intent_matched = Counter(
     "focal_intent_matched_total",
@@ -434,8 +434,8 @@ if rule.required_intent == context.canonical_intent_label:
 
 ## References
 
-- **Models**: `focal/mechanics/focal/models/intent.py`
-- **Retriever**: `focal/mechanics/focal/retrieval/intent_retriever.py`
-- **Store Interface**: `focal/stores/agent_config_store.py`
+- **Models**: `ruche/mechanics/focal/models/intent.py`
+- **Retriever**: `ruche/mechanics/focal/retrieval/intent_retriever.py`
+- **Store Interface**: `ruche/stores/agent_config_store.py`
 - **Migration**: `alembic/versions/012_add_intents_table.py`
 - **Tests**: `tests/unit/mechanics/focal/retrieval/test_intent_*.py`

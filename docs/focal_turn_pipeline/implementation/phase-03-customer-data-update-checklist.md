@@ -28,36 +28,36 @@
 ## 1. Models to Create/Modify
 
 > **IMPORTANT**: InterlocutorDataField, VariableEntry, and InterlocutorDataStore are renamed Profile models from Phase 1.
-> Do NOT create duplicate models. These should already exist after Phase 1 renames in `focal/domain/interlocutor/models.py`.
+> Do NOT create duplicate models. These should already exist after Phase 1 renames in `ruche/domain/interlocutor/models.py`.
 
 ### Prerequisites from Phase 1 (Already Complete)
 
 - [x] **InterlocutorDataField** (renamed from ProfileFieldDefinition)
-  - File: `focal/domain/interlocutor/models.py`
+  - File: `ruche/domain/interlocutor/models.py`
   - Fields: `name`, `scope`, `persist`, `value_type`, validation fields
   - Note: Use `name` field (not `key` or `name`)
 
 - [x] **VariableEntry** (renamed from ProfileField)
-  - File: `focal/domain/interlocutor/models.py`
+  - File: `ruche/domain/interlocutor/models.py`
   - Fields: `name`, `value`, `history`, `confidence`, `source`, etc.
 
 - [x] **InterlocutorDataStore** (renamed from CustomerProfile)
-  - File: `focal/domain/interlocutor/models.py`
+  - File: `ruche/domain/interlocutor/models.py`
   - Contains: `fields: dict[str, VariableEntry]`
   - Methods: Use existing get/set patterns from InterlocutorDataStore
 
 - [x] **InterlocutorSchemaMask** (created in Phase 2)
-  - File: `focal/mechanics/focal/context/customer_schema_mask.py`
+  - File: `ruche/mechanics/focal/context/customer_schema_mask.py`
   - Created in Phase 2 for Situational Sensor
 
 ### 1.1 Create `CustomerDataUpdate` Delta Model (NEW)
 
 - [x] **Create `CustomerDataUpdate` model**
-  - File: `focal/mechanics/focal/customer/models.py`
+  - File: `ruche/mechanics/focal/customer/models.py`
   - Action: Created new file with CustomerDataUpdate model
   - Details:
     ```python
-    from focal.domain.interlocutor.models import InterlocutorDataField  # Renamed from ProfileFieldDefinition
+    from ruche.domain.interlocutor.models import InterlocutorDataField  # Renamed from ProfileFieldDefinition
 
     class CustomerDataUpdate(BaseModel):
         """Represents a single update to apply to InterlocutorDataStore."""
@@ -72,20 +72,20 @@
 ### 1.2 Import CandidateVariableInfo (from Phase 2)
 
 - [x] **CandidateVariableInfo** (created in Phase 2)
-  - File: `focal/mechanics/focal/context/situational_snapshot.py`
+  - File: `ruche/mechanics/focal/context/situational_snapshot.py`
   - Note: Should already exist from Phase 2
 
 ### 1.3 Add Module Init Files
 
-- [x] **Create `focal/mechanics/focal/customer/__init__.py`**
-  - File: `focal/mechanics/focal/customer/__init__.py`
+- [x] **Create `ruche/mechanics/focal/customer/__init__.py`**
+  - File: `ruche/mechanics/focal/customer/__init__.py`
   - Action: Create
   - Details:
     ```python
     """Customer data management for alignment pipeline."""
 
-    from focal.mechanics.focal.customer.data_store_loader import InterlocutorDataStoreLoader
-    from focal.mechanics.focal.customer.models import (
+    from ruche.mechanics.focal.customer.data_store_loader import InterlocutorDataStoreLoader
+    from ruche.mechanics.focal.customer.models import (
         CandidateVariableInfo,
         InterlocutorDataStore,
         CustomerDataUpdate,
@@ -93,7 +93,7 @@
         InterlocutorSchemaMaskEntry,
         VariableEntry,
     )
-    from focal.mechanics.focal.customer.updater import CustomerDataUpdater
+    from ruche.mechanics.focal.customer.updater import CustomerDataUpdater
 
     __all__ = [
         "InterlocutorDataStore",
@@ -114,7 +114,7 @@
 ### 2.1 Add `scope` Field to InterlocutorDataField
 
 - [x] **Add `scope` field** (already exists in codebase)
-  - File: `focal/domain/interlocutor/models.py`
+  - File: `ruche/domain/interlocutor/models.py`
   - Action: Modify
   - Details: Add field after `value_type`:
     ```python
@@ -127,7 +127,7 @@
 ### 2.2 Add `persist` Field to InterlocutorDataField
 
 - [x] **Add `persist` field** (already exists in codebase)
-  - File: `focal/domain/interlocutor/models.py`
+  - File: `ruche/domain/interlocutor/models.py`
   - Action: Modify
   - Details: Add field after `scope`:
     ```python
@@ -151,7 +151,7 @@
 ### 3.1 Create InterlocutorDataStoreLoader
 
 - [x] **Create `InterlocutorDataStoreLoader` class**
-  - File: `focal/mechanics/focal/customer/data_store_loader.py` (NEW FILE)
+  - File: `ruche/mechanics/focal/customer/data_store_loader.py` (NEW FILE)
   - Action: Created
   - **Implemented**: Created with load() method that loads from InterlocutorDataStoreInterface
   - Details:
@@ -228,7 +228,7 @@
 ### 3.2 Create InterlocutorSchemaMask Builder
 
 - [x] **Create `build_customer_schema_mask()` function**
-  - File: `focal/mechanics/focal/customer/data_store_loader.py`
+  - File: `ruche/mechanics/focal/customer/data_store_loader.py`
   - Action: Added
   - **Implemented**: Created function that builds privacy-safe schema view
   - Details:
@@ -266,11 +266,11 @@
 ### 4.1 Create CustomerDataUpdater Class
 
 - [x] **Create `CustomerDataUpdater` class**
-  - File: `focal/mechanics/focal/customer/updater.py` (NEW FILE)
+  - File: `ruche/mechanics/focal/customer/updater.py` (NEW FILE)
   - Action: Create
   - Details:
     ```python
-    from focal.domain.interlocutor.validation import InterlocutorDataFieldValidator
+    from ruche.domain.interlocutor.validation import InterlocutorDataFieldValidator
 
     class CustomerDataUpdater:
         """Handles Phase 3 customer data updates.
@@ -316,7 +316,7 @@
 ### 4.2 Implement P3.1 - Match Candidates to Fields
 
 - [x] **Add `_match_candidates_to_fields()` method**
-  - File: `focal/mechanics/focal/customer/updater.py`
+  - File: `ruche/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -359,7 +359,7 @@
 ### 4.3 Implement P3.2 - Validate & Coerce Types
 
 - [x] **Add `_validate_and_coerce()` method**
-  - File: `focal/mechanics/focal/customer/updater.py`
+  - File: `ruche/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -393,7 +393,7 @@
 ### 4.4 Implement P3.3 - Apply Updates In-Memory
 
 - [x] **Add `_apply_updates_in_memory()` method**
-  - File: `focal/mechanics/focal/customer/updater.py`
+  - File: `ruche/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -433,7 +433,7 @@
 ### 4.5 Implement P3.4 - Mark for Persistence
 
 - [x] **Add `_mark_for_persistence()` method**
-  - File: `focal/mechanics/focal/customer/updater.py`
+  - File: `ruche/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -483,7 +483,7 @@
 ### 5.1 Create InterlocutorDataStore Persister
 
 - [x] **Create `InterlocutorDataStorePersister` class**
-  - File: `focal/mechanics/focal/customer/persister.py` (NEW FILE)
+  - File: `ruche/mechanics/focal/customer/persister.py` (NEW FILE)
   - Action: Created
   - **Implemented**: Created with persist() method for Phase 11
   - Details:
@@ -574,7 +574,7 @@
 ### 6.1 Update FocalCognitivePipeline for Phase 3
 
 - [x] **Add CustomerDataUpdater to FocalCognitivePipeline**
-  - File: `focal/mechanics/focal/engine.py`
+  - File: `ruche/mechanics/focal/engine.py`
   - Action: Modified
   - **Implemented**: Added CustomerDataUpdater initialization in __init__
   - Details: Added to `__init__`:
@@ -585,7 +585,7 @@
     ```
 
 - [x] **Add Phase 3 execution to `process_turn()`**
-  - File: `focal/mechanics/focal/engine.py`
+  - File: `ruche/mechanics/focal/engine.py`
   - Action: Modified
   - **Implemented**: Added Phase 3 execution after Phase 2, includes error handling and timing
   - Details: Added after Phase 2 (situational sensor):
@@ -605,7 +605,7 @@
 ### 6.2 Update AlignmentResult Model
 
 - [x] **Add `persistent_customer_updates` field**
-  - File: `focal/mechanics/focal/result.py`
+  - File: `ruche/mechanics/focal/result.py`
   - Action: Modified
   - **Implemented**: Added persistent_customer_updates field to AlignmentResult
   - Details: Add field to `AlignmentResult`:
@@ -636,7 +636,7 @@
 ### 7.2 Create Configuration Model
 
 - [x] **Create `CustomerDataUpdateConfig` model**
-  - File: `focal/config/models/pipeline.py`
+  - File: `ruche/config/models/pipeline.py`
   - Action: Modified
   - **Implemented**: Created CustomerDataUpdateConfig and added to PipelineConfig
   - Details:
@@ -758,7 +758,7 @@
 ### 9.1 Add Metrics
 
 - [x] **Add Phase 3 metrics**
-  - File: `focal/observability/metrics.py`
+  - File: `ruche/observability/metrics.py`
   - Action: Modified
   - **Implemented**: Added CUSTOMER_DATA_UPDATES, CUSTOMER_DATA_VALIDATION_ERRORS, and CUSTOMER_DATA_PERSISTENCE_MARKED metrics
   - Details:
@@ -786,7 +786,7 @@
 ### 9.2 Add Structured Logging
 
 - [x] **Add Phase 3 log events**
-  - File: `focal/mechanics/focal/customer/updater.py`
+  - File: `ruche/mechanics/focal/customer/updater.py`
   - Action: Completed - all key events are logged:
     - `candidate_variable_no_definition`
     - `candidate_variable_validation_failed`
@@ -807,7 +807,7 @@
 ### 10.2 Add Inline Documentation
 
 - [x] **Add docstrings to all new classes/methods**
-  - Files: All new files in `focal/mechanics/focal/customer/`
+  - Files: All new files in `ruche/mechanics/focal/customer/`
   - Action: Completed
   - **Implemented**: All classes and methods have docstrings with Args/Returns
 

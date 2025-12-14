@@ -14,17 +14,17 @@ from dotenv import load_dotenv
 # Load .env file
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-from focal.alignment.engine import AlignmentEngine
-from focal.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
-from focal.conversation.models import Session, SessionStatus, Channel
-from focal.conversation.stores.inmemory import InMemorySessionStore
-from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
-from focal.observability.logging import setup_logging, get_logger
-from focal.providers.embedding.jina import JinaEmbeddingProvider
-from focal.providers.rerank.jina import JinaRerankProvider
-from focal.providers.llm import create_executor
+from ruche.alignment.engine import AlignmentEngine
+from ruche.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
+from ruche.conversation.models import Session, SessionStatus, Channel
+from ruche.conversation.stores.inmemory import InMemorySessionStore
+from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.observability.logging import setup_logging, get_logger
+from ruche.providers.embedding.jina import JinaEmbeddingProvider
+from ruche.providers.rerank.jina import JinaRerankProvider
+from ruche.providers.llm import create_executor
 
 # Configure logging
 setup_logging(level="INFO")

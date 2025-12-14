@@ -6,17 +6,17 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.api.dependencies import (
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.api.dependencies import (
     get_audit_store,
     get_config_store,
     get_session_store,
     get_settings,
     reset_dependencies,
 )
-from focal.api.routes.health import router
-from focal.audit.stores.inmemory import InMemoryAuditStore
-from focal.conversation.stores.inmemory import InMemorySessionStore
+from ruche.api.routes.health import router
+from ruche.audit.stores.inmemory import InMemoryAuditStore
+from ruche.conversation.stores.inmemory import InMemorySessionStore
 
 
 @pytest.fixture

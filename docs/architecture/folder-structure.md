@@ -14,7 +14,7 @@ Answer: In the folder named after X.
 ## Top-Level Structure
 
 ```
-focal/
+ruche/
 ├── config/                  # TOML configuration files (per environment)
 │   ├── default.toml        # Base defaults (committed)
 │   ├── development.toml    # Local development overrides
@@ -22,7 +22,7 @@ focal/
 │   ├── production.toml     # Production environment
 │   └── test.toml           # Test environment
 │
-├── focal/                 # Main Python package
+├── ruche/                 # Main Python package
 │   ├── runtime/            # Conversation runtime infrastructure
 │   ├── mechanics/          # CognitivePipeline implementations
 │   ├── infrastructure/     # Consolidated infrastructure layer
@@ -32,7 +32,7 @@ focal/
 │   ├── observability/      # Logging, tracing, metrics
 │   └── config/             # Configuration loading (Pydantic models)
 │
-├── tests/                   # Mirrors focal/ structure
+├── tests/                   # Mirrors ruche/ structure
 ├── docs/                    # Documentation
 └── deploy/                  # Kubernetes, Docker, etc.
 ```
@@ -41,7 +41,7 @@ focal/
 
 ## Core Domains
 
-### `focal/runtime/` — Conversation Runtime Infrastructure
+### `ruche/runtime/` — Conversation Runtime Infrastructure
 
 **Purpose**: Manages conversation lifecycle, concurrency, and proactive task scheduling.
 
@@ -87,7 +87,7 @@ class AgentRuntime:
 
 ---
 
-### `focal/mechanics/` — CognitivePipeline Implementations
+### `ruche/mechanics/` — CognitivePipeline Implementations
 
 **Purpose**: Different cognitive mechanics (FOCAL alignment, future alternatives).
 
@@ -96,7 +96,7 @@ mechanics/
 ├── __init__.py
 ├── protocol.py             # CognitivePipeline abstract interface
 │
-└── focal/                  # FOCAL alignment mechanic
+└── ruche/                  # FOCAL alignment mechanic
     ├── __init__.py
     ├── pipeline.py         # FocalCognitivePipeline (main orchestrator)
     │
@@ -140,7 +140,7 @@ mechanics/
 
 ---
 
-### `focal/infrastructure/` — Consolidated Infrastructure Layer
+### `ruche/infrastructure/` — Consolidated Infrastructure Layer
 
 **Purpose**: All external dependencies (stores, providers, toolbox, channels).
 
@@ -228,7 +228,7 @@ infrastructure/
 
 ---
 
-### `focal/domain/` — Pure Domain Models
+### `ruche/domain/` — Pure Domain Models
 
 **Purpose**: Domain models with no infrastructure dependencies.
 
@@ -262,7 +262,7 @@ domain/
 
 ---
 
-### `focal/asa/` — Agent Setter Agent
+### `ruche/asa/` — Agent Setter Agent
 
 **Purpose**: Mechanic-agnostic meta-agent for validating and suggesting improvements to agent configurations.
 
@@ -288,7 +288,7 @@ asa/
 
 ---
 
-### `focal/observability/` — Logging, Tracing, Metrics
+### `ruche/observability/` — Logging, Tracing, Metrics
 
 **Purpose**: Structured logging, distributed tracing, and Prometheus metrics. See [observability.md](./observability.md) for full architecture.
 
@@ -325,7 +325,7 @@ async def logging_context_middleware(request: Request, call_next):
 
 ---
 
-### `focal/config/` — Configuration Loading
+### `ruche/config/` — Configuration Loading
 
 **Purpose**: Load TOML configuration files with Pydantic validation. See [configuration.md](./configuration.md) for full details.
 
@@ -350,11 +350,11 @@ config/
 1. **Defaults** in Pydantic models
 2. **Base config** in `config/default.toml`
 3. **Environment overrides** in `config/{env}.toml`
-4. **Runtime overrides** via `FOCAL_*` environment variables
+4. **Runtime overrides** via `RUCHE_*` environment variables
 
 ```python
 # Usage
-from focal.config.settings import get_settings
+from ruche.config.settings import get_settings
 
 settings = get_settings()
 port = settings.api.port
@@ -364,7 +364,7 @@ rule_strategy = settings.pipeline.retrieval.rule_selection.strategy
 
 ---
 
-### `focal/api/` — External Interfaces
+### `ruche/api/` — External Interfaces
 
 **Purpose**: REST API and MCP server for external integrations.
 
@@ -522,30 +522,30 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 
 | Looking for... | Location |
 |----------------|----------|
-| Turn processing orchestration | `focal/runtime/agent/runtime.py` |
-| Main pipeline logic | `focal/mechanics/focal/pipeline.py` |
-| Pipeline phases | `focal/mechanics/focal/phases/` |
-| Scenario migration | `focal/mechanics/focal/migration/` |
-| Rule domain models | `focal/domain/rules/rule.py` |
-| Scenario domain models | `focal/domain/scenarios/scenario.py` |
-| Interlocutor data models | `focal/domain/interlocutor/` |
-| Memory domain models | `focal/domain/memory/` |
-| ConfigStore implementations | `focal/infrastructure/stores/config/` |
-| SessionStore implementations | `focal/infrastructure/stores/session/` |
-| MemoryStore implementations | `focal/infrastructure/stores/memory/` |
-| InterlocutorDataStore implementations | `focal/infrastructure/stores/interlocutor/` |
-| LLM provider | `focal/infrastructure/providers/llm/` |
-| Embedding provider | `focal/infrastructure/providers/embedding/` |
-| Rerank provider | `focal/infrastructure/providers/rerank/` |
-| Tool execution | `focal/infrastructure/toolbox/` |
-| Channel adapters | `focal/infrastructure/channels/` |
-| API endpoints | `focal/api/routes/` |
-| MCP server | `focal/api/mcp/` |
-| Pipeline configuration | `focal/config/models/pipeline.py` |
-| Logging setup | `focal/observability/logging.py` |
-| Tracing setup | `focal/observability/tracing.py` |
-| Metrics definitions | `focal/observability/metrics.py` |
-| ASA validators | `focal/asa/validator/` |
+| Turn processing orchestration | `ruche/runtime/agent/runtime.py` |
+| Main pipeline logic | `ruche/mechanics/focal/pipeline.py` |
+| Pipeline phases | `ruche/mechanics/focal/phases/` |
+| Scenario migration | `ruche/mechanics/focal/migration/` |
+| Rule domain models | `ruche/domain/rules/rule.py` |
+| Scenario domain models | `ruche/domain/scenarios/scenario.py` |
+| Interlocutor data models | `ruche/domain/interlocutor/` |
+| Memory domain models | `ruche/domain/memory/` |
+| ConfigStore implementations | `ruche/infrastructure/stores/config/` |
+| SessionStore implementations | `ruche/infrastructure/stores/session/` |
+| MemoryStore implementations | `ruche/infrastructure/stores/memory/` |
+| InterlocutorDataStore implementations | `ruche/infrastructure/stores/interlocutor/` |
+| LLM provider | `ruche/infrastructure/providers/llm/` |
+| Embedding provider | `ruche/infrastructure/providers/embedding/` |
+| Rerank provider | `ruche/infrastructure/providers/rerank/` |
+| Tool execution | `ruche/infrastructure/toolbox/` |
+| Channel adapters | `ruche/infrastructure/channels/` |
+| API endpoints | `ruche/api/routes/` |
+| MCP server | `ruche/api/mcp/` |
+| Pipeline configuration | `ruche/config/models/pipeline.py` |
+| Logging setup | `ruche/observability/logging.py` |
+| Tracing setup | `ruche/observability/tracing.py` |
+| Metrics definitions | `ruche/observability/metrics.py` |
+| ASA validators | `ruche/asa/validator/` |
 
 ---
 
@@ -558,7 +558,7 @@ tests/
 │   │   ├── test_agent_runtime.py
 │   │   └── test_acf_mutex.py
 │   ├── mechanics/
-│   │   └── focal/
+│   │   └── ruche/
 │   │       ├── test_pipeline.py
 │   │       ├── phases/
 │   │       │   ├── test_p01_identification.py
@@ -595,26 +595,26 @@ tests/
 
 ## Summary: Architecture Layers
 
-**Runtime Layer** (`focal/runtime/`):
+**Runtime Layer** (`ruche/runtime/`):
 - **AgentRuntime** — Agent lifecycle, config caching, turn routing
 - **ACF (Agent Conversation Fabric)** — Turn serialization, queueing, supersession
 - **Agenda** — Proactive task scheduling
 
-**Mechanics Layer** (`focal/mechanics/`):
+**Mechanics Layer** (`ruche/mechanics/`):
 - **CognitivePipeline** — Abstract interface for cognitive mechanics
 - **FocalCognitivePipeline** — 12-phase FOCAL alignment implementation
 - **Migration** — Scenario version migration (JIT reconciliation)
 
-**Infrastructure Layer** (`focal/infrastructure/`):
+**Infrastructure Layer** (`ruche/infrastructure/`):
 - **Stores** — ConfigStore, SessionStore, MemoryStore, AuditStore, InterlocutorDataStore, VectorStore
 - **Providers** — LLMExecutor (via Agno), EmbeddingProvider, RerankProvider
 - **Toolbox** — Tool registry and execution gateway
 - **Channels** — Channel adapters (webchat, WhatsApp, Slack)
 
-**Domain Layer** (`focal/domain/`):
+**Domain Layer** (`ruche/domain/`):
 - **Pure domain models** — Rules, Scenarios, Interlocutor data, Memory (no infrastructure dependencies)
 
-**ASA (Agent Setter Agent)** (`focal/asa/`):
+**ASA (Agent Setter Agent)** (`ruche/asa/`):
 - **Validators** — Tool, scenario, pipeline conformance validation
 - **Suggester** — Policy suggestions, edge case generation
 - **CI** — Pre-deployment validation checks

@@ -7,17 +7,17 @@
 
 ## 1. Customer Data Naming Consolidation
 
-The existing `focal/domain/interlocutor/` module **IS** the InterlocutorDataStore implementation. It needs field additions and consistent usage, NOT parallel schemas.
+The existing `ruche/domain/interlocutor/` module **IS** the InterlocutorDataStore implementation. It needs field additions and consistent usage, NOT parallel schemas.
 
 ### Canonical Name Mapping
 
 | Old Name (profile/) | New Name (CustomerData) | Location | Action |
 |---------------------|------------------------|----------|--------|
-| `ProfileFieldDefinition` | `InterlocutorDataField` | `focal/domain/interlocutor/models.py` | **RENAME** + add `scope`, `persist` |
-| `ProfileField` | `VariableEntry` | `focal/domain/interlocutor/models.py` | **RENAME** + add `history` |
-| `CustomerProfile` | `InterlocutorDataStore` | `focal/domain/interlocutor/models.py` | **RENAME** |
-| `ProfileStore` | `InterlocutorDataStoreInterface` | `focal/domain/interlocutor/store.py` | **RENAME** |
-| `ProfileFieldSource` | `VariableSource` | `focal/domain/interlocutor/enums.py` | **RENAME** |
+| `ProfileFieldDefinition` | `InterlocutorDataField` | `ruche/domain/interlocutor/models.py` | **RENAME** + add `scope`, `persist` |
+| `ProfileField` | `VariableEntry` | `ruche/domain/interlocutor/models.py` | **RENAME** + add `history` |
+| `CustomerProfile` | `InterlocutorDataStore` | `ruche/domain/interlocutor/models.py` | **RENAME** |
+| `ProfileStore` | `InterlocutorDataStoreInterface` | `ruche/domain/interlocutor/store.py` | **RENAME** |
+| `ProfileFieldSource` | `VariableSource` | `ruche/domain/interlocutor/enums.py` | **RENAME** |
 
 ### Fields to ADD to Existing Models
 
@@ -61,11 +61,11 @@ These models ARE new and should be created:
 
 | Model | Location | Phase |
 |-------|----------|-------|
-| `InterlocutorSchemaMask` | `focal/mechanics/focal/context/customer_schema_mask.py` | P2 |
-| `CandidateVariableInfo` | `focal/mechanics/focal/context/situational_snapshot.py` | P2 |
-| `SituationalSnapshot` | `focal/mechanics/focal/context/situational_snapshot.py` | P2 |
-| `GlossaryItem` | `focal/mechanics/focal/models/glossary.py` | P1 |
-| `TurnContext` | `focal/mechanics/focal/models/turn_context.py` | P1 |
+| `InterlocutorSchemaMask` | `ruche/mechanics/focal/context/customer_schema_mask.py` | P2 |
+| `CandidateVariableInfo` | `ruche/mechanics/focal/context/situational_snapshot.py` | P2 |
+| `SituationalSnapshot` | `ruche/mechanics/focal/context/situational_snapshot.py` | P2 |
+| `GlossaryItem` | `ruche/mechanics/focal/models/glossary.py` | P1 |
+| `TurnContext` | `ruche/mechanics/focal/models/turn_context.py` | P1 |
 
 ---
 
@@ -78,28 +78,28 @@ Gap analysis identified these hardcoded prompts NOT addressed in any checklist:
 **Add to Phase 11 or create new "Memory Ingestion Templates" section:**
 
 - [ ] **Create entity_extraction.jinja2 template**
-  - File: `focal/memory/ingestion/prompts/entity_extraction.jinja2`
+  - File: `ruche/memory/ingestion/prompts/entity_extraction.jinja2`
   - Action: Extract 192-line inline prompt from `entity_extractor.py:45-237`
   - Details: Move hardcoded prompt to Jinja2 template
 
 - [ ] **Create TemplateLoader for entity extraction**
-  - File: `focal/memory/ingestion/entity_extractor.py`
+  - File: `ruche/memory/ingestion/entity_extractor.py`
   - Action: Modify to use Jinja2 loader instead of inline string
 
 ### Summarization (memory/ingestion/summarizer.py)
 
 - [ ] **Create window_summary.jinja2 template**
-  - File: `focal/memory/ingestion/prompts/window_summary.jinja2`
+  - File: `ruche/memory/ingestion/prompts/window_summary.jinja2`
   - Action: Extract inline prompt
 
 - [ ] **Create meta_summary.jinja2 template**
-  - File: `focal/memory/ingestion/prompts/meta_summary.jinja2`
+  - File: `ruche/memory/ingestion/prompts/meta_summary.jinja2`
   - Action: Extract inline prompt
 
 ### Scenario Filter
 
 - [ ] **Create scenario_filter.jinja2 template**
-  - File: `focal/mechanics/focal/filtering/prompts/scenario_filter.jinja2`
+  - File: `ruche/mechanics/focal/filtering/prompts/scenario_filter.jinja2`
   - Action: Currently `.txt` unused - implement LLM-based scenario filtering
   - Note: Gap analysis says "Deterministic only" - need to add LLM path
 
@@ -139,36 +139,36 @@ All checklists must use these paths:
 
 | Model | Canonical Path |
 |-------|---------------|
-| `InterlocutorDataField` | `focal/domain/interlocutor/models.py` (renamed from ProfileFieldDefinition) |
-| `VariableEntry` | `focal/domain/interlocutor/models.py` (renamed from ProfileField) |
-| `InterlocutorDataStore` | `focal/domain/interlocutor/models.py` (renamed from CustomerProfile) |
-| `InterlocutorSchemaMask` | `focal/mechanics/focal/context/customer_schema_mask.py` |
-| `CandidateVariableInfo` | `focal/mechanics/focal/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `focal/mechanics/focal/context/situational_snapshot.py` |
-| `GlossaryItem` | `focal/mechanics/focal/models/glossary.py` |
-| `TurnContext` | `focal/mechanics/focal/models/turn_context.py` |
-| `ResponsePlan` | `focal/mechanics/focal/planning/models.py` |
-| `TurnOutcome` | `focal/mechanics/focal/models/outcome.py` |
+| `InterlocutorDataField` | `ruche/domain/interlocutor/models.py` (renamed from ProfileFieldDefinition) |
+| `VariableEntry` | `ruche/domain/interlocutor/models.py` (renamed from ProfileField) |
+| `InterlocutorDataStore` | `ruche/domain/interlocutor/models.py` (renamed from CustomerProfile) |
+| `InterlocutorSchemaMask` | `ruche/mechanics/focal/context/customer_schema_mask.py` |
+| `CandidateVariableInfo` | `ruche/mechanics/focal/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `ruche/mechanics/focal/context/situational_snapshot.py` |
+| `GlossaryItem` | `ruche/mechanics/focal/models/glossary.py` |
+| `TurnContext` | `ruche/mechanics/focal/models/turn_context.py` |
+| `ResponsePlan` | `ruche/mechanics/focal/planning/models.py` |
+| `TurnOutcome` | `ruche/mechanics/focal/models/outcome.py` |
 
 ### Templates
 
 | Template | Canonical Path |
 |----------|---------------|
-| Situational Sensor | `focal/mechanics/focal/context/prompts/situational_sensor.jinja2` |
-| Rule Filter | `focal/mechanics/focal/filtering/prompts/rule_filter.jinja2` |
-| Scenario Filter | `focal/mechanics/focal/filtering/prompts/scenario_filter.jinja2` |
-| Generation | `focal/mechanics/focal/generation/prompts/generation.jinja2` |
-| Enforcement | `focal/mechanics/focal/enforcement/prompts/llm_judge.jinja2` |
-| Entity Extraction | `focal/memory/ingestion/prompts/entity_extraction.jinja2` |
-| Summarization | `focal/memory/ingestion/prompts/summarization.jinja2` |
+| Situational Sensor | `ruche/mechanics/focal/context/prompts/situational_sensor.jinja2` |
+| Rule Filter | `ruche/mechanics/focal/filtering/prompts/rule_filter.jinja2` |
+| Scenario Filter | `ruche/mechanics/focal/filtering/prompts/scenario_filter.jinja2` |
+| Generation | `ruche/mechanics/focal/generation/prompts/generation.jinja2` |
+| Enforcement | `ruche/mechanics/focal/enforcement/prompts/llm_judge.jinja2` |
+| Entity Extraction | `ruche/memory/ingestion/prompts/entity_extraction.jinja2` |
+| Summarization | `ruche/memory/ingestion/prompts/summarization.jinja2` |
 
 ### Stores
 
 | Store | Canonical Path |
 |-------|---------------|
-| InterlocutorDataStore (interface) | `focal/domain/interlocutor/store.py` (renamed from ProfileStore) |
-| InMemoryInterlocutorDataStore | `focal/domain/interlocutor/stores/inmemory.py` |
-| PostgresInterlocutorDataStore | `focal/domain/interlocutor/stores/postgres.py` |
+| InterlocutorDataStore (interface) | `ruche/domain/interlocutor/store.py` (renamed from ProfileStore) |
+| InMemoryInterlocutorDataStore | `ruche/domain/interlocutor/stores/inmemory.py` |
+| PostgresInterlocutorDataStore | `ruche/domain/interlocutor/stores/postgres.py` |
 
 ---
 
@@ -240,7 +240,7 @@ All models must use these field names:
 ## 7. Implementation Order (Revised)
 
 1. **Rename Profile → CustomerData** (foundation)
-   - Rename classes in `focal/domain/interlocutor/models.py`
+   - Rename classes in `ruche/domain/interlocutor/models.py`
    - Add `scope`, `persist`, `history` fields
    - Update all imports across codebase
 
@@ -268,7 +268,7 @@ All models must use these field names:
 
 Before implementing, verify:
 
-- [ ] All model definitions reference `focal/domain/interlocutor/models.py` (renamed)
+- [ ] All model definitions reference `ruche/domain/interlocutor/models.py` (renamed)
 - [ ] All field names use canonical naming (`name`, `tenant_id`, `customer_id`)
 - [ ] All ID fields are `UUID`, not `str`
 - [ ] No duplicate model definitions across phases

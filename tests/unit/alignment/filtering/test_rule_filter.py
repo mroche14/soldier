@@ -6,12 +6,12 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.context.models import Sentiment, Urgency
-from focal.alignment.filtering.models import MatchedRule, RuleFilterResult
-from focal.alignment.filtering.rule_filter import RuleFilter
-from focal.alignment.models import Rule
-from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.context.models import Sentiment, Urgency
+from ruche.alignment.filtering.models import MatchedRule, RuleFilterResult
+from ruche.alignment.filtering.rule_filter import RuleFilter
+from ruche.alignment.models import Rule
+from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):
@@ -398,7 +398,7 @@ class TestRuleFilterResult:
 
     def test_result_with_scenario_signal(self) -> None:
         """Test result can include scenario signal."""
-        from focal.alignment.context.models import ScenarioSignal
+        from ruche.alignment.context.models import ScenarioSignal
 
         result = RuleFilterResult(
             matched_rules=[],

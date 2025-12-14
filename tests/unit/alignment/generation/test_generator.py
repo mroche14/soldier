@@ -5,17 +5,17 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.context.models import Sentiment, Turn, Urgency
-from focal.alignment.execution.models import ToolResult
-from focal.alignment.filtering.models import MatchedRule
-from focal.alignment.generation.generator import ResponseGenerator
-from focal.alignment.generation.models import GenerationResult
-from focal.alignment.models.enums import TemplateResponseMode
-from focal.alignment.generation.prompt_builder import PromptBuilder
-from focal.alignment.models import Rule
-from focal.alignment.models.template import Template
-from focal.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.context.models import Sentiment, Turn, Urgency
+from ruche.alignment.execution.models import ToolResult
+from ruche.alignment.filtering.models import MatchedRule
+from ruche.alignment.generation.generator import ResponseGenerator
+from ruche.alignment.generation.models import GenerationResult
+from ruche.alignment.models.enums import TemplateResponseMode
+from ruche.alignment.generation.prompt_builder import PromptBuilder
+from ruche.alignment.models import Rule
+from ruche.alignment.models.template import Template
+from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

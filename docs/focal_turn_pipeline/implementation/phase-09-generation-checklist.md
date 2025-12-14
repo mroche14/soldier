@@ -30,7 +30,7 @@
 ### 1.1 OutcomeCategory Enum
 
 - [x] **Create OutcomeCategory enum**
-  - File: `focal/mechanics/focal/models/outcome.py`
+  - File: `ruche/mechanics/focal/models/outcome.py`
   - Action: Create new file
   - **Implemented**: Already exists with all required categories (PIPELINE and GENERATION categories)
   - Details:
@@ -60,7 +60,7 @@
 ### 1.2 TurnOutcome Model
 
 - [x] **Create TurnOutcome model**
-  - File: `focal/mechanics/focal/models/outcome.py`
+  - File: `ruche/mechanics/focal/models/outcome.py`
   - Action: Add to new file
   - **Implemented**: Already exists with resolution, categories, escalation_reason, blocking_rule_id
   - Details:
@@ -101,12 +101,12 @@
 ### 1.3 Update GenerationResult Model
 
 - [x] **Add LLM categories to GenerationResult**
-  - File: `focal/mechanics/focal/generation/models.py`
+  - File: `ruche/mechanics/focal/generation/models.py`
   - Action: Modify existing model
   - **Implemented**: GenerationResult already has llm_categories, channel_formatted, and channel fields
   - Details: Add fields:
     ```python
-    from focal.mechanics.focal.models.outcome import OutcomeCategory
+    from ruche.mechanics.focal.models.outcome import OutcomeCategory
 
     class GenerationResult(BaseModel):
         # ... existing fields ...
@@ -129,7 +129,7 @@
 ### 1.4 ResponsePlan Model (Dependency from Phase 8)
 
 - [x] **Verify ResponsePlan model exists (blocker)**
-  - File: `focal/mechanics/focal/planning/models.py`
+  - File: `ruche/mechanics/focal/planning/models.py`
   - Action: Document dependency
   - **Implemented**: ResponsePlan exists with global_response_type, template_ids, must_include, must_avoid, etc.
   - Details: Generation will receive ResponsePlan input. If Phase 8 not implemented:
@@ -144,7 +144,7 @@
 ### 2.1 Convert to Jinja2 Template
 
 - [ ] **Convert system_prompt.txt to Jinja2**
-  - File: `focal/mechanics/focal/generation/prompts/response_generator.jinja2`
+  - File: `ruche/mechanics/focal/generation/prompts/response_generator.jinja2`
   - Action: Create (rename from system_prompt.txt)
   - Details:
     - Convert from string formatting to Jinja2 syntax
@@ -182,7 +182,7 @@
 ### 2.2 Create Template Loader
 
 - [ ] **Create Jinja2 template loader**
-  - File: `focal/mechanics/focal/generation/template_loader.py`
+  - File: `ruche/mechanics/focal/generation/template_loader.py`
   - Action: Create new file
   - Details:
     ```python
@@ -210,7 +210,7 @@
 ### 2.3 Update PromptBuilder
 
 - [ ] **Add ResponsePlan to PromptBuilder**
-  - File: `focal/mechanics/focal/generation/prompt_builder.py`
+  - File: `ruche/mechanics/focal/generation/prompt_builder.py`
   - Action: Modify
   - Details:
     - Add `response_plan` parameter to `build_system_prompt()`
@@ -224,7 +224,7 @@
 ### 3.1 Create Channel Formatter Interface
 
 - [ ] **Create ChannelFormatter abstract class**
-  - File: `focal/mechanics/focal/generation/formatters/__init__.py`
+  - File: `ruche/mechanics/focal/generation/formatters/__init__.py`
   - Action: Create new directory and file
   - Details:
     ```python
@@ -255,7 +255,7 @@
 ### 3.2 WhatsApp Formatter
 
 - [ ] **Implement WhatsAppFormatter**
-  - File: `focal/mechanics/focal/generation/formatters/whatsapp.py`
+  - File: `ruche/mechanics/focal/generation/formatters/whatsapp.py`
   - Action: Create
   - Details:
     - Convert markdown to plain text
@@ -266,7 +266,7 @@
 ### 3.3 Email Formatter
 
 - [ ] **Implement EmailFormatter**
-  - File: `focal/mechanics/focal/generation/formatters/email.py`
+  - File: `ruche/mechanics/focal/generation/formatters/email.py`
   - Action: Create
   - Details:
     - Preserve markdown formatting
@@ -276,7 +276,7 @@
 ### 3.4 SMS Formatter
 
 - [ ] **Implement SMSFormatter**
-  - File: `focal/mechanics/focal/generation/formatters/sms.py`
+  - File: `ruche/mechanics/focal/generation/formatters/sms.py`
   - Action: Create
   - Details:
     - Strip all formatting
@@ -286,7 +286,7 @@
 ### 3.5 Web/Slack Formatter (Default)
 
 - [ ] **Implement DefaultFormatter**
-  - File: `focal/mechanics/focal/generation/formatters/default.py`
+  - File: `ruche/mechanics/focal/generation/formatters/default.py`
   - Action: Create
   - Details:
     - Pass through markdown as-is
@@ -295,7 +295,7 @@
 ### 3.6 Formatter Factory
 
 - [ ] **Create formatter factory**
-  - File: `focal/mechanics/focal/generation/formatters/__init__.py`
+  - File: `ruche/mechanics/focal/generation/formatters/__init__.py`
   - Action: Add to existing file
   - Details:
     ```python
@@ -325,14 +325,14 @@
 ### 4.1 Structured Output Parser
 
 - [ ] **Create LLM output parser**
-  - File: `focal/mechanics/focal/generation/parser.py`
+  - File: `ruche/mechanics/focal/generation/parser.py`
   - Action: Create
   - Details:
     ```python
     import json
     from pydantic import BaseModel, ValidationError
-    from focal.mechanics.focal.models.outcome import OutcomeCategory
-    from focal.observability.logging import get_logger
+    from ruche.mechanics.focal.models.outcome import OutcomeCategory
+    from ruche.observability.logging import get_logger
 
     logger = get_logger(__name__)
 
@@ -376,7 +376,7 @@
 ### 4.2 Update Generator to Parse Output
 
 - [ ] **Add parsing to ResponseGenerator.generate()**
-  - File: `focal/mechanics/focal/generation/generator.py`
+  - File: `ruche/mechanics/focal/generation/generator.py`
   - Action: Modify
   - Details:
     - Import parser
@@ -390,11 +390,11 @@
 ### 5.1 Resolution Logic
 
 - [ ] **Create resolution determiner**
-  - File: `focal/mechanics/focal/generation/resolution.py`
+  - File: `ruche/mechanics/focal/generation/resolution.py`
   - Action: Create
   - Details:
     ```python
-    from focal.mechanics.focal.models.outcome import OutcomeCategory, TurnOutcome
+    from ruche.mechanics.focal.models.outcome import OutcomeCategory, TurnOutcome
 
     def determine_resolution(
         categories: list[OutcomeCategory],
@@ -432,7 +432,7 @@
 ### 5.2 Build TurnOutcome
 
 - [ ] **Create TurnOutcome builder**
-  - File: `focal/mechanics/focal/generation/resolution.py`
+  - File: `ruche/mechanics/focal/generation/resolution.py`
   - Action: Add to existing file
   - Details:
     ```python
@@ -470,7 +470,7 @@
 ### 6.1 Update ResponseGenerator.generate() Signature
 
 - [ ] **Add new parameters to generate()**
-  - File: `focal/mechanics/focal/generation/generator.py`
+  - File: `ruche/mechanics/focal/generation/generator.py`
   - Action: Modify
   - Details: Add parameters:
     ```python
@@ -491,7 +491,7 @@
 ### 6.2 Update Generation Flow
 
 - [ ] **Update generate() implementation**
-  - File: `focal/mechanics/focal/generation/generator.py`
+  - File: `ruche/mechanics/focal/generation/generator.py`
   - Action: Modify
   - Details:
     1. Pass `response_plan` to prompt builder
@@ -531,7 +531,7 @@
 ### 7.2 Configuration Model
 
 - [ ] **Update GenerationConfig model**
-  - File: `focal/config/models/pipeline.py`
+  - File: `ruche/config/models/pipeline.py`
   - Action: Modify
   - Details: Add fields:
     ```python
@@ -549,7 +549,7 @@
 ### 8.1 Update Engine to Pass ResponsePlan
 
 - [ ] **Pass ResponsePlan from Phase 8 to Generation**
-  - File: `focal/mechanics/focal/engine.py`
+  - File: `ruche/mechanics/focal/engine.py`
   - Action: Modify
   - Details:
     - After Phase 8 (Response Planning), extract `response_plan`
@@ -559,7 +559,7 @@
 ### 8.2 Accumulate Categories Throughout Pipeline
 
 - [ ] **Track categories in AlignmentResult**
-  - File: `focal/mechanics/focal/result.py`
+  - File: `ruche/mechanics/focal/result.py`
   - Action: Modify
   - Details:
     - Add `outcome_categories: list[OutcomeCategory] = []` to AlignmentResult
@@ -571,7 +571,7 @@
 ### 8.3 Build TurnOutcome in Engine
 
 - [ ] **Create TurnOutcome after enforcement**
-  - File: `focal/mechanics/focal/engine.py`
+  - File: `ruche/mechanics/focal/engine.py`
   - Action: Modify
   - Details:
     - After Phase 10 (Enforcement), call `build_turn_outcome()`

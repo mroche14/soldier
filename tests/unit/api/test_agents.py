@@ -7,14 +7,14 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from focal.alignment.models import Agent
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.api.dependencies import get_config_store
-from focal.api.exceptions import FocalAPIError
-from focal.api.middleware.auth import get_tenant_context
-from focal.api.models.context import TenantContext
-from focal.api.models.errors import ErrorBody, ErrorResponse
-from focal.api.routes.agents import router
+from ruche.alignment.models import Agent
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.api.dependencies import get_config_store
+from ruche.api.exceptions import FocalAPIError
+from ruche.api.middleware.auth import get_tenant_context
+from ruche.api.models.context import TenantContext
+from ruche.api.models.errors import ErrorBody, ErrorResponse
+from ruche.api.routes.agents import router
 
 
 @pytest.fixture

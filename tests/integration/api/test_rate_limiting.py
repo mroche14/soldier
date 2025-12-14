@@ -8,24 +8,24 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
-from focal.api.dependencies import (
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.api.dependencies import (
     get_audit_store,
     get_config_store,
     get_session_store,
     get_settings,
     reset_dependencies,
 )
-from focal.api.exceptions import FocalAPIError
-from focal.api.middleware.rate_limit import (
+from ruche.api.exceptions import FocalAPIError
+from ruche.api.middleware.rate_limit import (
     RateLimitMiddleware,
     SlidingWindowRateLimiter,
 )
-from focal.api.models.context import TenantContext
-from focal.api.models.errors import ErrorBody, ErrorResponse
-from focal.api.routes.health import router as health_router
-from focal.audit.stores.inmemory import InMemoryAuditStore
-from focal.conversation.stores.inmemory import InMemorySessionStore
+from ruche.api.models.context import TenantContext
+from ruche.api.models.errors import ErrorBody, ErrorResponse
+from ruche.api.routes.health import router as health_router
+from ruche.audit.stores.inmemory import InMemoryAuditStore
+from ruche.conversation.stores.inmemory import InMemorySessionStore
 
 
 @pytest.fixture
@@ -108,7 +108,7 @@ async def create_test_app(
         return await call_next(request)
 
     # Override the global rate limiter
-    import focal.api.middleware.rate_limit as rl_module
+    import ruche.api.middleware.rate_limit as rl_module
     rl_module._rate_limiter = rate_limiter
 
     app.include_router(health_router)

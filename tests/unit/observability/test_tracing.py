@@ -7,7 +7,7 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace import SpanKind, StatusCode
 
-from focal.observability.tracing import (
+from ruche.observability.tracing import (
     TracingContext,
     create_span,
     extract_context,

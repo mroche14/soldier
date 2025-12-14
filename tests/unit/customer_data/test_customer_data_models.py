@@ -3,8 +3,8 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from focal.conversation.models import Channel
-from focal.customer_data import (
+from ruche.conversation.models import Channel
+from ruche.customer_data import (
     ChannelIdentity,
     Consent,
     CustomerDataStore,
@@ -13,14 +13,14 @@ from focal.customer_data import (
     VariableSource,
     VerificationLevel,
 )
-from focal.customer_data.enums import (
+from ruche.customer_data.enums import (
     FallbackAction,
     ItemStatus,
     RequiredLevel,
     SourceType,
     ValidationMode,
 )
-from focal.customer_data.models import (
+from ruche.customer_data.models import (
     CustomerDataField,
     ScenarioFieldRequirement,
 )

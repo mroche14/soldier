@@ -4,10 +4,10 @@ import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from focal.alignment.loaders.customer_data_loader import CustomerDataLoader
-from focal.customer_data import CustomerDataStore, CustomerDataField, VariableEntry
-from focal.customer_data.enums import ItemStatus, VariableSource
-from focal.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.alignment.loaders.customer_data_loader import CustomerDataLoader
+from ruche.customer_data import CustomerDataStore, CustomerDataField, VariableEntry
+from ruche.customer_data.enums import ItemStatus, VariableSource
+from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
 
 
 @pytest.fixture

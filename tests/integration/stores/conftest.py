@@ -13,7 +13,7 @@ import pytest
 import pytest_asyncio
 import redis.asyncio as redis
 
-from focal.db.pool import PostgresPool
+from ruche.db.pool import PostgresPool
 
 
 def docker_available() -> bool:

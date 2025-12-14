@@ -370,7 +370,7 @@ Redis Keys:
 focal:
   build:
     context: ../..
-    dockerfile: apps/focal/Dockerfile
+    dockerfile: apps/ruche/Dockerfile
   container_name: focal
   environment:
     # Database
@@ -391,8 +391,8 @@ focal:
     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     OTEL_SERVICE_NAME: focal
     LOG_LEVEL: INFO
-    FOCAL_OBSERVABILITY__LOG_FORMAT: json
-    FOCAL_OBSERVABILITY__TRACING_SAMPLE_RATE: 0.1
+    RUCHE_OBSERVABILITY__LOG_FORMAT: json
+    RUCHE_OBSERVABILITY__TRACING_SAMPLE_RATE: 0.1
 
     # Service
     ENVIRONMENT: development

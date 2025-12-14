@@ -4,15 +4,15 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.migration.diff import (
+from ruche.alignment.migration.diff import (
     compute_node_content_hash,
     compute_scenario_checksum,
     compute_transformation_map,
     determine_migration_scenario,
     find_anchor_nodes,
 )
-from focal.alignment.migration.models import MigrationScenario
-from focal.alignment.models import Scenario, ScenarioStep, StepTransition
+from ruche.alignment.migration.models import MigrationScenario
+from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
 
 
 @pytest.fixture
@@ -228,7 +228,7 @@ class TestMigrationScenarioDetermination:
 
     def test_clean_graft_no_changes(self):
         """Clean graft when no upstream changes."""
-        from focal.alignment.migration.models import DownstreamChanges, UpstreamChanges
+        from ruche.alignment.migration.models import DownstreamChanges, UpstreamChanges
 
         upstream = UpstreamChanges()
         downstream = DownstreamChanges()
@@ -239,7 +239,7 @@ class TestMigrationScenarioDetermination:
 
     def test_gap_fill_upstream_data_collection(self):
         """Gap fill when upstream node collects data."""
-        from focal.alignment.migration.models import (
+        from ruche.alignment.migration.models import (
             DownstreamChanges,
             InsertedNode,
             UpstreamChanges,
@@ -262,7 +262,7 @@ class TestMigrationScenarioDetermination:
 
     def test_re_route_upstream_fork(self):
         """Re-route when upstream has new fork."""
-        from focal.alignment.migration.models import (
+        from ruche.alignment.migration.models import (
             DownstreamChanges,
             NewFork,
             UpstreamChanges,

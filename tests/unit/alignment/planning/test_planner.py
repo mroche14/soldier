@@ -3,17 +3,17 @@
 import pytest
 from uuid import uuid4
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.filtering.models import MatchedRule
-from focal.alignment.models import Rule, Scope
-from focal.alignment.planning.models import (
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.filtering.models import MatchedRule
+from ruche.alignment.models import Rule, Scope
+from ruche.alignment.planning.models import (
     ContributionType,
     ResponsePlan,
     ResponseType,
     ScenarioContribution,
     ScenarioContributionPlan,
 )
-from focal.alignment.planning.planner import ResponsePlanner
+from ruche.alignment.planning.planner import ResponsePlanner
 
 
 class TestResponsePlanner:

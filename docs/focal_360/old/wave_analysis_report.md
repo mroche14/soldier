@@ -41,14 +41,14 @@ Wave 1 proposes two parallel tasks that wire existing infrastructure:
 ### What Already Exists
 
 **Idempotency:**
-- `IdempotencyCache` class at `focal/api/middleware/idempotency.py` (lines 29-130)
-- TODOs at `focal/api/routes/chat.py` lines 189-193 and 232-234
+- `IdempotencyCache` class at `ruche/api/middleware/idempotency.py` (lines 29-130)
+- TODOs at `ruche/api/routes/chat.py` lines 189-193 and 232-234
 - `compute_request_fingerprint()` utility (lines 148-165)
 - `idempotency_key` parameter already in chat route (line 152)
 
 **AgentConfig:**
-- `AgentConfig` model at `focal/config/models/agent.py` (lines 8-41)
-- `Agent` domain model at `focal/alignment/models/agent.py` with embedded `AgentSettings`
+- `AgentConfig` model at `ruche/config/models/agent.py` (lines 8-41)
+- `Agent` domain model at `ruche/alignment/models/agent.py` with embedded `AgentSettings`
 - `AgentConfigStore.get_agent()` method already exists (line 189)
 - `StaticConfigLoader` already loads agent in P1.6
 
@@ -58,8 +58,8 @@ Wave 1 proposes two parallel tasks that wire existing infrastructure:
 
 | Model | Location | Purpose |
 |-------|----------|---------|
-| `AgentConfig` | `focal/config/models/agent.py` | Pipeline configuration overrides |
-| `Agent.settings` | `focal/alignment/models/agent.py` | Domain model with embedded `AgentSettings` |
+| `AgentConfig` | `ruche/config/models/agent.py` | Pipeline configuration overrides |
+| `Agent.settings` | `ruche/alignment/models/agent.py` | Domain model with embedded `AgentSettings` |
 
 **The implementation plan doesn't clarify which to use.** This must be resolved before implementation.
 
@@ -88,13 +88,13 @@ Wave 1 proposes two parallel tasks that wire existing infrastructure:
 ### Impact Radius
 
 **Idempotency** (Low Risk):
-- `focal/api/routes/chat.py` - Add cache logic
-- `focal/api/middleware/idempotency.py` - Add Redis backend
+- `ruche/api/routes/chat.py` - Add cache logic
+- `ruche/api/middleware/idempotency.py` - Add Redis backend
 - `config/default.toml` - Add config section
 
 **AgentConfig** (Medium Risk):
-- `focal/alignment/engine.py` - Add config loading in P1.6
-- `focal/config/loader.py` - Add merge logic
+- `ruche/alignment/engine.py` - Add config loading in P1.6
+- `ruche/config/loader.py` - Add merge logic
 - Every pipeline step that uses model/temperature/max_tokens
 
 ### Potential Problems
@@ -189,7 +189,7 @@ The documentation mentions "two or three messages back to back" but doesn't expl
 **Move to background job (not middleware)**:
 
 ```python
-# focal/jobs/workflows/abuse_detection.py
+# ruche/jobs/workflows/abuse_detection.py
 class AbuseDetectionWorkflow:
     """Analyze turn patterns to detect abuse."""
 
@@ -209,14 +209,14 @@ class AbuseDetectionWorkflow:
 ### Impact Radius
 
 **If debouncing implemented (NOT RECOMMENDED):**
-- `focal/api/middleware/ingress.py` (NEW - 200-300 lines)
+- `ruche/api/middleware/ingress.py` (NEW - 200-300 lines)
 - Requires Redis for distributed state
 - Touches 100% of user-facing traffic
 
 **Abuse detection (recommended approach):**
-- `focal/alignment/models/outcome.py` - Add enum value
-- `focal/jobs/workflows/abuse_detection.py` (NEW)
-- `focal/customer_data/models.py` - Add `abuse_risk_score` field
+- `ruche/alignment/models/outcome.py` - Add enum value
+- `ruche/jobs/workflows/abuse_detection.py` (NEW)
+- `ruche/customer_data/models.py` - Add `abuse_risk_score` field
 
 ### Recommendation
 
@@ -244,11 +244,11 @@ Wave 3 proposes:
 **What Already Exists:**
 
 ```python
-# focal/alignment/generation/formatters/whatsapp.py
+# ruche/alignment/generation/formatters/whatsapp.py
 class WhatsAppFormatter(ChannelFormatter):
     MAX_LENGTH = 4096  # Already defined
 
-# focal/alignment/generation/formatters/sms.py
+# ruche/alignment/generation/formatters/sms.py
 class SMSFormatter(ChannelFormatter):
     MAX_LENGTH = 160  # Already defined
 ```
@@ -455,13 +455,13 @@ Wave 5 attempts to deliver two **fundamentally different feature sets**:
 - Goal is a simple model attached to ResponsePlan
 
 **What Exists:**
-- Hatchet framework at `focal/jobs/` with working workflows
+- Hatchet framework at `ruche/jobs/` with working workflows
 - `ResponsePlan` exists (Goal attachment point)
 - `Session` model has appropriate storage hooks
-- Redis patterns in `focal/conversation/stores/redis.py`
+- Redis patterns in `ruche/conversation/stores/redis.py`
 
 **What's Missing:**
-- `focal/agenda/` module (models, store, workflows)
+- `ruche/agenda/` module (models, store, workflows)
 - Outbound message trigger endpoint
 - Follow-up workflow
 
@@ -507,9 +507,9 @@ Invalidating one but not others creates inconsistency.
 ### Impact Radius
 
 **Agenda/Goals (Contained):**
-- New `focal/agenda/` module
-- `focal/alignment/planning/models.py` - Add Goal to ResponsePlan
-- `focal/jobs/workflows/follow_up.py` - New workflow
+- New `ruche/agenda/` module
+- `ruche/alignment/planning/models.py` - Add Goal to ResponsePlan
+- `ruche/jobs/workflows/follow_up.py` - New workflow
 - Risk: LOW
 
 **Hot Reload (Wide):**
@@ -731,16 +731,16 @@ Then build features to address them.
 ## Appendix: Files Referenced in Analysis
 
 ### Core Infrastructure
-- `focal/api/middleware/idempotency.py` - IdempotencyCache
-- `focal/api/routes/chat.py` - Chat endpoint with TODOs
-- `focal/config/models/agent.py` - AgentConfig model
-- `focal/alignment/models/agent.py` - Agent domain model
-- `focal/alignment/engine.py` - AlignmentEngine
-- `focal/alignment/execution/tool_executor.py` - Tool execution
-- `focal/alignment/models/scenario.py` - ScenarioStep.is_checkpoint
-- `focal/alignment/generation/formatters/` - Channel formatters
-- `focal/jobs/workflows/` - Hatchet workflows
-- `focal/audit/models/turn_record.py` - TurnRecord
+- `ruche/api/middleware/idempotency.py` - IdempotencyCache
+- `ruche/api/routes/chat.py` - Chat endpoint with TODOs
+- `ruche/config/models/agent.py` - AgentConfig model
+- `ruche/alignment/models/agent.py` - Agent domain model
+- `ruche/alignment/engine.py` - AlignmentEngine
+- `ruche/alignment/execution/tool_executor.py` - Tool execution
+- `ruche/alignment/models/scenario.py` - ScenarioStep.is_checkpoint
+- `ruche/alignment/generation/formatters/` - Channel formatters
+- `ruche/jobs/workflows/` - Hatchet workflows
+- `ruche/audit/models/turn_record.py` - TurnRecord
 
 ### Documentation
 - `docs/focal_360/README.md` - FOCAL 360 overview
@@ -751,7 +751,7 @@ Then build features to address them.
 
 ### Configuration
 - `config/default.toml` - Default configuration
-- `focal/config/loader.py` - Config loading
+- `ruche/config/loader.py` - Config loading
 
 ---
 

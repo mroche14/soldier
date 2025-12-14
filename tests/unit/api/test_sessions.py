@@ -9,20 +9,20 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from focal.api.dependencies import (
+from ruche.api.dependencies import (
     get_audit_store,
     get_session_store,
     get_settings,
     reset_dependencies,
 )
-from focal.api.exceptions import FocalAPIError
-from focal.api.middleware.auth import get_tenant_context
-from focal.api.models.context import TenantContext
-from focal.api.models.errors import ErrorBody, ErrorResponse
-from focal.api.routes.sessions import router
-from focal.audit.models import TurnRecord
-from focal.conversation.models import Channel, Session
-from focal.conversation.models.turn import ToolCall
+from ruche.api.exceptions import FocalAPIError
+from ruche.api.middleware.auth import get_tenant_context
+from ruche.api.models.context import TenantContext
+from ruche.api.models.errors import ErrorBody, ErrorResponse
+from ruche.api.routes.sessions import router
+from ruche.audit.models import TurnRecord
+from ruche.conversation.models import Channel, Session
+from ruche.conversation.models.turn import ToolCall
 
 
 @pytest.fixture

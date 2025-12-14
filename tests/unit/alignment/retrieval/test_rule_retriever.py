@@ -4,15 +4,15 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from focal.alignment.context.situation_snapshot import SituationSnapshot
-from focal.alignment.models import Scope
-from focal.alignment.retrieval.models import RuleSource
-from focal.alignment.retrieval.reranker import RuleReranker
-from focal.alignment.retrieval.rule_retriever import RuleRetriever
-from focal.alignment.stores import InMemoryAgentConfigStore
-from focal.config.models.selection import SelectionConfig
-from focal.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from focal.providers.rerank.mock import MockRerankProvider
+from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.alignment.models import Scope
+from ruche.alignment.retrieval.models import RuleSource
+from ruche.alignment.retrieval.reranker import RuleReranker
+from ruche.alignment.retrieval.rule_retriever import RuleRetriever
+from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.config.models.selection import SelectionConfig
+from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.providers.rerank.mock import MockRerankProvider
 from tests.factories.alignment import RuleFactory
 
 

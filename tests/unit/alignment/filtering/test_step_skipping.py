@@ -3,9 +3,9 @@
 import pytest
 from uuid import uuid4
 
-from focal.alignment.filtering.scenario_filter import ScenarioFilter
-from focal.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
-from focal.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.alignment.filtering.scenario_filter import ScenarioFilter
+from ruche.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
+from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
 
 
 @pytest.fixture

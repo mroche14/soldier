@@ -3,7 +3,7 @@
 import pytest
 from uuid import uuid4
 
-from focal.alignment.planning.models import (
+from ruche.alignment.planning.models import (
     ContributionType,
     ScenarioContribution,
     ScenarioContributionPlan,

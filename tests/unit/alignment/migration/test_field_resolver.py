@@ -4,13 +4,13 @@ from uuid import uuid4
 
 import pytest
 
-from focal.alignment.migration.field_resolver import (
+from ruche.alignment.migration.field_resolver import (
     NO_CONFIRM_THRESHOLD,
     USE_THRESHOLD,
     MissingFieldResolver,
 )
-from focal.alignment.migration.models import ResolutionSource
-from focal.conversation.models import Channel, Session
+from ruche.alignment.migration.models import ResolutionSource
+from ruche.conversation.models import Channel, Session
 
 
 @pytest.fixture
@@ -230,7 +230,7 @@ class TestFieldResolutionResultMetadata:
 
     def test_result_has_requirement_fields(self):
         """Test that FieldResolutionResult has requirement metadata fields."""
-        from focal.alignment.migration.models import FieldResolutionResult
+        from ruche.alignment.migration.models import FieldResolutionResult
 
         result = FieldResolutionResult(
             field_name="email",
@@ -247,7 +247,7 @@ class TestFieldResolutionResultMetadata:
 
     def test_result_defaults_none_for_metadata(self):
         """Test that requirement metadata defaults to None/0."""
-        from focal.alignment.migration.models import FieldResolutionResult
+        from ruche.alignment.migration.models import FieldResolutionResult
 
         result = FieldResolutionResult(
             field_name="email",
@@ -265,7 +265,7 @@ class TestGetUnfilledHardRequirements:
 
     def test_returns_unfilled_hard_only(self):
         """Test filtering for unfilled hard requirements."""
-        from focal.alignment.migration.models import FieldResolutionResult
+        from ruche.alignment.migration.models import FieldResolutionResult
 
         results = {
             "email": FieldResolutionResult(
@@ -297,7 +297,7 @@ class TestGetUnfilledHardRequirements:
 
     def test_returns_empty_when_all_filled(self):
         """Test empty result when all hard requirements are filled."""
-        from focal.alignment.migration.models import FieldResolutionResult
+        from ruche.alignment.migration.models import FieldResolutionResult
 
         results = {
             "email": FieldResolutionResult(
@@ -319,7 +319,7 @@ class TestGetFieldsToAsk:
 
     def test_returns_ask_fallback_only(self):
         """Test filtering for unfilled fields with ask fallback."""
-        from focal.alignment.migration.models import FieldResolutionResult
+        from ruche.alignment.migration.models import FieldResolutionResult
 
         results = {
             "email": FieldResolutionResult(
@@ -355,7 +355,7 @@ class TestGetFieldsToAsk:
 
     def test_excludes_filled_fields(self):
         """Test that filled fields are excluded."""
-        from focal.alignment.migration.models import FieldResolutionResult
+        from ruche.alignment.migration.models import FieldResolutionResult
 
         results = {
             "email": FieldResolutionResult(

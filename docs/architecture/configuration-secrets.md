@@ -18,7 +18,7 @@ API keys and credentials require special handling. **Never commit secrets to TOM
 │     ↓ (if not found)                                            │
 │                                                                  │
 │  3. Environment Variables (Focal-prefixed)                     │
-│     FOCAL_PIPELINE__GENERATION__MODEL, etc.                   │
+│     RUCHE_PIPELINE__GENERATION__MODEL, etc.                   │
 │     ↓ (if not found)                                            │
 │                                                                  │
 │  4. .env.local file (Development only, gitignored)              │
@@ -59,7 +59,7 @@ Each provider type has conventional env var names that are resolved by `LLMExecu
 ### Pydantic Secret Resolution
 
 ```python
-# focal/config/models/providers.py
+# ruche/config/models/providers.py
 from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -156,13 +156,13 @@ user = "focal"
 For local development, use a single `.env` file at the **project root** (gitignored):
 
 ```
-focal/
+ruche/
 ├── .env                    # ← Secrets here (gitignored, NEVER commit)
 ├── .env.example            # ← Template without values (committed)
 ├── config/
 │   ├── default.toml        # Non-secret config (committed)
 │   └── development.toml    # Dev overrides (committed)
-├── focal/
+├── ruche/
 │   └── ...
 └── ...
 ```
@@ -223,18 +223,18 @@ JINA_API_KEY=xxxxx
 # DATABASES (local development)
 # =============================================================================
 
-FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD=local_dev_password
-FOCAL_STORAGE__CONVERSATION__REDIS__PASSWORD=
+RUCHE_STORAGE__CONFIG__POSTGRES__PASSWORD=local_dev_password
+RUCHE_STORAGE__CONVERSATION__REDIS__PASSWORD=
 
 # =============================================================================
 # OPTIONAL OVERRIDES
 # =============================================================================
 
 # Override environment
-FOCAL_ENV=development
+RUCHE_ENV=development
 
 # Disable fallbacks for debugging (use only primary model)
-# FOCAL_PROVIDERS__LLM__QUALITY__FALLBACK_ON_ERROR=false
+# RUCHE_PROVIDERS__LLM__QUALITY__FALLBACK_ON_ERROR=false
 ```
 
 **.env.example file (committed as template):**
@@ -278,8 +278,8 @@ STABILITY_API_KEY=
 # DATABASES (local development)
 # =============================================================================
 
-FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD=
-FOCAL_STORAGE__CONVERSATION__REDIS__PASSWORD=
+RUCHE_STORAGE__CONFIG__POSTGRES__PASSWORD=
+RUCHE_STORAGE__CONVERSATION__REDIS__PASSWORD=
 ```
 
 **.gitignore entries:**
@@ -300,7 +300,7 @@ FOCAL_STORAGE__CONVERSATION__REDIS__PASSWORD=
 The `.env` file is loaded automatically at application startup:
 
 ```python
-# focal/config/loader.py
+# ruche/config/loader.py
 import os
 from pathlib import Path
 
@@ -357,7 +357,7 @@ cp .env.example .env
 nano .env  # or use your preferred editor
 
 # 3. Run the application (env vars are auto-loaded)
-python -m focal.api
+python -m ruche.api
 
 # Or run tests
 pytest
@@ -383,7 +383,7 @@ dotenv
 For production, integrate with a secret manager:
 
 ```python
-# focal/config/secrets.py
+# ruche/config/secrets.py
 from abc import ABC, abstractmethod
 from functools import lru_cache
 import os
@@ -408,7 +408,7 @@ class EnvSecretProvider(SecretProvider):
 class AWSSecretsManagerProvider(SecretProvider):
     """Get secrets from AWS Secrets Manager."""
 
-    def __init__(self, secret_prefix: str = "focal/"):
+    def __init__(self, secret_prefix: str = "ruche/"):
         import boto3
         self.client = boto3.client("secretsmanager")
         self.prefix = secret_prefix
@@ -459,7 +459,7 @@ class ChainedSecretProvider(SecretProvider):
 @lru_cache
 def get_secret_provider() -> SecretProvider:
     """Get configured secret provider."""
-    secret_backend = os.getenv("FOCAL_SECRET_BACKEND", "env")
+    secret_backend = os.getenv("RUCHE_SECRET_BACKEND", "env")
 
     if secret_backend == "env":
         return EnvSecretProvider()
@@ -542,9 +542,9 @@ services:
     env_file:
       - .env.local  # Gitignored file with secrets
     environment:
-      - FOCAL_ENV=development
+      - RUCHE_ENV=development
       # Non-secret overrides
-      - FOCAL_API__PORT=8000
+      - RUCHE_API__PORT=8000
 ```
 
 ### Secret Rotation
@@ -552,7 +552,7 @@ services:
 For production, implement secret rotation:
 
 ```python
-# focal/config/secrets.py
+# ruche/config/secrets.py
 
 class RotatingSecretProvider(SecretProvider):
     """
@@ -608,7 +608,7 @@ class RotatingSecretProvider(SecretProvider):
 
 **File Structure:**
 ```
-focal/
+ruche/
 ├── .env                 # Secrets (gitignored)
 ├── .env.example         # Template (committed)
 ├── config/
@@ -636,21 +636,21 @@ Environment variables override TOML values using nested delimiter (`__`):
 
 ```bash
 # Override API port
-export FOCAL_API__PORT=9000
+export RUCHE_API__PORT=9000
 
 # Override generation models (JSON array)
-export FOCAL_PIPELINE__GENERATION__MODELS='["anthropic/claude-3-haiku", "openai/gpt-4o-mini"]'
+export RUCHE_PIPELINE__GENERATION__MODELS='["anthropic/claude-3-haiku", "openai/gpt-4o-mini"]'
 
 # Override storage credentials (secrets)
-export FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD=secret123
-export FOCAL_STORAGE__MEMORY__NEO4J__PASSWORD=secret456
+export RUCHE_STORAGE__CONFIG__POSTGRES__PASSWORD=secret123
+export RUCHE_STORAGE__MEMORY__NEO4J__PASSWORD=secret456
 
 # Override selection strategy
-export FOCAL_PIPELINE__RETRIEVAL__RULE_SELECTION__STRATEGY=entropy
-export FOCAL_PIPELINE__RETRIEVAL__RULE_SELECTION__LOW_ENTROPY_K=5
+export RUCHE_PIPELINE__RETRIEVAL__RULE_SELECTION__STRATEGY=entropy
+export RUCHE_PIPELINE__RETRIEVAL__RULE_SELECTION__LOW_ENTROPY_K=5
 
 # Override generation timeout
-export FOCAL_PIPELINE__GENERATION__TIMEOUT_SECONDS=120
+export RUCHE_PIPELINE__GENERATION__TIMEOUT_SECONDS=120
 ```
 
 ---

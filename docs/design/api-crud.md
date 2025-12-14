@@ -31,7 +31,7 @@ JWT Claims:
 ## Base URL
 
 ```
-https://focal.example.com/v1
+https://ruche.example.com/v1
 ```
 
 ## Common Patterns

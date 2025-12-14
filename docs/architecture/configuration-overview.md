@@ -15,7 +15,7 @@ TOML files override defaults per environment.
 ## Folder Structure
 
 ```
-focal/
+ruche/
 ├── .env                             # Secrets (gitignored, NEVER commit)
 ├── .env.example                     # Template for .env (committed)
 │
@@ -26,7 +26,7 @@ focal/
 │   ├── production.toml              # Production environment
 │   └── test.toml                    # Test environment
 │
-└── focal/
+└── ruche/
     └── config/                      # Configuration loading code
         ├── __init__.py
         ├── loader.py                # TOML loader + .env loading
@@ -52,7 +52,7 @@ focal/
 ### Environment Resolution
 
 ```python
-# focal/config/loader.py
+# ruche/config/loader.py
 import os
 from pathlib import Path
 from typing import Any
@@ -63,13 +63,13 @@ from pydantic import BaseModel
 
 def get_config_path() -> Path:
     """Resolve config directory from environment or default."""
-    config_dir = os.getenv("FOCAL_CONFIG_DIR", "config")
+    config_dir = os.getenv("RUCHE_CONFIG_DIR", "config")
     return Path(config_dir)
 
 
 def get_environment() -> str:
-    """Get current environment from FOCAL_ENV or default to 'development'."""
-    return os.getenv("FOCAL_ENV", "development")
+    """Get current environment from RUCHE_ENV or default to 'development'."""
+    return os.getenv("RUCHE_ENV", "development")
 
 
 def load_toml(path: Path) -> dict[str, Any]:
@@ -98,7 +98,7 @@ def load_config() -> dict[str, Any]:
     Resolution order (later overrides earlier):
     1. default.toml (base defaults)
     2. {environment}.toml (environment-specific)
-    3. Environment variables (FOCAL_*)
+    3. Environment variables (RUCHE_*)
     """
     config_path = get_config_path()
     env = get_environment()
@@ -116,17 +116,17 @@ def load_config() -> dict[str, Any]:
 ### Settings Class
 
 ```python
-# focal/config/settings.py
+# ruche/config/settings.py
 from functools import lru_cache
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from focal.config.loader import load_config
-from focal.config.models.api import APIConfig
-from focal.config.models.pipeline import PipelineConfig
-from focal.config.models.providers import ProvidersConfig
-from focal.config.models.storage import StorageConfig
+from ruche.config.loader import load_config
+from ruche.config.models.api import APIConfig
+from ruche.config.models.pipeline import PipelineConfig
+from ruche.config.models.providers import ProvidersConfig
+from ruche.config.models.storage import StorageConfig
 
 
 class Settings(BaseSettings):
@@ -138,7 +138,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_prefix="FOCAL_",
+        env_prefix="RUCHE_",
         env_nested_delimiter="__",
         extra="ignore",
     )
