@@ -296,11 +296,11 @@ pytest tests/e2e/ --e2e-base-url=https://staging.focal.example.com
 
 | Module | Line Coverage | Branch Coverage |
 |--------|---------------|-----------------|
-| `focal/alignment/` | 85% | 80% |
+| `focal/mechanics/focal/` | 85% | 80% |
 | `focal/memory/` | 85% | 80% |
-| `focal/conversation/` | 80% | 75% |
+| `focal/runtime/acf/` | 80% | 75% |
 | `focal/audit/` | 80% | 75% |
-| `focal/providers/` | 80% | 75% |
+| `focal/infrastructure/providers/` | 80% | 75% |
 | `focal/config/` | 90% | 85% |
 | `focal/api/` | 80% | 75% |
 | **Overall** | **85%** | **80%** |
@@ -482,11 +482,11 @@ async def test_context_extraction_latency(context_extractor, benchmark_messages)
 
 
 @pytest.mark.performance
-async def test_full_turn_latency(alignment_engine, benchmark_conversations):
+async def test_full_turn_latency(focal_cognitive_pipeline, benchmark_conversations):
     """Full turn processing should complete within latency targets."""
 
     report = await measure_latency(
-        func=alignment_engine.process_turn,
+        func=focal_cognitive_pipeline.process_turn,
         args_list=benchmark_conversations,
         iterations=50,
     )
@@ -527,7 +527,7 @@ Every `Store` implementation must pass the same contract tests:
 # tests/contracts/test_config_store_contract.py
 import pytest
 from abc import ABC
-from focal.alignment.stores import ConfigStore
+from focal.infrastructure.stores.config import ConfigStore
 
 class ConfigStoreContract(ABC):
     """Contract tests that all ConfigStore implementations must pass."""
@@ -568,7 +568,7 @@ class ConfigStoreContract(ABC):
     # ... more contract tests
 
 
-# tests/unit/alignment/stores/test_inmemory_config.py
+# tests/unit/infrastructure/stores/config/test_inmemory_config.py
 class TestInMemoryConfigStore(ConfigStoreContract):
     """InMemoryConfigStore must fulfill the ConfigStore contract."""
 

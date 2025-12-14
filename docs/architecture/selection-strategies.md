@@ -684,7 +684,7 @@ SelectionStrategyConfig = (
 Create selection strategies from Pydantic config:
 
 ```python
-# focal/alignment/retrieval/selection.py
+# focal/mechanics/focal/retrieval/selection.py
 from focal.config.models.selection import SelectionStrategyConfig
 
 
@@ -747,7 +747,7 @@ export FOCAL_PIPELINE__RETRIEVAL__RULE_SELECTION__ALPHA=2.0
 
 ```python
 from focal.config.settings import get_settings
-from focal.alignment.retrieval.selection import create_selection_strategy
+from focal.mechanics.focal.retrieval.selection import create_selection_strategy
 
 
 async def retrieve_rules(
@@ -800,7 +800,7 @@ async def retrieve_rules(
 
 ```python
 from focal.config.settings import get_settings
-from focal.alignment.retrieval.selection import create_selection_strategy
+from focal.mechanics.focal.retrieval.selection import create_selection_strategy
 
 
 async def retrieve_memory(

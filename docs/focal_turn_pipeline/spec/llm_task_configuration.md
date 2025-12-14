@@ -69,7 +69,7 @@ class LLMTaskContext(BaseModel):
     # Always available
     turn_context: TurnContext
     session_state: SessionState
-    customer_data: CustomerDataStore
+    interlocutor_data: InterlocutorDataStore
 
     # Task-specific (passed by the task)
     task_inputs: dict[str, Any]
@@ -84,7 +84,7 @@ class LLMTaskContext(BaseModel):
 You are analyzing a customer message to extract situational context.
 
 ## Customer Schema (values hidden for privacy)
-{% for key, entry in customer_schema_mask.variables.items() %}
+{% for key, entry in interlocutor_schema_mask.variables.items() %}
 - {{ key }}: {{ entry.type }} ({{ entry.scope }}) - {{ "has value" if entry.exists else "unknown" }}
 {% endfor %}
 

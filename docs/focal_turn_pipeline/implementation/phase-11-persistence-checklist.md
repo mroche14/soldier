@@ -12,7 +12,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 
 1. **P11.1** - Update SessionState with lifecycle changes, transitions, canonical intent
 2. **P11.2** - Persist SessionState to session store
-3. **P11.3** - Persist CustomerDataStore (only non-SESSION scoped fields)
+3. **P11.3** - Persist InterlocutorDataStore (only non-SESSION scoped fields)
 4. **P11.4** - Record complete TurnRecord with all phase decisions
 5. **P11.5** - Background memory ingestion (entity extraction, summarization)
 6. **P11.6** - Build final API response
@@ -26,8 +26,8 @@ Phase 11 handles the final persistence and audit trail creation after response g
 
 ### 1.1 Convert Sequential to Parallel
 
-- [ ] **Refactor AlignmentEngine persistence to use asyncio.gather**
-  - File: `focal/alignment/engine.py`
+- [ ] **Refactor FocalCognitivePipeline persistence to use asyncio.gather**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - Current code (lines ~446-460):
     ```python
@@ -77,7 +77,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
   - Details: Run all persistence operations in parallel. Use `return_exceptions=True` to avoid one failure blocking others.
 
 - [ ] **Add error handling for parallel persistence failures**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Add
   - Details: Check for exceptions in gather results, log failures separately
     ```python
@@ -107,7 +107,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Update engine to record persistence metrics**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - Details: Wrap persistence in timing context
     ```python
@@ -119,12 +119,12 @@ Phase 11 handles the final persistence and audit trail creation after response g
 
 ---
 
-## 2. CustomerDataStore Persistence (Scope-Based Filtering)
+## 2. InterlocutorDataStore Persistence (Scope-Based Filtering)
 
 ### 2.1 Implement Scope-Based Persistence
 
 - [ ] **Create _persist_customer_data method**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Add
   - Details: Filter and persist only non-SESSION scoped fields
     ```python
@@ -203,14 +203,14 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Add CustomerDataUpdate model**
-  - File: `focal/alignment/models/customer_data.py`
+  - File: `focal/mechanics/focal/models/customer_data.py`
   - Action: Create
   - Details: Lightweight model for Phase 3 → Phase 11 handoff
     ```python
     """Customer data update models for Phase 3."""
 
     from pydantic import BaseModel, Field
-    from focal.customer_data.models import CustomerDataField
+    from focal.domain.interlocutor.models import InterlocutorDataField
 
     class CustomerDataUpdate(BaseModel):
         """Lightweight update record from Phase 3.
@@ -222,7 +222,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
         field_name: str = Field(..., description="Field name")
         value: Any = Field(..., description="Extracted value")
         confidence: float = Field(..., description="Confidence score 0-1")
-        field_definition: CustomerDataField = Field(
+        field_definition: InterlocutorDataField = Field(
             ..., description="Schema definition with scope and persist flags"
         )
         is_update: bool = Field(
@@ -233,7 +233,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 2.2 Session-End Cleanup
 
 - [ ] **Add session cleanup for SESSION-scoped variables**
-  - File: `focal/conversation/store.py`
+  - File: `focal/runtime/store.py`
   - Action: Modify interface
   - Details: Add cleanup method to SessionStore interface
     ```python
@@ -254,7 +254,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Implement cleanup in InMemorySessionStore**
-  - File: `focal/conversation/stores/inmemory.py`
+  - File: `focal/runtime/stores/inmemory.py`
   - Action: Add
   - Details: Clear SESSION-scoped variables from session.variables dict
     ```python
@@ -277,7 +277,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Implement cleanup in RedisSessionStore**
-  - File: `focal/conversation/stores/redis.py`
+  - File: `focal/runtime/stores/redis.py`
   - Action: Add
   - Details: Same cleanup logic for Redis backend
 
@@ -304,7 +304,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
 ### 3.1 Integrate Task Queue
 
 - [ ] **Add memory ingestion task to engine**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - Details: Fire-and-forget memory ingestion after response sent
     ```python
@@ -326,8 +326,8 @@ Phase 11 handles the final persistence and audit trail creation after response g
         )
     ```
 
-- [ ] **Add TaskQueue to AlignmentEngine constructor**
-  - File: `focal/alignment/engine.py`
+- [ ] **Add TaskQueue to FocalCognitivePipeline constructor**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - Details: Add optional task_queue parameter
     ```python
@@ -491,16 +491,16 @@ Phase 11 handles the final persistence and audit trail creation after response g
 > This phase only adds the outcome field to TurnRecord for persistence.
 
 **Prerequisites from Phase 9** (must be complete first):
-- [x] `OutcomeCategory` model - `focal/alignment/models/outcome.py`
-- [x] `TurnOutcome` model - `focal/alignment/models/outcome.py`
-- [x] `build_turn_outcome()` helper - `focal/alignment/generation/resolution.py`
+- [x] `OutcomeCategory` model - `focal/mechanics/focal/models/outcome.py`
+- [x] `TurnOutcome` model - `focal/mechanics/focal/models/outcome.py`
+- [x] `build_turn_outcome()` helper - `focal/mechanics/focal/generation/resolution.py`
 
 - [ ] **Add outcome field to TurnRecord**
   - File: `focal/audit/models/turn_record.py`
   - Action: Modify
   - Details: Add TurnOutcome field
     ```python
-    from focal.alignment.models.outcome import TurnOutcome
+    from focal.mechanics.focal.models.outcome import TurnOutcome
 
     class TurnRecord(BaseModel):
         # ... existing fields ...
@@ -555,8 +555,8 @@ Phase 11 handles the final persistence and audit trail creation after response g
 
 ### 4.3 Populate Outcome in Engine
 
-- [ ] **Compute TurnOutcome in AlignmentEngine**
-  - File: `focal/alignment/engine.py`
+- [ ] **Compute TurnOutcome in FocalCognitivePipeline**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Add method
   - Details: Determine resolution and categories from pipeline state
     ```python
@@ -632,7 +632,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Call _compute_turn_outcome in process_turn**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - Details: Compute outcome before persistence
     ```python
@@ -649,7 +649,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     ```
 
 - [ ] **Update _persist_turn_record to include outcome**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - Details: Add outcome to TurnRecord
     ```python
@@ -935,7 +935,7 @@ This phase requires:
 - [x] **Phase 1-10 Complete**: All prior pipeline phases working
 - [x] **SessionStore Interface**: For session persistence
 - [x] **AuditStore Interface**: For turn record persistence
-- [x] **CustomerDataStoreInterface**: For customer data persistence
+- [x] **InterlocutorDataStoreInterface**: For customer data persistence
 - [ ] **CustomerDataUpdate Model**: For Phase 3 → Phase 11 handoff
 - [ ] **TurnOutcome Model**: For outcome tracking
 - [ ] **TaskQueue**: For background memory ingestion
@@ -971,7 +971,7 @@ This phase requires:
         )
         customer_data_enabled: bool = Field(
             default=True,
-            description="Persist customer data updates to CustomerDataStoreInterface"
+            description="Persist customer data updates to InterlocutorDataStoreInterface"
         )
         session_cleanup_on_end: bool = Field(
             default=True,
@@ -1005,7 +1005,7 @@ This phase requires:
 ### 9.2 Add Structured Logging
 
 - [ ] **Log persistence timing details**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Add
   - Details: Log parallel persistence metrics
     ```python

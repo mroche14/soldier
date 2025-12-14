@@ -50,7 +50,7 @@ class ResponsePlan(BaseModel):
 
 ### 1.1 ResponseType Enum
 - [x] **Create ResponseType enum**
-  - File: `focal/alignment/planning/models.py` (added to existing file)
+  - File: `focal/mechanics/focal/planning/models.py` (added to existing file)
   - Action: Completed
   - Details:
     ```python
@@ -69,7 +69,7 @@ class ResponsePlan(BaseModel):
 
 ### 1.2 ScenarioContribution Model
 - [x] **Create ScenarioContribution model**
-  - File: `focal/alignment/planning/models.py` (already exists from P6)
+  - File: `focal/mechanics/focal/planning/models.py` (already exists from P6)
   - Action: Already implemented
   - Details:
     ```python
@@ -87,7 +87,7 @@ class ResponsePlan(BaseModel):
 
 ### 1.3 ScenarioContributionPlan Model
 - [x] **Create ScenarioContributionPlan model**
-  - File: `focal/alignment/planning/models.py` (already exists from P6)
+  - File: `focal/mechanics/focal/planning/models.py` (already exists from P6)
   - Action: Already implemented
   - Details:
     ```python
@@ -102,7 +102,7 @@ class ResponsePlan(BaseModel):
 
 ### 1.4 RuleConstraint Model
 - [x] **Create RuleConstraint model**
-  - File: `focal/alignment/planning/models.py`
+  - File: `focal/mechanics/focal/planning/models.py`
   - Action: Completed
   - Details:
     ```python
@@ -116,7 +116,7 @@ class ResponsePlan(BaseModel):
 
 ### 1.5 ResponsePlan Model
 - [x] **Create ResponsePlan model**
-  - File: `focal/alignment/planning/models.py`
+  - File: `focal/mechanics/focal/planning/models.py`
   - Action: Completed
   - Details:
     ```python
@@ -143,7 +143,7 @@ class ResponsePlan(BaseModel):
 
 ### 1.6 Update __init__.py
 - [x] **Export new models**
-  - File: `focal/alignment/planning/__init__.py`
+  - File: `focal/mechanics/focal/planning/__init__.py`
   - Action: Completed
   - Details: Exported `ResponseType`, `ScenarioContribution`, `ScenarioContributionPlan`, `RuleConstraint`, `ResponsePlan`
 
@@ -153,21 +153,21 @@ class ResponsePlan(BaseModel):
 
 ### 2.1 Create ResponsePlanner Class
 - [x] **Create ResponsePlanner class skeleton**
-  - File: `focal/alignment/planning/__init__.py`
+  - File: `focal/mechanics/focal/planning/__init__.py`
   - Action: Completed (directory already existed from P6)
 
 - [x] **Implement ResponsePlanner class**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details:
     ```python
-    from focal.alignment.models.response import (
+    from focal.mechanics.focal.models.response import (
         ResponsePlan, ResponseType, ScenarioContributionPlan,
         ScenarioContribution, RuleConstraint
     )
-    from focal.alignment.models.rule import MatchedRule
-    from focal.alignment.models.scenario import ScenarioFilterResult
-    from focal.alignment.stores.config_store import ConfigStore
+    from focal.mechanics.focal.models.rule import MatchedRule
+    from focal.mechanics.focal.models.scenario import ScenarioFilterResult
+    from focal.mechanics.focal.stores.config_store import ConfigStore
     from focal.observability.logging import get_logger
     from focal.observability.metrics import (
         response_planning_duration,
@@ -199,7 +199,7 @@ class ResponsePlan(BaseModel):
 
 ### 2.2 Implement P8.1: Determine Global Response Type
 - [x] **Implement _determine_response_type method**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details:
     ```python
@@ -228,7 +228,7 @@ class ResponsePlan(BaseModel):
 
 ### 2.3 Implement P8.2: Collect Step-Level Templates
 - [x] **Implement _collect_templates method**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details:
     ```python
@@ -251,7 +251,7 @@ class ResponsePlan(BaseModel):
 
 ### 2.4 Implement P8.3: Build Per-Scenario Contribution Plan
 - [x] **Implement _build_scenario_contributions method**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed (logic integrated into _synthesize_plan)
   - Details:
     ```python
@@ -278,7 +278,7 @@ class ResponsePlan(BaseModel):
     ```
 
 - [x] **Implement _extract_step_contribution helper**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Not needed - contributions already extracted by P6
   - Details:
     ```python
@@ -298,7 +298,7 @@ class ResponsePlan(BaseModel):
 
 ### 2.5 Implement P8.4: Synthesize Global ResponsePlan
 - [x] **Implement _synthesize_plan method**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details:
     ```python
@@ -338,7 +338,7 @@ class ResponsePlan(BaseModel):
 
 ### 2.6 Implement P8.5: Inject Explicit Constraints
 - [x] **Implement _inject_constraints method**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details:
     ```python
@@ -381,18 +381,18 @@ class ResponsePlan(BaseModel):
     ```
 
 - [x] **Implement _extract_must_include helper**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details: Keyword-based extraction implemented
 
 - [x] **Implement _extract_must_avoid helper**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details: Keyword-based extraction implemented
 
 ### 2.7 Wire Up Full Pipeline
 - [x] **Complete build_response_plan orchestration**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed - full orchestration method implemented
   - Details:
     ```python
@@ -439,9 +439,9 @@ class ResponsePlan(BaseModel):
 
 ## 3. Engine Integration
 
-### 3.1 Add ResponsePlanner to AlignmentEngine
+### 3.1 Add ResponsePlanner to FocalCognitivePipeline
 - [x] **Add ResponsePlanner dependency**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Completed
   - Details:
     - Added `ResponsePlanner` import
@@ -450,7 +450,7 @@ class ResponsePlan(BaseModel):
 
 ### 3.2 Insert Phase 8 Step in Pipeline
 - [x] **Add Phase 8 execution after Tool Execution (P7)**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Completed
   - Details:
     - Added `_build_response_plan` method
@@ -459,7 +459,7 @@ class ResponsePlan(BaseModel):
 
 ### 3.3 Update AlignmentResult Model
 - [x] **Add response_plan field to AlignmentResult**
-  - File: `focal/alignment/result.py`
+  - File: `focal/mechanics/focal/result.py`
   - Action: Completed
   - Details:
     - Added `ResponsePlan` import
@@ -468,7 +468,7 @@ class ResponsePlan(BaseModel):
 
 ### 3.4 Update PromptBuilder to Accept ResponsePlan
 - [x] **Modify PromptBuilder to use ResponsePlan**
-  - File: `focal/alignment/generation/prompt_builder.py`
+  - File: `focal/mechanics/focal/generation/prompt_builder.py`
   - Action: Completed
   - Details:
     - Added `response_plan: ResponsePlan | None` parameter to `build_system_prompt`
@@ -477,7 +477,7 @@ class ResponsePlan(BaseModel):
 
 ### 3.5 Update ResponseGenerator to Accept ResponsePlan
 - [x] **Modify ResponseGenerator to use ResponsePlan**
-  - File: `focal/alignment/generation/generator.py`
+  - File: `focal/mechanics/focal/generation/generator.py`
   - Action: Completed
   - Details:
     - Added `response_plan: ResponsePlan | None` parameter to `generate`
@@ -555,7 +555,7 @@ class ResponsePlan(BaseModel):
 
 ### 5.2 Add Structured Logging
 - [x] **Add logging throughout ResponsePlanner**
-  - File: `focal/alignment/planning/planner.py`
+  - File: `focal/mechanics/focal/planning/planner.py`
   - Action: Completed
   - Details:
     - Logs response type determination with response_type_determined event

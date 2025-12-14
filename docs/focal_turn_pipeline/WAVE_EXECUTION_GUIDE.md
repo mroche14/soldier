@@ -99,12 +99,12 @@ Or for implementation:
 Execute ALL items in the Phase 1 checklist.
 
 ## Key Deliverables
-1. Rename Profile models → CustomerData models (see CHECKLIST_CORRECTIONS.md)
-2. Add `scope` and `persist` fields to CustomerDataField
+1. Rename Profile models → InterlocutorData models (see CHECKLIST_CORRECTIONS.md)
+2. Add `scope` and `persist` fields to InterlocutorDataField
 3. Add `history` field to VariableEntry
 4. Create TurnContext, GlossaryItem models
-5. Create CustomerDataLoader, StaticConfigLoader
-6. Update AlignmentEngine to build TurnContext
+5. Create InterlocutorDataLoader, StaticConfigLoader
+6. Update FocalCognitivePipeline to build TurnContext
 7. Add ConfigStore methods for glossary and schema
 8. Unit tests with 85%+ coverage
 
@@ -123,9 +123,9 @@ As you complete EACH item:
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/models/ -v
-uv run pytest tests/unit/alignment/loaders/ -v
-uv run pytest --cov=focal/alignment --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/models/ -v
+uv run pytest tests/unit/mechanics/focal/loaders/ -v
+uv run pytest --cov=focal/mechanics/focal --cov-report=term-missing
 ```
 
 ## Report Format
@@ -136,7 +136,7 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 
 **Verification After Completion**:
 - [ ] TurnContext model exists and is exported
-- [ ] CustomerDataField has `scope` and `persist` fields
+- [ ] InterlocutorDataField has `scope` and `persist` fields
 - [ ] VariableEntry has `history` field
 - [ ] All renames complete (grep for old names returns nothing)
 - [ ] Tests pass with 85%+ coverage
@@ -163,10 +163,10 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 5. `docs/focal_turn_pipeline/implementation/phase-02-situational-sensor-checklist.md` - Your checklist
 
 ## Prerequisites Completed (Phase 1)
-- TurnContext model exists at `focal/alignment/models/turn_context.py`
-- CustomerDataField (renamed from ProfileFieldDefinition) has `scope`, `persist`
+- TurnContext model exists at `focal/mechanics/focal/models/turn_context.py`
+- InterlocutorDataField (renamed from ProfileFieldDefinition) has `scope`, `persist`
 - VariableEntry (renamed from ProfileField) has `history`
-- GlossaryItem model exists at `focal/alignment/models/glossary.py`
+- GlossaryItem model exists at `focal/mechanics/focal/models/glossary.py`
 - ConfigStore has glossary and schema methods
 
 ## Your Assignment
@@ -174,25 +174,25 @@ Execute ALL items in the Phase 2 checklist.
 
 ## Key Deliverables
 1. Create SituationalSnapshot, CandidateVariableInfo models
-2. Create CustomerSchemaMask model and builder
+2. Create InterlocutorSchemaMask model and builder
 3. Create Jinja2 TemplateLoader utility
 4. Create situational_sensor.jinja2 template
 5. Implement SituationalSensor class with all P2.x substeps
 6. Add [pipeline.situational_sensor] config section
-7. Integrate with AlignmentEngine (replace ContextExtractor)
+7. Integrate with FocalCognitivePipeline (replace ContextExtractor)
 8. Unit tests with 85%+ coverage
 
 ## Important Notes
-- CustomerDataField, VariableEntry, CustomerDataStore already exist (renamed in P1)
+- InterlocutorDataField, VariableEntry, InterlocutorDataStore already exist (renamed in P1)
 - Do NOT create duplicate models - use the renamed Profile models
-- Template path: `focal/alignment/context/prompts/situational_sensor.jinja2`
+- Template path: `focal/mechanics/focal/context/prompts/situational_sensor.jinja2`
 - Config model: SituationalSensorConfig in `focal/config/models/pipeline.py`
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/context/ -v
-uv run pytest tests/unit/alignment/models/test_situational_snapshot.py -v
-uv run pytest --cov=focal/alignment/context --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/context/ -v
+uv run pytest tests/unit/mechanics/focal/models/test_situational_snapshot.py -v
+uv run pytest --cov=focal/mechanics/focal/context --cov-report=term-missing
 ```
 
 ## Report Format
@@ -240,8 +240,8 @@ Execute ALL items in the Phase 4 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/retrieval/ -v
-uv run pytest --cov=focal/alignment/retrieval --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/retrieval/ -v
+uv run pytest --cov=focal/mechanics/focal/retrieval --cov-report=term-missing
 ```
 
 ## Report Format
@@ -250,7 +250,7 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 
 **Verification After Wave 2**:
 - [ ] SituationalSnapshot model exists with candidate_variables
-- [ ] CustomerSchemaMask builds correctly
+- [ ] InterlocutorSchemaMask builds correctly
 - [ ] TemplateLoader works with Jinja2 templates
 - [ ] Retrieval is parallelized (asyncio.gather)
 - [ ] Both agents' tests pass
@@ -278,15 +278,15 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 
 ## Prerequisites Completed
 - SituationalSnapshot model exists with candidate_variables (P2)
-- CustomerDataField has scope and persist fields (P1)
+- InterlocutorDataField has scope and persist fields (P1)
 - VariableEntry has history field (P1)
-- CustomerDataStore (renamed CustomerProfile) exists (P1)
+- InterlocutorDataStore (renamed CustomerProfile) exists (P1)
 
 ## Your Assignment
 Execute ALL items in the Phase 3 checklist.
 
 ## Key Deliverables
-1. Implement candidate variable → CustomerDataStore matching
+1. Implement candidate variable → InterlocutorDataStore matching
 2. Implement type coercion and validation
 3. Implement in-memory update with history tracking
 4. Mark variables for persistence based on persist flag
@@ -294,15 +294,15 @@ Execute ALL items in the Phase 3 checklist.
 6. Unit tests with 85%+ coverage
 
 ## Important Notes
-- Use existing validation in `focal/customer_data/validation.py` if available
+- Use existing validation in `focal/domain/interlocutor/validation.py` if available
 - candidate_variables comes from SituationalSnapshot (P2 output)
 - Only variables with persist=True should be saved to database
 - History should track: {value, timestamp, source, confidence}
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/customer/ -v
-uv run pytest --cov=focal/alignment/customer --cov-report=term-missing
+uv run pytest tests/unit/domain/interlocutor/ -v
+uv run pytest --cov=focal/domain/interlocutor --cov-report=term-missing
 ```
 
 ## Report Format
@@ -349,8 +349,8 @@ Execute ALL items in the Phase 5 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/filtering/ -v
-uv run pytest --cov=focal/alignment/filtering --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/filtering/ -v
+uv run pytest --cov=focal/mechanics/focal/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -408,9 +408,9 @@ Execute ALL items in the Phase 6 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/filtering/test_scenario_filter.py -v
-uv run pytest tests/unit/alignment/models/test_scenario_*.py -v
-uv run pytest --cov=focal/alignment/filtering --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/filtering/test_scenario_filter.py -v
+uv run pytest tests/unit/mechanics/focal/models/test_scenario_*.py -v
+uv run pytest --cov=focal/mechanics/focal/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -446,7 +446,7 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 
 ## Prerequisites Completed
 - ScenarioFilterResult with contributions (P6)
-- CustomerDataStore with variables (P3)
+- InterlocutorDataStore with variables (P3)
 - Rule.attached_tool_ids exists
 
 ## Your Assignment
@@ -467,8 +467,8 @@ Execute ALL items in the Phase 7 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/execution/ -v
-uv run pytest --cov=focal/alignment/execution --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/execution/ -v
+uv run pytest --cov=focal/mechanics/focal/execution --cov-report=term-missing
 ```
 
 ## Report Format
@@ -512,13 +512,13 @@ Execute ALL items in the Phase 8 checklist.
 
 ## Important Notes
 - Phase 8 is currently SKIPPED in pipeline - this is the gap to fill
-- ResponsePlan goes to `focal/alignment/planning/models.py`
-- ResponsePlanner goes to `focal/alignment/planning/planner.py`
+- ResponsePlan goes to `focal/mechanics/focal/planning/models.py`
+- ResponsePlanner goes to `focal/mechanics/focal/planning/planner.py`
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/planning/ -v
-uv run pytest --cov=focal/alignment/planning --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/planning/ -v
+uv run pytest --cov=focal/mechanics/focal/planning --cov-report=term-missing
 ```
 
 ## Report Format
@@ -578,16 +578,16 @@ Execute ALL items in Phases 9, 10, and 11 checklists.
 6. Add enforcement_expression field to Rule model
 
 ### Phase 11: Persistence
-1. Implement persistent_updates batching for CustomerDataStore
+1. Implement persistent_updates batching for InterlocutorDataStore
 2. Add entity_extraction.jinja2 template (from CHECKLIST_CORRECTIONS)
 3. Add summarization templates (window_summary.jinja2, meta_summary.jinja2)
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/alignment/generation/ -v
-uv run pytest tests/unit/alignment/enforcement/ -v
-uv run pytest tests/unit/alignment/persistence/ -v
-uv run pytest --cov=focal/alignment --cov-report=term-missing
+uv run pytest tests/unit/mechanics/focal/generation/ -v
+uv run pytest tests/unit/mechanics/focal/enforcement/ -v
+uv run pytest tests/unit/mechanics/focal/persistence/ -v
+uv run pytest --cov=focal/mechanics/focal --cov-report=term-missing
 ```
 
 ## Report Format
@@ -617,27 +617,27 @@ Use the individual phase prompts, running P9 → P10 → P11 in sequence.
 
 ```bash
 # 1. Ruff linting
-uv run ruff check focal/alignment/
-uv run ruff check --fix focal/alignment/  # Auto-fix issues
+uv run ruff check focal/mechanics/focal/
+uv run ruff check --fix focal/mechanics/focal/  # Auto-fix issues
 
 # 2. Ruff formatting
-uv run ruff format focal/alignment/
+uv run ruff format focal/mechanics/focal/
 
 # 3. Mypy type checking
-uv run mypy focal/alignment/ --ignore-missing-imports
+uv run mypy focal/mechanics/focal/ --ignore-missing-imports
 
 # 4. Tests
-uv run pytest tests/unit/alignment/ -v --tb=short
+uv run pytest tests/unit/mechanics/focal/ -v --tb=short
 ```
 
 ### Quick All-in-One Check
 
 ```bash
 echo "=== WAVE QUALITY CHECK ===" && \
-uv run ruff check focal/alignment/ && \
-uv run ruff format --check focal/alignment/ && \
-uv run mypy focal/alignment/ --ignore-missing-imports && \
-uv run pytest tests/unit/alignment/ -v --tb=short && \
+uv run ruff check focal/mechanics/focal/ && \
+uv run ruff format --check focal/mechanics/focal/ && \
+uv run mypy focal/mechanics/focal/ --ignore-missing-imports && \
+uv run pytest tests/unit/mechanics/focal/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```
 
@@ -653,7 +653,7 @@ After all waves complete:
 
 ```bash
 # Run full pipeline test
-uv run pytest tests/integration/alignment/ -v
+uv run pytest tests/integration/mechanics/focal/ -v
 
 # Run E2E test if available
 uv run pytest tests/e2e/ -v
@@ -662,18 +662,18 @@ uv run pytest tests/e2e/ -v
 ### Coverage Check
 
 ```bash
-uv run pytest --cov=focal/alignment --cov-report=html
+uv run pytest --cov=focal/mechanics/focal --cov-report=html
 # Open htmlcov/index.html to verify 85%+ coverage
 ```
 
 ### Final Quality Gate
 
 ```bash
-# Full quality check on entire alignment module
-uv run ruff check focal/alignment/ && \
-uv run ruff format --check focal/alignment/ && \
-uv run mypy focal/alignment/ --ignore-missing-imports && \
-uv run pytest tests/unit/alignment/ --cov=focal/alignment --cov-fail-under=85
+# Full quality check on entire mechanics/focal module
+uv run ruff check focal/mechanics/focal/ && \
+uv run ruff format --check focal/mechanics/focal/ && \
+uv run mypy focal/mechanics/focal/ --ignore-missing-imports && \
+uv run pytest tests/unit/mechanics/focal/ --cov=focal/mechanics/focal --cov-fail-under=85
 ```
 
 ### Checklist Audit

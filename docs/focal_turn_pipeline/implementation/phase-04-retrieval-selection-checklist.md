@@ -83,8 +83,8 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 
 ### 1.1 Convert Sequential Retrieval to Parallel
 
-- [x] **Refactor `AlignmentEngine._retrieve()` to use `asyncio.gather()`**
-  - File: `focal/alignment/engine.py`
+- [x] **Refactor `FocalCognitivePipeline._retrieve()` to use `asyncio.gather()`**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modified
   - **Implemented**: Converted sequential retrieval to parallel using `asyncio.gather` with exception handling
   - Added `import asyncio` at top of file
@@ -170,7 +170,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 3.1 Add Reranking to ScenarioRetriever
 
 - [x] **Add optional reranker to `ScenarioRetriever.__init__()`**
-  - File: `focal/alignment/retrieval/scenario_retriever.py`
+  - File: `focal/mechanics/focal/retrieval/scenario_retriever.py`
   - Action: Modified
   - **Implemented**: Added `ScenarioReranker` class and integrated into `ScenarioRetriever`
   - Added `reranker` parameter to constructor
@@ -178,7 +178,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
   - Updated exports in `__init__.py`
   - Details:
     ```python
-    from focal.alignment.retrieval.reranker import ScenarioReranker
+    from focal.mechanics.focal.retrieval.reranker import ScenarioReranker
 
     class ScenarioRetriever:
         def __init__(
@@ -193,7 +193,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Apply reranking before selection in `ScenarioRetriever.retrieve()`**
-  - File: `focal/alignment/retrieval/scenario_retriever.py`
+  - File: `focal/mechanics/focal/retrieval/scenario_retriever.py`
   - Action: Modify
   - **Already Implemented**: Reranking is applied at lines 107-108 before selection
   - Current location: Lines 51-56 (retrieve method)
@@ -234,12 +234,12 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
   - File: `focal/memory/retrieval/reranker.py`
   - Action: Create if missing, or use existing
   - **Implemented**: Created MemoryReranker following RuleReranker/ScenarioReranker pattern
-  - Details: Similar pattern to `RuleReranker` in `focal/alignment/retrieval/reranker.py`
+  - Details: Similar pattern to `RuleReranker` in `focal/mechanics/focal/retrieval/reranker.py`
 
-### 3.3 Update AlignmentEngine to Pass Rerankers
+### 3.3 Update FocalCognitivePipeline to Pass Rerankers
 
-- [x] **Construct rerankers in `AlignmentEngine.__init__()`**
-  - File: `focal/alignment/engine.py`
+- [x] **Construct rerankers in `FocalCognitivePipeline.__init__()`**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - **Implemented**: Created per-object-type rerankers (rule, scenario, memory) and passed to retrievers
   - Current location: Lines ~100-180 (constructor)
@@ -269,8 +269,8 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 
 ### 4.1 Create Intent Models
 
-- [x] **Create `focal/alignment/models/intent.py`**
-  - File: `focal/alignment/models/intent.py`
+- [x] **Create `focal/mechanics/focal/models/intent.py`**
+  - File: `focal/mechanics/focal/models/intent.py`
   - Action: Create
   - **Implemented**: Created Intent, IntentCandidate, and ScoredIntent models with all required fields
   - Details:
@@ -310,7 +310,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Add intent to `Context` model**
-  - File: `focal/alignment/context/models.py`
+  - File: `focal/mechanics/focal/context/models.py`
   - Action: Modify
   - **Implemented**: Added canonical_intent_label and canonical_intent_score fields to Context
   - Details:
@@ -326,7 +326,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 4.2 Add Intent to ConfigStore
 
 - [x] **Add intent methods to `AgentConfigStore` interface**
-  - File: `focal/alignment/stores/agent_config_store.py`
+  - File: `focal/mechanics/focal/stores/agent_config_store.py`
   - Action: Modify
   - **Implemented**: Added get_intent, get_intents, save_intent, delete_intent methods to interface
   - Details:
@@ -357,13 +357,13 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Implement intent methods in `InMemoryConfigStore`**
-  - File: `focal/alignment/stores/inmemory.py`
+  - File: `focal/mechanics/focal/stores/inmemory.py`
   - Action: Modify
   - **Implemented**: Added _intents storage dict and implemented all CRUD methods
   - Details: Add `_intents: dict[UUID, Intent]` and implement CRUD methods
 
 - [x] **Implement intent methods in `PostgresConfigStore`**
-  - File: `focal/alignment/stores/postgres.py`
+  - File: `focal/mechanics/focal/stores/postgres.py`
   - Action: Modify
   - **Implemented**: Added stub methods that raise NotImplementedError with clear TODO notes
   - Details: Add database queries for intent table (create migration separately)
@@ -371,8 +371,8 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 
 ### 4.3 Create IntentRetriever
 
-- [x] **Create `focal/alignment/retrieval/intent_retriever.py`**
-  - File: `focal/alignment/retrieval/intent_retriever.py`
+- [x] **Create `focal/mechanics/focal/retrieval/intent_retriever.py`**
+  - File: `focal/mechanics/focal/retrieval/intent_retriever.py`
   - Action: Create
   - **Implemented**: Created IntentRetriever class with hybrid search and decide_canonical_intent function
   - Details:
@@ -452,7 +452,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 4.4 Implement Canonical Intent Decision (P4.3)
 
 - [x] **Create `decide_canonical_intent()` function**
-  - File: `focal/alignment/retrieval/intent_retriever.py`
+  - File: `focal/mechanics/focal/retrieval/intent_retriever.py`
   - Action: Add
   - **Implemented**: Created function to merge LLM sensor intent with hybrid retrieval results
   - Details:
@@ -495,8 +495,8 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
         return sensor_intent, sensor_confidence or 0.0
     ```
 
-- [x] **Integrate intent decision in AlignmentEngine**
-  - File: `focal/alignment/engine.py`
+- [x] **Integrate intent decision in FocalCognitivePipeline**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modify
   - **Implemented**: Added IntentRetriever construction, intent retrieval task, and canonical intent decision logic
   - Details:
@@ -600,7 +600,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 5.3 Add BM25 to RuleRetriever
 
 - [x] **Add BM25 index creation to `RuleRetriever`**
-  - File: `focal/alignment/retrieval/rule_retriever.py`
+  - File: `focal/mechanics/focal/retrieval/rule_retriever.py`
   - Action: Modified
   - **Implemented**: Added hybrid_config parameter, HybridScorer integration, and _hybrid_retrieval method
   - Details:
@@ -670,7 +670,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
     ```
 
 - [x] **Add BM25 to ScenarioRetriever**
-  - File: `focal/alignment/retrieval/scenario_retriever.py`
+  - File: `focal/mechanics/focal/retrieval/scenario_retriever.py`
   - Action: Modified
   - **Implemented**: Added hybrid_config parameter, HybridScorer integration, _hybrid_retrieval and _vector_only_retrieval methods
   - Details: Similar pattern to RuleRetriever above
@@ -798,7 +798,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### 7.2 Add Parallel Execution Timing
 
 - [x] **Track parallel vs sequential timing**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modified (already implemented in previous changes)
   - **Implemented**: Added PARALLEL_RETRIEVAL_DURATION metric and logging in engine.py
   - Details:
@@ -905,7 +905,7 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 ### Tier 2: Reranking Integration (Build on existing)
 4. ScenarioRetriever reranking (3.1)
 5. MemoryRetriever reranking (3.2)
-6. AlignmentEngine reranker construction (3.3)
+6. FocalCognitivePipeline reranker construction (3.3)
 
 ### Tier 3: Intent Retrieval (New feature)
 7. Intent models (4.1)
@@ -953,10 +953,10 @@ Query → [Vector Search ‖ BM25 Search] → Merge → [Optional: Rerank] → S
 - **Selection Strategies**: `docs/architecture/selection-strategies.md`
 - **Implementation Plan**: `IMPLEMENTATION_PLAN.md` (Phase 8)
 - **Current Code**:
-  - `focal/alignment/retrieval/rule_retriever.py`
-  - `focal/alignment/retrieval/scenario_retriever.py`
+  - `focal/mechanics/focal/retrieval/rule_retriever.py`
+  - `focal/mechanics/focal/retrieval/scenario_retriever.py`
   - `focal/memory/retrieval/retriever.py`
-  - `focal/alignment/engine.py` (lines 746-778 - sequential retrieval)
+  - `focal/mechanics/focal/engine.py` (lines 746-778 - sequential retrieval)
 
 ---
 

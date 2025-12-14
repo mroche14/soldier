@@ -7,21 +7,21 @@
 
 ## 1. Customer Data Naming Consolidation
 
-The existing `focal/customer_data/` module **IS** the CustomerDataStore implementation. It needs field additions and consistent usage, NOT parallel schemas.
+The existing `focal/domain/interlocutor/` module **IS** the InterlocutorDataStore implementation. It needs field additions and consistent usage, NOT parallel schemas.
 
 ### Canonical Name Mapping
 
 | Old Name (profile/) | New Name (CustomerData) | Location | Action |
 |---------------------|------------------------|----------|--------|
-| `ProfileFieldDefinition` | `CustomerDataField` | `focal/customer_data/models.py` | **RENAME** + add `scope`, `persist` |
-| `ProfileField` | `VariableEntry` | `focal/customer_data/models.py` | **RENAME** + add `history` |
-| `CustomerProfile` | `CustomerDataStore` | `focal/customer_data/models.py` | **RENAME** |
-| `ProfileStore` | `CustomerDataStoreInterface` | `focal/customer_data/store.py` | **RENAME** |
-| `ProfileFieldSource` | `VariableSource` | `focal/customer_data/enums.py` | **RENAME** |
+| `ProfileFieldDefinition` | `InterlocutorDataField` | `focal/domain/interlocutor/models.py` | **RENAME** + add `scope`, `persist` |
+| `ProfileField` | `VariableEntry` | `focal/domain/interlocutor/models.py` | **RENAME** + add `history` |
+| `CustomerProfile` | `InterlocutorDataStore` | `focal/domain/interlocutor/models.py` | **RENAME** |
+| `ProfileStore` | `InterlocutorDataStoreInterface` | `focal/domain/interlocutor/store.py` | **RENAME** |
+| `ProfileFieldSource` | `VariableSource` | `focal/domain/interlocutor/enums.py` | **RENAME** |
 
 ### Fields to ADD to Existing Models
 
-**On `ProfileFieldDefinition` → `CustomerDataField`:**
+**On `ProfileFieldDefinition` → `InterlocutorDataField`:**
 ```python
 # ADD these fields (in customer_data/models.py)
 scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"] = Field(
@@ -49,11 +49,11 @@ Remove these duplicate model definitions:
 
 | Checklist | Section | What to DELETE |
 |-----------|---------|---------------|
-| Phase 1 | §1.3 | `CustomerDataField` model creation (use renamed `ProfileFieldDefinition`) |
-| Phase 1 | §1.4 | `CustomerDataStore` model creation (use renamed `CustomerProfile`) |
+| Phase 1 | §1.3 | `InterlocutorDataField` model creation (use renamed `ProfileFieldDefinition`) |
+| Phase 1 | §1.4 | `InterlocutorDataStore` model creation (use renamed `CustomerProfile`) |
 | Phase 1 | §1.4 | `VariableEntry` model creation (use renamed `ProfileField`) |
-| Phase 2 | §2.1 | `CustomerDataField`, `VariableEntry`, `CustomerDataStore` models |
-| Phase 3 | §1.1-1.4 | `VariableEntry`, `CustomerDataStore`, `CustomerSchemaMask` models |
+| Phase 2 | §2.1 | `InterlocutorDataField`, `VariableEntry`, `InterlocutorDataStore` models |
+| Phase 3 | §1.1-1.4 | `VariableEntry`, `InterlocutorDataStore`, `InterlocutorSchemaMask` models |
 
 ### KEEP (New Models Not in `customer_data`)
 
@@ -61,11 +61,11 @@ These models ARE new and should be created:
 
 | Model | Location | Phase |
 |-------|----------|-------|
-| `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` | P2 |
-| `CandidateVariableInfo` | `focal/alignment/context/situational_snapshot.py` | P2 |
-| `SituationalSnapshot` | `focal/alignment/context/situational_snapshot.py` | P2 |
-| `GlossaryItem` | `focal/alignment/models/glossary.py` | P1 |
-| `TurnContext` | `focal/alignment/models/turn_context.py` | P1 |
+| `InterlocutorSchemaMask` | `focal/mechanics/focal/context/customer_schema_mask.py` | P2 |
+| `CandidateVariableInfo` | `focal/mechanics/focal/context/situational_snapshot.py` | P2 |
+| `SituationalSnapshot` | `focal/mechanics/focal/context/situational_snapshot.py` | P2 |
+| `GlossaryItem` | `focal/mechanics/focal/models/glossary.py` | P1 |
+| `TurnContext` | `focal/mechanics/focal/models/turn_context.py` | P1 |
 
 ---
 
@@ -99,7 +99,7 @@ Gap analysis identified these hardcoded prompts NOT addressed in any checklist:
 ### Scenario Filter
 
 - [ ] **Create scenario_filter.jinja2 template**
-  - File: `focal/alignment/filtering/prompts/scenario_filter.jinja2`
+  - File: `focal/mechanics/focal/filtering/prompts/scenario_filter.jinja2`
   - Action: Currently `.txt` unused - implement LLM-based scenario filtering
   - Note: Gap analysis says "Deterministic only" - need to add LLM path
 
@@ -139,26 +139,26 @@ All checklists must use these paths:
 
 | Model | Canonical Path |
 |-------|---------------|
-| `CustomerDataField` | `focal/customer_data/models.py` (renamed from ProfileFieldDefinition) |
-| `VariableEntry` | `focal/customer_data/models.py` (renamed from ProfileField) |
-| `CustomerDataStore` | `focal/customer_data/models.py` (renamed from CustomerProfile) |
-| `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` |
-| `CandidateVariableInfo` | `focal/alignment/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `focal/alignment/context/situational_snapshot.py` |
-| `GlossaryItem` | `focal/alignment/models/glossary.py` |
-| `TurnContext` | `focal/alignment/models/turn_context.py` |
-| `ResponsePlan` | `focal/alignment/planning/models.py` |
-| `TurnOutcome` | `focal/alignment/models/outcome.py` |
+| `InterlocutorDataField` | `focal/domain/interlocutor/models.py` (renamed from ProfileFieldDefinition) |
+| `VariableEntry` | `focal/domain/interlocutor/models.py` (renamed from ProfileField) |
+| `InterlocutorDataStore` | `focal/domain/interlocutor/models.py` (renamed from CustomerProfile) |
+| `InterlocutorSchemaMask` | `focal/mechanics/focal/context/customer_schema_mask.py` |
+| `CandidateVariableInfo` | `focal/mechanics/focal/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `focal/mechanics/focal/context/situational_snapshot.py` |
+| `GlossaryItem` | `focal/mechanics/focal/models/glossary.py` |
+| `TurnContext` | `focal/mechanics/focal/models/turn_context.py` |
+| `ResponsePlan` | `focal/mechanics/focal/planning/models.py` |
+| `TurnOutcome` | `focal/mechanics/focal/models/outcome.py` |
 
 ### Templates
 
 | Template | Canonical Path |
 |----------|---------------|
-| Situational Sensor | `focal/alignment/context/prompts/situational_sensor.jinja2` |
-| Rule Filter | `focal/alignment/filtering/prompts/rule_filter.jinja2` |
-| Scenario Filter | `focal/alignment/filtering/prompts/scenario_filter.jinja2` |
-| Generation | `focal/alignment/generation/prompts/generation.jinja2` |
-| Enforcement | `focal/alignment/enforcement/prompts/llm_judge.jinja2` |
+| Situational Sensor | `focal/mechanics/focal/context/prompts/situational_sensor.jinja2` |
+| Rule Filter | `focal/mechanics/focal/filtering/prompts/rule_filter.jinja2` |
+| Scenario Filter | `focal/mechanics/focal/filtering/prompts/scenario_filter.jinja2` |
+| Generation | `focal/mechanics/focal/generation/prompts/generation.jinja2` |
+| Enforcement | `focal/mechanics/focal/enforcement/prompts/llm_judge.jinja2` |
 | Entity Extraction | `focal/memory/ingestion/prompts/entity_extraction.jinja2` |
 | Summarization | `focal/memory/ingestion/prompts/summarization.jinja2` |
 
@@ -166,9 +166,9 @@ All checklists must use these paths:
 
 | Store | Canonical Path |
 |-------|---------------|
-| CustomerDataStore (interface) | `focal/customer_data/store.py` (renamed from ProfileStore) |
-| InMemoryCustomerDataStore | `focal/customer_data/stores/inmemory.py` |
-| PostgresCustomerDataStore | `focal/customer_data/stores/postgres.py` |
+| InterlocutorDataStore (interface) | `focal/domain/interlocutor/store.py` (renamed from ProfileStore) |
+| InMemoryInterlocutorDataStore | `focal/domain/interlocutor/stores/inmemory.py` |
+| PostgresInterlocutorDataStore | `focal/domain/interlocutor/stores/postgres.py` |
 
 ---
 
@@ -193,15 +193,15 @@ All models must use these field names:
 
 ### Phase 1: Identification
 
-- DELETE: §1.3 (CustomerDataField), §1.4 (CustomerDataStore, VariableEntry)
+- DELETE: §1.3 (InterlocutorDataField), §1.4 (InterlocutorDataStore, VariableEntry)
 - DELETE: §5 (Database Migrations), §6 (API Routes)
 - MODIFY: §1.2 (GlossaryItem) - keep, it's new
-- ADD: Rename ProfileFieldDefinition → CustomerDataField with `scope`, `persist`
+- ADD: Rename ProfileFieldDefinition → InterlocutorDataField with `scope`, `persist`
 
 ### Phase 2: Situational Sensor
 
-- DELETE: §2.1 CustomerDataField, VariableEntry, CustomerDataStore models
-- KEEP: §2.1 CustomerSchemaMask, CandidateVariableInfo (new models)
+- DELETE: §2.1 InterlocutorDataField, VariableEntry, InterlocutorDataStore models
+- KEEP: §2.1 InterlocutorSchemaMask, CandidateVariableInfo (new models)
 - KEEP: All Jinja2 template work
 
 ### Phase 3: Customer Data Update
@@ -240,12 +240,12 @@ All models must use these field names:
 ## 7. Implementation Order (Revised)
 
 1. **Rename Profile → CustomerData** (foundation)
-   - Rename classes in `focal/customer_data/models.py`
+   - Rename classes in `focal/domain/interlocutor/models.py`
    - Add `scope`, `persist`, `history` fields
    - Update all imports across codebase
 
 2. **Create new models** (Phase 1-2)
-   - `CustomerSchemaMask`
+   - `InterlocutorSchemaMask`
    - `CandidateVariableInfo`
    - `SituationalSnapshot`
    - `GlossaryItem`
@@ -268,7 +268,7 @@ All models must use these field names:
 
 Before implementing, verify:
 
-- [ ] All model definitions reference `focal/customer_data/models.py` (renamed)
+- [ ] All model definitions reference `focal/domain/interlocutor/models.py` (renamed)
 - [ ] All field names use canonical naming (`name`, `tenant_id`, `customer_id`)
 - [ ] All ID fields are `UUID`, not `str`
 - [ ] No duplicate model definitions across phases

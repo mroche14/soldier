@@ -185,23 +185,23 @@ The existing `focal/customer_data/` module IS the CustomerDataStore. Do NOT crea
 
 | Old Name (profile/) | New Name | Action |
 |---------------------|----------|--------|
-| `ProfileFieldDefinition` | `CustomerDataField` | RENAME + add `scope`, `persist` |
+| `ProfileFieldDefinition` | `InterlocutorDataField` | RENAME + add `scope`, `persist` |
 | `ProfileField` | `VariableEntry` | RENAME + add `history` |
-| `CustomerProfile` | `CustomerDataStore` | RENAME |
-| `ProfileStore` | `CustomerDataStoreInterface` | RENAME |
+| `CustomerProfile` | `InterlocutorDataStore` | RENAME |
+| `ProfileStore` | `InterlocutorDataStoreInterface` | RENAME |
 | `ProfileFieldSource` | `VariableSource` | RENAME |
 
 ### New Models to CREATE (these don't exist yet)
 
 | Model | Location |
 |-------|----------|
-| `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` |
-| `CandidateVariableInfo` | `focal/alignment/context/situational_snapshot.py` |
-| `SituationalSnapshot` | `focal/alignment/context/situational_snapshot.py` |
-| `GlossaryItem` | `focal/alignment/models/glossary.py` |
-| `TurnContext` | `focal/alignment/models/turn_context.py` |
-| `ResponsePlan` | `focal/alignment/planning/models.py` |
-| `TurnOutcome` | `focal/alignment/models/outcome.py` |
+| `InterlocutorSchemaMask` | `focal/mechanics/focal/context/interlocutor_schema_mask.py` |
+| `CandidateVariableInfo` | `focal/mechanics/focal/context/situational_snapshot.py` |
+| `SituationalSnapshot` | `focal/mechanics/focal/context/situational_snapshot.py` |
+| `GlossaryItem` | `focal/mechanics/focal/models/glossary.py` |
+| `TurnContext` | `focal/mechanics/focal/models/turn_context.py` |
+| `ResponsePlan` | `focal/mechanics/focal/planning/models.py` |
+| `TurnOutcome` | `focal/mechanics/focal/models/outcome.py` |
 
 ---
 
@@ -210,7 +210,7 @@ The existing `focal/customer_data/` module IS the CustomerDataStore. Do NOT crea
 ### Adding a New Model
 
 ```python
-# focal/alignment/models/my_model.py
+# focal/mechanics/focal/models/my_model.py
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
@@ -233,7 +233,7 @@ class MyModel(BaseModel):
     updated_at: datetime
 
 # Export in __init__.py
-# focal/alignment/models/__init__.py
+# focal/mechanics/focal/models/__init__.py
 from .my_model import MyModel
 ```
 
@@ -264,7 +264,7 @@ class PipelineConfig(BaseModel):
 ### Adding Structured Logging
 
 ```python
-from focal.observability.logging import get_logger
+from focal.infrastructure.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -284,7 +284,7 @@ logger.info(f"Completed processing {count} items in {elapsed}ms")  # WRONG!
 ### Adding Metrics
 
 ```python
-# focal/observability/metrics.py
+# focal/infrastructure/observability/metrics.py
 from prometheus_client import Counter, Histogram
 
 my_operation_total = Counter(
@@ -303,7 +303,7 @@ my_operation_duration = Histogram(
 ### Adding a Store Interface
 
 ```python
-# focal/alignment/stores/my_store.py
+# focal/mechanics/focal/stores/my_store.py
 from abc import ABC, abstractmethod
 
 class MyStore(ABC):
@@ -319,7 +319,7 @@ class MyStore(ABC):
         """Save item."""
         pass
 
-# focal/alignment/stores/inmemory.py
+# focal/mechanics/focal/stores/inmemory.py
 class InMemoryMyStore(MyStore):
     """In-memory implementation for testing."""
 
@@ -336,7 +336,7 @@ class InMemoryMyStore(MyStore):
 ### Adding Jinja2 Templates
 
 ```jinja2
-{# focal/alignment/context/prompts/my_task.jinja2 #}
+{# focal/mechanics/focal/context/prompts/my_task.jinja2 #}
 You are analyzing a customer conversation.
 
 {% if context %}
@@ -355,7 +355,7 @@ Respond with JSON:
 
 ```python
 # Loading templates
-from focal.alignment.context.template_loader import TemplateLoader
+from focal.mechanics.focal.context.template_loader import TemplateLoader
 from pathlib import Path
 
 loader = TemplateLoader(Path(__file__).parent / "prompts")
@@ -481,21 +481,21 @@ Always add a brief note about:
 uv run pytest
 
 # Run specific phase tests
-uv run pytest tests/unit/alignment/models/ -v
+uv run pytest tests/unit/mechanics/focal/models/ -v
 
 # Run with coverage
-uv run pytest --cov=focal/alignment --cov-report=term-missing
+uv run pytest --cov=focal/mechanics/focal --cov-report=term-missing
 
 # Run only your phase's tests
-uv run pytest tests/unit/alignment/context/ -v --cov=focal/alignment/context
+uv run pytest tests/unit/mechanics/focal/context/ -v --cov=focal/mechanics/focal/context
 ```
 
 ### Test Patterns
 
 ```python
-# tests/unit/alignment/models/test_my_model.py
+# tests/unit/mechanics/focal/models/test_my_model.py
 import pytest
-from focal.alignment.models.my_model import MyModel
+from focal.mechanics.focal.models.my_model import MyModel
 
 class TestMyModel:
     """Test suite for MyModel."""
@@ -522,7 +522,7 @@ class TestMyModel:
 
 ```python
 # tests/factories.py
-from focal.alignment.models.my_model import MyModel
+from focal.mechanics.focal.models.my_model import MyModel
 
 class MyModelFactory:
     @staticmethod
@@ -554,7 +554,7 @@ At the end of your work, provide this report:
 - **Coverage**: XX%
 
 ## Completed Items
-1. Created `MyModel` in `focal/alignment/models/my_model.py`
+1. Created `MyModel` in `focal/mechanics/focal/models/my_model.py`
 2. Added config section `[pipeline.my_feature]` to `config/default.toml`
 3. Implemented `MyStore` interface and `InMemoryMyStore`
 4. ... (list all)
@@ -571,17 +571,17 @@ At the end of your work, provide this report:
 - Added extra validation for X because Y
 
 ## Tests Created
-- `tests/unit/alignment/models/test_my_model.py` (8 tests)
-- `tests/unit/alignment/stores/test_my_store.py` (5 tests)
+- `tests/unit/mechanics/focal/models/test_my_model.py` (8 tests)
+- `tests/unit/mechanics/focal/stores/test_my_store.py` (5 tests)
 
 ## Files Created/Modified
 ### Created
-- `focal/alignment/models/my_model.py`
-- `focal/alignment/stores/my_store.py`
-- `tests/unit/alignment/models/test_my_model.py`
+- `focal/mechanics/focal/models/my_model.py`
+- `focal/mechanics/focal/stores/my_store.py`
+- `tests/unit/mechanics/focal/models/test_my_model.py`
 
 ### Modified
-- `focal/alignment/models/__init__.py` (added export)
+- `focal/mechanics/focal/models/__init__.py` (added export)
 - `config/default.toml` (added section)
 - `focal/config/models/pipeline.py` (added config model)
 
@@ -598,19 +598,19 @@ At the end of your work, provide this report:
 
 ```python
 # Logging
-from focal.observability.logging import get_logger
+from focal.infrastructure.observability.logging import get_logger
 logger = get_logger(__name__)
 
 # Metrics
-from focal.observability.metrics import my_metric
+from focal.infrastructure.observability.metrics import my_metric
 
 # Models
-from focal.alignment.models import MyModel
-from focal.alignment.models.rule import Rule, MatchedRule
+from focal.mechanics.focal.models import MyModel
+from focal.mechanics.focal.models.rule import Rule, MatchedRule
 
 # Stores
-from focal.alignment.stores.config_store import ConfigStore
-from focal.alignment.stores.inmemory import InMemoryConfigStore
+from focal.mechanics.focal.stores.config_store import ConfigStore
+from focal.mechanics.focal.stores.inmemory import InMemoryConfigStore
 
 # Config
 from focal.config.loader import get_settings
@@ -626,12 +626,12 @@ from datetime import datetime, UTC
 
 | Type | Location Pattern |
 |------|------------------|
-| Models | `focal/alignment/models/{name}.py` |
-| Stores | `focal/alignment/stores/{name}.py` |
+| Models | `focal/mechanics/focal/models/{name}.py` |
+| Stores | `focal/mechanics/focal/stores/{name}.py` |
 | Config Models | `focal/config/models/{domain}.py` |
-| Templates | `focal/alignment/{domain}/prompts/{name}.jinja2` |
-| Unit Tests | `tests/unit/alignment/{mirror_of_src}/test_{name}.py` |
-| Integration Tests | `tests/integration/alignment/test_{feature}.py` |
+| Templates | `focal/mechanics/focal/{domain}/prompts/{name}.jinja2` |
+| Unit Tests | `tests/unit/mechanics/focal/{mirror_of_src}/test_{name}.py` |
+| Integration Tests | `tests/integration/mechanics/focal/test_{feature}.py` |
 
 ---
 
@@ -662,13 +662,13 @@ Before marking your phase complete:
 
 ```bash
 # Check for linting issues
-uv run ruff check focal/alignment/
+uv run ruff check focal/mechanics/focal/
 
 # Auto-fix what can be fixed
-uv run ruff check --fix focal/alignment/
+uv run ruff check --fix focal/mechanics/focal/
 
 # Format code
-uv run ruff format focal/alignment/
+uv run ruff format focal/mechanics/focal/
 ```
 
 **All ruff errors MUST be fixed** before marking phase complete.
@@ -677,10 +677,10 @@ uv run ruff format focal/alignment/
 
 ```bash
 # Run type checking on your changes
-uv run mypy focal/alignment/ --ignore-missing-imports
+uv run mypy focal/mechanics/focal/ --ignore-missing-imports
 
 # Or check specific files you modified
-uv run mypy focal/alignment/models/my_new_model.py
+uv run mypy focal/mechanics/focal/models/my_new_model.py
 ```
 
 **Target**: No new type errors introduced. Pre-existing errors are acceptable but don't add more.
@@ -691,10 +691,10 @@ Run this at the end of each phase:
 
 ```bash
 # Full quality check
-echo "=== RUFF CHECK ===" && uv run ruff check focal/alignment/ && \
-echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check focal/alignment/ && \
-echo "=== MYPY ===" && uv run mypy focal/alignment/ --ignore-missing-imports && \
-echo "=== TESTS ===" && uv run pytest tests/unit/alignment/ -v --tb=short && \
+echo "=== RUFF CHECK ===" && uv run ruff check focal/mechanics/focal/ && \
+echo "=== RUFF FORMAT CHECK ===" && uv run ruff format --check focal/mechanics/focal/ && \
+echo "=== MYPY ===" && uv run mypy focal/mechanics/focal/ --ignore-missing-imports && \
+echo "=== TESTS ===" && uv run pytest tests/unit/mechanics/focal/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```
 

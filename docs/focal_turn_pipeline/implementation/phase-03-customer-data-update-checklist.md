@@ -8,13 +8,13 @@
 
 ## Phase Overview
 
-**Goal**: Map `candidate_variables` from the Situational Sensor (Phase 2) into the `CustomerDataStore` using schema-driven field definitions.
+**Goal**: Map `candidate_variables` from the Situational Sensor (Phase 2) into the `InterlocutorDataStore` using schema-driven field definitions.
 
-**Key Principle**: This phase operates **in-memory only**. Updates are applied to the runtime `CustomerDataStore` snapshot, and persistence decisions are marked but NOT executed until Phase 11.
+**Key Principle**: This phase operates **in-memory only**. Updates are applied to the runtime `InterlocutorDataStore` snapshot, and persistence decisions are marked but NOT executed until Phase 11.
 
 **Architecture Pattern**:
-- **Schema**: `CustomerDataField` (renamed from ProfileFieldDefinition) defines what fields can exist (with `scope`, `persist`, validation)
-- **Runtime**: `VariableEntry` (renamed from ProfileField) holds the actual values in `CustomerDataStore` (with history, confidence)
+- **Schema**: `InterlocutorDataField` (renamed from ProfileFieldDefinition) defines what fields can exist (with `scope`, `persist`, validation)
+- **Runtime**: `VariableEntry` (renamed from ProfileField) holds the actual values in `InterlocutorDataStore` (with history, confidence)
 - **Updates**: `CustomerDataUpdate` captures the delta for this turn
 
 **Scope-Based Persistence**:
@@ -27,42 +27,42 @@
 
 ## 1. Models to Create/Modify
 
-> **IMPORTANT**: CustomerDataField, VariableEntry, and CustomerDataStore are renamed Profile models from Phase 1.
-> Do NOT create duplicate models. These should already exist after Phase 1 renames in `focal/customer_data/models.py`.
+> **IMPORTANT**: InterlocutorDataField, VariableEntry, and InterlocutorDataStore are renamed Profile models from Phase 1.
+> Do NOT create duplicate models. These should already exist after Phase 1 renames in `focal/domain/interlocutor/models.py`.
 
 ### Prerequisites from Phase 1 (Already Complete)
 
-- [x] **CustomerDataField** (renamed from ProfileFieldDefinition)
-  - File: `focal/customer_data/models.py`
+- [x] **InterlocutorDataField** (renamed from ProfileFieldDefinition)
+  - File: `focal/domain/interlocutor/models.py`
   - Fields: `name`, `scope`, `persist`, `value_type`, validation fields
   - Note: Use `name` field (not `key` or `name`)
 
 - [x] **VariableEntry** (renamed from ProfileField)
-  - File: `focal/customer_data/models.py`
+  - File: `focal/domain/interlocutor/models.py`
   - Fields: `name`, `value`, `history`, `confidence`, `source`, etc.
 
-- [x] **CustomerDataStore** (renamed from CustomerProfile)
-  - File: `focal/customer_data/models.py`
+- [x] **InterlocutorDataStore** (renamed from CustomerProfile)
+  - File: `focal/domain/interlocutor/models.py`
   - Contains: `fields: dict[str, VariableEntry]`
-  - Methods: Use existing get/set patterns from CustomerDataStore
+  - Methods: Use existing get/set patterns from InterlocutorDataStore
 
-- [x] **CustomerSchemaMask** (created in Phase 2)
-  - File: `focal/alignment/context/customer_schema_mask.py`
+- [x] **InterlocutorSchemaMask** (created in Phase 2)
+  - File: `focal/mechanics/focal/context/customer_schema_mask.py`
   - Created in Phase 2 for Situational Sensor
 
 ### 1.1 Create `CustomerDataUpdate` Delta Model (NEW)
 
 - [x] **Create `CustomerDataUpdate` model**
-  - File: `focal/alignment/customer/models.py`
+  - File: `focal/mechanics/focal/customer/models.py`
   - Action: Created new file with CustomerDataUpdate model
   - Details:
     ```python
-    from focal.customer_data.models import CustomerDataField  # Renamed from ProfileFieldDefinition
+    from focal.domain.interlocutor.models import InterlocutorDataField  # Renamed from ProfileFieldDefinition
 
     class CustomerDataUpdate(BaseModel):
-        """Represents a single update to apply to CustomerDataStore."""
-        field_name: str  # Use 'name' not 'key' to match CustomerDataField.name
-        field_definition: CustomerDataField
+        """Represents a single update to apply to InterlocutorDataStore."""
+        field_name: str  # Use 'name' not 'key' to match InterlocutorDataField.name
+        field_definition: InterlocutorDataField
         raw_value: Any
         is_update: bool  # True = update existing, False = new value
         validated_value: Any | None = None
@@ -72,36 +72,36 @@
 ### 1.2 Import CandidateVariableInfo (from Phase 2)
 
 - [x] **CandidateVariableInfo** (created in Phase 2)
-  - File: `focal/alignment/context/situational_snapshot.py`
+  - File: `focal/mechanics/focal/context/situational_snapshot.py`
   - Note: Should already exist from Phase 2
 
 ### 1.3 Add Module Init Files
 
-- [x] **Create `focal/alignment/customer/__init__.py`**
-  - File: `focal/alignment/customer/__init__.py`
+- [x] **Create `focal/mechanics/focal/customer/__init__.py`**
+  - File: `focal/mechanics/focal/customer/__init__.py`
   - Action: Create
   - Details:
     ```python
     """Customer data management for alignment pipeline."""
 
-    from focal.alignment.customer.data_store_loader import CustomerDataStoreLoader
-    from focal.alignment.customer.models import (
+    from focal.mechanics.focal.customer.data_store_loader import InterlocutorDataStoreLoader
+    from focal.mechanics.focal.customer.models import (
         CandidateVariableInfo,
-        CustomerDataStore,
+        InterlocutorDataStore,
         CustomerDataUpdate,
-        CustomerSchemaMask,
-        CustomerSchemaMaskEntry,
+        InterlocutorSchemaMask,
+        InterlocutorSchemaMaskEntry,
         VariableEntry,
     )
-    from focal.alignment.customer.updater import CustomerDataUpdater
+    from focal.mechanics.focal.customer.updater import CustomerDataUpdater
 
     __all__ = [
-        "CustomerDataStore",
-        "CustomerDataStoreLoader",
+        "InterlocutorDataStore",
+        "InterlocutorDataStoreLoader",
         "CustomerDataUpdate",
         "CustomerDataUpdater",
-        "CustomerSchemaMask",
-        "CustomerSchemaMaskEntry",
+        "InterlocutorSchemaMask",
+        "InterlocutorSchemaMaskEntry",
         "VariableEntry",
         "CandidateVariableInfo",
     ]
@@ -109,12 +109,12 @@
 
 ---
 
-## 2. CustomerDataField Enhancements
+## 2. InterlocutorDataField Enhancements
 
-### 2.1 Add `scope` Field to CustomerDataField
+### 2.1 Add `scope` Field to InterlocutorDataField
 
 - [x] **Add `scope` field** (already exists in codebase)
-  - File: `focal/customer_data/models.py`
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Modify
   - Details: Add field after `value_type`:
     ```python
@@ -124,10 +124,10 @@
     )
     ```
 
-### 2.2 Add `persist` Field to CustomerDataField
+### 2.2 Add `persist` Field to InterlocutorDataField
 
 - [x] **Add `persist` field** (already exists in codebase)
-  - File: `focal/customer_data/models.py`
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Modify
   - Details: Add field after `scope`:
     ```python
@@ -137,37 +137,37 @@
     )
     ```
 
-### 2.3 Update CustomerDataField Tests
+### 2.3 Update InterlocutorDataField Tests
 
-- [x] **Update existing CustomerDataField tests**
+- [x] **Update existing InterlocutorDataField tests**
   - File: `tests/unit/customer_data/test_customer_data_models.py`
   - Action: Already exists
-  - **Note**: 41 tests pass including CustomerDataField tests. Scope and persist fields are already tested
+  - **Note**: 41 tests pass including InterlocutorDataField tests. Scope and persist fields are already tested
 
 ---
 
-## 3. CustomerDataStore Loader (Phase 1.5 Integration)
+## 3. InterlocutorDataStore Loader (Phase 1.5 Integration)
 
-### 3.1 Create CustomerDataStoreLoader
+### 3.1 Create InterlocutorDataStoreLoader
 
-- [x] **Create `CustomerDataStoreLoader` class**
-  - File: `focal/alignment/customer/data_store_loader.py` (NEW FILE)
+- [x] **Create `InterlocutorDataStoreLoader` class**
+  - File: `focal/mechanics/focal/customer/data_store_loader.py` (NEW FILE)
   - Action: Created
-  - **Implemented**: Created with load() method that loads from CustomerDataStoreInterface
+  - **Implemented**: Created with load() method that loads from InterlocutorDataStoreInterface
   - Details:
     ```python
-    class CustomerDataStoreLoader:
-        """Loads CustomerDataStore snapshot from CustomerDataStoreInterface at turn start (P1.5)."""
+    class InterlocutorDataStoreLoader:
+        """Loads InterlocutorDataStore snapshot from InterlocutorDataStoreInterface at turn start (P1.5)."""
 
-        def __init__(self, profile_store: CustomerDataStoreInterface):
+        def __init__(self, profile_store: InterlocutorDataStoreInterface):
             self._profile_store = profile_store
 
         async def load(
             self,
             tenant_id: UUID,
             customer_id: UUID,
-            field_definitions: list[CustomerDataField],
-        ) -> CustomerDataStore:
+            field_definitions: list[InterlocutorDataField],
+        ) -> InterlocutorDataStore:
             """Load customer data snapshot.
 
             Args:
@@ -176,12 +176,12 @@
                 field_definitions: Schema definitions for this agent
 
             Returns:
-                CustomerDataStore with current values
+                InterlocutorDataStore with current values
             """
             # Get profile
             profile = await self._profile_store.get_by_customer_id(
                 tenant_id=tenant_id,
-                customer_id=customer_id  # May need adjustment based on CustomerDataStoreInterface API
+                customer_id=customer_id  # May need adjustment based on InterlocutorDataStoreInterface API
             )
 
             # Build VariableEntry dict from ProfileFields
@@ -206,7 +206,7 @@
                             history=[]  # Could load history from ProfileField if tracked
                         )
 
-            return CustomerDataStore(
+            return InterlocutorDataStore(
                 tenant_id=tenant_id,
                 customer_id=customer_id,
                 variables=variables,
@@ -225,18 +225,18 @@
             return mapping.get(profile_source, "SYSTEM")
     ```
 
-### 3.2 Create CustomerSchemaMask Builder
+### 3.2 Create InterlocutorSchemaMask Builder
 
 - [x] **Create `build_customer_schema_mask()` function**
-  - File: `focal/alignment/customer/data_store_loader.py`
+  - File: `focal/mechanics/focal/customer/data_store_loader.py`
   - Action: Added
   - **Implemented**: Created function that builds privacy-safe schema view
   - Details:
     ```python
     def build_customer_schema_mask(
-        field_definitions: list[CustomerDataField],
-        customer_data_store: CustomerDataStore,
-    ) -> CustomerSchemaMask:
+        field_definitions: list[InterlocutorDataField],
+        customer_data_store: InterlocutorDataStore,
+    ) -> InterlocutorSchemaMask:
         """Build privacy-safe schema view for LLM (P2.1).
 
         Args:
@@ -244,19 +244,19 @@
             customer_data_store: Current customer data
 
         Returns:
-            CustomerSchemaMask with field structure (no values)
+            InterlocutorSchemaMask with field structure (no values)
         """
-        variables: dict[str, CustomerSchemaMaskEntry] = {}
+        variables: dict[str, InterlocutorSchemaMaskEntry] = {}
 
         for definition in field_definitions:
-            variables[definition.name] = CustomerSchemaMaskEntry(
+            variables[definition.name] = InterlocutorSchemaMaskEntry(
                 scope=definition.scope,
                 type=definition.value_type,
                 exists=definition.name in customer_data_store.variables,
                 description=definition.description,
             )
 
-        return CustomerSchemaMask(variables=variables)
+        return InterlocutorSchemaMask(variables=variables)
     ```
 
 ---
@@ -266,32 +266,32 @@
 ### 4.1 Create CustomerDataUpdater Class
 
 - [x] **Create `CustomerDataUpdater` class**
-  - File: `focal/alignment/customer/updater.py` (NEW FILE)
+  - File: `focal/mechanics/focal/customer/updater.py` (NEW FILE)
   - Action: Create
   - Details:
     ```python
-    from focal.customer_data.validation import CustomerDataFieldValidator
+    from focal.domain.interlocutor.validation import InterlocutorDataFieldValidator
 
     class CustomerDataUpdater:
         """Handles Phase 3 customer data updates.
 
-        Takes candidate variables from P2 and updates CustomerDataStore in-memory.
+        Takes candidate variables from P2 and updates InterlocutorDataStore in-memory.
         """
 
-        def __init__(self, validator: CustomerDataFieldValidator):
+        def __init__(self, validator: InterlocutorDataFieldValidator):
             self._validator = validator
             self._logger = get_logger(__name__)
 
         async def update(
             self,
-            customer_data_store: CustomerDataStore,
+            customer_data_store: InterlocutorDataStore,
             candidate_variables: dict[str, CandidateVariableInfo],
-            field_definitions: list[CustomerDataField],
-        ) -> tuple[CustomerDataStore, list[CustomerDataUpdate]]:
+            field_definitions: list[InterlocutorDataField],
+        ) -> tuple[InterlocutorDataStore, list[CustomerDataUpdate]]:
             """Execute Phase 3 update flow.
 
             Returns:
-                - Updated CustomerDataStore (in-memory)
+                - Updated InterlocutorDataStore (in-memory)
                 - List of persistent_updates to save at P11
             """
             # P3.1: Match candidates to field definitions
@@ -316,14 +316,14 @@
 ### 4.2 Implement P3.1 - Match Candidates to Fields
 
 - [x] **Add `_match_candidates_to_fields()` method**
-  - File: `focal/alignment/customer/updater.py`
+  - File: `focal/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
     def _match_candidates_to_fields(
         self,
         candidate_variables: dict[str, CandidateVariableInfo],
-        field_definitions: list[CustomerDataField],
+        field_definitions: list[InterlocutorDataField],
     ) -> list[CustomerDataUpdate]:
         """P3.1: Match candidate keys to known field definitions.
 
@@ -359,7 +359,7 @@
 ### 4.3 Implement P3.2 - Validate & Coerce Types
 
 - [x] **Add `_validate_and_coerce()` method**
-  - File: `focal/alignment/customer/updater.py`
+  - File: `focal/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
@@ -368,7 +368,7 @@
     ) -> list[CustomerDataUpdate]:
         """P3.2: Validate and type-coerce values.
 
-        Uses CustomerDataFieldValidator to check types, regex, allowed_values.
+        Uses InterlocutorDataFieldValidator to check types, regex, allowed_values.
         """
         for update in updates:
             result = self._validator.validate(
@@ -393,16 +393,16 @@
 ### 4.4 Implement P3.3 - Apply Updates In-Memory
 
 - [x] **Add `_apply_updates_in_memory()` method**
-  - File: `focal/alignment/customer/updater.py`
+  - File: `focal/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
     def _apply_updates_in_memory(
         self,
-        customer_data_store: CustomerDataStore,
+        customer_data_store: InterlocutorDataStore,
         updates: list[CustomerDataUpdate],
     ) -> None:
-        """P3.3: Mutate CustomerDataStore in-memory (no DB writes).
+        """P3.3: Mutate InterlocutorDataStore in-memory (no DB writes).
 
         Only applies updates with valid values.
         """
@@ -417,7 +417,7 @@
                 last_updated_at=utc_now(),
                 source="USER",  # From situational sensor extraction
                 confidence=1.0,  # Could extract from candidate if available
-                history=[],  # Will be populated by CustomerDataStore.set()
+                history=[],  # Will be populated by InterlocutorDataStore.set()
             )
 
             customer_data_store.set(update.name, entry)
@@ -433,14 +433,14 @@
 ### 4.5 Implement P3.4 - Mark for Persistence
 
 - [x] **Add `_mark_for_persistence()` method**
-  - File: `focal/alignment/customer/updater.py`
+  - File: `focal/mechanics/focal/customer/updater.py`
   - Action: Add
   - Details:
     ```python
     def _mark_for_persistence(
         self,
         updates: list[CustomerDataUpdate],
-        field_definitions: list[CustomerDataField],
+        field_definitions: list[InterlocutorDataField],
     ) -> list[CustomerDataUpdate]:
         """P3.4: Filter updates that should be persisted at P11.
 
@@ -480,18 +480,18 @@
 
 ## 5. Phase 11 Persistence Integration
 
-### 5.1 Create CustomerDataStore Persister
+### 5.1 Create InterlocutorDataStore Persister
 
-- [x] **Create `CustomerDataStorePersister` class**
-  - File: `focal/alignment/customer/persister.py` (NEW FILE)
+- [x] **Create `InterlocutorDataStorePersister` class**
+  - File: `focal/mechanics/focal/customer/persister.py` (NEW FILE)
   - Action: Created
   - **Implemented**: Created with persist() method for Phase 11
   - Details:
     ```python
-    class CustomerDataStorePersister:
-        """Persists CustomerDataStore updates to CustomerDataStoreInterface at P11.3."""
+    class InterlocutorDataStorePersister:
+        """Persists InterlocutorDataStore updates to InterlocutorDataStoreInterface at P11.3."""
 
-        def __init__(self, profile_store: CustomerDataStoreInterface):
+        def __init__(self, profile_store: InterlocutorDataStoreInterface):
             self._profile_store = profile_store
             self._logger = get_logger(__name__)
 
@@ -500,7 +500,7 @@
             tenant_id: UUID,
             customer_id: UUID,
             updates: list[CustomerDataUpdate],
-            customer_data_store: CustomerDataStore,
+            customer_data_store: InterlocutorDataStore,
         ) -> None:
             """Save persistent updates to database.
 
@@ -529,7 +529,7 @@
                     field_definition_id=update.field_definition.id,
                 )
 
-                # Save to CustomerDataStoreInterface
+                # Save to InterlocutorDataStoreInterface
                 await self._profile_store.update_field(
                     tenant_id=tenant_id,
                     customer_id=customer_id,
@@ -569,23 +569,23 @@
 
 ---
 
-## 6. AlignmentEngine Integration
+## 6. FocalCognitivePipeline Integration
 
-### 6.1 Update AlignmentEngine for Phase 3
+### 6.1 Update FocalCognitivePipeline for Phase 3
 
-- [x] **Add CustomerDataUpdater to AlignmentEngine**
-  - File: `focal/alignment/engine.py`
+- [x] **Add CustomerDataUpdater to FocalCognitivePipeline**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modified
   - **Implemented**: Added CustomerDataUpdater initialization in __init__
   - Details: Added to `__init__`:
     ```python
     self._customer_data_updater = CustomerDataUpdater(
-        validator=CustomerDataFieldValidator()
+        validator=InterlocutorDataFieldValidator()
     )
     ```
 
 - [x] **Add Phase 3 execution to `process_turn()`**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modified
   - **Implemented**: Added Phase 3 execution after Phase 2, includes error handling and timing
   - Details: Added after Phase 2 (situational sensor):
@@ -605,7 +605,7 @@
 ### 6.2 Update AlignmentResult Model
 
 - [x] **Add `persistent_customer_updates` field**
-  - File: `focal/alignment/result.py`
+  - File: `focal/mechanics/focal/result.py`
   - Action: Modified
   - **Implemented**: Added persistent_customer_updates field to AlignmentResult
   - Details: Add field to `AlignmentResult`:
@@ -661,19 +661,19 @@
   - Action: Already exists
   - **Note**: VariableEntry (ProfileField) tests exist and pass (41 tests total)
 
-- [x] **Test `CustomerDataStore` model**
+- [x] **Test `InterlocutorDataStore` model**
   - File: `tests/unit/customer_data/test_customer_data_models.py`
   - Action: Already exists
-  - **Note**: CustomerDataStore tests exist and pass
+  - **Note**: InterlocutorDataStore tests exist and pass
 
-- [x] **Test `CustomerSchemaMask` model**
+- [x] **Test `InterlocutorSchemaMask` model**
   - File: `tests/unit/alignment/context/test_customer_schema_mask.py`
   - Action: Already exists
-  - **Note**: 4 tests exist and pass for CustomerSchemaMask
+  - **Note**: 4 tests exist and pass for InterlocutorSchemaMask
 
-### 8.2 Unit Tests - CustomerDataStoreLoader
+### 8.2 Unit Tests - InterlocutorDataStoreLoader
 
-- [x] **Test `CustomerDataStoreLoader.load()`**
+- [x] **Test `InterlocutorDataStoreLoader.load()`**
   - File: N/A
   - Action: Deferred
   - **Note**: Core implementation complete. Can add tests in follow-up if needed. 93% coverage already achieved.
@@ -681,7 +681,7 @@
 - [x] **Test `build_customer_schema_mask()`**
   - File: N/A
   - Action: Deferred
-  - **Note**: CustomerSchemaMask tests exist. build_customer_schema_mask is a simple builder function. Can add tests in follow-up if needed.
+  - **Note**: InterlocutorSchemaMask tests exist. build_customer_schema_mask is a simple builder function. Can add tests in follow-up if needed.
 
 ### 8.3 Unit Tests - CustomerDataUpdater
 
@@ -706,7 +706,7 @@
   - File: `tests/unit/alignment/customer/test_updater.py`
   - Action: Add
   - Details:
-    - Test new values added to CustomerDataStore
+    - Test new values added to InterlocutorDataStore
     - Test existing values updated with history
     - Test invalid updates are skipped
     - Test all scope types (IDENTITY, BUSINESS, CASE, SESSION)
@@ -739,17 +739,17 @@
   - Action: Deferred
   - **Note**: CustomerDataUpdater has 17 passing tests covering all P3.1-P3.4 logic. Integration test can be added in follow-up.
 
-- [x] **Test AlignmentEngine integration**
+- [x] **Test FocalCognitivePipeline integration**
   - File: N/A
   - Action: Deferred
-  - **Note**: AlignmentEngine integration is complete and functional. Integration test can be added in follow-up.
+  - **Note**: FocalCognitivePipeline integration is complete and functional. Integration test can be added in follow-up.
 
 ### 8.6 Contract Tests
 
-- [x] **Add CustomerDataStoreInterface contract test for scope filtering**
+- [x] **Add InterlocutorDataStoreInterface contract test for scope filtering**
   - File: N/A
   - Action: Not required
-  - **Note**: Scope filtering is handled in application logic (Phase 3), not at the CustomerDataStoreInterface layer. Contract tests already exist.
+  - **Note**: Scope filtering is handled in application logic (Phase 3), not at the InterlocutorDataStoreInterface layer. Contract tests already exist.
 
 ---
 
@@ -786,7 +786,7 @@
 ### 9.2 Add Structured Logging
 
 - [x] **Add Phase 3 log events**
-  - File: `focal/alignment/customer/updater.py`
+  - File: `focal/mechanics/focal/customer/updater.py`
   - Action: Completed - all key events are logged:
     - `candidate_variable_no_definition`
     - `candidate_variable_validation_failed`
@@ -807,7 +807,7 @@
 ### 10.2 Add Inline Documentation
 
 - [x] **Add docstrings to all new classes/methods**
-  - Files: All new files in `focal/alignment/customer/`
+  - Files: All new files in `focal/mechanics/focal/customer/`
   - Action: Completed
   - **Implemented**: All classes and methods have docstrings with Args/Returns
 
@@ -818,13 +818,13 @@
 ### Required Before Phase 3
 
 - **Phase 2 (Situational Sensor)**: Must produce `SituationalSnapshot` with `candidate_variables`
-    - **CustomerDataField**: Must have `scope` and `persist` fields added
+    - **InterlocutorDataField**: Must have `scope` and `persist` fields added
 
 ### Enables After Phase 3
 
-- **Phase 4 (Retrieval)**: Can use updated CustomerDataStore for rule matching
-- **Phase 7 (Tool Execution)**: Can resolve variables from CustomerDataStore
-- **Phase 11 (Persistence)**: Saves persistent_updates to CustomerDataStoreInterface
+- **Phase 4 (Retrieval)**: Can use updated InterlocutorDataStore for rule matching
+- **Phase 7 (Tool Execution)**: Can resolve variables from InterlocutorDataStore
+- **Phase 11 (Persistence)**: Saves persistent_updates to InterlocutorDataStoreInterface
 
 ---
 
@@ -833,8 +833,8 @@
 Phase 3 is complete when:
 
 1. [ ] All models created and validated
-2. [ ] `scope` and `persist` fields added to `CustomerDataField`
-3. [ ] CustomerDataStoreLoader loads snapshot from CustomerDataStoreInterface
+2. [ ] `scope` and `persist` fields added to `InterlocutorDataField`
+3. [ ] InterlocutorDataStoreLoader loads snapshot from InterlocutorDataStoreInterface
 4. [ ] CustomerDataUpdater implements P3.1-P3.4 correctly
 5. [ ] SESSION scope variables NOT persisted to DB
 6. [ ] IDENTITY/BUSINESS/CASE scope variables persisted (if persist=True)
@@ -842,7 +842,7 @@ Phase 3 is complete when:
 8. [ ] All unit tests pass (85%+ coverage)
 9. [ ] Integration test demonstrates full P1.5 → P3 → P11 flow
 10. [ ] Metrics emitted for updates, validations, persistence
-11. [ ] AlignmentEngine executes Phase 3 in correct order
+11. [ ] FocalCognitivePipeline executes Phase 3 in correct order
 12. [ ] Documentation updated in CLAUDE.md
 
 ---
@@ -850,10 +850,10 @@ Phase 3 is complete when:
 ## Estimated Effort
 
 - Models & Configuration: 2-3 hours
-- CustomerDataStoreLoader: 2-3 hours
+- InterlocutorDataStoreLoader: 2-3 hours
 - CustomerDataUpdater (P3.1-P3.4): 4-5 hours
 - Persister & Cleanup: 2-3 hours
-- AlignmentEngine Integration: 1-2 hours
+- FocalCognitivePipeline Integration: 1-2 hours
 - Tests (unit + integration): 6-8 hours
 - Documentation & Polish: 1-2 hours
 
@@ -863,9 +863,9 @@ Phase 3 is complete when:
 
 ## Notes
 
-- **Zero In-Memory State**: CustomerDataStore is loaded at P1.5, mutated in P3, persisted at P11, then discarded
+- **Zero In-Memory State**: InterlocutorDataStore is loaded at P1.5, mutated in P3, persisted at P11, then discarded
 - **Multi-Tenant**: All queries include `tenant_id`
 - **Scope Cleanup**: SESSION-scoped variables cleaned at session end (automatic via non-persistence)
 - **History Tracking**: `VariableEntry.history` tracks all previous values with timestamps
-- **Validation Modes**: Support strict/warn/disabled via CustomerDataField
-- **Privacy**: CustomerSchemaMask exposes structure but NEVER actual values to LLM
+- **Validation Modes**: Support strict/warn/disabled via InterlocutorDataField
+- **Privacy**: InterlocutorSchemaMask exposes structure but NEVER actual values to LLM

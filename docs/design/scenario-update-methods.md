@@ -385,7 +385,7 @@ async def pre_turn_reconciliation(session: Session) -> ReconciliationResult:
         session.pending_migration.anchor_content_hash
     )
 
-    customer_data = await customer_data_store.get_by_customer_id(
+    interlocutor_data = await interlocutor_data_store.get_by_customer_id(
         tenant_id=session.tenant_id,
         customer_id=session.customer_id,
     )
@@ -400,11 +400,11 @@ async def pre_turn_reconciliation(session: Session) -> ReconciliationResult:
         result = await execute_clean_graft(session, transformation, migration_plan)
     elif scenario_type == "gap_fill":
         result = await execute_gap_fill(
-            session, transformation, migration_plan, customer_data
+            session, transformation, migration_plan, interlocutor_data
         )
     elif scenario_type == "re_route":
         result = await execute_re_route(
-            session, transformation, migration_plan, customer_data
+            session, transformation, migration_plan, interlocutor_data
         )
     else:
         result = ReconciliationResult(action="continue")
@@ -545,7 +545,7 @@ async def execute_gap_fill(
     session: Session,
     transformation: AnchorTransformation,
     plan: MigrationPlan,
-    customer_data: CustomerDataStore,
+    interlocutor_data: InterlocutorDataStore,
 ) -> ReconciliationResult:
     """
     Gap Fill: Handle inserted upstream nodes.
@@ -592,8 +592,8 @@ async def execute_gap_fill(
             ):
                 continue  # Can skip - field not used
 
-            # Try to fill from customer_data/session/conversation
-            result = await fill_gap(field_name, customer_data, session)
+            # Try to fill from interlocutor_data/session/conversation
+            result = await fill_gap(field_name, interlocutor_data, session)
 
             if not result.filled:
                 missing_fields.append(field_name)
@@ -643,7 +643,7 @@ async def execute_re_route(
     session: Session,
     transformation: AnchorTransformation,
     plan: MigrationPlan,
-    customer_data: CustomerDataStore,
+    interlocutor_data: InterlocutorDataStore,
 ) -> ReconciliationResult:
     """
     Re-Route: Handle new forks that could redirect user.
@@ -685,7 +685,7 @@ async def execute_re_route(
                 if field_name in condition_data:
                     continue
 
-                result = await fill_gap(field_name, customer_data, session)
+                result = await fill_gap(field_name, interlocutor_data, session)
                 if result.filled:
                     condition_data[field_name] = result.value
                 else:
@@ -754,7 +754,7 @@ async def execute_re_route(
 
     # No re-routing needed - fall through to gap fill or clean graft
     if transformation.upstream_changes.inserted_nodes:
-        return await execute_gap_fill(session, transformation, plan, customer_data)
+        return await execute_gap_fill(session, transformation, plan, interlocutor_data)
 
     return await execute_clean_graft(session, transformation, plan)
 ```
@@ -882,13 +882,13 @@ When data collection is required, gap fill attempts to find the value without as
 ```python
 async def fill_gap(
     field_name: str,
-    customer_data: CustomerDataStore,
+    interlocutor_data: InterlocutorDataStore,
     session: Session,
 ) -> GapFillResult:
     """
     Try to fill a missing field without asking the user.
 
-    Tier 1: Structured data (CustomerDataStore + Session) - instant, reliable
+    Tier 1: Structured data (InterlocutorDataStore + Session) - instant, reliable
     Tier 2: Conversation extraction (LLM) - slower, less reliable
     Tier 3: Ask user - caller handles this case
     """
@@ -897,14 +897,14 @@ async def fill_gap(
     # TIER 1: Structured Data
     # ═══════════════════════════════════════════════════════════════════════
 
-    # Check customer data (cross-session, cross-scenario)
-    if field_name in customer_data.fields:
-        field = customer_data.fields[field_name]
+    # Check interlocutor data (cross-session, cross-scenario)
+    if field_name in interlocutor_data.fields:
+        field = interlocutor_data.fields[field_name]
         if not field.is_expired():
             return GapFillResult(
                 filled=True,
                 value=field.value,
-                source="customer_data",
+                source="interlocutor_data",
                 confidence=field.confidence,
             )
 
@@ -933,8 +933,8 @@ async def fill_gap(
     )
 
     if extraction.found and extraction.confidence >= 0.85:
-        # Persist to customer data for future use
-        await customer_data.set_field(
+        # Persist to interlocutor data for future use
+        await interlocutor_data.set_field(
             name=field_name,
             value=extraction.value,
             source="conversation_extraction",
@@ -962,7 +962,7 @@ class GapFillResult:
     """Result of gap fill attempt."""
     filled: bool
     value: Any = None
-    source: str = ""  # "customer_data" | "session" | "extraction"
+    source: str = ""  # "interlocutor_data" | "session" | "extraction"
     confidence: float = 1.0
     needs_confirmation: bool = False
 ```
@@ -1211,7 +1211,7 @@ async def execute_composite_migration(
     session: Session,
     start_version: int,
     end_version: int,
-    customer_data: CustomerDataStore,
+    interlocutor_data: InterlocutorDataStore,
 ) -> ReconciliationResult:
     """
     Handle multi-version gaps by computing net effect.
@@ -1286,7 +1286,7 @@ async def execute_composite_migration(
 
     missing_fields = []
     for field_name in final_requirements:
-        result = await fill_gap(field_name, customer_data, session)
+        result = await fill_gap(field_name, interlocutor_data, session)
         if not result.filled:
             missing_fields.append(field_name)
 
@@ -1550,7 +1550,7 @@ The Control Plane should display migration plans for review:
 
 ## See Also
 
-- [Customer Data Store](./customer-profile.md) - Persistent customer data enabling gap fill
+- [Interlocutor Data](./customer-profile.md) - Persistent interlocutor data enabling gap fill
 - [Alignment Engine](../architecture/alignment-engine.md) - Scenario navigation and step transitions
 - [Domain Model](./domain-model.md) - Core entity definitions
 - [Turn Pipeline](./turn-pipeline.md) - Where reconciliation fits in request processing

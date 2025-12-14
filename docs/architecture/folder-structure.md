@@ -23,13 +23,13 @@ focal/
 │   └── test.toml           # Test environment
 │
 ├── focal/                 # Main Python package
-│   ├── alignment/          # The brain: rules, scenarios, context
-│   ├── memory/             # Long-term memory: episodes, entities
-│   ├── conversation/       # Live conversation state
-│   ├── audit/              # What happened: turns, logs
+│   ├── runtime/            # Conversation runtime infrastructure
+│   ├── mechanics/          # CognitivePipeline implementations
+│   ├── infrastructure/     # Consolidated infrastructure layer
+│   ├── domain/             # Pure domain models
+│   ├── asa/                # Agent Setter Agent (meta-agent)
+│   ├── api/                # External interfaces
 │   ├── observability/      # Logging, tracing, metrics
-│   ├── providers/          # External services: LLMs, embeddings
-│   ├── api/                # HTTP/gRPC interfaces
 │   └── config/             # Configuration loading (Pydantic models)
 │
 ├── tests/                   # Mirrors focal/ structure
@@ -41,170 +41,249 @@ focal/
 
 ## Core Domains
 
-### `focal/alignment/` — The Brain
+### `focal/runtime/` — Conversation Runtime Infrastructure
 
-**Purpose**: Determines what the agent should do on each turn.
+**Purpose**: Manages conversation lifecycle, concurrency, and proactive task scheduling.
 
 ```
-alignment/
+runtime/
 ├── __init__.py
-├── engine.py               # Main AlignmentEngine class
 │
-├── context/                # Step 1-2: Understand the message
+├── acf/                    # Agent Conversation Fabric
 │   ├── __init__.py
-│   ├── extractor.py        # ContextExtractor interface + implementations
-│   ├── models.py           # Context, UserIntent, ExtractedEntities
-│   └── prompts/            # Prompt templates for context extraction
-│       └── extract_intent.txt
+│   ├── mutex.py            # Per-session turn serialization
+│   ├── turns.py            # Turn queueing and execution
+│   └── supersede.py        # Message supersession logic
 │
-├── retrieval/              # Step 3: Find relevant rules/scenarios
+├── agent/                  # AgentRuntime
 │   ├── __init__.py
-│   ├── rule_retriever.py   # RuleRetriever: vector search + filters
-│   ├── scenario_retriever.py
-│   └── reranker.py         # Reranking strategies
+│   ├── runtime.py          # Main AgentRuntime class
+│   ├── lifecycle.py        # Agent initialization and cleanup
+│   ├── cache.py            # Config/schema caching
+│   └── invalidation.py     # Cache invalidation on config changes
 │
-├── filtering/              # Step 4: LLM judges relevance
-│   ├── __init__.py
-│   ├── rule_filter.py      # LLM-based rule filtering
-│   ├── scenario_filter.py  # Scenario start/continue/exit decisions
-│   └── prompts/
-│       ├── filter_rules.txt
-│       └── evaluate_scenario.txt
-│
-├── execution/              # Step 5: Run tools
-│   ├── __init__.py
-│   ├── tool_executor.py    # Execute tools from matched rules
-│   └── variable_resolver.py
-│
-├── generation/             # Step 6: Generate response
-│   ├── __init__.py
-│   ├── prompt_builder.py   # Assemble final prompt
-│   ├── generator.py        # ResponseGenerator
-│   └── prompts/
-│       └── system_prompt.txt
-│
-├── enforcement/            # Step 7: Validate response
-│   ├── __init__.py
-│   ├── validator.py        # Check against hard constraints
-│   └── fallback.py         # Template fallback logic
-│
-└── models/                 # Domain models for alignment
+└── agenda/                 # Proactive task scheduling
     ├── __init__.py
-    ├── rule.py             # Rule, MatchedRule
-    ├── scenario.py         # Scenario, ScenarioStep, StepTransition
-    ├── template.py         # Template, TemplateMode
-    └── variable.py         # Variable, VariableUpdatePolicy
+    ├── scheduler.py        # Task scheduler (bypasses ACF mutex)
+    └── tasks.py            # Proactive task definitions
 ```
 
 **Key Classes**:
 ```python
-# alignment/engine.py
-class AlignmentEngine:
-    """Orchestrates the full alignment flow."""
-
-    def __init__(
-        self,
-        context_extractor: ContextExtractor,
-        rule_retriever: RuleRetriever,
-        scenario_retriever: ScenarioRetriever,
-        rule_filter: RuleFilter,
-        scenario_filter: ScenarioFilter,
-        tool_executor: ToolExecutor,
-        response_generator: ResponseGenerator,
-        enforcement: EnforcementValidator,
-    ): ...
+# runtime/agent/runtime.py
+class AgentRuntime:
+    """Manages agent lifecycle, caching, and turn routing."""
 
     async def process_turn(
         self,
-        message: str,
-        conversation: Conversation,
-        config: AgentConfig,
-    ) -> AlignmentResult: ...
+        turn_input: TurnInput,
+    ) -> TurnResult: ...
+
+    async def schedule_proactive_task(
+        self,
+        task: ProactiveTask,
+    ) -> None: ...
 ```
 
 ---
 
-### `focal/memory/` — Long-term Memory
+### `focal/mechanics/` — CognitivePipeline Implementations
 
-**Purpose**: Stores and retrieves episodic memory (what happened) and semantic knowledge (entities, relationships).
+**Purpose**: Different cognitive mechanics (FOCAL alignment, future alternatives).
 
 ```
-memory/
+mechanics/
 ├── __init__.py
-├── models/                 # Domain models
-│   ├── __init__.py
-│   ├── episode.py          # Episode (atomic memory unit)
-│   ├── entity.py           # Entity (person, order, product)
-│   └── relationship.py     # Relationship (edges between entities)
+├── protocol.py             # CognitivePipeline abstract interface
 │
-├── store.py                # MemoryStore interface
-│
-├── stores/                 # Implementations
-│   ├── __init__.py
-│   ├── neo4j.py            # Neo4jMemoryStore
-│   ├── postgres.py         # PostgresMemoryStore (pgvector)
-│   ├── mongodb.py          # MongoDBMemoryStore (Atlas)
-│   └── inmemory.py         # InMemoryMemoryStore (testing)
-│
-├── ingestion/              # Adding to memory
-│   ├── __init__.py
-│   ├── ingestor.py         # MemoryIngestor
-│   ├── entity_extractor.py # Extract entities from text
-│   └── summarizer.py       # Summarize long conversations
-│
-└── retrieval/              # Searching memory
+└── focal/                  # FOCAL alignment mechanic
     ├── __init__.py
-    ├── retriever.py        # MemoryRetriever (hybrid search)
-    └── reranker.py         # Memory-specific reranking
+    ├── pipeline.py         # FocalCognitivePipeline (main orchestrator)
+    │
+    ├── phases/             # 12-phase pipeline
+    │   ├── __init__.py
+    │   ├── p01_identification.py      # Context loading
+    │   ├── p02_situational_sensor.py  # Intent + variable extraction
+    │   ├── p03_customer_data_update.py # Variable validation/update
+    │   ├── p04_retrieval.py           # Candidate retrieval
+    │   ├── p05_reranking.py           # Reranking
+    │   ├── p06_scenario_orchestration.py # Scenario state management
+    │   ├── p07_tool_execution.py      # Tool execution
+    │   ├── p08_rule_filtering.py      # LLM rule filtering
+    │   ├── p09_generation.py          # Response generation
+    │   ├── p10_enforcement.py         # Constraint validation
+    │   ├── p11_persistence.py         # State persistence
+    │   └── p12_memory_ingestion.py    # Memory updates
+    │
+    ├── models/             # FOCAL-specific models
+    │   ├── __init__.py
+    │   ├── turn_context.py         # TurnContext (aggregated context)
+    │   ├── turn_input.py           # TurnInput (inbound event)
+    │   ├── situational_snapshot.py # Intent + candidate variables
+    │   └── glossary.py             # GlossaryItem
+    │
+    ├── migration/          # Scenario version migration
+    │   ├── __init__.py
+    │   ├── planner.py      # MigrationPlanner, MigrationDeployer
+    │   ├── executor.py     # MigrationExecutor (JIT reconciliation)
+    │   ├── composite.py    # CompositeMapper (multi-version gaps)
+    │   ├── gap_fill.py     # GapFillService (data retrieval)
+    │   ├── diff.py         # Content hashing, transformation computation
+    │   └── models.py       # Migration models
+    │
+    └── prompts/            # Jinja2 templates
+        ├── situational_sensor.jinja2
+        ├── rule_filter.jinja2
+        ├── generation.jinja2
+        └── ...
 ```
 
 ---
 
-### `focal/conversation/` — Live State
+### `focal/infrastructure/` — Consolidated Infrastructure Layer
 
-**Purpose**: Manages active conversation state (sessions).
+**Purpose**: All external dependencies (stores, providers, toolbox, channels).
 
 ```
-conversation/
+infrastructure/
 ├── __init__.py
-├── models/
+│
+├── stores/                 # Data persistence abstractions
 │   ├── __init__.py
-│   ├── session.py          # Session (active conversation)
-│   └── turn.py             # Turn (single exchange)
+│   │
+│   ├── config/             # ConfigStore: rules, scenarios, templates
+│   │   ├── __init__.py
+│   │   ├── base.py         # ConfigStore interface
+│   │   ├── postgres.py     # PostgresConfigStore
+│   │   ├── mongodb.py      # MongoDBConfigStore
+│   │   └── inmemory.py     # InMemoryConfigStore (testing)
+│   │
+│   ├── session/            # SessionStore: active conversation state
+│   │   ├── __init__.py
+│   │   ├── base.py         # SessionStore interface
+│   │   ├── redis.py        # RedisSessionStore
+│   │   ├── mongodb.py      # MongoDBSessionStore
+│   │   └── inmemory.py     # InMemorySessionStore (testing)
+│   │
+│   ├── interlocutor/       # InterlocutorDataStore (was: customer_data)
+│   │   ├── __init__.py
+│   │   ├── base.py         # InterlocutorDataStore interface
+│   │   ├── postgres.py     # PostgresInterlocutorDataStore
+│   │   └── inmemory.py     # InMemoryInterlocutorDataStore
+│   │
+│   ├── memory/             # MemoryStore: episodes, entities, relationships
+│   │   ├── __init__.py
+│   │   ├── base.py         # MemoryStore interface
+│   │   ├── postgres.py     # PostgresMemoryStore (pgvector)
+│   │   ├── neo4j.py        # Neo4jMemoryStore
+│   │   └── inmemory.py     # InMemoryMemoryStore (testing)
+│   │
+│   ├── audit/              # AuditStore: immutable history
+│   │   ├── __init__.py
+│   │   ├── base.py         # AuditStore interface
+│   │   ├── postgres.py     # PostgresAuditStore
+│   │   ├── timescale.py    # TimescaleAuditStore
+│   │   └── inmemory.py     # InMemoryAuditStore (testing)
+│   │
+│   └── vector/             # VectorStore: generic vector search
+│       ├── __init__.py
+│       ├── base.py         # VectorStore interface
+│       └── postgres.py     # PostgresVectorStore (pgvector)
 │
-├── store.py                # SessionStore interface
+├── providers/              # AI capability providers
+│   ├── __init__.py
+│   │
+│   ├── llm/                # LLMExecutor (text generation)
+│   │   ├── __init__.py
+│   │   ├── base.py         # LLMMessage, LLMResponse
+│   │   ├── executor.py     # LLMExecutor (uses Agno for routing)
+│   │   └── mock.py         # MockLLMProvider (testing)
+│   │
+│   ├── embedding/          # EmbeddingProvider (vector embeddings)
+│   │   ├── __init__.py
+│   │   ├── base.py         # EmbeddingProvider interface
+│   │   ├── openai.py       # OpenAIEmbeddings
+│   │   ├── cohere.py       # CohereEmbeddings
+│   │   ├── voyage.py       # VoyageEmbeddings
+│   │   └── mock.py         # MockEmbeddings (testing)
+│   │
+│   └── rerank/             # RerankProvider (result reranking)
+│       ├── __init__.py
+│       ├── base.py         # RerankProvider interface
+│       ├── cohere.py       # CohereRerank
+│       └── voyage.py       # VoyageRerank
 │
-└── stores/
+├── toolbox/                # Tool execution
+│   ├── __init__.py
+│   ├── toolbox.py          # Toolbox (tool registry)
+│   └── gateway.py          # ToolGateway (execution environment)
+│
+└── channels/               # Channel adapters
     ├── __init__.py
-    ├── redis.py            # RedisSessionStore
-    ├── mongodb.py          # MongoDBSessionStore
-    ├── dynamodb.py         # DynamoDBSessionStore
-    └── inmemory.py         # InMemorySessionStore (testing)
+    ├── base.py             # ChannelAdapter interface
+    ├── webchat.py          # WebChatAdapter
+    ├── whatsapp.py         # WhatsAppAdapter
+    └── slack.py            # SlackAdapter
 ```
 
 ---
 
-### `focal/audit/` — What Happened
+### `focal/domain/` — Pure Domain Models
 
-**Purpose**: Immutable record of all interactions for compliance and debugging.
+**Purpose**: Domain models with no infrastructure dependencies.
 
 ```
-audit/
+domain/
 ├── __init__.py
-├── models/
+│
+├── interlocutor/           # Interlocutor data models (was: customer_data)
 │   ├── __init__.py
-│   ├── turn_record.py      # Full turn with all metadata
-│   └── event.py            # System events (tool calls, errors)
+│   ├── field.py            # InterlocutorDataField (schema definition)
+│   ├── entry.py            # VariableEntry (runtime value + history)
+│   ├── store.py            # InterlocutorDataStore (collection of variables)
+│   └── source.py           # VariableSource (where variable came from)
 │
-├── store.py                # AuditStore interface
+├── rules/                  # Rule domain models
+│   ├── __init__.py
+│   ├── rule.py             # Rule
+│   └── matched_rule.py     # MatchedRule
 │
-└── stores/
+├── scenarios/              # Scenario domain models
+│   ├── __init__.py
+│   ├── scenario.py         # Scenario, ScenarioStep
+│   └── transition.py       # StepTransition
+│
+└── memory/                 # Memory domain models
     ├── __init__.py
-    ├── postgres.py         # PostgresAuditStore
-    ├── timescale.py        # TimescaleAuditStore
-    ├── mongodb.py          # MongoDBAuditStore
-    ├── clickhouse.py       # ClickHouseAuditStore
-    └── inmemory.py         # InMemoryAuditStore (testing)
+    ├── episode.py          # Episode (atomic memory unit)
+    ├── entity.py           # Entity (person, order, product)
+    └── relationship.py     # Relationship (edges between entities)
+```
+
+---
+
+### `focal/asa/` — Agent Setter Agent
+
+**Purpose**: Mechanic-agnostic meta-agent for validating and suggesting improvements to agent configurations.
+
+```
+asa/
+├── __init__.py
+│
+├── validator/              # Conformance validation
+│   ├── __init__.py
+│   ├── tool_validator.py   # Tool schema validation
+│   ├── scenario_validator.py # Scenario state machine validation
+│   └── pipeline_validator.py # Pipeline config validation
+│
+├── suggester/              # Policy suggestions
+│   ├── __init__.py
+│   ├── policy_suggester.py # Suggest missing policies
+│   └── edge_case_generator.py # Generate edge case scenarios
+│
+└── ci/                     # Pre-deployment CI validation
+    ├── __init__.py
+    └── checks.py           # CI validation checks
 ```
 
 ---
@@ -243,75 +322,6 @@ async def logging_context_middleware(request: Request, call_next):
 ```
 
 **Note**: Focal integrates with kernel_agent's existing OpenTelemetry Collector and Prometheus setup. Logs go to stdout (JSON), traces to OTLP, metrics scraped at `/metrics`.
-
----
-
-### `focal/providers/` — External Services
-
-**Purpose**: Interfaces for LLMs, embeddings, and other external services. Each step in the pipeline can use a different provider.
-
-```
-providers/
-├── __init__.py
-│
-├── llm/                    # Large Language Models
-│   ├── __init__.py
-│   ├── base.py             # LLMMessage, LLMResponse, errors
-│   ├── executor.py         # LLMExecutor (uses Agno for routing)
-│   └── mock.py             # MockLLMProvider (testing)
-│
-├── embedding/              # Embedding Models
-│   ├── __init__.py
-│   ├── base.py             # EmbeddingProvider interface
-│   ├── openai.py           # OpenAIEmbeddings
-│   ├── cohere.py           # CohereEmbeddings
-│   ├── voyage.py           # VoyageEmbeddings
-│   ├── sentence_transformers.py  # Local SentenceTransformers
-│   └── mock.py             # MockEmbeddings (testing)
-│
-└── rerank/                 # Reranking Models
-    ├── __init__.py
-    ├── base.py             # RerankProvider interface
-    ├── cohere.py           # CohereRerank
-    ├── voyage.py           # VoyageRerank
-    └── cross_encoder.py    # Local CrossEncoder
-```
-
-**Key Interfaces**:
-```python
-# providers/llm/executor.py
-class LLMExecutor:
-    """Unified LLM interface using Agno for model routing."""
-
-    async def generate(
-        self,
-        messages: list[LLMMessage],
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        stop_sequences: list[str] | None = None,
-    ) -> LLMResponse: ...
-
-    async def generate_structured(
-        self,
-        messages: list[LLMMessage],
-        schema: type[BaseModel],
-    ) -> BaseModel: ...
-
-
-# providers/embedding/base.py
-class EmbeddingProvider(ABC):
-    """Interface for embedding providers."""
-
-    @property
-    @abstractmethod
-    def dimensions(self) -> int: ...
-
-    @abstractmethod
-    async def embed(self, text: str) -> list[float]: ...
-
-    @abstractmethod
-    async def embed_batch(self, texts: list[str]) -> list[list[float]]: ...
-```
 
 ---
 
@@ -356,24 +366,25 @@ rule_strategy = settings.pipeline.retrieval.rule_selection.strategy
 
 ### `focal/api/` — External Interfaces
 
-**Purpose**: HTTP and gRPC APIs.
+**Purpose**: REST API and MCP server for external integrations.
 
 ```
 api/
 ├── __init__.py
 ├── app.py                  # FastAPI app factory
 │
-├── routes/
+├── routes/                 # REST endpoints
 │   ├── __init__.py
-│   ├── chat.py             # POST /v1/chat
+│   ├── chat.py             # POST /v1/chat (turn processing)
 │   ├── sessions.py         # Session CRUD
 │   ├── config.py           # Rules, Scenarios, Templates CRUD
+│   ├── interlocutor.py     # Interlocutor data CRUD
 │   └── health.py           # Health checks
 │
-├── grpc/
+├── mcp/                    # MCP server for tool discovery
 │   ├── __init__.py
-│   ├── server.py           # gRPC server
-│   └── protos/             # .proto files
+│   ├── server.py           # MCP server implementation
+│   └── handlers.py         # Tool discovery handlers
 │
 ├── middleware/
 │   ├── __init__.py
@@ -462,29 +473,27 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 
 ```
                                     ┌─────────────────────────────────────┐
-                                    │           PROVIDERS                  │
+                                    │      INFRASTRUCTURE/PROVIDERS        │
                                     │  ┌─────────┐ ┌─────────┐ ┌────────┐ │
                                     │  │ LLM     │ │Embedding│ │Rerank  │ │
                                     │  │Anthropic│ │ OpenAI  │ │ Cohere │ │
                                     │  │ OpenAI  │ │ Cohere  │ │ Voyage │ │
-                                    │  │ Bedrock │ │ Voyage  │ │        │ │
+                                    │  │ OpenRouter│ │ Voyage │ │        │ │
                                     │  └────┬────┘ └────┬────┘ └───┬────┘ │
                                     └───────┼──────────┼──────────┼──────┘
                                             │          │          │
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                              ALIGNMENT ENGINE                                 │
-│                                                                               │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐   │
-│  │  Context    │    │  Retrieval  │    │    LLM      │    │  Response   │   │
-│  │ Extraction  │───▶│   + Rerank  │───▶│  Filtering  │───▶│ Generation  │   │
-│  │             │    │             │    │             │    │             │   │
-│  │ (LLM/Embed) │    │(Embed+Store)│    │   (LLM)     │    │   (LLM)     │   │
-│  └─────────────┘    └──────┬──────┘    └─────────────┘    └─────────────┘   │
-│                            │                                                  │
-│                            ▼                                                  │
-│                    ┌───────────────┐                                         │
-│                    │  ConfigStore  │  Rules, Scenarios, Templates            │
-│                    └───────────────┘                                         │
+│                          RUNTIME / MECHANICS                                  │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │              AgentRuntime (lifecycle, caching, routing)                 │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐     │ │
+│  │  │                  FocalCognitivePipeline                        │     │ │
+│  │  │                                                                │     │ │
+│  │  │  P01→P02→P03→P04→P05→P06→P07→P08→P09→P10→P11→P12             │     │ │
+│  │  │  Identify | Sense | Update | Retrieve | Rerank | Orchestrate  │     │ │
+│  │  │  | Execute | Filter | Generate | Enforce | Persist | Ingest   │     │ │
+│  │  └────────────────────────────────────────────────────────────────┘     │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────┘
          │                                                           │
          ▼                                                           ▼
@@ -495,9 +504,16 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 │ Entities        │  │ Active step     │  │ Events          │  │ Scenarios       │
 │ Relationships   │  │ Variables       │  │ Metrics         │  │ Templates       │
 │                 │  │                 │  │                 │  │ Variables       │
-│ Neo4j/Postgres  │  │ Redis/MongoDB   │  │ Postgres/       │  │ Postgres/       │
-│ /MongoDB        │  │ /DynamoDB       │  │ Timescale       │  │ MongoDB         │
+│ Postgres/Neo4j  │  │ Redis/MongoDB   │  │ Postgres/       │  │ Postgres/       │
+│                 │  │                 │  │ Timescale       │  │ MongoDB         │
 └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘
+       ┌────────────────────┐
+       │InterlocutorDataStore│
+       │                     │
+       │ Variable entries    │
+       │ History tracking    │
+       │ Postgres            │
+       └─────────────────────┘
 ```
 
 ---
@@ -506,19 +522,30 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 
 | Looking for... | Location |
 |----------------|----------|
-| Rule matching logic | `focal/alignment/retrieval/rule_retriever.py` |
-| Scenario state machine | `focal/alignment/models/scenario.py` |
-| Context extraction prompts | `focal/alignment/context/prompts/` |
-| Add a new LLM provider | `focal/providers/llm/` |
-| Add a new embedding provider | `focal/providers/embedding/` |
-| Memory storage implementations | `focal/memory/stores/` |
-| Session management | `focal/conversation/` |
+| Turn processing orchestration | `focal/runtime/agent/runtime.py` |
+| Main pipeline logic | `focal/mechanics/focal/pipeline.py` |
+| Pipeline phases | `focal/mechanics/focal/phases/` |
+| Scenario migration | `focal/mechanics/focal/migration/` |
+| Rule domain models | `focal/domain/rules/rule.py` |
+| Scenario domain models | `focal/domain/scenarios/scenario.py` |
+| Interlocutor data models | `focal/domain/interlocutor/` |
+| Memory domain models | `focal/domain/memory/` |
+| ConfigStore implementations | `focal/infrastructure/stores/config/` |
+| SessionStore implementations | `focal/infrastructure/stores/session/` |
+| MemoryStore implementations | `focal/infrastructure/stores/memory/` |
+| InterlocutorDataStore implementations | `focal/infrastructure/stores/interlocutor/` |
+| LLM provider | `focal/infrastructure/providers/llm/` |
+| Embedding provider | `focal/infrastructure/providers/embedding/` |
+| Rerank provider | `focal/infrastructure/providers/rerank/` |
+| Tool execution | `focal/infrastructure/toolbox/` |
+| Channel adapters | `focal/infrastructure/channels/` |
 | API endpoints | `focal/api/routes/` |
-| Domain models for rules | `focal/alignment/models/rule.py` |
+| MCP server | `focal/api/mcp/` |
 | Pipeline configuration | `focal/config/models/pipeline.py` |
 | Logging setup | `focal/observability/logging.py` |
 | Tracing setup | `focal/observability/tracing.py` |
 | Metrics definitions | `focal/observability/metrics.py` |
+| ASA validators | `focal/asa/validator/` |
 
 ---
 
@@ -527,22 +554,37 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 ```
 tests/
 ├── unit/                   # Fast, isolated tests
-│   ├── alignment/
-│   │   ├── test_context_extractor.py
-│   │   ├── test_rule_retriever.py
-│   │   └── test_enforcement.py
-│   ├── memory/
-│   ├── conversation/
-│   └── providers/
+│   ├── runtime/
+│   │   ├── test_agent_runtime.py
+│   │   └── test_acf_mutex.py
+│   ├── mechanics/
+│   │   └── focal/
+│   │       ├── test_pipeline.py
+│   │       ├── phases/
+│   │       │   ├── test_p01_identification.py
+│   │       │   ├── test_p02_situational_sensor.py
+│   │       │   └── ...
+│   │       └── migration/
+│   │           ├── test_planner.py
+│   │           └── test_executor.py
+│   ├── domain/
+│   │   ├── test_rule.py
+│   │   ├── test_scenario.py
+│   │   └── test_interlocutor.py
+│   └── infrastructure/
+│       ├── stores/
+│       ├── providers/
+│       └── toolbox/
 │
 ├── integration/            # Tests with real backends
 │   ├── stores/
-│   │   ├── test_postgres_memory.py
-│   │   ├── test_redis_session.py
-│   │   └── test_neo4j_memory.py
+│   │   ├── test_postgres_config_store.py
+│   │   ├── test_redis_session_store.py
+│   │   ├── test_postgres_memory_store.py
+│   │   └── test_postgres_interlocutor_store.py
 │   └── providers/
-│       ├── test_anthropic.py
-│       └── test_openai.py
+│       ├── test_anthropic_llm.py
+│       └── test_openai_embeddings.py
 │
 └── e2e/                    # Full pipeline tests
     ├── test_chat_flow.py
@@ -551,17 +593,30 @@ tests/
 
 ---
 
-## Summary: 4 Stores + Providers
+## Summary: Architecture Layers
 
-**Stores** (where data lives):
-1. **MemoryStore** — Long-term memory (episodes, entities)
-2. **ConfigStore** — Agent behavior (rules, scenarios, templates)
-3. **SessionStore** — Live session state
-4. **AuditStore** — Immutable history
+**Runtime Layer** (`focal/runtime/`):
+- **AgentRuntime** — Agent lifecycle, config caching, turn routing
+- **ACF (Agent Conversation Fabric)** — Turn serialization, queueing, supersession
+- **Agenda** — Proactive task scheduling
 
-**Providers** (external services):
-1. **LLMExecutor** — Text generation via Agno (OpenRouter, Anthropic, OpenAI, Groq)
-2. **EmbeddingProvider** — Vector embeddings (OpenAI, Cohere, Voyage, etc.)
-3. **RerankProvider** — Result reranking (Cohere, Voyage, CrossEncoder)
+**Mechanics Layer** (`focal/mechanics/`):
+- **CognitivePipeline** — Abstract interface for cognitive mechanics
+- **FocalCognitivePipeline** — 12-phase FOCAL alignment implementation
+- **Migration** — Scenario version migration (JIT reconciliation)
 
-Each pipeline step can use different providers, configured per-agent.
+**Infrastructure Layer** (`focal/infrastructure/`):
+- **Stores** — ConfigStore, SessionStore, MemoryStore, AuditStore, InterlocutorDataStore, VectorStore
+- **Providers** — LLMExecutor (via Agno), EmbeddingProvider, RerankProvider
+- **Toolbox** — Tool registry and execution gateway
+- **Channels** — Channel adapters (webchat, WhatsApp, Slack)
+
+**Domain Layer** (`focal/domain/`):
+- **Pure domain models** — Rules, Scenarios, Interlocutor data, Memory (no infrastructure dependencies)
+
+**ASA (Agent Setter Agent)** (`focal/asa/`):
+- **Validators** — Tool, scenario, pipeline conformance validation
+- **Suggester** — Policy suggestions, edge case generation
+- **CI** — Pre-deployment validation checks
+
+Each pipeline phase can use different models/providers, configured per-agent in TOML.

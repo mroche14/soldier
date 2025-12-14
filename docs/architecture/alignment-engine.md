@@ -1,5 +1,7 @@
 # Alignment Engine
 
+> **Note**: The alignment engine is the conceptual core of Focal's turn processing. The implementation class is `FocalCognitivePipeline` located in `focal/mechanics/focal/pipeline.py`.
+
 The alignment engine ensures Focal agents behave according to defined policies. It processes each turn through a multi-step pipeline, matching **Rules** for behavioral control and **Scenarios** for multi-step flows.
 
 ## Core Principle
@@ -1467,11 +1469,11 @@ else:
 ```
 
 This enables:
-- **Gap fill during migration**: New steps requiring data can pull from CustomerDataStore
+- **Gap fill during migration**: New steps requiring data can pull from InterlocutorDataStore
 - **Cross-scenario continuity**: Data collected once is available everywhere
 - **Verification persistence**: KYC status, verified phone/email survive across sessions
 
-**See**: [Customer Data Store](../design/customer-profile.md) for the full model.
+**See**: [Interlocutor Data](../design/customer-profile.md) for the full model.
 
 ---
 

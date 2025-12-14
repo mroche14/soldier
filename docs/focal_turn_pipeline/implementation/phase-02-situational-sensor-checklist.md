@@ -6,7 +6,7 @@
 > - `CLAUDE.md` - LLM Task Pattern, Configuration System
 >
 > **Dependencies**:
-> - **Requires**: Phase 1 (Context Loading) - TurnContext, CustomerDataStore, GlossaryItem
+> - **Requires**: Phase 1 (Context Loading) - TurnContext, InterlocutorDataStore, GlossaryItem
 > - **Blocks**: Phase 3 (Customer Data Update) - Needs SituationalSnapshot with candidate_variables
 >
 > **Goal**: Implement schema-aware, glossary-aware context extraction that produces `SituationalSnapshot` with candidate variables for customer data updates.
@@ -27,7 +27,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 
 | Component | Current | Target |
 |-----------|---------|--------|
-| **Input to LLM** | Message + last 5 turns | Message + K turns + CustomerSchemaMask + GlossaryView |
+| **Input to LLM** | Message + last 5 turns | Message + K turns + InterlocutorSchemaMask + GlossaryView |
 | **Output Model** | `Context` (intent, entities, sentiment) | `SituationalSnapshot` (candidate_variables, intent evolution) |
 | **Prompt Format** | `.txt` with `str.format()` | `.jinja2` with Jinja2 Environment |
 | **Configuration** | Hardcoded K=5 | Configurable via `[pipeline.situational_sensor]` |
@@ -37,67 +37,67 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 
 ## Phase 2.1: Core Models
 
-> **IMPORTANT**: CustomerDataField, VariableEntry, and CustomerDataStore are renamed Profile models from Phase 1.
+> **IMPORTANT**: InterlocutorDataField, VariableEntry, and InterlocutorDataStore are renamed Profile models from Phase 1.
 > Do NOT create duplicate models. These should already exist after Phase 1 renames.
 
 ### Prerequisites from Phase 1 (Already Complete)
 
-- [x] **CustomerDataField** (renamed from ProfileFieldDefinition)
-  - File: `focal/customer_data/models.py`
+- [x] **InterlocutorDataField** (renamed from ProfileFieldDefinition)
+  - File: `focal/domain/interlocutor/models.py`
   - Fields: `name`, `scope`, `persist`, `value_type`, etc.
   - Note: Use `name` field (not `key`) per existing convention
 
 - [x] **VariableEntry** (renamed from ProfileField)
-  - File: `focal/customer_data/models.py`
+  - File: `focal/domain/interlocutor/models.py`
   - Fields: `name`, `value`, `history`, `confidence`, etc.
 
-- [x] **CustomerDataStore** (renamed from CustomerProfile)
-  - File: `focal/customer_data/models.py`
+- [x] **InterlocutorDataStore** (renamed from CustomerProfile)
+  - File: `focal/domain/interlocutor/models.py`
   - Contains: `fields: dict[str, VariableEntry]`
 
 ### New Models for Phase 2 (Create These)
 
-- [x] **Create CustomerSchemaMask model**
-  - File: `focal/alignment/context/customer_schema_mask.py`
+- [x] **Create InterlocutorSchemaMask model**
+  - File: `focal/mechanics/focal/context/customer_schema_mask.py`
   - Action: Created (already existed from Phase 1)
-  - **Implemented**: Model exists with `CustomerSchemaMaskEntry` and `CustomerSchemaMask`
+  - **Implemented**: Model exists with `InterlocutorSchemaMaskEntry` and `InterlocutorSchemaMask`
   - Models:
     ```python
-    class CustomerSchemaMaskEntry(BaseModel):
+    class InterlocutorSchemaMaskEntry(BaseModel):
         scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"]
         type: str
-        exists: bool  # True if CustomerDataStore has value for this key
+        exists: bool  # True if InterlocutorDataStore has value for this key
         display_name: str | None = None
 
-    class CustomerSchemaMask(BaseModel):
+    class InterlocutorSchemaMask(BaseModel):
         """Privacy-safe view for LLM showing schema structure without actual values."""
-        variables: dict[str, CustomerSchemaMaskEntry]
+        variables: dict[str, InterlocutorSchemaMaskEntry]
 
     def build_customer_schema_mask(
-        customer_data: CustomerDataStore,
-        schema: list[CustomerDataField],
-    ) -> CustomerSchemaMask:
+        customer_data: InterlocutorDataStore,
+        schema: list[InterlocutorDataField],
+    ) -> InterlocutorSchemaMask:
         """Build mask from store and schema."""
         variables = {}
         for field_def in schema:
-            variables[field_def.name] = CustomerSchemaMaskEntry(
+            variables[field_def.name] = InterlocutorSchemaMaskEntry(
                 scope=field_def.scope,
                 type=field_def.value_type,
                 exists=field_def.name in customer_data.fields,
                 display_name=field_def.display_name,
             )
-        return CustomerSchemaMask(variables=variables)
+        return InterlocutorSchemaMask(variables=variables)
     ```
 
 - [x] **GlossaryItem** (from Phase 1)
-  - File: `focal/alignment/models/glossary.py`
+  - File: `focal/mechanics/focal/models/glossary.py`
   - Note: Already exists from Phase 1
   - **Implemented**: Model exists with all required fields
 
 ### Situational Sensor Output Models
 
 - [x] **Create CandidateVariableInfo model**
-  - File: `focal/alignment/context/situational_snapshot.py`
+  - File: `focal/mechanics/focal/context/situational_snapshot.py`
   - Action: Created new file
   - Model: `CandidateVariableInfo`
   - **Implemented**: Created with `value`, `scope`, `is_update` fields
@@ -110,7 +110,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Details: Extracted variable from user message with scoping metadata
 
 - [x] **Create SituationalSnapshot model**
-  - File: `focal/alignment/context/situational_snapshot.py`
+  - File: `focal/mechanics/focal/context/situational_snapshot.py`
   - Action: Added to same file
   - Model: `SituationalSnapshot`
   - **Implemented**: Created with all fields from spec including `candidate_variables`
@@ -141,13 +141,13 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Update Existing Models
 
 - [x] **Update __init__.py exports**
-  - File: `focal/alignment/models/__init__.py`
+  - File: `focal/mechanics/focal/models/__init__.py`
   - Action: Not needed (models are in customer_data/, not alignment/models/)
-  - Details: `CustomerDataField`, `VariableEntry`, `CustomerDataStore` are in `focal/customer_data/models.py`
-  - **Implemented**: `CustomerSchemaMask` and `CustomerSchemaMaskEntry` exported from `focal/alignment/context/__init__.py`
+  - Details: `InterlocutorDataField`, `VariableEntry`, `InterlocutorDataStore` are in `focal/domain/interlocutor/models.py`
+  - **Implemented**: `InterlocutorSchemaMask` and `InterlocutorSchemaMaskEntry` exported from `focal/mechanics/focal/context/__init__.py`
 
 - [x] **Update context __init__.py exports**
-  - File: `focal/alignment/context/__init__.py`
+  - File: `focal/mechanics/focal/context/__init__.py`
   - Action: Modified
   - Details: Added exports for `SituationalSnapshot`, `CandidateVariableInfo`
   - **Implemented**: Both models exported in `__all__`
@@ -217,7 +217,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Template Loader
 
 - [x] **Create Jinja2 template loader utility**
-  - File: `focal/alignment/context/template_loader.py`
+  - File: `focal/mechanics/focal/context/template_loader.py`
   - Action: Created new file
   - Class: `TemplateLoader`
   - **Implemented**: Created with Jinja2 Environment configuration (trim_blocks, lstrip_blocks enabled)
@@ -245,7 +245,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Situational Sensor Prompt Template
 
 - [x] **Create situational_sensor.jinja2 template**
-  - File: `focal/alignment/context/prompts/situational_sensor.jinja2`
+  - File: `focal/mechanics/focal/context/prompts/situational_sensor.jinja2`
   - Action: Created new file
   - **Implemented**: Full Jinja2 template with schema mask, glossary, conversation history, and JSON response format
   - Template structure:
@@ -315,14 +315,14 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Core Sensor Class
 
 - [x] **Create SituationalSensor class**
-  - File: `focal/alignment/context/situational_sensor.py`
+  - File: `focal/mechanics/focal/context/situational_sensor.py`
   - Action: Created new file
   - Class: `SituationalSensor`
   - **Implemented**: Created with all methods from spec (P2.1-P2.6), uses TemplateLoader for Jinja2 rendering
   - Methods:
     - `__init__(llm_executor, config)` - Note: template_loader created internally
     - `async sense(message, history, customer_data_store, customer_data_fields, glossary_items, previous_intent_label) -> SituationalSnapshot`
-    - `_build_schema_mask(customer_data_store, customer_data_fields) -> CustomerSchemaMask` (P2.1)
+    - `_build_schema_mask(customer_data_store, customer_data_fields) -> InterlocutorSchemaMask` (P2.1)
     - `_build_glossary_view(glossary_items) -> dict[str, GlossaryItem]` (P2.2)
     - `_build_conversation_window(history) -> list[Turn]` (P2.3)
     - `async _call_sensor_llm(...) -> dict[str, Any]` (P2.4)
@@ -331,56 +331,56 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
     - `_validate_language(language, message) -> str` (P2.6)
   - Details: Main class implementing all Phase 2 substeps
 
-### P2.1: Build CustomerSchemaMask
+### P2.1: Build InterlocutorSchemaMask
 
 - [x] **Implement _build_schema_mask method**
-  - File: `focal/alignment/context/situational_sensor.py`
+  - File: `focal/mechanics/focal/context/situational_sensor.py`
   - Action: Implemented
-  - **Implemented**: Creates CustomerSchemaMaskEntry for each field, checks existence in CustomerDataStore.fields
+  - **Implemented**: Creates InterlocutorSchemaMaskEntry for each field, checks existence in InterlocutorDataStore.fields
 
 ### P2.2: Build Glossary View
 
 - [x] **Implement _build_glossary_view method**
-  - File: `focal/alignment/context/situational_sensor.py`
+  - File: `focal/mechanics/focal/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Simply returns glossary dict (filtering already done by caller)
 
 ### P2.3: Build Conversation Window
 
 - [x] **Implement _build_conversation_window method**
-  - File: `focal/alignment/context/situational_sensor.py`
+  - File: `focal/mechanics/focal/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Extracts last K turns using config.history_turns, handles K=0 case
 
 ### P2.4: Call Sensor LLM
 
 - [x] **Implement _call_sensor_llm method**
-  - File: `focal/alignment/context/situational_sensor.py`
+  - File: `focal/mechanics/focal/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Renders Jinja2 template, calls LLMExecutor, extracts JSON from response (handles markdown code blocks)
 
 ### P2.5: Parse Snapshot
 
 - [x] **Implement _parse_snapshot method**
-  - File: `focal/alignment/context/situational_sensor.py`
+  - File: `focal/mechanics/focal/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Parses LLM JSON into SituationalSnapshot, handles nested candidate_variables, provides defaults for optional fields
 
 ### P2.6: Validate Language
 
 - [x] **Implement _validate_language method**
-  - File: `focal/alignment/context/situational_sensor.py`
+  - File: `focal/mechanics/focal/context/situational_sensor.py`
   - Action: Implemented
   - **Implemented**: Validates ISO 639-1 format (2-letter alphabetic), defaults to "en" if invalid
 
 ---
 
-## Phase 2.5: Integration with AlignmentEngine
+## Phase 2.5: Integration with FocalCognitivePipeline
 
 ### Update Engine to Use Situational Sensor
 
 - [x] **Replace ContextExtractor with SituationalSensor**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modified
   - Changes:
     - Updated imports to include `SituationalSensor` and `SituationalSnapshot`
@@ -392,7 +392,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Details: Sensor runs when enabled, loads customer data/glossary/schema, calls sense()
 
 - [x] **Update AlignmentResult model**
-  - File: `focal/alignment/result.py`
+  - File: `focal/mechanics/focal/result.py`
   - Action: Modified
   - Changes:
     - Added import for `SituationalSnapshot`
@@ -400,14 +400,14 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
     - Kept `context: Context | None` for backward compatibility
   - Details: Both Context and SituationalSnapshot are now in result model
 
-### Load CustomerDataStore and Glossary in Phase 1
+### Load InterlocutorDataStore and Glossary in Phase 1
 
-- [x] **Add CustomerDataStore loading to engine**
-  - File: `focal/alignment/engine.py`
+- [x] **Add InterlocutorDataStore loading to engine**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modified in `_extract_context()` method
   - Logic:
-    - Loads CustomerDataStore using `_customer_data_loader.load()` for customer
-    - Loads CustomerDataField definitions using `_static_config_loader.load_customer_data_schema()`
+    - Loads InterlocutorDataStore using `_customer_data_loader.load()` for customer
+    - Loads InterlocutorDataField definitions using `_static_config_loader.load_customer_data_schema()`
     - Loads GlossaryItem dict using `_static_config_loader.load_glossary()`
     - Passes all three to `SituationalSensor.sense()`
   - Details: Loading happens within _extract_context when situational_sensor is enabled
@@ -419,47 +419,47 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### ConfigStore Extensions
 
 - [x] **Add GlossaryItem CRUD to ConfigStore interface**
-  - File: `focal/alignment/stores/agent_config_store.py`
+  - File: `focal/mechanics/focal/stores/agent_config_store.py`
   - Action: Already exists (Phase 1)
   - Methods:
     - `async get_glossary_items(tenant_id: UUID, agent_id: UUID, *, enabled_only: bool = True) -> list[GlossaryItem]`
     - `async save_glossary_item(item: GlossaryItem) -> UUID`
   - Details: Interface already has glossary methods from Phase 1
 
-- [x] **Add CustomerDataField CRUD to ConfigStore interface**
-  - File: `focal/alignment/stores/agent_config_store.py`
+- [x] **Add InterlocutorDataField CRUD to ConfigStore interface**
+  - File: `focal/mechanics/focal/stores/agent_config_store.py`
   - Action: Already exists (Phase 1)
   - Methods:
-    - `async get_customer_data_fields(tenant_id: UUID, agent_id: UUID, *, enabled_only: bool = True) -> list[CustomerDataField]`
-    - `async save_customer_data_field(field: CustomerDataField) -> UUID`
+    - `async get_customer_data_fields(tenant_id: UUID, agent_id: UUID, *, enabled_only: bool = True) -> list[InterlocutorDataField]`
+    - `async save_customer_data_field(field: InterlocutorDataField) -> UUID`
   - Details: Interface already has customer_data_field methods from Phase 1
 
 ### InMemory Implementations
 
 - [x] **Implement glossary methods in InMemoryConfigStore**
-  - File: `focal/alignment/stores/inmemory.py`
+  - File: `focal/mechanics/focal/stores/inmemory.py`
   - Action: Already implemented (Phase 1)
   - Details: Lines 427-446, uses `_glossary_items` dict keyed by UUID
 
 - [x] **Implement customer_data_field methods in InMemoryConfigStore**
-  - File: `focal/alignment/stores/inmemory.py`
+  - File: `focal/mechanics/focal/stores/inmemory.py`
   - Action: Already implemented (Phase 1)
   - Details: Lines 448-467, uses `_customer_data_fields` dict keyed by UUID
 
-### CustomerDataStoreInterface Extensions
+### InterlocutorDataStoreInterface Extensions
 
-- [x] **Confirm core CRUD exists on CustomerDataStoreInterface**
-  - File: `focal/customer_data/store.py`
+- [x] **Confirm core CRUD exists on InterlocutorDataStoreInterface**
+  - File: `focal/domain/interlocutor/store.py`
   - Action: Already exists (uses get_by_customer_id)
   - Methods:
-    - `async get_by_customer_id(tenant_id: UUID, customer_id: UUID, *, include_history: bool = False) -> CustomerDataStore | None`
-    - `async save(profile: CustomerDataStore) -> UUID`
-  - Details: CustomerDataStoreInterface already manages CustomerDataStore (renamed from CustomerProfile in Phase 1)
+    - `async get_by_customer_id(tenant_id: UUID, customer_id: UUID, *, include_history: bool = False) -> InterlocutorDataStore | None`
+    - `async save(profile: InterlocutorDataStore) -> UUID`
+  - Details: InterlocutorDataStoreInterface already manages InterlocutorDataStore (renamed from CustomerProfile in Phase 1)
 
-- [x] **Implement in InMemoryCustomerDataStore**
-  - File: `focal/customer_data/stores/inmemory.py`
+- [x] **Implement in InMemoryInterlocutorDataStore**
+  - File: `focal/domain/interlocutor/stores/inmemory.py`
   - Action: Already implemented (Phase 1)
-  - Details: Lines 48-127, fully functional CRUD for CustomerDataStore
+  - Details: Lines 48-127, fully functional CRUD for InterlocutorDataStore
 
 ---
 
@@ -467,15 +467,15 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 
 ### Unit Tests for Models
 
-- [x] **Test CustomerDataField, VariableEntry, CustomerDataStore**
+- [x] **Test InterlocutorDataField, VariableEntry, InterlocutorDataStore**
   - File: `tests/unit/customer_data/test_customer_data_models.py`
   - Action: Already tested (Phase 1)
-  - **Note**: These models exist in `focal/customer_data/models.py` with existing comprehensive tests
+  - **Note**: These models exist in `focal/domain/interlocutor/models.py` with existing comprehensive tests
 
-- [x] **Test CustomerSchemaMask models**
+- [x] **Test InterlocutorSchemaMask models**
   - File: `tests/unit/alignment/context/test_customer_schema_mask.py`
   - Action: Already exists from Phase 1
-  - **Implemented**: Tests exist with 100% coverage of CustomerSchemaMask models
+  - **Implemented**: Tests exist with 100% coverage of InterlocutorSchemaMask models
 
 - [x] **Test GlossaryItem model**
   - File: `tests/unit/alignment/models/test_glossary.py`
@@ -565,7 +565,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 - [x] **Test SituationalSensor with empty inputs**
   - File: `tests/unit/alignment/context/test_situational_sensor.py`
   - Action: Added to same file
-  - **Implemented**: 1 test with empty CustomerDataStore, no glossary, no history
+  - **Implemented**: 1 test with empty InterlocutorDataStore, no glossary, no history
   - Coverage: Edge cases
 
 ### Store Contract Tests
@@ -586,16 +586,16 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
     - test_save_and_get_customer_data_fields - saves and retrieves fields
     - test_get_customer_data_fields_tenant_isolation - tenant isolation
     - test_get_customer_data_fields_enabled_only - enabled filtering
-  - **Implemented**: Added TestCustomerDataFieldOperations class with 3 tests
+  - **Implemented**: Added TestInterlocutorDataFieldOperations class with 3 tests
 
-- [x] **Test CustomerDataStoreInterface CRUD methods**
+- [x] **Test InterlocutorDataStoreInterface CRUD methods**
   - File: `tests/unit/customer_data/stores/test_inmemory_customer_data.py`
   - Action: Already comprehensively tested (Phase 1)
   - Tests:
     - test_save_and_get_by_id - CRUD operations
     - test_get_by_customer_id - lookup by customer_id
     - test_get_by_channel_identity - channel identity resolution
-  - **Note**: CustomerDataStoreInterface methods already tested with CustomerDataStore model
+  - **Note**: InterlocutorDataStoreInterface methods already tested with InterlocutorDataStore model
 
 ---
 
@@ -623,7 +623,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Action: Modified
   - Details: Added "Focal Turn Pipeline Patterns (Phase 2+)" section documenting:
     - Jinja2 Template Pattern for LLM Tasks - template loader usage, location conventions
-    - CustomerDataStore Pattern - runtime values vs schema definitions, access patterns
+    - InterlocutorDataStore Pattern - runtime values vs schema definitions, access patterns
     - Schema Mask Pattern for Privacy - never expose actual values to LLMs
     - Glossary Usage Pattern - loading and passing to templates
     - SituationalSnapshot Pattern - replaces basic Context with candidate variables
@@ -647,11 +647,11 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 When Phase 2 is complete:
 
 1. ✅ **SituationalSnapshot model** exists with `candidate_variables` field
-2. ✅ **CustomerSchemaMask** builds privacy-safe view for LLM
+2. ✅ **InterlocutorSchemaMask** builds privacy-safe view for LLM
 3. ✅ **GlossaryView** provides domain terminology to LLM
 4. ✅ **Jinja2 template** renders with schema mask + glossary + conversation
 5. ✅ **SituationalSensor.sense()** returns complete snapshot
-6. ✅ **AlignmentEngine** uses SituationalSensor instead of ContextExtractor
+6. ✅ **FocalCognitivePipeline** uses SituationalSensor instead of ContextExtractor
 7. ✅ **All tests pass** with 85%+ coverage
 8. ✅ **Configuration** loaded from `[pipeline.situational_sensor]`
 9. ✅ **Phase 3** can consume `candidate_variables` for customer data updates
@@ -668,8 +668,8 @@ When Phase 2 is complete:
 ### Blocks Phase 3
 Phase 3 (Customer Data Update) **cannot be implemented** until Phase 2 is complete because it requires:
 - `SituationalSnapshot.candidate_variables` as input
-- `CustomerDataField` schema definitions
-- `CustomerDataStore` runtime storage
+- `InterlocutorDataField` schema definitions
+- `InterlocutorDataStore` runtime storage
 
 ---
 

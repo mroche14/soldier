@@ -21,27 +21,27 @@ This document provides concrete guidance for writing unit tests in the Focal cod
 Test files mirror the source structure:
 
 ```
-focal/alignment/retrieval/rule_retriever.py
-    → tests/unit/alignment/retrieval/test_rule_retriever.py
+focal/mechanics/focal/retrieval/rule_retriever.py
+    → tests/unit/mechanics/focal/retrieval/test_rule_retriever.py
 
 focal/memory/stores/inmemory.py
     → tests/unit/memory/stores/test_inmemory.py
 
-focal/providers/llm/base.py
-    → tests/unit/providers/llm/test_base.py
+focal/infrastructure/providers/llm/base.py
+    → tests/unit/infrastructure/providers/llm/test_base.py
 ```
 
 ### File Layout
 
 ```python
-# tests/unit/alignment/retrieval/test_rule_retriever.py
+# tests/unit/mechanics/focal/retrieval/test_rule_retriever.py
 """Unit tests for RuleRetriever."""
 
 import pytest
 from uuid import uuid4
 
-from focal.alignment.retrieval.rule_retriever import RuleRetriever
-from focal.alignment.models import Rule, Context
+from focal.mechanics.focal.retrieval.rule_retriever import RuleRetriever
+from focal.mechanics.focal.models import Rule, Context
 from tests.factories import RuleFactory, ContextFactory
 
 
@@ -386,7 +386,7 @@ from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from focal.alignment.models import Rule, RuleScope
+from focal.mechanics.focal.models import Rule, RuleScope
 
 
 @dataclass
@@ -686,19 +686,19 @@ class TestElbowSelectionStrategy:
 ### Testing Pipeline Steps
 
 ```python
-class TestContextExtractor:
-    """Unit tests for ContextExtractor."""
+class TestIdentificationSensor:
+    """Unit tests for IdentificationSensor."""
 
     @pytest.fixture
-    def extractor(self, llm_executor):
-        return LLMContextExtractor(
+    def sensor(self, llm_executor):
+        return LLMIdentificationSensor(
             llm_executor=llm_executor,
             history_turns=5,
         )
 
-    async def test_extracts_intent_from_message(self, extractor):
+    async def test_extracts_intent_from_message(self, sensor):
         """User intent is extracted from message."""
-        context = await extractor.extract(
+        context = await sensor.sense(
             message="I want to return my order",
             history=[],
         )
@@ -706,9 +706,9 @@ class TestContextExtractor:
         assert context.intent is not None
         assert context.intent.primary_intent == "return_product"
 
-    async def test_includes_conversation_history(self, extractor, sample_history):
-        """Extraction considers conversation history."""
-        context = await extractor.extract(
+    async def test_includes_conversation_history(self, sensor, sample_history):
+        """Sensing considers conversation history."""
+        context = await sensor.sense(
             message="Yes, that one",  # Ambiguous without history
             history=sample_history,
         )
@@ -716,9 +716,9 @@ class TestContextExtractor:
         # Should understand "that one" from history
         assert context.resolved_references is not None
 
-    async def test_extracts_entities(self, extractor):
+    async def test_extracts_entities(self, sensor):
         """Named entities are extracted from message."""
-        context = await extractor.extract(
+        context = await sensor.sense(
             message="I ordered product SKU-12345 last Tuesday",
             history=[],
         )
@@ -726,9 +726,9 @@ class TestContextExtractor:
         assert "SKU-12345" in [e.value for e in context.entities]
         assert any(e.type == "product_sku" for e in context.entities)
 
-    async def test_handles_empty_message(self, extractor):
+    async def test_handles_empty_message(self, sensor):
         """Empty message returns minimal context."""
-        context = await extractor.extract(message="", history=[])
+        context = await sensor.sense(message="", history=[])
 
         assert context is not None
         assert context.intent is None or context.intent.confidence < 0.5

@@ -18,15 +18,15 @@
 
 **Current Status:** 85% implemented
 - ✅ P1.1-P1.4: Session loading, customer resolution implemented
-- ⚠️ P1.5: CustomerDataStore exists (persistent), needs runtime snapshot wiring
-- ⚠️ P1.6: Config loader exists, missing GlossaryItem model and CustomerDataField schema loading
+- ⚠️ P1.5: InterlocutorDataStore exists (persistent), needs runtime snapshot wiring
+- ⚠️ P1.6: Config loader exists, missing GlossaryItem model and InterlocutorDataField schema loading
 - ✅ P1.7: Full migration system exists
 - ⚠️ P1.8: No explicit TurnContext model, implicitly passed via engine
 
 **Dependencies:**
 - Requires: Phase 0-2 (folder structure, config, observability)
 - Blocks: Phase 2 (Situational Sensor needs TurnContext)
-- Blocks: Phase 3 (Customer Data Update needs CustomerDataStore)
+- Blocks: Phase 3 (Customer Data Update needs InterlocutorDataStore)
 
 ---
 
@@ -35,7 +35,7 @@
 ### 1.1 Create TurnContext Model
 
 - [x] **Create TurnContext model**
-  - File: `focal/alignment/models/turn_context.py`
+  - File: `focal/mechanics/focal/models/turn_context.py`
   - Action: Create new file
   - Details:
     ```python
@@ -47,7 +47,7 @@
         # Routing
         tenant_id: UUID
         agent_id: UUID
-        customer_id: UUID
+        interlocutor_id: UUID
         session_id: UUID
         turn_number: int
 
@@ -55,11 +55,11 @@
         session: Session
 
         # Customer data (runtime snapshot)
-        customer_data: CustomerDataStore
+        customer_data: InterlocutorDataStore
 
         # Static config
         pipeline_config: PipelineConfig
-        customer_data_fields: dict[str, CustomerDataField]  # name -> definition
+        customer_data_fields: dict[str, InterlocutorDataField]  # name -> definition
         glossary: dict[str, GlossaryItem]  # term -> definition
 
         # Reconciliation (if happened)
@@ -73,7 +73,7 @@
 ### 1.2 Create GlossaryItem Model
 
 - [x] **Create GlossaryItem model**
-  - File: `focal/alignment/models/glossary.py`
+  - File: `focal/mechanics/focal/models/glossary.py`
   - Action: Create new file
   - Details:
     ```python
@@ -102,7 +102,7 @@
   - Why: LLM needs domain-specific terminology to extract intent and generate responses
 
 - [x] **Add GlossaryItem methods to ConfigStore interface**
-  - File: `focal/alignment/stores/agent_config_store.py`
+  - File: `focal/mechanics/focal/stores/agent_config_store.py`
   - Action: Add methods
   - Details:
     ```python
@@ -124,18 +124,18 @@
   - Why: ConfigStore owns static configuration including glossary
 
 - [x] **Implement glossary methods in InMemoryConfigStore**
-  - File: `focal/alignment/stores/inmemory.py`
+  - File: `focal/mechanics/focal/stores/inmemory.py`
   - Action: Added implementation
   - **Implemented**: Added `get_glossary_items()` and `save_glossary_item()` methods with filtering by tenant, agent, and enabled status
   - Details: Dictionary storage keyed by item ID, filters by tenant_id and agent_id
   - Why: Testing support
 
-### 1.3 Extend Existing ProfileFieldDefinition (Rename to CustomerDataField)
+### 1.3 Extend Existing ProfileFieldDefinition (Rename to InterlocutorDataField)
 
-> **COMPLETED**: Renamed `ProfileFieldDefinition` → `CustomerDataField` in `focal/customer_data/models.py`
+> **COMPLETED**: Renamed `ProfileFieldDefinition` → `InterlocutorDataField` in `focal/domain/interlocutor/models.py`
 
-- [x] **Add `scope` field to CustomerDataField**
-  - File: `focal/customer_data/models.py`
+- [x] **Add `scope` field to InterlocutorDataField**
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Modified existing class
   - Details: Add after `value_type` field:
     ```python
@@ -145,8 +145,8 @@
     )
     ```
 
-- [x] **Add `persist` field to CustomerDataField**
-  - File: `focal/customer_data/models.py`
+- [x] **Add `persist` field to InterlocutorDataField**
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Modified existing class
   - Details: Add after `scope` field:
     ```python
@@ -156,14 +156,14 @@
     )
     ```
 
-- [x] **Rename ProfileFieldDefinition → CustomerDataField**
-  - File: `focal/customer_data/models.py`
+- [x] **Rename ProfileFieldDefinition → InterlocutorDataField**
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Renamed class and updated all imports
   - Details: Updated 27 files across codebase
   - Why: Aligns with focal pipeline spec naming
 
 - [x] **Add history field to VariableEntry (renamed from ProfileField)**
-  - File: `focal/customer_data/models.py`
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Modified existing class
   - Details: Add field:
     ```python
@@ -174,37 +174,37 @@
     ```
 
 - [x] **Rename ProfileField → VariableEntry**
-  - File: `focal/customer_data/models.py`
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Renamed class and updated all imports
 
-- [x] **Rename CustomerProfile → CustomerDataStore**
-  - File: `focal/customer_data/models.py`
+- [x] **Rename CustomerProfile → InterlocutorDataStore**
+  - File: `focal/domain/interlocutor/models.py`
   - Action: Renamed class and updated all imports
 
-- [x] **Rename ProfileStore → CustomerDataStoreInterface**
-  - File: `focal/customer_data/store.py`
+- [x] **Rename ProfileStore → InterlocutorDataStoreInterface**
+  - File: `focal/domain/interlocutor/store.py`
   - Action: Renamed interface and updated all imports
 
 - [x] **Update existing model field names for consistency**
-  - File: `focal/customer_data/models.py`
+  - File: `focal/domain/interlocutor/models.py`
   - Details: Field uses `name` per existing convention
 
-### 1.4 Create CustomerSchemaMask Model (New - Not in Profile)
+### 1.4 Create InterlocutorSchemaMask Model (New - Not in Profile)
 
-- [x] **Create CustomerSchemaMask model**
-  - File: `focal/alignment/context/customer_schema_mask.py`
+- [x] **Create InterlocutorSchemaMask model**
+  - File: `focal/mechanics/focal/context/customer_schema_mask.py`
   - Action: Create new file
   - Details:
     ```python
-    class CustomerSchemaMask(BaseModel):
+    class InterlocutorSchemaMask(BaseModel):
         """Privacy-safe view of customer data schema for LLM.
 
         Shows field existence and type, NOT values.
         Used in Phase 2 (Situational Sensor).
         """
-        variables: dict[str, CustomerSchemaMaskEntry]
+        variables: dict[str, InterlocutorSchemaMaskEntry]
 
-    class CustomerSchemaMaskEntry(BaseModel):
+    class InterlocutorSchemaMaskEntry(BaseModel):
         """Single field in the schema mask."""
         scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"]
         type: str
@@ -212,26 +212,26 @@
         display_name: str | None = None
 
     def build_customer_schema_mask(
-        customer_data: CustomerDataStore,  # Renamed from CustomerProfile
-        schema: list[CustomerDataField],   # Renamed from ProfileFieldDefinition
-    ) -> CustomerSchemaMask:
+        customer_data: InterlocutorDataStore,  # Renamed from CustomerProfile
+        schema: list[InterlocutorDataField],   # Renamed from ProfileFieldDefinition
+    ) -> InterlocutorSchemaMask:
         """Build privacy-safe schema view for LLM."""
         variables = {}
         for field_def in schema:
-            variables[field_def.name] = CustomerSchemaMaskEntry(
+            variables[field_def.name] = InterlocutorSchemaMaskEntry(
                 scope=field_def.scope,
                 type=field_def.value_type,
                 exists=field_def.name in customer_data.fields,
                 display_name=field_def.display_name,
             )
-        return CustomerSchemaMask(variables=variables)
+        return InterlocutorSchemaMask(variables=variables)
     ```
   - Why: Allows LLM to extract variables without exposing PII
 
 ### 1.5 Create TurnInput Model
 
 - [x] **Create TurnInput model**
-  - File: `focal/alignment/models/turn_input.py`
+  - File: `focal/mechanics/focal/models/turn_input.py`
   - Action: Created new file
   - Details:
     ```python
@@ -283,7 +283,7 @@
     ```
   - Why: Control glossary behavior
 
-### 2.2 Add CustomerDataField Configuration
+### 2.2 Add InterlocutorDataField Configuration
 
 - [x] **Add customer data schema section**
   - File: `config/default.toml`
@@ -324,8 +324,8 @@
 
 ### 3.1 Customer Resolution (P1.2)
 
-- [x] **Add explicit customer resolution method to AlignmentEngine**
-  - File: `focal/alignment/engine.py`
+- [x] **Add explicit customer resolution method to FocalCognitivePipeline**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Added private method
   - **Implemented**: Added `_resolve_customer()` method that resolves customer from channel identity, creates new profile if not found, handles ephemeral IDs when no profile store available
   - Details:
@@ -364,35 +364,35 @@
     ```
   - Why: Explicit customer resolution (currently implicit in session lookup)
 
-### 3.2 CustomerDataStore Loading (P1.5)
+### 3.2 InterlocutorDataStore Loading (P1.5)
 
-- [x] **Add CustomerDataStore loader**
-  - File: `focal/alignment/loaders/__init__.py`
+- [x] **Add InterlocutorDataStore loader**
+  - File: `focal/mechanics/focal/loaders/__init__.py`
   - Action: Created new module
-  - Details: Created `focal/alignment/loaders/customer_data_loader.py`
+  - Details: Created `focal/mechanics/focal/loaders/customer_data_loader.py`
 
 - [x] **Implement CustomerDataLoader**
-  - File: `focal/alignment/loaders/customer_data_loader.py`
+  - File: `focal/mechanics/focal/loaders/customer_data_loader.py`
   - Action: Created new file
   - Details:
     ```python
     class CustomerDataLoader:
-        """Loads CustomerDataStore snapshot from CustomerDataStoreInterface."""
+        """Loads InterlocutorDataStore snapshot from InterlocutorDataStoreInterface."""
 
-        def __init__(self, profile_store: CustomerDataStoreInterface):
+        def __init__(self, profile_store: InterlocutorDataStoreInterface):
             self._profile_store = profile_store
 
         async def load(
             self,
             customer_id: UUID,
             tenant_id: UUID,
-            schema: dict[str, CustomerDataField],
-        ) -> CustomerDataStore:
+            schema: dict[str, InterlocutorDataField],
+        ) -> InterlocutorDataStore:
             """Load customer data snapshot.
 
             Returns runtime wrapper with VariableEntry objects.
             """
-            # Get CustomerDataStore from CustomerDataStoreInterface
+            # Get InterlocutorDataStore from InterlocutorDataStoreInterface
             profile = await self._profile_store.get_by_customer_id(
                 tenant_id=tenant_id,
                 customer_id=customer_id,
@@ -400,7 +400,7 @@
 
             if not profile:
                 # New customer, empty store
-                return CustomerDataStore(
+                return InterlocutorDataStore(
                     customer_id=customer_id,
                     tenant_id=tenant_id,
                     variables={},
@@ -433,7 +433,7 @@
                     updated_at=field.updated_at,
                 )
 
-            return CustomerDataStore(
+            return InterlocutorDataStore(
                 customer_id=customer_id,
                 tenant_id=tenant_id,
                 variables=variables,
@@ -448,7 +448,7 @@
 ### 3.3 Static Config Loading (P1.6)
 
 - [x] **Add config loader for glossary and schema**
-  - File: `focal/alignment/loaders/static_config_loader.py`
+  - File: `focal/mechanics/focal/loaders/static_config_loader.py`
   - Action: Created new file
   - Details:
     ```python
@@ -475,7 +475,7 @@
             self,
             tenant_id: UUID,
             agent_id: UUID,
-        ) -> dict[str, CustomerDataField]:
+        ) -> dict[str, InterlocutorDataField]:
             """Load customer data field definitions."""
             fields = await self._config_store.get_customer_data_fields(
                 tenant_id=tenant_id,
@@ -488,8 +488,8 @@
 
 ### 3.4 TurnContext Builder (P1.8)
 
-- [x] **Add build_turn_context method to AlignmentEngine**
-  - File: `focal/alignment/engine.py`
+- [x] **Add build_turn_context method to FocalCognitivePipeline**
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Added private method
   - **Implemented**: Added `_build_turn_context()` method that aggregates session, customer data, glossary, schema, and reconciliation results into TurnContext. Includes graceful error handling with fallback to empty data on failures.
   - Details:
@@ -498,7 +498,7 @@
         self,
         turn_input: TurnInput,
         session: Session,
-        customer_data: CustomerDataStore,
+        customer_data: InterlocutorDataStore,
         reconciliation_result: ReconciliationResult | None,
     ) -> TurnContext:
         """Build TurnContext (P1.8)."""
@@ -539,7 +539,7 @@
 ### 3.5 Refactor process_turn to Use TurnContext
 
 - [x] **Refactor process_turn to integrate Phase 1**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Modified existing method
   - **Implemented**: 2025-12-08
   - Details:
@@ -558,7 +558,7 @@
 ### 3.6 Parallel Loading Optimization (P1.5-P1.6)
 
 - [x] **Parallel loading already implemented in _build_turn_context**
-  - File: `focal/alignment/engine.py` (lines 1338-1449)
+  - File: `focal/mechanics/focal/engine.py` (lines 1338-1449)
   - Action: Already implemented
   - **Status**: Complete - no action needed
   - Details:
@@ -617,7 +617,7 @@
     - History tracking
     - SESSION scope cleanup
 
-- [x] **Test CustomerSchemaMask model**
+- [x] **Test InterlocutorSchemaMask model**
   - File: `tests/unit/alignment/context/test_customer_schema_mask.py`
   - Action: Created new file
   - Tests:
@@ -632,7 +632,7 @@
   - Action: Created new file
   - **Implemented**: 5 tests covering loading, filtering, and schema validation
   - Tests:
-    - Load from CustomerDataStoreInterface ✓
+    - Load from InterlocutorDataStoreInterface ✓
     - Convert stored fields → VariableEntry ✓
     - Handle missing profile (new customer) ✓
     - Filter inactive fields ✓
@@ -672,7 +672,7 @@
   - InMemory implementation tested via loader tests (6 tests)
   - Production store contract tests will be added with PostgreSQL implementation
 
-- [x] **CustomerDataField contract tests**: Covered by `tests/unit/alignment/loaders/test_static_config_loader.py`
+- [x] **InterlocutorDataField contract tests**: Covered by `tests/unit/alignment/loaders/test_static_config_loader.py`
   - InMemory implementation tested via loader tests
   - Production store contract tests will be added with PostgreSQL implementation
 
@@ -683,7 +683,7 @@
 ### 5.1 Metrics
 
 - [x] **Timing metrics implemented**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Added timing for customer resolution step
   - **Implemented**: 2025-12-08
   - Details:
@@ -700,7 +700,7 @@
 ### 5.2 Structured Logging
 
 - [x] **Phase 1 log events added**
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Action: Added structured logs for Phase 1 operations
   - **Implemented**: 2025-12-08
   - Details:
@@ -718,7 +718,7 @@
 ### 5.3 Tracing
 
 - [x] **OpenTelemetry spans**: Infrastructure ready, spans can be added incrementally
-  - File: `focal/alignment/engine.py`
+  - File: `focal/mechanics/focal/engine.py`
   - Status: Structured logging provides traceability; OTel spans are enhancement
   - Current tracing: All Phase 1 operations logged with tenant_id, agent_id, session_id, customer_id
   - OTel spans can be added when instrumenting full pipeline
@@ -732,10 +732,10 @@
 - [x] **CLAUDE.md updated with Phase 1 documentation**
   - File: `CLAUDE.md`
   - Added: "Focal Turn Pipeline (Phase 1 Implementation)" section
-  - Documents: TurnContext, TurnInput, GlossaryItem, CustomerSchemaMask
-  - Documents: CustomerDataField, VariableEntry, CustomerDataStore
+  - Documents: TurnContext, TurnInput, GlossaryItem, InterlocutorSchemaMask
+  - Documents: InterlocutorDataField, VariableEntry, InterlocutorDataStore
   - Documents: CustomerDataLoader, StaticConfigLoader
-  - Documents: Usage in AlignmentEngine
+  - Documents: Usage in FocalCognitivePipeline
 
 ### 6.2 Update Architecture Docs
 
@@ -768,16 +768,16 @@
 
 ### 7.2 Blocks These Phases
 
-- Phase 2 (Situational Sensor): Needs CustomerSchemaMask, GlossaryView
-- Phase 3 (Customer Data Update): Needs CustomerDataStore runtime wrapper
-- Phase 7 (Tool Execution): Needs CustomerDataStore for variable resolution
+- Phase 2 (Situational Sensor): Needs InterlocutorSchemaMask, GlossaryView
+- Phase 3 (Customer Data Update): Needs InterlocutorDataStore runtime wrapper
+- Phase 7 (Tool Execution): Needs InterlocutorDataStore for variable resolution
 - Phase 8 (Response Planning): Needs GlossaryView for prompt building
 
 ### 7.3 Optional Enhancements (Future)
 
 - Intent catalog (P4.2-P4.3 in focal_turn_pipeline.md)
 - External glossary source (S3, API)
-- CustomerDataField versioning
+- InterlocutorDataField versioning
 - Multi-agent glossary sharing
 
 ---
@@ -786,12 +786,12 @@
 
 ### Phase 1 is complete when:
 
-1. ✅ Profile models renamed: ProfileFieldDefinition → CustomerDataField, ProfileField → VariableEntry, CustomerProfile → CustomerDataStore
-2. ✅ `scope` and `persist` fields added to CustomerDataField
+1. ✅ Profile models renamed: ProfileFieldDefinition → InterlocutorDataField, ProfileField → VariableEntry, CustomerProfile → InterlocutorDataStore
+2. ✅ `scope` and `persist` fields added to InterlocutorDataField
 3. ✅ `history` field added to VariableEntry
-4. ✅ TurnContext, GlossaryItem, CustomerSchemaMask models created
+4. ✅ TurnContext, GlossaryItem, InterlocutorSchemaMask models created
 5. ✅ ConfigStore has glossary methods
-6. ✅ AlignmentEngine has explicit Phase 1 methods (P1.1-P1.8)
+6. ✅ FocalCognitivePipeline has explicit Phase 1 methods (P1.1-P1.8)
 7. ✅ TurnContext is built and passed to Phase 2+
 8. ✅ Parallel loading (P1.5-P1.6) works
 9. ✅ All unit tests pass (85% coverage minimum)
@@ -805,11 +805,11 @@
 | Task Category | Estimated Time |
 |---------------|----------------|
 | Profile model renames + field additions | 2 hours |
-| New models (TurnContext, GlossaryItem, CustomerSchemaMask) | 2 hours |
+| New models (TurnContext, GlossaryItem, InterlocutorSchemaMask) | 2 hours |
 | Loaders (CustomerDataLoader, StaticConfigLoader) | 3 hours |
 | ConfigStore interface extensions | 2 hours |
 | InMemoryConfigStore implementation | 2 hours |
-| AlignmentEngine refactoring | 4 hours |
+| FocalCognitivePipeline refactoring | 4 hours |
 | Unit tests | 6 hours |
 | Integration tests | 3 hours |
 | Observability (metrics, logging, tracing) | 2 hours |
@@ -823,8 +823,8 @@
 Recommended order to minimize dependencies:
 
 1. **Models** (Day 1 AM)
-   - TurnInput, GlossaryItem, CustomerDataField
-   - CustomerDataStore, VariableEntry, CustomerSchemaMask
+   - TurnInput, GlossaryItem, InterlocutorDataField
+   - InterlocutorDataStore, VariableEntry, InterlocutorSchemaMask
    - TurnContext
 
 2. **ConfigStore Extensions** (Day 1 PM)
@@ -837,7 +837,7 @@ Recommended order to minimize dependencies:
    - StaticConfigLoader
    - Unit tests for loaders
 
-4. **AlignmentEngine Integration** (Day 2 PM - Day 3)
+4. **FocalCognitivePipeline Integration** (Day 2 PM - Day 3)
    - Refactor process_turn to use TurnContext
    - Add P1.1-P1.8 explicit methods
    - Parallel loading optimization
@@ -862,11 +862,11 @@ Recommended order to minimize dependencies:
 
 ## 11. Notes
 
-- **IMPORTANT - Renaming Convention**: The `focal/customer_data/` module (formerly `focal/profile/`) IS the CustomerDataStore implementation. Renames completed:
-  - `ProfileFieldDefinition` → `CustomerDataField` ✓
+- **IMPORTANT - Renaming Convention**: The `focal/domain/interlocutor/` module (formerly `focal/profile/`) IS the InterlocutorDataStore implementation. Renames completed:
+  - `ProfileFieldDefinition` → `InterlocutorDataField` ✓
   - `ProfileField` → `VariableEntry` ✓
-  - `CustomerProfile` → `CustomerDataStore` ✓
-  - `ProfileStore` → `CustomerDataStoreInterface` ✓
+  - `CustomerProfile` → `InterlocutorDataStore` ✓
+  - `ProfileStore` → `InterlocutorDataStoreInterface` ✓
 
 - **Scope Lifetimes**:
   - IDENTITY: Permanent (name, email, phone)
@@ -892,25 +892,25 @@ Recommended order to minimize dependencies:
 - Coverage: All customer_data module tests passing
 
 **Renames Completed:**
-- ProfileFieldDefinition → CustomerDataField ✓
+- ProfileFieldDefinition → InterlocutorDataField ✓
 - ProfileField → VariableEntry ✓
-- CustomerProfile → CustomerDataStore ✓
+- CustomerProfile → InterlocutorDataStore ✓
 - ProfileFieldSource → VariableSource ✓
 
 **Files Modified:**
-- `focal/customer_data/models.py` - Renamed all three classes
-- `focal/customer_data/enums.py` - Renamed VariableSource enum
-- `focal/customer_data/__init__.py` - Updated exports (removed aliases)
-- `focal/customer_data/store.py` - Updated all type hints
-- `focal/customer_data/validation.py` - Updated imports and type hints
-- `focal/customer_data/extraction.py` - Updated imports and type hints
-- `focal/customer_data/stores/cached.py` - Updated imports and type hints
-- `focal/customer_data/stores/inmemory.py` - Updated imports and type hints
-- `focal/customer_data/stores/postgres.py` - Updated imports and type hints
-- `focal/alignment/filtering/scenario_filter.py` - Updated imports
-- `focal/alignment/loaders/customer_data_loader.py` - Updated imports
-- `focal/alignment/migration/field_resolver.py` - Updated imports
-- `focal/alignment/migration/models.py` - Updated imports
+- `focal/domain/interlocutor/models.py` - Renamed all three classes
+- `focal/domain/interlocutor/enums.py` - Renamed VariableSource enum
+- `focal/domain/interlocutor/__init__.py` - Updated exports (removed aliases)
+- `focal/domain/interlocutor/store.py` - Updated all type hints
+- `focal/domain/interlocutor/validation.py` - Updated imports and type hints
+- `focal/domain/interlocutor/extraction.py` - Updated imports and type hints
+- `focal/domain/interlocutor/stores/cached.py` - Updated imports and type hints
+- `focal/domain/interlocutor/stores/inmemory.py` - Updated imports and type hints
+- `focal/domain/interlocutor/stores/postgres.py` - Updated imports and type hints
+- `focal/mechanics/focal/filtering/scenario_filter.py` - Updated imports
+- `focal/mechanics/focal/loaders/customer_data_loader.py` - Updated imports
+- `focal/mechanics/focal/migration/field_resolver.py` - Updated imports
+- `focal/mechanics/focal/migration/models.py` - Updated imports
 - `focal/jobs/workflows/schema_extraction.py` - Updated imports
 - `tests/integration/stores/test_postgres_customer_data.py` - Updated imports
 - `tests/contract/test_customer_data_store_contract.py` - Updated imports
@@ -930,7 +930,7 @@ All customer_data unit tests passing:
 - ChannelIdentity models: 4 tests
 - VariableEntry (formerly ProfileField): 10 tests
 - ProfileAsset models: 4 tests
-- CustomerDataField (formerly ProfileFieldDefinition): 6 tests
+- InterlocutorDataField (formerly ProfileFieldDefinition): 6 tests
 - ScenarioFieldRequirement: 6 tests
 - Validation logic: 18 tests
 - Store implementations: 82 tests
@@ -939,7 +939,7 @@ All customer_data unit tests passing:
 - This is a BREAKING CHANGE - all code using the old names has been updated
 - No aliases remain in `__init__.py` - only the new names are exported
 - The `history` field was already present in VariableEntry from CCV implementation
-- The `scope` and `persist` fields were already present in CustomerDataField from CCV implementation
+- The `scope` and `persist` fields were already present in InterlocutorDataField from CCV implementation
 - All imports across the entire codebase have been updated to use the new names
 
 ---
@@ -947,7 +947,7 @@ All customer_data unit tests passing:
 ### Folder Rename Completed: 2025-12-08
 
 **Folder Renames:**
-- `focal/profile/` → `focal/customer_data/` ✓
+- `focal/profile/` → `focal/domain/interlocutor/` ✓
 - `tests/unit/profile/` → `tests/unit/customer_data/` ✓
 
 **Test File Renames:**
@@ -976,19 +976,19 @@ All customer_data unit tests passing:
 
 **Changes Made:**
 
-1. **Updated process_turn signature** (`focal/alignment/engine.py` lines 220-258)
+1. **Updated process_turn signature** (`focal/mechanics/focal/engine.py` lines 220-258)
    - Added `channel: str = "api"` parameter
    - Added `channel_user_id: str | None = None` parameter
    - Added `customer_id: UUID | None = None` parameter
    - Updated docstring to reflect Phase 1 steps
 
-2. **Added customer resolution** (`focal/alignment/engine.py` lines 317-340)
+2. **Added customer resolution** (`focal/mechanics/focal/engine.py` lines 317-340)
    - Call `_resolve_customer()` at start of `_process_turn_impl`
    - Use `channel_user_id or str(session_id)` as fallback identifier
    - Added timing for customer_resolution step
    - Returns `(customer_id, is_new_customer)` tuple
 
-3. **Added TurnContext building** (`focal/alignment/engine.py` lines 389-409)
+3. **Added TurnContext building** (`focal/mechanics/focal/engine.py` lines 389-409)
    - Call `_build_turn_context()` after reconciliation
    - Only builds when session exists (graceful degradation)
    - Added structured logging for turn_context_built event

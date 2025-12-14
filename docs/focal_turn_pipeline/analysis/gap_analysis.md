@@ -13,32 +13,32 @@
 
 The focal pipeline specification uses a **two-part customer data architecture**:
 
-> **Note:** Since this analysis was generated, naming has been consolidated in `focal/customer_data/` (`CustomerProfile` → `CustomerDataStore`, `ProfileField` → `VariableEntry`, etc.). Treat legacy names below as historical references.
+> **Note:** Since this analysis was generated, naming has been consolidated in `focal/domain/interlocutor/` (`CustomerProfile` → `InterlocutorDataStore`, `ProfileField` → `VariableEntry`, etc.). Treat legacy names below as historical references.
 
 | Component | Purpose | Current Implementation |
 |-----------|---------|------------------------|
-| **CustomerDataField** | Schema definition (what fields exist) | `CustomerDataField` exists (includes `scope` and `persist`) |
-| **CustomerDataStore** | Runtime values per customer | `CustomerDataStore` exists (loaded as a per-turn snapshot) |
+| **InterlocutorDataField** | Schema definition (what fields exist) | `InterlocutorDataField` exists (includes `scope` and `persist`) |
+| **InterlocutorDataStore** | Runtime values per customer | `InterlocutorDataStore` exists (loaded as a per-turn snapshot) |
 | **VariableEntry** | Per-variable metadata with history | `VariableEntry` exists (includes `history`; no explicit `scope` field) |
-| **CustomerSchemaMask** | Privacy-safe LLM view | Implemented (`focal/alignment/context/customer_schema_mask.py`) |
-| **CandidateVariableInfo** | LLM extraction intermediate | Implemented (`focal/alignment/context/situation_snapshot.py`) |
+| **InterlocutorSchemaMask** | Privacy-safe LLM view | Implemented (`focal/mechanics/focal/context/interlocutor_schema_mask.py`) |
+| **CandidateVariableInfo** | LLM extraction intermediate | Implemented (`focal/mechanics/focal/context/situation_snapshot.py`) |
 
 **Architecture Mismatch**: Customer data is stored persistently, but the pipeline requires a **runtime per-turn snapshot** that's loaded (P1.5), mutated in-memory (P3.3), and persisted selectively (P11.3).
 
-**What CustomerDataStore HAS**:
+**What InterlocutorDataStore HAS**:
 - `VariableEntry` with value, type, source, confidence, timestamps ✓
-- `CustomerDataField` with name, type, validation, `scope`, `persist` ✓
-- `CustomerDataStoreInterface` with CRUD operations ✓
+- `InterlocutorDataField` with name, type, validation, `scope`, `persist` ✓
+- `InterlocutorDataStoreInterface` with CRUD operations ✓
 - `VerificationLevel`, `ItemStatus`, `SourceType` enums ✓
 
-**What CustomerDataStore is MISSING**:
-- Explicit `scope` on `VariableEntry` (currently scope is defined on `CustomerDataField` and must be derived at runtime)
+**What InterlocutorDataStore is MISSING**:
+- Explicit `scope` on `VariableEntry` (currently scope is defined on `InterlocutorDataField` and must be derived at runtime)
 - Session-end cleanup for SESSION-scoped variables (or equivalent TTL/expiry semantics)
 
 **Critical Impact**: Phases P1.5, P2.1, P3.1-P3.4, P7.3, P11.3 all depend on this architecture.
 
 **Migration path**:
-1. Decide whether `VariableEntry` stores `scope` or derives it from `CustomerDataField`
+1. Decide whether `VariableEntry` stores `scope` or derives it from `InterlocutorDataField`
 2. Implement session-end cleanup for SESSION scope (if not already handled elsewhere)
 
 ---
@@ -103,15 +103,15 @@ The spec (Section 5) requires each LLM task to have:
 | P1.2 | Resolve customer from channel | ⚠️ PARTIAL | `chat.py` - Implicit in session lookup | No explicit `customer_id`, `is_new_customer` tracking |
 | P1.3 | Resolve/create session | ✅ IMPLEMENTED | `conversation/stores/` - Redis & InMemory | — |
 | P1.4 | Load SessionState | ✅ IMPLEMENTED | `conversation/models/session.py` | — |
-| P1.5 | Load CustomerDataStore | ⚠️ PARTIAL | `customer_data/models.py`, `customer_data/store.py` | Has CustomerDataStore, needs explicit per-turn snapshot wiring (see Key Architectural Notes) |
-| P1.6 | Load static config | ⚠️ PARTIAL | `config/loader.py` | **Missing**: GlossaryItem, CustomerDataField schema |
+| P1.5 | Load InterlocutorDataStore | ⚠️ PARTIAL | `domain/interlocutor/models.py`, `domain/interlocutor/store.py` | Has InterlocutorDataStore, needs explicit per-turn snapshot wiring (see Key Architectural Notes) |
+| P1.6 | Load static config | ⚠️ PARTIAL | `config/loader.py` | **Missing**: GlossaryItem, InterlocutorDataField schema |
 | P1.7 | Scenario reconciliation | ✅ IMPLEMENTED | `alignment/migration/` | Full migration system |
 | P1.8 | Build TurnContext | ⚠️ PARTIAL | Engine + DI | **Missing**: Explicit `TurnContext` model |
 
 **Key Gaps**:
 - No explicit `TurnContext` aggregation model
 - Glossary items not implemented
-- CustomerDataField schema loading not explicit
+- InterlocutorDataField schema loading not explicit
 
 ---
 
@@ -121,7 +121,7 @@ The spec (Section 5) requires each LLM task to have:
 
 | ID | Sub-phase | Status | Implementation | Gap |
 |----|-----------|--------|----------------|-----|
-| P2.1 | Build CustomerSchemaMask | ❌ NOT FOUND | — | Model not defined, no masking logic |
+| P2.1 | Build InterlocutorSchemaMask | ❌ NOT FOUND | — | Model not defined, no masking logic |
 | P2.2 | Build Glossary view | ❌ NOT FOUND | — | No `GlossaryItem` model, no retrieval |
 | P2.3 | Build conversation window | ⚠️ PARTIAL | `extractor.py:161-171` | Hardcoded K=5, not configurable |
 | P2.4 | Call Situational Sensor LLM | ⚠️ PARTIAL | `context/extractor.py:140-159` | Missing: schema mask, glossary, candidate vars |
@@ -162,30 +162,30 @@ situation_facts: list[str]
 **Key Gaps**:
 - **`SituationalSnapshot`** model completely missing
 - **`CandidateVariableInfo`** model completely missing (blocks Phase 3)
-- **`CustomerSchemaMask`** not built or passed to LLM
+- **`InterlocutorSchemaMask`** not built or passed to LLM
 - **`GlossaryItem`** and `GlossaryView` not implemented
 - Conversation window hardcoded to K=5 (line 167 of `extractor.py`)
 - No candidate variable extraction from user message
-- **Blocks Phase 3**: Without `candidate_variables`, P3 cannot update CustomerDataStore
+- **Blocks Phase 3**: Without `candidate_variables`, P3 cannot update InterlocutorDataStore
 
 ---
 
 ## Phase 3: Customer Data Update
 
-**Goal**: Map `candidate_variables` into `CustomerDataStore` using schema definitions.
+**Goal**: Map `candidate_variables` into `InterlocutorDataStore` using schema definitions.
 
 | ID | Sub-phase | Status | Implementation | Gap |
 |----|-----------|--------|----------------|-----|
 | P3.1 | Match candidates to fields | ❌ NOT FOUND | — | Depends on P2 (SituationalSnapshot) |
-| P3.2 | Validate & coerce types | ⚠️ PARTIAL | `customer_data/validation.py` | Exists but not integrated |
-| P3.3 | Apply updates in memory | ❌ NOT FOUND | — | Has `CustomerDataStore`, needs in-memory update flow with history/confidence |
+| P3.2 | Validate & coerce types | ⚠️ PARTIAL | `domain/interlocutor/validation.py` | Exists but not integrated |
+| P3.3 | Apply updates in memory | ❌ NOT FOUND | — | Has `InterlocutorDataStore`, needs in-memory update flow with history/confidence |
 | P3.4 | Mark updates for persistence | ❌ NOT FOUND | — | No `persistent_updates` tracking |
 
 **Key Gaps**:
 - Blocked by Phase 2 gaps (no `SituationalSnapshot`)
-- `CustomerDataStore` architecture not implemented (see Key Architectural Notes)
-  - Has `CustomerDataStore` but needs: `CustomerDataField` schema, `VariableEntry` with history/confidence
-- `CustomerDataUpdate` model not defined
+- `InterlocutorDataStore` architecture not implemented (see Key Architectural Notes)
+  - Has `InterlocutorDataStore` but needs: `InterlocutorDataField` schema, `VariableEntry` with history/confidence
+- `InterlocutorDataUpdate` model not defined
 - Validation exists but not connected to pipeline
 
 ---
@@ -261,7 +261,7 @@ situation_facts: list[str]
 |----|-----------|--------|----------------|-----|
 | P7.1 | Collect tool bindings | ⚠️ PARTIAL | `Rule.attached_tool_ids` exists | No `ToolBinding` model, no collection logic |
 | P7.2 | Compute required variables | ❌ NOT FOUND | — | No variable requirement analysis |
-| P7.3 | Resolve from profile/session | ⚠️ PARTIAL | Models exist | Resolution logic not implemented |
+| P7.3 | Resolve from interlocutor/session | ⚠️ PARTIAL | Models exist | Resolution logic not implemented |
 | P7.4 | Determine allowed tool calls | ❌ NOT FOUND | — | No BEFORE/DURING/AFTER scheduling |
 | P7.5 | Execute tenant tools | ✅ IMPLEMENTED | `execution/tool_executor.py` | Parallel, timeout, fail-fast |
 | P7.6 | Merge tool results | ⚠️ PARTIAL | `session.variables` update | No formal `engine_variables` phase |
@@ -443,7 +443,7 @@ if any(phrase in lower_response for phrase in self._extract_phrases(rule)):
 |----|-----------|--------|----------------|-----|
 | P11.1 | Update SessionState | ✅ IMPLEMENTED | `engine.py` | — |
 | P11.2 | Persist SessionState | ✅ IMPLEMENTED | `conversation/stores/` | Redis, PostgreSQL |
-| P11.3 | Persist CustomerDataStore | ⚠️ PARTIAL | `customer_data/store.py` | No explicit `persistent_updates` batch |
+| P11.3 | Persist InterlocutorDataStore | ⚠️ PARTIAL | `domain/interlocutor/store.py` | No explicit `persistent_updates` batch |
 | P11.4 | Record TurnRecord | ✅ IMPLEMENTED | `audit/stores/` | PostgreSQL, InMemory |
 | P11.5 | Memory ingestion | ✅ IMPLEMENTED | `memory/ingestion/` | Async queue, summarization |
 | P11.6 | Build final API response | ✅ IMPLEMENTED | `api/routes/chat.py` | — |
@@ -495,10 +495,10 @@ Based on dependencies and impact:
 |-------|-------|----------|
 | `SituationalSnapshot` | P2 | High |
 | `CandidateVariableInfo` | P2 | High |
-| `CustomerSchemaMask` | P2 | High |
+| `InterlocutorSchemaMask` | P2 | High |
 | `GlossaryItem` / `GlossaryView` | P1, P2 | Medium |
-| `CustomerDataStore` + `CustomerDataField` + `VariableEntry` | P1, P3 | High |
-| `CustomerDataUpdate` | P3 | High |
+| `InterlocutorDataStore` + `InterlocutorDataField` + `VariableEntry` | P1, P3 | High |
+| `InterlocutorDataUpdate` | P3 | High |
 | `TurnContext` | P1 | Medium |
 | `ScenarioContribution` | P6 | High |
 | `ScenarioContributionPlan` | P6 | High |
@@ -515,11 +515,9 @@ Based on dependencies and impact:
 ## Files to Create
 
 ```
-focal/alignment/
+focal/mechanics/focal/
 ├── context/
 │   └── situational_snapshot.py    # SituationalSnapshot, CandidateVariableInfo
-├── customer/
-│   └── data_store.py              # CustomerDataStore, CustomerDataUpdate
 ├── planning/
 │   ├── response_planner.py        # ResponsePlan synthesis
 │   └── models.py                  # ResponsePlan, ResponseType
@@ -531,6 +529,9 @@ focal/alignment/
 │   └── grounding_verifier.py      # Grounding check
 └── models/
     └── outcome.py                 # TurnOutcome, OutcomeCategory
+
+focal/domain/interlocutor/
+└── data_store.py                  # InterlocutorDataStore, InterlocutorDataUpdate
 ```
 
 ---
@@ -543,10 +544,10 @@ See `focal_turn_pipeline.md` Section 6 for the full Pipeline Execution Model.
 
 | Phase | Parallel Operations | Spec | Current | Gap |
 |-------|---------------------|------|---------|-----|
-| **P1** | CustomerDataStore ‖ Config/Glossary | ✓ Parallel | Sequential | `engine.py:293-300` - sequential awaits |
+| **P1** | InterlocutorDataStore ‖ Config/Glossary | ✓ Parallel | Sequential | `engine.py:293-300` - sequential awaits |
 | **P4** | Rule ‖ Scenario ‖ Memory ‖ Intent retrieval | ✓ Parallel | Sequential | `engine.py:746-778` - sequential awaits |
 | **P4** | Reranking per object type | ✓ Parallel | Sequential | Only rules reranked, no gather |
-| **P11** | Session ‖ CustomerData ‖ TurnRecord ‖ Memory | ✓ Parallel | Sequential | `engine.py:446-460` - sequential awaits |
+| **P11** | Session ‖ InterlocutorData ‖ TurnRecord ‖ Memory | ✓ Parallel | Sequential | `engine.py:446-460` - sequential awaits |
 | **P11** | Memory ingestion (background) | ✓ Async | Not integrated | Task queue exists but unused |
 
 **Current Code Analysis** (from `engine.py`):

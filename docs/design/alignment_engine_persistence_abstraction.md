@@ -1,7 +1,9 @@
 
 # Persistence Abstraction for the Alignment Engine (SQL / NoSQL Agnostic)
 
-> **Status:** HISTORICAL. This document predates `docs/focal_360/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses `ConfigStore`, `MemoryStore`, `SessionStore`, `AuditStore` (plus `CustomerDataStoreInterface`) with UUIDs.
+> **Status:** HISTORICAL. This document predates `docs/focal_360/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses stores in `focal/stores/` (including `MemoryStore`, `SessionStore`, `AuditStore`, plus `InterlocutorDataStoreInterface`) with UUIDs.
+>
+> The alignment engine implementation is now `FocalCognitivePipeline` in `focal/mechanics/focal/pipeline.py`.
 >
 > For the current approach, see: `docs/design/decisions/001-storage-choice.md` and `docs/architecture/overview.md`.
 
@@ -13,7 +15,7 @@
 
 ### 1.1 What we want
 
-We want the **alignment engine** (rules, scenarios, customer state, sessions, enforcement, etc.) to:
+We want the **alignment engine** (rules, scenarios, interlocutor state, sessions, enforcement, etc.) to:
 
 - **Not care** whether the underlying storage is SQL (e.g. Postgres) or NoSQL (e.g. Mongo).
 - Use **one physical database per deployment** (or per environment), not 10 different datastores.
@@ -52,8 +54,8 @@ Examples of **domain objects** for the engine:
 - `ScenarioTransition`
 - `ScenarioInstance`
 - `SessionState`
-- `CustomerDataStore`
-- `CustomerDataField`
+- `InterlocutorDataStore`
+- `InterlocutorDataField`
 - `GlossaryItem`
 - `TurnInput`
 - `TurnContext`
@@ -106,8 +108,8 @@ Concretely, for v1 we assume:
 
 Both hold:
 
-- **Config & knowledge** (rules, scenarios, steps, glossary, customer data fields, pipeline config).
-- **Customer & session state** (CustomerDataStore, SessionState).
+- **Config & knowledge** (rules, scenarios, steps, glossary, interlocutor data fields, pipeline config).
+- **Interlocutor & session state** (InterlocutorDataStore, SessionState).
 - **Audit logs** (TurnRecord).
 
 We are *not* talking about “one DB per type of data”. There is **one physical DB** per deployment.
@@ -139,7 +141,7 @@ Engine code never touches SQLAlchemy, Motor, Prisma, etc.; it only calls these i
 - `Rule`
 - `Scenario`, `ScenarioStep`, `ScenarioTransition`
 - `GlossaryItem`
-- `CustomerDataField`
+- `InterlocutorDataField`
 - Pipeline / LLM task configs
 
 **Characteristics:**
@@ -150,11 +152,11 @@ Engine code never touches SQLAlchemy, Motor, Prisma, etc.; it only calls these i
 
 These are handled by `ConfigStore`.
 
-### 4.2 Category 2: State (Customer & Session)
+### 4.2 Category 2: State (Interlocutor & Session)
 
 **What lives here:**
 
-- `CustomerDataStore` (profile + variables, history & confidence).
+- `InterlocutorDataStore` (profile + variables, history & confidence).
 - `SessionState` (active scenarios, last intent, per-session variables).
 
 **Characteristics:**
@@ -234,11 +236,11 @@ class ConfigStore(ABC):
     ) -> Sequence[GlossaryItem]:
         ...
 
-    # Customer data fields (profile schema)
+    # Interlocutor data fields (profile schema)
     @abstractmethod
-    async def list_customer_data_fields_for_agent(
+    async def list_interlocutor_data_fields_for_agent(
         self, tenant_id: str, agent_id: str
-    ) -> Sequence[CustomerDataField]:
+    ) -> Sequence[InterlocutorDataField]:
         ...
 ```
 
@@ -248,31 +250,31 @@ Later, you can extend it with:
 
 ### 5.2 StateStore
 
-Responsibility: **read/write customer and session state**.
+Responsibility: **read/write interlocutor and session state**.
 
 ```python
 class StateStore(ABC):
-    # Customer data
+    # Interlocutor data
 
     @abstractmethod
-    async def get_customer_data(
+    async def get_interlocutor_data(
         self, tenant_id: str, customer_key: str
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         ...
 
     @abstractmethod
-    async def save_customer_data(
-        self, customer_data: CustomerDataStore
+    async def save_interlocutor_data(
+        self, interlocutor_data: InterlocutorDataStore
     ) -> None:
         ...
 
     @abstractmethod
-    async def find_customer_by_channel(
+    async def find_interlocutor_by_channel(
         self,
         tenant_id: str,
         channel_type: str,  # "whatsapp", "email", "webchat", etc.
         channel_id: str,    # phone number, email address, webchat session ID
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         ...
 
     # Session state
@@ -321,12 +323,12 @@ class PersistencePort(ABC):
     async def list_rules_for_agent(...): ...
     async def list_scenarios_for_agent(...): ...
     async def list_glossary_for_agent(...): ...
-    async def list_customer_data_fields_for_agent(...): ...
+    async def list_interlocutor_data_fields_for_agent(...): ...
 
     # State methods
-    async def get_customer_data(...): ...
-    async def save_customer_data(...): ...
-    async def find_customer_by_channel(...): ...
+    async def get_interlocutor_data(...): ...
+    async def save_interlocutor_data(...): ...
+    async def find_interlocutor_by_channel(...): ...
     async def get_session(...): ...
     async def save_session(...): ...
 
@@ -372,7 +374,7 @@ Assume a single Postgres database with tables:
 - `scenario_steps`
 - `scenario_transitions`
 - `glossary_items`
-- `customer_data`
+- `interlocutor_data`
 - `sessions`
 - `turn_records`
 
@@ -441,26 +443,26 @@ class PostgresConfigStore(ConfigStore):
 
 ### 7.3 PostgresStateStore (sketch)
 
-For simplicity, treat `CustomerDataStore` and `SessionState` as **JSON columns**.
+For simplicity, treat `InterlocutorDataStore` and `SessionState` as **JSON columns**.
 
 ```python
 class PostgresStateStore(StateStore):
     def __init__(self, engine: AsyncEngine):
         self.engine = engine
 
-    async def get_customer_data(self, tenant_id: str, customer_key: str) -> CustomerDataStore | None:
+    async def get_interlocutor_data(self, tenant_id: str, customer_key: str) -> InterlocutorDataStore | None:
         query = text(
-            "SELECT data FROM customer_data WHERE tenant_id = :tenant_id AND customer_key = :ck"
+            "SELECT data FROM interlocutor_data WHERE tenant_id = :tenant_id AND customer_key = :ck"
         )
         async with self.engine.connect() as conn:
             row = (await conn.execute(query, {"tenant_id": tenant_id, "ck": customer_key})).mappings().first()
-        return CustomerDataStore(**row["data"]) if row else None
+        return InterlocutorDataStore(**row["data"]) if row else None
 
-    async def save_customer_data(self, customer_data: CustomerDataStore) -> None:
-        payload = customer_data.model_dump()
+    async def save_interlocutor_data(self, interlocutor_data: InterlocutorDataStore) -> None:
+        payload = interlocutor_data.model_dump()
         query = text(
             """
-            INSERT INTO customer_data (tenant_id, customer_key, data)
+            INSERT INTO interlocutor_data (tenant_id, customer_key, data)
             VALUES (:tenant_id, :ck, :data)
             ON CONFLICT (tenant_id, customer_key)
             DO UPDATE SET data = EXCLUDED.data
@@ -470,8 +472,8 @@ class PostgresStateStore(StateStore):
             await conn.execute(
                 query,
                 {
-                    "tenant_id": customer_data.tenant_id,
-                    "ck": customer_data.customer_key,
+                    "tenant_id": interlocutor_data.tenant_id,
+                    "ck": interlocutor_data.customer_key,
                     "data": payload,
                 },
             )
@@ -559,14 +561,14 @@ class MongoStateStore(StateStore):
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
 
-    async def get_customer_data(self, tenant_id: str, customer_key: str) -> CustomerDataStore | None:
-        doc = await self.db.customer_data.find_one({"tenant_id": tenant_id, "customer_key": customer_key})
-        return CustomerDataStore(**doc["data"]) if doc else None
+    async def get_interlocutor_data(self, tenant_id: str, customer_key: str) -> InterlocutorDataStore | None:
+        doc = await self.db.interlocutor_data.find_one({"tenant_id": tenant_id, "customer_key": customer_key})
+        return InterlocutorDataStore(**doc["data"]) if doc else None
 
-    async def save_customer_data(self, customer_data: CustomerDataStore) -> None:
-        await self.db.customer_data.update_one(
-            {"tenant_id": customer_data.tenant_id, "customer_key": customer_data.customer_key},
-            {"$set": {"data": customer_data.model_dump()}},
+    async def save_interlocutor_data(self, interlocutor_data: InterlocutorDataStore) -> None:
+        await self.db.interlocutor_data.update_one(
+            {"tenant_id": interlocutor_data.tenant_id, "customer_key": interlocutor_data.customer_key},
+            {"$set": {"data": interlocutor_data.model_dump()}},
             upsert=True,
         )
 
@@ -590,10 +592,10 @@ Notice: **engine code doesn’t change** – only the wiring at startup.
 
 ### 9.1 Do we need cross-aggregate transactions?
 
-In typical turns, you’ll do:
+In typical turns, you'll do:
 
 - Update `SessionState`.
-- Update `CustomerDataStore`.
+- Update `InterlocutorDataStore`.
 - Record `TurnRecord`.
 
 Ideally, those are **all-or-nothing**.
@@ -629,7 +631,7 @@ Then in your **Phase 11** code you do:
 ```python
 async with unit_of_work as uow:
     await uow.state.save_session(session)
-    await uow.state.save_customer_data(customer_data)
+    await uow.state.save_interlocutor_data(interlocutor_data)
     await uow.audit.record_turn(turn_record)
     await uow.commit()
 ```
@@ -650,21 +652,21 @@ If this feels heavy for v1, you can:
 ### Phase 1 (load)
 
 - `StateStore`:
-  - `find_customer_by_channel`
-  - `get_customer_data`
+  - `find_interlocutor_by_channel`
+  - `get_interlocutor_data`
   - `get_session`
 - `ConfigStore`:
   - `list_rules_for_agent`
   - `list_scenarios_for_agent`
   - `list_glossary_for_agent`
-  - `list_customer_data_fields_for_agent`
+  - `list_interlocutor_data_fields_for_agent`
 
 ### Phase 3 & 11 (update / persist)
 
 - After Phase 3 (in-memory updates), we **only mark** which updates must be persisted.
 - In Phase 11:
-  - `StateStore.save_session`  
-  - `StateStore.save_customer_data`
+  - `StateStore.save_session`
+  - `StateStore.save_interlocutor_data`
   - `AuditStore.record_turn`
 
 Other phases (2, 4, 5, 6, 7, 8, 9, 10) work purely in memory and with `VectorStore` for retrieval.
@@ -677,7 +679,7 @@ Other phases (2, 4, 5, 6, 7, 8, 9, 10) work purely in memory and with `VectorSto
 
 Every persisted entity has `tenant_id` as a **first-class field**:
 
-- `Rule`, `Scenario`, `ScenarioStep`, `CustomerDataStore`, `SessionState`, `TurnRecord`, etc.
+- `Rule`, `Scenario`, `ScenarioStep`, `InterlocutorDataStore`, `SessionState`, `TurnRecord`, etc.
 
 Queries in stores always filter by `tenant_id`. Example in Postgres:
 
@@ -722,11 +724,11 @@ class InMemoryStateStore(StateStore):
         self.customers = {}
         self.sessions = {}
 
-    async def get_customer_data(self, tenant_id: str, customer_key: str) -> CustomerDataStore | None:
-        return self.customers.get((tenant_id, customer_key))
+    async def get_interlocutor_data(self, tenant_id: str, customer_key: str) -> InterlocutorDataStore | None:
+        return self.interlocutors.get((tenant_id, customer_key))
 
-    async def save_customer_data(self, data: CustomerDataStore) -> None:
-        self.customers[(data.tenant_id, data.customer_key)] = data
+    async def save_interlocutor_data(self, data: InterlocutorDataStore) -> None:
+        self.interlocutors[(data.tenant_id, data.customer_key)] = data
 
     # etc.
 ```
@@ -762,7 +764,7 @@ Schema changes:
 - The domain models evolve (e.g. new field on `Rule`),
 - You update:
   - DB schema (SQL migrations or Mongo schema migration script),
-  - `Postgres*Store` and `Mongo*Store` mapping code,
+  - `Postgres*Store` and `Mongo*Store` mapping code (now in `focal/stores/`),
 - Domain logic remains unchanged.
 
 ---
@@ -770,7 +772,7 @@ Schema changes:
 ## 14. Summary of Decisions
 
 1. **One physical DB per deployment** (Postgres recommended, Mongo possible).
-2. Domain objects (`Rule`, `Scenario`, `CustomerDataStore`, etc.) are **pure models** (Pydantic), DB-agnostic.
+2. Domain objects (`Rule`, `Scenario`, `InterlocutorDataStore`, etc.) are **pure models** (Pydantic), DB-agnostic.
 3. Engine interacts with storage via **3 small interfaces**:
    - `ConfigStore`
    - `StateStore`

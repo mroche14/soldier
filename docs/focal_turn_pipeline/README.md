@@ -33,7 +33,7 @@ Turn boundaries, message accumulation, and supersede signals are owned by the **
 │  ║  PHASE 1: IDENTIFICATION & CONTEXT LOADING                                    ║  │
 │  ║  ┌──────────────────────────────────────────────────────────────────────────┐ ║  │
 │  ║  │ • Resolve tenant/agent/customer/session                                  │ ║  │
-│  ║  │ • Load SessionState, CustomerDataStore, Config, Glossary                 │ ║  │
+│  ║  │ • Load SessionState, InterlocutorDataStore, Config, Glossary             │ ║  │
 │  ║  │ • Build TurnContext                                                      │ ║  │
 │  ║  └──────────────────────────────────────────────────────────────────────────┘ ║  │
 │  ╚═══════════════════════════════════════════════════════════════════════════════╝  │
@@ -42,7 +42,7 @@ Turn boundaries, message accumulation, and supersede signals are owned by the **
 │  ╔═══════════════════════════════════════════════════════════════════════════════╗  │
 │  ║  PHASE 2: SITUATIONAL SENSOR (LLM)                                            ║  │
 │  ║  ┌──────────────────────────────────────────────────────────────────────────┐ ║  │
-│  ║  │ • Schema-aware extraction (masked CustomerDataStore)                     │ ║  │
+│  ║  │ • Schema-aware extraction (masked InterlocutorDataStore)                 │ ║  │
 │  ║  │ • Intent detection, topic/tone analysis                                  │ ║  │
 │  ║  │ • Extract candidate variables from conversation                          │ ║  │
 │  ║  │ → Output: SituationalSnapshot                                            │ ║  │
@@ -54,7 +54,7 @@ Turn boundaries, message accumulation, and supersede signals are owned by the **
 │  ║  PHASE 3: CUSTOMER DATA UPDATE                                                ║  │
 │  ║  ┌──────────────────────────────────────────────────────────────────────────┐ ║  │
 │  ║  │ • Validate & coerce extracted variables against schema                   │ ║  │
-│  ║  │ • Update in-memory CustomerDataStore                                     │ ║  │
+│  ║  │ • Update in-memory InterlocutorDataStore                                 │ ║  │
 │  ║  │ • Mark persistent updates for Phase 11                                   │ ║  │
 │  ║  └──────────────────────────────────────────────────────────────────────────┘ ║  │
 │  ╚═══════════════════════════════════════════════════════════════════════════════╝  │
@@ -96,7 +96,7 @@ Turn boundaries, message accumulation, and supersede signals are owned by the **
 │  ║  PHASE 7: TOOL EXECUTION                                                      ║  │
 │  ║  ┌──────────────────────────────────────────────────────────────────────────┐ ║  │
 │  ║  │ • Collect tool bindings from rules + scenario steps                      │ ║  │
-│  ║  │ • Resolve variables from CustomerDataStore / Session first               │ ║  │
+│  ║  │ • Resolve variables from InterlocutorDataStore / Session first           │ ║  │
 │  ║  │ • Execute tools for missing variables                                    │ ║  │
 │  ║  │ → Output: engine_variables                                               │ ║  │
 │  ║  └──────────────────────────────────────────────────────────────────────────┘ ║  │
@@ -143,7 +143,7 @@ Turn boundaries, message accumulation, and supersede signals are owned by the **
 │  ╔═══════════════════════════════════════════════════════════════════════════════╗  │
 │  ║  PHASE 11: PERSISTENCE, AUDIT & OUTPUT                                        ║  │
 │  ║  ┌──────────────────────────────────────────────────────────────────────────┐ ║  │
-│  ║  │ • Persist SessionState + CustomerDataStore                               │ ║  │
+│  ║  │ • Persist SessionState + InterlocutorDataStore                           │ ║  │
 │  ║  │ • Record TurnRecord (full audit trail)                                   │ ║  │
 │  ║  │ • Optional: Long-term memory ingestion                                   │ ║  │
 │  ║  │ • Emit metrics & traces                                                  │ ║  │
@@ -165,7 +165,7 @@ Turn boundaries, message accumulation, and supersede signals are owned by the **
 |:-----:|------|------------------|------------|
 | **1** | Identification & Context Loading | Bootstrap turn context | `TurnContext` |
 | **2** | Situational Sensor | Understand what's happening | `SituationalSnapshot` |
-| **3** | Customer Data Update | Update customer profile | Updated `CustomerDataStore` |
+| **3** | Customer Data Update | Update customer profile | Updated `InterlocutorDataStore` |
 | **4** | Retrieval & Selection | Find relevant rules/scenarios | Candidates with scores |
 | **5** | Rule Selection | Determine which rules apply | `applied_rules` |
 | **6** | Scenario Orchestration | Navigate scenario state machine | `ScenarioContributionPlan` |
@@ -184,7 +184,7 @@ User Message
     │        │
     │        ├──→ SituationalSnapshot (Phase 2)
     │        │        │
-    │        │        ├──→ CustomerDataStore updates (Phase 3)
+    │        │        ├──→ InterlocutorDataStore updates (Phase 3)
     │        │        │
     │        │        └──→ Retrieval queries (Phase 4)
     │        │                 │
