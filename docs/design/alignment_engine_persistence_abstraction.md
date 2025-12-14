@@ -3,7 +3,7 @@
 
 > **Status:** HISTORICAL. This document predates `docs/focal_360/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses stores in `ruche/stores/` (including `MemoryStore`, `SessionStore`, `AuditStore`, plus `InterlocutorDataStoreInterface`) with UUIDs.
 >
-> The alignment engine implementation is now `FocalCognitivePipeline` in `ruche/brain/focal/pipeline.py`.
+> The alignment engine implementation is now `FocalCognitivePipeline` in `ruche/brains/focal/pipeline.py`.
 >
 > For the current approach, see: `docs/design/decisions/001-storage-choice.md` and `docs/architecture/overview.md`.
 

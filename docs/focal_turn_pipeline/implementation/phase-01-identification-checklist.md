@@ -35,7 +35,7 @@
 ### 1.1 Create TurnContext Model
 
 - [x] **Create TurnContext model**
-  - File: `ruche/brain/focal/models/turn_context.py`
+  - File: `ruche/brains/focal/models/turn_context.py`
   - Action: Create new file
   - Details:
     ```python
@@ -73,7 +73,7 @@
 ### 1.2 Create GlossaryItem Model
 
 - [x] **Create GlossaryItem model**
-  - File: `ruche/brain/focal/models/glossary.py`
+  - File: `ruche/brains/focal/models/glossary.py`
   - Action: Create new file
   - Details:
     ```python
@@ -102,7 +102,7 @@
   - Why: LLM needs domain-specific terminology to extract intent and generate responses
 
 - [x] **Add GlossaryItem methods to ConfigStore interface**
-  - File: `ruche/brain/focal/stores/agent_config_store.py`
+  - File: `ruche/brains/focal/stores/agent_config_store.py`
   - Action: Add methods
   - Details:
     ```python
@@ -124,7 +124,7 @@
   - Why: ConfigStore owns static configuration including glossary
 
 - [x] **Implement glossary methods in InMemoryConfigStore**
-  - File: `ruche/brain/focal/stores/inmemory.py`
+  - File: `ruche/brains/focal/stores/inmemory.py`
   - Action: Added implementation
   - **Implemented**: Added `get_glossary_items()` and `save_glossary_item()` methods with filtering by tenant, agent, and enabled status
   - Details: Dictionary storage keyed by item ID, filters by tenant_id and agent_id
@@ -192,7 +192,7 @@
 ### 1.4 Create InterlocutorSchemaMask Model (New - Not in Profile)
 
 - [x] **Create InterlocutorSchemaMask model**
-  - File: `ruche/brain/focal/context/customer_schema_mask.py`
+  - File: `ruche/brains/focal/context/customer_schema_mask.py`
   - Action: Create new file
   - Details:
     ```python
@@ -231,7 +231,7 @@
 ### 1.5 Create TurnInput Model
 
 - [x] **Create TurnInput model**
-  - File: `ruche/brain/focal/models/turn_input.py`
+  - File: `ruche/brains/focal/models/turn_input.py`
   - Action: Created new file
   - Details:
     ```python
@@ -325,7 +325,7 @@
 ### 3.1 Customer Resolution (P1.2)
 
 - [x] **Add explicit customer resolution method to FocalCognitivePipeline**
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Action: Added private method
   - **Implemented**: Added `_resolve_customer()` method that resolves customer from channel identity, creates new profile if not found, handles ephemeral IDs when no profile store available
   - Details:
@@ -367,12 +367,12 @@
 ### 3.2 InterlocutorDataStore Loading (P1.5)
 
 - [x] **Add InterlocutorDataStore loader**
-  - File: `ruche/brain/focal/loaders/__init__.py`
+  - File: `ruche/brains/focal/loaders/__init__.py`
   - Action: Created new module
-  - Details: Created `ruche/brain/focal/loaders/customer_data_loader.py`
+  - Details: Created `ruche/brains/focal/loaders/customer_data_loader.py`
 
 - [x] **Implement CustomerDataLoader**
-  - File: `ruche/brain/focal/loaders/customer_data_loader.py`
+  - File: `ruche/brains/focal/loaders/customer_data_loader.py`
   - Action: Created new file
   - Details:
     ```python
@@ -448,7 +448,7 @@
 ### 3.3 Static Config Loading (P1.6)
 
 - [x] **Add config loader for glossary and schema**
-  - File: `ruche/brain/focal/loaders/static_config_loader.py`
+  - File: `ruche/brains/focal/loaders/static_config_loader.py`
   - Action: Created new file
   - Details:
     ```python
@@ -489,7 +489,7 @@
 ### 3.4 TurnContext Builder (P1.8)
 
 - [x] **Add build_turn_context method to FocalCognitivePipeline**
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Action: Added private method
   - **Implemented**: Added `_build_turn_context()` method that aggregates session, customer data, glossary, schema, and reconciliation results into TurnContext. Includes graceful error handling with fallback to empty data on failures.
   - Details:
@@ -539,7 +539,7 @@
 ### 3.5 Refactor process_turn to Use TurnContext
 
 - [x] **Refactor process_turn to integrate Phase 1**
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Action: Modified existing method
   - **Implemented**: 2025-12-08
   - Details:
@@ -558,7 +558,7 @@
 ### 3.6 Parallel Loading Optimization (P1.5-P1.6)
 
 - [x] **Parallel loading already implemented in _build_turn_context**
-  - File: `ruche/brain/focal/engine.py` (lines 1338-1449)
+  - File: `ruche/brains/focal/engine.py` (lines 1338-1449)
   - Action: Already implemented
   - **Status**: Complete - no action needed
   - Details:
@@ -683,7 +683,7 @@
 ### 5.1 Metrics
 
 - [x] **Timing metrics implemented**
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Action: Added timing for customer resolution step
   - **Implemented**: 2025-12-08
   - Details:
@@ -700,7 +700,7 @@
 ### 5.2 Structured Logging
 
 - [x] **Phase 1 log events added**
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Action: Added structured logs for Phase 1 operations
   - **Implemented**: 2025-12-08
   - Details:
@@ -718,7 +718,7 @@
 ### 5.3 Tracing
 
 - [x] **OpenTelemetry spans**: Infrastructure ready, spans can be added incrementally
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Status: Structured logging provides traceability; OTel spans are enhancement
   - Current tracing: All Phase 1 operations logged with tenant_id, agent_id, session_id, customer_id
   - OTel spans can be added when instrumenting full pipeline
@@ -907,10 +907,10 @@ Recommended order to minimize dependencies:
 - `ruche/domain/interlocutor/stores/cached.py` - Updated imports and type hints
 - `ruche/domain/interlocutor/stores/inmemory.py` - Updated imports and type hints
 - `ruche/domain/interlocutor/stores/postgres.py` - Updated imports and type hints
-- `ruche/brain/focal/filtering/scenario_filter.py` - Updated imports
-- `ruche/brain/focal/loaders/customer_data_loader.py` - Updated imports
-- `ruche/brain/focal/migration/field_resolver.py` - Updated imports
-- `ruche/brain/focal/migration/models.py` - Updated imports
+- `ruche/brains/focal/filtering/scenario_filter.py` - Updated imports
+- `ruche/brains/focal/loaders/customer_data_loader.py` - Updated imports
+- `ruche/brains/focal/migration/field_resolver.py` - Updated imports
+- `ruche/brains/focal/migration/models.py` - Updated imports
 - `ruche/jobs/workflows/schema_extraction.py` - Updated imports
 - `tests/integration/stores/test_postgres_customer_data.py` - Updated imports
 - `tests/contract/test_customer_data_store_contract.py` - Updated imports
@@ -976,19 +976,19 @@ All customer_data unit tests passing:
 
 **Changes Made:**
 
-1. **Updated process_turn signature** (`ruche/brain/focal/engine.py` lines 220-258)
+1. **Updated process_turn signature** (`ruche/brains/focal/engine.py` lines 220-258)
    - Added `channel: str = "api"` parameter
    - Added `channel_user_id: str | None = None` parameter
    - Added `customer_id: UUID | None = None` parameter
    - Updated docstring to reflect Phase 1 steps
 
-2. **Added customer resolution** (`ruche/brain/focal/engine.py` lines 317-340)
+2. **Added customer resolution** (`ruche/brains/focal/engine.py` lines 317-340)
    - Call `_resolve_customer()` at start of `_process_turn_impl`
    - Use `channel_user_id or str(session_id)` as fallback identifier
    - Added timing for customer_resolution step
    - Returns `(customer_id, is_new_customer)` tuple
 
-3. **Added TurnContext building** (`ruche/brain/focal/engine.py` lines 389-409)
+3. **Added TurnContext building** (`ruche/brains/focal/engine.py` lines 389-409)
    - Call `_build_turn_context()` after reconciliation
    - Only builds when session exists (graceful degradation)
    - Added structured logging for turn_context_built event

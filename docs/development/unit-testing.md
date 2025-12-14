@@ -21,8 +21,8 @@ This document provides concrete guidance for writing unit tests in the Focal cod
 Test files mirror the source structure:
 
 ```
-ruche/brain/focal/retrieval/rule_retriever.py
-    → tests/unit/brain/focal/retrieval/test_rule_retriever.py
+ruche/brains/focal/retrieval/rule_retriever.py
+    → tests/unit/brains/focal/retrieval/test_rule_retriever.py
 
 ruche/memory/stores/inmemory.py
     → tests/unit/memory/stores/test_inmemory.py
@@ -34,14 +34,14 @@ ruche/infrastructure/providers/llm/base.py
 ### File Layout
 
 ```python
-# tests/unit/brain/focal/retrieval/test_rule_retriever.py
+# tests/unit/brains/focal/retrieval/test_rule_retriever.py
 """Unit tests for RuleRetriever."""
 
 import pytest
 from uuid import uuid4
 
-from ruche.brain.focal.retrieval.rule_retriever import RuleRetriever
-from ruche.brain.focal.models import Rule, Context
+from ruche.brains.focal.retrieval.rule_retriever import RuleRetriever
+from ruche.brains.focal.models import Rule, Context
 from tests.factories import RuleFactory, ContextFactory
 
 
@@ -386,7 +386,7 @@ from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from ruche.brain.focal.models import Rule, RuleScope
+from ruche.brains.focal.models import Rule, RuleScope
 
 
 @dataclass

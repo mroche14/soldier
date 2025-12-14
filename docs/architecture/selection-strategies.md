@@ -684,7 +684,7 @@ SelectionStrategyConfig = (
 Create selection strategies from Pydantic config:
 
 ```python
-# ruche/brain/focal/retrieval/selection.py
+# ruche/brains/focal/retrieval/selection.py
 from ruche.config.models.selection import SelectionStrategyConfig
 
 
@@ -747,7 +747,7 @@ export RUCHE_PIPELINE__RETRIEVAL__RULE_SELECTION__ALPHA=2.0
 
 ```python
 from ruche.config.settings import get_settings
-from ruche.brain.focal.retrieval.selection import create_selection_strategy
+from ruche.brains.focal.retrieval.selection import create_selection_strategy
 
 
 async def retrieve_rules(
@@ -800,7 +800,7 @@ async def retrieve_rules(
 
 ```python
 from ruche.config.settings import get_settings
-from ruche.brain.focal.retrieval.selection import create_selection_strategy
+from ruche.brains.focal.retrieval.selection import create_selection_strategy
 
 
 async def retrieve_memory(

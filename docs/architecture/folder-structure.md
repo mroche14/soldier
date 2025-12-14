@@ -87,7 +87,7 @@ class AgentRuntime:
 
 ---
 
-### `ruche/brain/` — CognitivePipeline Implementations
+### `ruche/brains/` — CognitivePipeline Implementations
 
 **Purpose**: Different cognitive mechanics (FOCAL alignment, future alternatives).
 
@@ -523,9 +523,9 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 | Looking for... | Location |
 |----------------|----------|
 | Turn processing orchestration | `ruche/runtime/agent/runtime.py` |
-| Main pipeline logic | `ruche/brain/focal/pipeline.py` |
-| Pipeline phases | `ruche/brain/focal/phases/` |
-| Scenario migration | `ruche/brain/focal/migration/` |
+| Main pipeline logic | `ruche/brains/focal/pipeline.py` |
+| Pipeline phases | `ruche/brains/focal/phases/` |
+| Scenario migration | `ruche/brains/focal/migration/` |
 | Rule domain models | `ruche/domain/rules/rule.py` |
 | Scenario domain models | `ruche/domain/scenarios/scenario.py` |
 | Interlocutor data models | `ruche/domain/interlocutor/` |
@@ -600,7 +600,7 @@ tests/
 - **ACF (Agent Conversation Fabric)** — Turn serialization, queueing, supersession
 - **Agenda** — Proactive task scheduling
 
-**Mechanics Layer** (`ruche/brain/`):
+**Mechanics Layer** (`ruche/brains/`):
 - **CognitivePipeline** — Abstract interface for cognitive mechanics
 - **FocalCognitivePipeline** — 12-phase FOCAL alignment implementation
 - **Migration** — Scenario version migration (JIT reconciliation)

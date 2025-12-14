@@ -25,18 +25,18 @@ Phase 5 takes the candidate rules from Phase 4 retrieval and applies three layer
 
 ## Phase 5.1: Pre-filtering by Scope & Lifecycle
 
-**Status**: ✅ Mostly Implemented in `ruche/brain/focal/retrieval/rule_retriever.py`
+**Status**: ✅ Mostly Implemented in `ruche/brains/focal/retrieval/rule_retriever.py`
 
 ### Tasks
 
 - [x] **Review existing scope filtering logic**
-  - File: `ruche/brain/focal/retrieval/rule_retriever.py`
+  - File: `ruche/brains/focal/retrieval/rule_retriever.py`
   - Action: Reviewed
   - Details: Verified scope filtering in `_retrieve_scope()` - correctly filters GLOBAL → SCENARIO → STEP hierarchy (lines 107-152)
   - Implementation: Scope filtering works by calling `config_store.get_rules()` with `scope` and `scope_id` parameters
 
 - [x] **Review lifecycle filtering**
-  - File: `ruche/brain/focal/retrieval/rule_retriever.py`
+  - File: `ruche/brains/focal/retrieval/rule_retriever.py`
   - Action: Reviewed
   - Details: Verified `_passes_business_filters()` (lines 283-299) checks:
     - `enabled=True` ✓
@@ -59,7 +59,7 @@ Phase 5 takes the candidate rules from Phase 4 retrieval and applies three layer
 ### Current State Analysis
 
 **What exists**:
-- Binary filtering (applies: true/false) in `ruche/brain/focal/filtering/rule_filter.py`
+- Binary filtering (applies: true/false) in `ruche/brains/focal/filtering/rule_filter.py`
 - Relevance scoring (0.0-1.0)
 - Batch processing
 - JSON parsing
@@ -74,13 +74,13 @@ Phase 5 takes the candidate rules from Phase 4 retrieval and applies three layer
 #### A. Create Ternary Output Model
 
 - [x] **Add RuleApplicability enum**
-  - File: `ruche/brain/focal/filtering/models.py`
+  - File: `ruche/brains/focal/filtering/models.py`
   - Action: Added
   - Details: Created enum with APPLIES, NOT_RELATED, UNSURE values
   - Implementation: Lines 15-20 in models.py
 
 - [x] **Update RuleEvaluation model**
-  - File: `ruche/brain/focal/filtering/models.py`
+  - File: `ruche/brains/focal/filtering/models.py`
   - Action: Created
   - Details: New model with applicability, confidence, relevance, reasoning fields
   - Implementation: Lines 23-30 in models.py
@@ -88,7 +88,7 @@ Phase 5 takes the candidate rules from Phase 4 retrieval and applies three layer
 #### B. Create Jinja2 Prompt Template
 
 - [x] **Create Jinja2 template for rule filtering**
-  - File: `ruche/brain/focal/filtering/prompts/filter_rules.jinja2`
+  - File: `ruche/brains/focal/filtering/prompts/filter_rules.jinja2`
   - Action: Created
   - Details: Create template with:
     - User message context
@@ -138,7 +138,7 @@ Phase 5 takes the candidate rules from Phase 4 retrieval and applies three layer
     ```
 
 - [x] **Add Jinja2 environment setup**
-  - File: `ruche/brain/focal/filtering/rule_filter.py`
+  - File: `ruche/brains/focal/filtering/rule_filter.py`
   - Action: Modified
   - Details: Added Jinja2 Environment in __init__, jinja2 already installed
   - Implementation: Lines 53-60 in rule_filter.py
@@ -146,7 +146,7 @@ Phase 5 takes the candidate rules from Phase 4 retrieval and applies three layer
 #### C. Update RuleFilter Implementation
 
 - [x] **Update RuleFilter to use Jinja2**
-  - File: `ruche/brain/focal/filtering/rule_filter.py`
+  - File: `ruche/brains/focal/filtering/rule_filter.py`
   - Action: Modified
   - Details:
     ```python
@@ -168,17 +168,17 @@ Phase 5 takes the candidate rules from Phase 4 retrieval and applies three layer
     ```
 
 - [x] **Update _evaluate_batch to use template**
-  - File: `ruche/brain/focal/filtering/rule_filter.py`
+  - File: `ruche/brains/focal/filtering/rule_filter.py`
   - Action: Completed
   - Details: Lines 164-167 use Jinja2 template rendering: `prompt = self._template.render(context=context, rules=rules)`
 
 - [x] **Update _parse_evaluations for ternary state**
-  - File: `ruche/brain/focal/filtering/rule_filter.py`
+  - File: `ruche/brains/focal/filtering/rule_filter.py`
   - Action: Completed
   - Details: Lines 178-258 implement ternary state parsing with APPLIES/NOT_RELATED/UNSURE handling, invalid value defaults to UNSURE
 
 - [x] **Update filter() to handle UNSURE rules**
-  - File: `ruche/brain/focal/filtering/rule_filter.py`
+  - File: `ruche/brains/focal/filtering/rule_filter.py`
   - Action: Completed
   - Details: Lines 94-136 implement UNSURE handling with configurable policy (include/exclude/log_only)
 
@@ -214,7 +214,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
 #### A. Create Relationship Model for Rules
 
 - [x] **Check if relationship model exists**
-  - File: `ruche/brain/focal/models/rule_relationship.py`
+  - File: `ruche/brains/focal/models/rule_relationship.py`
   - Action: Completed
   - Details: Created rule-specific relationship model with RuleRelationshipKind enum and RuleRelationship model:
     ```python
@@ -247,7 +247,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
 #### B. Extend ConfigStore Interface
 
 - [x] **Add relationship methods to ConfigStore**
-  - File: `ruche/brain/focal/stores/agent_config_store.py`
+  - File: `ruche/brains/focal/stores/agent_config_store.py`
   - Action: Completed
   - Details: Added methods to AgentConfigStore interface (lines 73-99):
     ```python
@@ -281,25 +281,25 @@ After LLM filtering establishes certainty, expand the rule set via relationships
     ```
 
 - [x] **Implement in InMemoryConfigStore**
-  - File: `ruche/brain/focal/stores/inmemory.py`
+  - File: `ruche/brains/focal/stores/inmemory.py`
   - Action: Completed
   - Details: Lines 127-169 implement relationship methods with `_rule_relationships` dict
 
 - [x] **Implement in PostgresConfigStore**
-  - File: `ruche/brain/focal/stores/postgres.py`
+  - File: `ruche/brains/focal/stores/postgres.py`
   - Action: Completed (stubs)
   - Details: Lines 1338-1372 add stub implementations with NotImplementedError and reference to migration requirements
 
 #### C. Create Relationship Expander
 
 - [x] **Create RelationshipExpander class**
-  - File: `ruche/brain/focal/filtering/relationship_expander.py`
+  - File: `ruche/brains/focal/filtering/relationship_expander.py`
   - Action: Completed
   - Details: Lines 16-113 implement RelationshipExpander with expand() method:
     ```python
-    from ruche.brain.focal.models import Rule
-    from ruche.brain.focal.models.relationship import RuleRelationship, RuleRelationshipKind
-    from ruche.brain.focal.stores.config_store import ConfigStore
+    from ruche.brains.focal.models import Rule
+    from ruche.brains.focal.models.relationship import RuleRelationship, RuleRelationshipKind
+    from ruche.brains.focal.stores.config_store import ConfigStore
     from ruche.observability.logging import get_logger
 
     logger = get_logger(__name__)
@@ -399,7 +399,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
     ```
 
 - [x] **Implement _build_graph helper**
-  - File: `ruche/brain/focal/filtering/relationship_expander.py`
+  - File: `ruche/brains/focal/filtering/relationship_expander.py`
   - Action: Completed
   - Details: Lines 115-125 build adjacency list from relationships:
     ```python
@@ -417,7 +417,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
     ```
 
 - [x] **Implement _expand_from_rule helper**
-  - File: `ruche/brain/focal/filtering/relationship_expander.py`
+  - File: `ruche/brains/focal/filtering/relationship_expander.py`
   - Action: Completed
   - Details: Lines 127-184 implement recursive expansion via depends_on/implies:
     ```python
@@ -480,7 +480,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
     ```
 
 - [x] **Implement _apply_exclusions helper**
-  - File: `ruche/brain/focal/filtering/relationship_expander.py`
+  - File: `ruche/brains/focal/filtering/relationship_expander.py`
   - Action: Completed
   - Details: Lines 186-203 mark excluded rules:
     ```python
@@ -507,7 +507,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
 #### D. Integrate into Pipeline
 
 - [ ] ⏸️ BLOCKED: **Update FocalCognitivePipeline to use RelationshipExpander** _(Deferred - requires Phase 6 completion)_
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Action: Deferred to Phase 6 integration
   - Details: After P5.2 (RuleFilter), call RelationshipExpander:
     ```python
@@ -530,7 +530,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
     ```
 
 - [ ] ⏸️ BLOCKED: **Add RelationshipExpander to DI** _(Deferred - requires Phase 6 completion)_
-  - File: `ruche/brain/focal/engine.py`
+  - File: `ruche/brains/focal/engine.py`
   - Action: Deferred to Phase 6 integration
   - Details: Add to `__init__`:
     ```python
@@ -689,7 +689,7 @@ After LLM filtering establishes certainty, expand the rule set via relationships
 ### Structured Logging
 
 - [x] **Add Phase 5 logging**
-  - File: `ruche/brain/focal/filtering/rule_filter.py`, `relationship_expander.py`
+  - File: `ruche/brains/focal/filtering/rule_filter.py`, `relationship_expander.py`
   - Action: Completed
   - Details: Structured logging implemented:
     - rule_filter.py: filtering_rules, unsure_rule, rules_filtered (lines 87-149)
@@ -808,8 +808,8 @@ Phase 5 is complete when:
 
 - `docs/focal_turn_pipeline/README.md` - Section 3.6 (Rules & Relationships), Phase 5 spec
 - `docs/focal_turn_pipeline/analysis/gap_analysis.md` - Phase 5 gap analysis (lines 223-237)
-- `ruche/brain/focal/filtering/rule_filter.py` - Current implementation
-- `ruche/brain/focal/models/rule.py` - Rule model
+- `ruche/brains/focal/filtering/rule_filter.py` - Current implementation
+- `ruche/brains/focal/models/rule.py` - Rule model
 - `IMPLEMENTATION_PLAN.md` - Phase 9 (Alignment Pipeline - Filtering)
 
 ---
@@ -928,15 +928,15 @@ Phase 5 is complete when:
 ## Files Created
 
 **Models:**
-- `ruche/brain/focal/models/rule_relationship.py`
-- Updated: `ruche/brain/focal/filtering/models.py` (added RuleApplicability, RuleEvaluation)
+- `ruche/brains/focal/models/rule_relationship.py`
+- Updated: `ruche/brains/focal/filtering/models.py` (added RuleApplicability, RuleEvaluation)
 
 **Core Implementation:**
-- `ruche/brain/focal/filtering/prompts/filter_rules.jinja2`
-- `ruche/brain/focal/filtering/relationship_expander.py`
-- Updated: `ruche/brain/focal/filtering/rule_filter.py` (Jinja2 + ternary output)
-- Updated: `ruche/brain/focal/stores/agent_config_store.py` (relationship methods)
-- Updated: `ruche/brain/focal/stores/inmemory.py` (relationship implementation)
+- `ruche/brains/focal/filtering/prompts/filter_rules.jinja2`
+- `ruche/brains/focal/filtering/relationship_expander.py`
+- Updated: `ruche/brains/focal/filtering/rule_filter.py` (Jinja2 + ternary output)
+- Updated: `ruche/brains/focal/stores/agent_config_store.py` (relationship methods)
+- Updated: `ruche/brains/focal/stores/inmemory.py` (relationship implementation)
 
 **Configuration:**
 - Updated: `config/default.toml` (rule_filtering, relationship_expansion sections)
@@ -945,5 +945,5 @@ Phase 5 is complete when:
 - `tests/unit/alignment/filtering/test_rule_filter_ternary.py` (8 tests, all passing)
 
 **Exports:**
-- Updated: `ruche/brain/focal/models/__init__.py`
+- Updated: `ruche/brains/focal/models/__init__.py`
 

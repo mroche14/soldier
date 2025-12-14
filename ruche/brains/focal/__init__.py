@@ -18,6 +18,6 @@ The FocalCognitivePipeline coordinates 12 phases:
 12. Persistence - Save session, customer data, turn record
 """
 
-from ruche.brain.focal.pipeline import FocalCognitivePipeline
+from ruche.brains.focal.pipeline import FocalCognitivePipeline
 
 __all__ = ["FocalCognitivePipeline"]

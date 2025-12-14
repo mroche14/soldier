@@ -123,9 +123,9 @@ As you complete EACH item:
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/models/ -v
-uv run pytest tests/unit/brain/focal/loaders/ -v
-uv run pytest --cov=ruche/brain/focal --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/models/ -v
+uv run pytest tests/unit/brains/focal/loaders/ -v
+uv run pytest --cov=ruche/brains/focal --cov-report=term-missing
 ```
 
 ## Report Format
@@ -163,10 +163,10 @@ Provide a final report following the template in SUBAGENT_PROTOCOL.md.
 5. `docs/focal_turn_pipeline/implementation/phase-02-situational-sensor-checklist.md` - Your checklist
 
 ## Prerequisites Completed (Phase 1)
-- TurnContext model exists at `ruche/brain/focal/models/turn_context.py`
+- TurnContext model exists at `ruche/brains/focal/models/turn_context.py`
 - InterlocutorDataField (renamed from ProfileFieldDefinition) has `scope`, `persist`
 - VariableEntry (renamed from ProfileField) has `history`
-- GlossaryItem model exists at `ruche/brain/focal/models/glossary.py`
+- GlossaryItem model exists at `ruche/brains/focal/models/glossary.py`
 - ConfigStore has glossary and schema methods
 
 ## Your Assignment
@@ -185,14 +185,14 @@ Execute ALL items in the Phase 2 checklist.
 ## Important Notes
 - InterlocutorDataField, VariableEntry, InterlocutorDataStore already exist (renamed in P1)
 - Do NOT create duplicate models - use the renamed Profile models
-- Template path: `ruche/brain/focal/context/prompts/situational_sensor.jinja2`
+- Template path: `ruche/brains/focal/context/prompts/situational_sensor.jinja2`
 - Config model: SituationalSensorConfig in `ruche/config/models/pipeline.py`
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/context/ -v
-uv run pytest tests/unit/brain/focal/models/test_situational_snapshot.py -v
-uv run pytest --cov=ruche/brain/focal/context --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/context/ -v
+uv run pytest tests/unit/brains/focal/models/test_situational_snapshot.py -v
+uv run pytest --cov=ruche/brains/focal/context --cov-report=term-missing
 ```
 
 ## Report Format
@@ -240,8 +240,8 @@ Execute ALL items in the Phase 4 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/retrieval/ -v
-uv run pytest --cov=ruche/brain/focal/retrieval --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/retrieval/ -v
+uv run pytest --cov=ruche/brains/focal/retrieval --cov-report=term-missing
 ```
 
 ## Report Format
@@ -349,8 +349,8 @@ Execute ALL items in the Phase 5 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/filtering/ -v
-uv run pytest --cov=ruche/brain/focal/filtering --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/filtering/ -v
+uv run pytest --cov=ruche/brains/focal/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -408,9 +408,9 @@ Execute ALL items in the Phase 6 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/filtering/test_scenario_filter.py -v
-uv run pytest tests/unit/brain/focal/models/test_scenario_*.py -v
-uv run pytest --cov=ruche/brain/focal/filtering --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/filtering/test_scenario_filter.py -v
+uv run pytest tests/unit/brains/focal/models/test_scenario_*.py -v
+uv run pytest --cov=ruche/brains/focal/filtering --cov-report=term-missing
 ```
 
 ## Report Format
@@ -467,8 +467,8 @@ Execute ALL items in the Phase 7 checklist.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/execution/ -v
-uv run pytest --cov=ruche/brain/focal/execution --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/execution/ -v
+uv run pytest --cov=ruche/brains/focal/execution --cov-report=term-missing
 ```
 
 ## Report Format
@@ -512,13 +512,13 @@ Execute ALL items in the Phase 8 checklist.
 
 ## Important Notes
 - Phase 8 is currently SKIPPED in pipeline - this is the gap to fill
-- ResponsePlan goes to `ruche/brain/focal/planning/models.py`
-- ResponsePlanner goes to `ruche/brain/focal/planning/planner.py`
+- ResponsePlan goes to `ruche/brains/focal/planning/models.py`
+- ResponsePlanner goes to `ruche/brains/focal/planning/planner.py`
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/planning/ -v
-uv run pytest --cov=ruche/brain/focal/planning --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/planning/ -v
+uv run pytest --cov=ruche/brains/focal/planning --cov-report=term-missing
 ```
 
 ## Report Format
@@ -584,10 +584,10 @@ Execute ALL items in Phases 9, 10, and 11 checklists.
 
 ## Testing Commands
 ```bash
-uv run pytest tests/unit/brain/focal/generation/ -v
-uv run pytest tests/unit/brain/focal/enforcement/ -v
-uv run pytest tests/unit/brain/focal/persistence/ -v
-uv run pytest --cov=ruche/brain/focal --cov-report=term-missing
+uv run pytest tests/unit/brains/focal/generation/ -v
+uv run pytest tests/unit/brains/focal/enforcement/ -v
+uv run pytest tests/unit/brains/focal/persistence/ -v
+uv run pytest --cov=ruche/brains/focal --cov-report=term-missing
 ```
 
 ## Report Format
@@ -617,27 +617,27 @@ Use the individual phase prompts, running P9 → P10 → P11 in sequence.
 
 ```bash
 # 1. Ruff linting
-uv run ruff check ruche/brain/focal/
-uv run ruff check --fix ruche/brain/focal/  # Auto-fix issues
+uv run ruff check ruche/brains/focal/
+uv run ruff check --fix ruche/brains/focal/  # Auto-fix issues
 
 # 2. Ruff formatting
-uv run ruff format ruche/brain/focal/
+uv run ruff format ruche/brains/focal/
 
 # 3. Mypy type checking
-uv run mypy ruche/brain/focal/ --ignore-missing-imports
+uv run mypy ruche/brains/focal/ --ignore-missing-imports
 
 # 4. Tests
-uv run pytest tests/unit/brain/focal/ -v --tb=short
+uv run pytest tests/unit/brains/focal/ -v --tb=short
 ```
 
 ### Quick All-in-One Check
 
 ```bash
 echo "=== WAVE QUALITY CHECK ===" && \
-uv run ruff check ruche/brain/focal/ && \
-uv run ruff format --check ruche/brain/focal/ && \
-uv run mypy ruche/brain/focal/ --ignore-missing-imports && \
-uv run pytest tests/unit/brain/focal/ -v --tb=short && \
+uv run ruff check ruche/brains/focal/ && \
+uv run ruff format --check ruche/brains/focal/ && \
+uv run mypy ruche/brains/focal/ --ignore-missing-imports && \
+uv run pytest tests/unit/brains/focal/ -v --tb=short && \
 echo "=== ALL CHECKS PASSED ==="
 ```
 
@@ -653,7 +653,7 @@ After all waves complete:
 
 ```bash
 # Run full pipeline test
-uv run pytest tests/integration/brain/focal/ -v
+uv run pytest tests/integration/brains/focal/ -v
 
 # Run E2E test if available
 uv run pytest tests/e2e/ -v
@@ -662,18 +662,18 @@ uv run pytest tests/e2e/ -v
 ### Coverage Check
 
 ```bash
-uv run pytest --cov=ruche/brain/focal --cov-report=html
+uv run pytest --cov=ruche/brains/focal --cov-report=html
 # Open htmlcov/index.html to verify 85%+ coverage
 ```
 
 ### Final Quality Gate
 
 ```bash
-# Full quality check on entire brain/focal module
-uv run ruff check ruche/brain/focal/ && \
-uv run ruff format --check ruche/brain/focal/ && \
-uv run mypy ruche/brain/focal/ --ignore-missing-imports && \
-uv run pytest tests/unit/brain/focal/ --cov=ruche/brain/focal --cov-fail-under=85
+# Full quality check on entire brains/focal module
+uv run ruff check ruche/brains/focal/ && \
+uv run ruff format --check ruche/brains/focal/ && \
+uv run mypy ruche/brains/focal/ --ignore-missing-imports && \
+uv run pytest tests/unit/brains/focal/ --cov=ruche/brains/focal --cov-fail-under=85
 ```
 
 ### Checklist Audit
