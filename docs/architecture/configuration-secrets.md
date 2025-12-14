@@ -18,7 +18,7 @@ API keys and credentials require special handling. **Never commit secrets to TOM
 │     ↓ (if not found)                                            │
 │                                                                  │
 │  3. Environment Variables (Focal-prefixed)                     │
-│     FOCAL_PIPELINE__GENERATION__MODELS, etc.                  │
+│     FOCAL_PIPELINE__GENERATION__MODEL, etc.                   │
 │     ↓ (if not found)                                            │
 │                                                                  │
 │  4. .env.local file (Development only, gitignored)              │
@@ -31,7 +31,7 @@ API keys and credentials require special handling. **Never commit secrets to TOM
 
 ### Standard Environment Variable Names
 
-Each provider type has conventional env var names that are auto-resolved by LiteLLM:
+Each provider type has conventional env var names that are resolved by `LLMExecutor` (Agno-backed):
 
 | Provider | Environment Variable | Notes |
 |----------|---------------------|-------|
@@ -130,12 +130,12 @@ TOML files should **never** contain actual secrets:
 
 # Models are configured per step - API keys resolved from environment
 [pipeline.generation]
-models = [
-    "openrouter/anthropic/claude-sonnet-4-5-20250514",  # Uses OPENROUTER_API_KEY
-    "anthropic/claude-sonnet-4-5-20250514",            # Uses ANTHROPIC_API_KEY
-    "openai/gpt-4o",                                   # Uses OPENAI_API_KEY
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"  # Uses OPENROUTER_API_KEY
+fallback_models = [
+    "anthropic/claude-sonnet-4-5-20250514",  # Uses ANTHROPIC_API_KEY
+    "openai/gpt-4o",                         # Uses OPENAI_API_KEY
 ]
-# LiteLLM automatically resolves API keys from standard env vars
+# LLMExecutor resolves API keys from standard env vars
 
 [storage.config.postgres]
 host = "localhost"
@@ -148,7 +148,7 @@ user = "focal"
 ```toml
 # ❌ WRONG: Never embed secrets in TOML
 # There's no place to put API keys anyway - models are just strings
-# and LiteLLM handles auth via environment variables
+# and LLMExecutor handles auth via environment variables
 ```
 
 ### Development: Root .env File
@@ -654,4 +654,3 @@ export FOCAL_PIPELINE__GENERATION__TIMEOUT_SECONDS=120
 ```
 
 ---
-

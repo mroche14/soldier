@@ -2,6 +2,8 @@
 
 This document provides a summary of all the documentation files in the `docs` directory.
 
+> **Status:** This file is an auto-generated snapshot and may be stale (paths, names, and summaries). Treat `docs/focal_360/` as the canonical architecture, and validate details against the actual docs and `config/*.toml`.
+
 ---
 
 ### `/home/marvin/Projects/focal/docs/design/scenario-update-methods.md`
@@ -89,13 +91,13 @@ A key design principle is the separation of the **RuleFilter** (which rules appl
 
 ### `docs/design/customer-profile.md`
 
-This document introduces the "Customer Profile," a persistent, cross-session data store for verified facts about a customer. It addresses the need for a storage layer that sits between temporary session variables and unstructured conversation memory.
+This document introduces the Customer Data Store, a persistent, cross-session data store for verified facts about a customer. It addresses the need for a storage layer that sits between temporary session variables and unstructured conversation memory.
 
-Key aspects of the Customer Profile include:
+Key aspects of the Customer Data Store include:
 
 *   **Persistence:** It stores verified customer data (like email, KYC status, or preferences) that persists across multiple conversations and scenarios.
-*   **Data Models:** It defines Pydantic models for `CustomerProfile`, `ProfileField` (a single fact), `ProfileAsset` (like an uploaded ID), and `Consent`. Each field tracks its value, source, verification status, and confidence.
-*   **Schema Definition:** "Profile Field Definitions" allow developers to define the schema of expected customer data, including validation rules, privacy settings, and extraction hints for LLMs.
+*   **Data Models:** It defines Pydantic models for `CustomerDataStore`, `VariableEntry` (a single fact), `ProfileAsset` (like an uploaded ID), and `Consent`. Each field tracks its value, source, verification status, and confidence.
+*   **Schema Definition:** Customer data field definitions (e.g., `CustomerDataField`) allow developers to define the schema of expected customer data, including validation rules, privacy settings, and extraction hints for LLMs.
 *   **Integration:** The profile is tightly integrated with sessions and scenarios. Scenarios can declare required fields, and the `ScenarioFilter` can check the profile before allowing a user to enter a scenario or transition to a new step.
 *   **Scenario Migration:** The profile simplifies scenario migrations by providing a reliable source for "gap filling" when new data is required by an updated scenario flow.
 *   **Privacy:** The design includes considerations for privacy and compliance (GDPR/CCPA), with features for data export, deletion, and a detailed audit trail.
@@ -160,11 +162,11 @@ The key decisions are:
     *   **`AuditStore`:** For immutable, append-only logs of all actions for compliance and debugging.
 
 *   **Provider Architecture:** AI capabilities are abstracted into three provider interfaces:
-    *   **`LLMProvider`:** For text generation and understanding.
+    *   **`LLMExecutor`:** For text generation and understanding.
     *   **`EmbeddingProvider`:** For converting text into vector embeddings for search.
     *   **`RerankProvider`:** For improving the relevance of search results.
 
-This decoupled design allows for pluggable backends. For example, `MemoryStore` could be implemented with Neo4j or PostgreSQL (with pgvector), and `LLMProvider` can be switched between Anthropic, OpenAI, or a local model, all without changing the core application logic. The ADR includes the Python interface definitions for each store and provider, and discusses the pros and cons of this approach.
+This decoupled design allows for pluggable backends. For example, `MemoryStore` could be implemented with Neo4j or PostgreSQL (with pgvector), and `LLMExecutor` can be configured to use OpenRouter/Anthropic/OpenAI via model strings, all without changing the core application logic. The ADR includes the Python interface definitions for each store and provider, and discusses the pros and cons of this approach.
 
 ---
 
@@ -176,7 +178,7 @@ The key configuration models defined are:
 
 *   **`DeploymentConfig`:** Specifies the deployment mode (`standalone` or `external`) and its associated settings.
 *   **`APIConfig`:** Configures the API server, including host, port, workers, CORS, and rate limiting.
-*   **Provider Configurations:** A comprehensive set of models for all AI providers, categorized by modality (LLM, Vision, Embedding, STT, TTS, etc.). A key feature is the use of **fallback chains**, where each pipeline step can specify a list of models to try in order. This provides resilience against provider outages or performance issues. The configuration leverages **LiteLLM** for a unified interface.
+*   **Provider Configurations:** A comprehensive set of models for all AI providers, categorized by modality (LLM, Vision, Embedding, STT, TTS, etc.). A key feature is the use of **fallback chains**, where each pipeline step can specify a list of models to try in order. This provides resilience against provider outages or performance issues. The configuration leverages **LLMExecutor (Agno-backed)** for LLM execution.
 *   **`PipelineConfig`:** This is the master model for the turn pipeline. It composes configurations for each step (`InputProcessing`, `ContextExtraction`, `Retrieval`, `Generation`, etc.), allowing for fine-grained control over which models and settings are used at each stage of processing.
 *   **`StorageConfig`:** Defines the configuration for all storage backends. It includes separate configurations for `ConfigStore`, `MemoryStore`, `SessionStore`, and `AuditStore`, each allowing a different backend to be selected (e.g., `postgres`, `redis`, `neo4j`, `inmemory`).
 *   **Selection Strategy Configurations:** Defines models for various strategies (`Elbow`, `AdaptiveK`, `Entropy`, `Clustering`) used in the retrieval step to dynamically select the best number of results.
@@ -378,7 +380,7 @@ This document defines Focal's logging, tracing, and metrics strategy, designed t
 Key aspects include:
 
 *   **Three Pillars:** The observability architecture is built on three pillars:
-    *   **Logs:** Structured JSON logs via `structlog` to stdout, with automatic context binding (`tenant_id`, `agent_id`, `session_id`, `turn_id`, `trace_id`).
+    *   **Logs:** Structured JSON logs via `structlog` to stdout, with automatic context binding (`tenant_id`, `agent_id`, `session_id`, `logical_turn_id`, `trace_id`).
     *   **Traces:** OpenTelemetry spans for each pipeline step, exported via OTLP to a collector (Jaeger/Tempo).
     *   **Metrics:** Prometheus-compatible `/metrics` endpoint with counters, histograms, and gauges for requests, pipeline latency, LLM calls, rule matches, and errors.
 

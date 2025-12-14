@@ -1,25 +1,27 @@
 ## 2. Pipeline (Phases 1–11)
 
+> **Note:** This pipeline runs **once per LogicalTurn** (one or more messages). Turn boundaries, message accumulation, and supersede signals are handled by ACF. See `docs/focal_360/architecture/ACF_SPEC.md`.
+
 ### Phase 1 – Identification & context loading
 
-**Goal:** From an inbound event, build a `TurnContext` with session, customer, config, and glossary loaded.
+**Goal:** From an inbound event, build a `TurnContext` with session, interlocutor data, config, and glossary loaded.
 
-| ID   | Substep                                 | Goal                                                                | Inputs                                                                 | Outputs                                                                   |
-| ---- | --------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| P1.1 | Extract routing identifiers             | Identify tenant/agent, channel, and channel/customer IDs            | Inbound event (`tenant_id`, `agent_id`, `channel_id` or `customer_id`) | `TurnInput`                                                               |
-| P1.2 | Resolve customer from channel or create | Map `channel_id` to existing customer, or create a new one          | `tenant_id`, `channel_id`, optional `customer_id`                      | `customer_key`, `is_new_customer`                                         |
-| P1.3 | Resolve / create session                | Find or allocate a session for this customer & channel              | `tenant_id`, `agent_id`, `customer_key`, `channel`                     | `session_id`                                                              |
-| P1.4 | Load SessionState                       | Load scenario instances, session vars, last intent                  | `tenant_id`, `agent_id`, `session_id`                                  | `SessionState`                                                            |
-| P1.5 | Load CustomerDataStore snapshot         | Get all customer variables                                          | `tenant_id`, `customer_key`                                            | `CustomerDataStore`                                                       |
-| P1.6 | Load static config                      | Load pipeline config, LLM tasks, CustomerDataFields, glossary items | `tenant_id`, `agent_id`                                                | `PipelineConfig`, `LlmTaskConfig`s, `CustomerDataField`s, `GlossaryItem`s |
-| P1.7 | Scenario reconciliation (if needed)     | Handle scenario version changes since last turn                     | `SessionState`, loaded Scenarios                                       | Reconciled `SessionState`                                                 |
-| P1.8 | Build TurnContext                       | Aggregate all of the above                                          | P1.1–P1.7                                                              | `TurnContext`                                                             |
+| ID   | Substep                                    | Goal                                                                   | Inputs                                                                    | Outputs                                                                      |
+| ---- | ------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| P1.1 | Extract routing identifiers                | Identify tenant/agent, channel, and channel/interlocutor IDs           | Inbound event (`tenant_id`, `agent_id`, `channel_user_id`, optional `interlocutor_id`, `interlocutor_type`) | `TurnInput`                                                                  |
+| P1.2 | Resolve interlocutor from channel or create| Map `channel_user_id` to existing interlocutor, or create a new one    | `tenant_id`, `channel_user_id`, optional `interlocutor_id`, `interlocutor_type` | `interlocutor_id`, `is_new_interlocutor`                                     |
+| P1.3 | Resolve / create session                   | Find or allocate a session for this interlocutor & channel             | `tenant_id`, `agent_id`, `interlocutor_id`, `channel`                     | `session_id`                                                                 |
+| P1.4 | Load SessionState                          | Load scenario instances, session vars, last intent                     | `tenant_id`, `agent_id`, `session_id`                                     | `SessionState`                                                               |
+| P1.5 | Load InterlocutorDataStore snapshot        | Get all interlocutor variables                                         | `tenant_id`, `interlocutor_id`                                            | `InterlocutorDataStore`                                                      |
+| P1.6 | Load static config                         | Load pipeline config, LLM tasks, InterlocutorDataFields, glossary items| `tenant_id`, `agent_id`                                                   | `PipelineConfig`, `LlmTaskConfig`s, `InterlocutorDataField`s, `GlossaryItem`s|
+| P1.7 | Scenario reconciliation (if needed)        | Handle scenario version changes since last turn                        | `SessionState`, loaded Scenarios                                          | Reconciled `SessionState`                                                    |
+| P1.8 | Build TurnContext                          | Aggregate all of the above                                             | P1.1–P1.7                                                                 | `TurnContext`                                                                |
 
 **Scenario Reconciliation (P1.7):**
 
-If a session has an active scenario and the scenario's version has changed since the session started, we need to reconcile the customer's position in the scenario graph before processing the turn.
+If a session has an active scenario and the scenario's version has changed since the session started, we need to reconcile the interlocutor's position in the scenario graph before processing the turn.
 
-> For full details on scenario migration (gap-fill, teleportation, re-routing), see [scenario-update-methods.md](./scenario-update-methods.md).
+> For full details on scenario migration (gap-fill, teleportation, re-routing), see [scenario-update-methods.md](../../design/scenario-update-methods.md).
 
 ---
 
@@ -34,44 +36,44 @@ If a session has an active scenario and the scenario's version has changed since
 
 #### 2.1 Build masked inputs
 
-| ID   | Substep                   | Goal                                                     | Inputs                                    | Outputs               |
-| ---- | ------------------------- | -------------------------------------------------------- | ----------------------------------------- | --------------------- |
-| P2.1 | Build CustomerSchemaMask  | Show LLM which fields exist and whether they have values | `CustomerDataStore`, `CustomerDataField`s | `CustomerSchemaMask`  |
-| P2.2 | Build Glossary view       | Provide domain terms and their meanings/usage            | `GlossaryItem`s                           | `GlossaryView` (dict) |
-| P2.3 | Build conversation window | Select last *K* messages                                 | `SessionState`, `TurnInput.message`       | `conversation_window` |
+| ID   | Substep                      | Goal                                                     | Inputs                                       | Outputs                  |
+| ---- | ---------------------------- | -------------------------------------------------------- | -------------------------------------------- | ------------------------ |
+| P2.1 | Build InterlocutorSchemaMask | Show LLM which fields exist and whether they have values | `InterlocutorDataStore`, `InterlocutorDataField`s | `InterlocutorSchemaMask` |
+| P2.2 | Build Glossary view          | Provide domain terms and their meanings/usage            | `GlossaryItem`s                              | `GlossaryView` (dict)    |
+| P2.3 | Build conversation window    | Select last *K* messages                                 | `SessionState`, `TurnInput.messages`         | `conversation_window`    |
 
-`CustomerSchemaMask` is only: `field_key → {scope, type, exists}`.
+`InterlocutorSchemaMask` is only: `field_key → {scope, type, exists}`.
 No values, so no sensitive data is exposed to the LLM here.
 
 #### 2.2 Sensor LLM call
 
-| ID   | Substep                     | Goal                                                           | Inputs                                                                                 | Outputs                  |
-| ---- | --------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------ |
-| P2.4 | Call Situational Sensor LLM | Get JSON with situation, intent evolution, candidate variables | `conversation_window`, `CustomerSchemaMask`, `GlossaryView`, previous canonical intent | `situational_json` (raw) |
-| P2.5 | Parse & validate snapshot   | Convert JSON into typed `SituationalSnapshot`                  | `situational_json`                                                                     | `SituationalSnapshot`    |
-| P2.6 | Validate / fix language     | Confirm/fix `language`                                         | `SituationalSnapshot`, `TurnInput.message`                                             | `language_code`          |
+| ID   | Substep                     | Goal                                                           | Inputs                                                                                    | Outputs                  |
+| ---- | --------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------ |
+| P2.4 | Call Situational Sensor LLM | Get JSON with situation, intent evolution, candidate variables | `conversation_window`, `InterlocutorSchemaMask`, `GlossaryView`, previous canonical intent | `situational_json` (raw) |
+| P2.5 | Parse & validate snapshot   | Convert JSON into typed `SituationalSnapshot`                  | `situational_json`                                                                        | `SituationalSnapshot`    |
+| P2.6 | Validate / fix language     | Confirm/fix `language`                                         | `SituationalSnapshot`, `TurnInput.messages` (joined)                                      | `language_code`          |
 
 What the LLM outputs (conceptually):
 
 * `language`
 * `intent_changed` (bool) + `new_intent_label`, `new_intent_text`
 * `topic_changed`, `tone`, optional `frustration_level`
-* `situation_facts`: bullet-like statements (“User wants refund because…”)
+* `situation_facts`: bullet-like statements ("User wants refund because…")
 * `candidate_variables`:
-  `{ <field_key>: {value, scope, is_update} }`, where keys are taken from `CustomerSchemaMask.variables` (so it uses **correct field names**).
+  `{ <field_key>: {value, scope, is_update} }`, where keys are taken from `InterlocutorSchemaMask.variables` (so it uses **correct field names**).
 
 ---
 
-### Phase 3 – CustomerDataStore update (schema-driven)
+### Phase 3 – InterlocutorDataStore update (schema-driven)
 
-**Goal:** map `candidate_variables` into `CustomerDataStore` using `CustomerDataField` definitions.
+**Goal:** map `candidate_variables` into `InterlocutorDataStore` using `InterlocutorDataField` definitions.
 
-| ID   | Substep                                | Goal                                               | Inputs                                                            | Outputs                                             |
-| ---- | -------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------- |
-| P3.1 | Match candidates to CustomerDataFields | Align candidate keys to known fields               | `SituationalSnapshot.candidate_variables`, `customer_data_fields` | list of `(CustomerDataField, raw_value, is_update)` |
-| P3.2 | Validate & coerce types                | Check/coerce value types                           | mapping from P3.1                                                 | `CustomerDataUpdate` list (lightweight)             |
-| P3.3 | Apply updates in memory                | Mutate in-memory `CustomerDataStore` for this turn | `CustomerDataStore`, `CustomerDataUpdate`, `is_update` flags      | updated `CustomerDataStore`                         |
-| P3.4 | Mark updates for persistence           | Decide what will be persisted later                | updated `CustomerDataStore`, `CustomerDataField.persist` flags    | list of `persistent_updates` (lightweight)          |
+| ID   | Substep                                   | Goal                                                  | Inputs                                                               | Outputs                                                |
+| ---- | ----------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------ |
+| P3.1 | Match candidates to InterlocutorDataFields| Align candidate keys to known fields                  | `SituationalSnapshot.candidate_variables`, `interlocutor_data_fields`| list of `(InterlocutorDataField, raw_value, is_update)`|
+| P3.2 | Validate & coerce types                   | Check/coerce value types                              | mapping from P3.1                                                    | `InterlocutorDataUpdate` list (lightweight)            |
+| P3.3 | Apply updates in memory                   | Mutate in-memory `InterlocutorDataStore` for this turn| `InterlocutorDataStore`, `InterlocutorDataUpdate`, `is_update` flags | updated `InterlocutorDataStore`                        |
+| P3.4 | Mark updates for persistence              | Decide what will be persisted later                   | updated `InterlocutorDataStore`, `InterlocutorDataField.persist` flags| list of `persistent_updates` (lightweight)             |
 
 DB writes happen in Phase 11, but logically we know the deltas here.
 
@@ -89,7 +91,7 @@ DB writes happen in Phase 11, but logically we know the deltas here.
 
 | ID   | Substep                              | Goal                 | Inputs                                                                   | Outputs                                 |
 | ---- | ------------------------------------ | -------------------- | ------------------------------------------------------------------------ | --------------------------------------- |
-| P4.1 | Compute embedding & lexical features | Enable hybrid search | `TurnInput.message` or `SituationalSnapshot.new_intent_text`, `language` | `message_embedding`, `lexical_features` |
+| P4.1 | Compute embedding & lexical features | Enable hybrid search | `TurnInput.messages` (joined) or `SituationalSnapshot.new_intent_text`, `language` | `message_embedding`, `lexical_features` |
 
 #### 4.2 Intent retrieval
 
@@ -170,13 +172,13 @@ Notice:
 * step transitions,
 * which scenarios **contribute** to this turn’s response.
 
-A customer can be in **several scenarios at once**, and a single answer can mix contributions from multiple scenarios (questions, tool results, etc.).
+An interlocutor can be in **several scenarios at once**, and a single answer can mix contributions from multiple scenarios (questions, tool results, etc.).
 
 | ID   | Substep                                 | Goal                                                                       | Inputs                                                                                                                  | Outputs                                  |
 | ---- | --------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | P6.1 | Build scenario selection context        | Combine candidates, existing instances, relationships, rules               | `selected_scenario_candidates`, `SessionState`, `applied_rules`, `Relationship`s                                        | `ScenarioSelectionContext` (lightweight) |
 | P6.2 | Scenario lifecycle decisions            | For each candidate + active scenario: START/CONTINUE/PAUSE/COMPLETE/CANCEL | `ScenarioSelectionContext`, `SituationalSnapshot`, `canonical_intent_label`                                             | list of `ScenarioLifecycleDecision`      |
-| P6.3 | Step transition evaluation per scenario | For each ACTIVE scenario: stay or move to next step                        | ACTIVE `ScenarioInstance`s, `ScenarioTransition`s, `SituationalSnapshot`, `CustomerDataStore`, `canonical_intent_label` | list of `ScenarioStepTransitionDecision` |
+| P6.3 | Step transition evaluation per scenario | For each ACTIVE scenario: stay or move to next step                        | ACTIVE `ScenarioInstance`s, `ScenarioTransition`s, `SituationalSnapshot`, `InterlocutorDataStore`, `canonical_intent_label` | list of `ScenarioStepTransitionDecision` |
 | P6.4 | Determine scenario contributions        | Decide how each scenario wants to participate in this turn                 | lifecycle & step decisions, step metadata, `applied_rules`                                                              | `ScenarioContributionPlan`               |
 
 Key points:
@@ -195,7 +197,7 @@ These contributions feed into response planning.
 
 When evaluating step transitions, the system should detect if the user already has all required data to **skip intermediate steps**. This commonly happens when:
 - User provides multiple pieces of information in one message
-- Data from previous conversations is already in `CustomerDataStore`
+- Data from previous conversations is already in `InterlocutorDataStore`
 - Tool results from Phase 7 (previous turn) already filled required variables
 
 Example:
@@ -211,10 +213,10 @@ With step skipping:    Jump directly to [confirm_refund] (we have order_id + rea
 
 The transition evaluation (P6.3) checks:
 1. What variables does each downstream step require?
-2. Which of those are already in `CustomerDataStore` or extractable from current message?
+2. Which of those are already in `InterlocutorDataStore` or extractable from current message?
 3. What's the furthest valid step we can reach?
 
-> **Note:** This is NOT the same as scenario migration (handling version changes). For migration when scenario structure changes between turns, see [scenario-update-methods.md](./scenario-update-methods.md).
+> **Note:** This is NOT the same as scenario migration (handling version changes). For migration when scenario structure changes between turns, see [scenario-update-methods.md](../../design/scenario-update-methods.md).
 
 ---
 
@@ -226,15 +228,15 @@ The transition evaluation (P6.3) checks:
 * they’re in the right `when` (BEFORE/DURING/AFTER),
 * they’re needed to fill variables for this turn.
 
-| ID   | Substep                                                   | Goal                                       | Inputs                                                      | Outputs                                |
-| ---- | --------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------- | -------------------------------------- |
-| P7.1 | Collect tool bindings from contributing scenarios + rules | Know which tools are eligible now          | `ScenarioContributionPlan`, scenario steps, `applied_rules` | list of `ToolBinding`                  |
-| P7.2 | Compute required variables for this turn                  | Which vars should be filled via tools      | `ToolBinding`, `applied_rules`, step metadata               | set of `required_var_names` (set[str]) |
-| P7.3 | Resolve from CustomerDataStore / Session                  | Use already-known data first               | updated `CustomerDataStore`, `SessionState`                 | `known_vars`, `missing_vars` (dicts)   |
-| P7.4 | Determine tool calls allowed now                          | Respect scenario scheduling for tools      | `ToolBinding`, `missing_vars`, scenario steps               | list of `(tool_id, var_names_to_fill)` |
-| P7.5 | Execute tenant tools                                      | Fetch domain data                          | list of tool calls                                          | tool results (var_name → value)        |
-| P7.6 | Merge tool results into engine variables                  | Build `engine_variables`                   | `known_vars`, tool results                                  | `engine_variables` (dict[str, Any])    |
-| P7.7 | Keep future-scheduled tools for later                     | Do not execute tools meant for later steps | scenario graphs & bindings                                  | –                                      |
+| ID   | Substep                                                   | Goal                                       | Inputs                                                         | Outputs                                |
+| ---- | --------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- | -------------------------------------- |
+| P7.1 | Collect tool bindings from contributing scenarios + rules | Know which tools are eligible now          | `ScenarioContributionPlan`, scenario steps, `applied_rules`    | list of `ToolBinding`                  |
+| P7.2 | Compute required variables for this turn                  | Which vars should be filled via tools      | `ToolBinding`, `applied_rules`, step metadata                  | set of `required_var_names` (set[str]) |
+| P7.3 | Resolve from InterlocutorDataStore / Session              | Use already-known data first               | updated `InterlocutorDataStore`, `SessionState`                | `known_vars`, `missing_vars` (dicts)   |
+| P7.4 | Determine tool calls allowed now                          | Respect scenario scheduling for tools      | `ToolBinding`, `missing_vars`, scenario steps                  | list of `(tool_id, var_names_to_fill)` |
+| P7.5 | Execute tenant tools                                      | Fetch domain data                          | list of tool calls                                             | tool results (var_name → value)        |
+| P7.6 | Merge tool results into engine variables                  | Build `engine_variables`                   | `known_vars`, tool results                                     | `engine_variables` (dict[str, Any])    |
+| P7.7 | Keep future-scheduled tools for later                     | Do not execute tools meant for later steps | scenario graphs & bindings                                     | –                                      |
 
 We keep **one pass** per turn here; if later you want a multi-iteration silent loop (try more tools if still missing data), you can add it around P7.2-P7.6.
 
@@ -333,7 +335,7 @@ By the time we reach generation, the pipeline has already appended:
 | P10.1a | Collect matched hard constraints              | Hard constraints from rules that matched this turn             | `applied_rules`                                                      | `matched_hard_rules` (list[Rule])     |
 | P10.1b | Always add GLOBAL hard constraints            | **All** GLOBAL `is_hard_constraint=True` rules, even unmatched | ConfigStore query: `scope=GLOBAL, is_hard_constraint=True`           | `rules_to_enforce` (list[Rule])       |
 | P10.2  | Extract variables from answer                 | Understand what the answer committed to                        | `channel_answer`                                                     | `response_variables` (dict)           |
-| P10.3  | Build enforcement variable view               | Merge profile + session + response                             | `CustomerDataStore`, `SessionState`, `response_variables`            | `enforcement_vars` (dict)             |
+| P10.3  | Build enforcement variable view               | Merge interlocutor data + session + response                   | `InterlocutorDataStore`, `SessionState`, `response_variables`        | `enforcement_vars` (dict)             |
 | P10.4  | Evaluate deterministic constraints (Lane 1)   | Evaluate `enforcement_expression` per rule                     | `rules_to_enforce` with `enforcement_expression`, `enforcement_vars` | deterministic violations (list)       |
 | P10.5  | Evaluate subjective constraints (Lane 2)      | LLM-as-Judge for rules without expressions                     | `rules_to_enforce` without expressions, `channel_answer`             | subjective violations (list)          |
 | P10.6  | Optional relevance/grounding checks           | Check relevant & grounded answers                              | user message, retrieved docs, answer, `TurnOutcome.categories`       | extra violations or pass              |
@@ -363,15 +365,15 @@ By the time we reach generation, the pipeline has already appended:
 
 ### Phase 11 – Persistence, audit & output
 
-| ID    | Substep                             | Goal                                                  | Inputs                                                                                                                        | Outputs                 |
-| ----- | ----------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| P11.1 | Update SessionState                 | Apply lifecycle & transitions, store canonical intent | `SessionState`, `ScenarioLifecycleDecision`s, `ScenarioStepTransitionDecision`s, `engine_variables`, `canonical_intent_label` | new `SessionState`      |
-| P11.2 | Persist SessionState                | Save to session store                                 | new `SessionState`                                                                                                            | durable session row     |
-| P11.3 | Persist CustomerDataStore           | Commit `persistent_updates`                           | updated `CustomerDataStore`                                                                                                   | durable customer record |
-| P11.4 | Record TurnRecord                   | Full trace of the turn                                | `TurnContext`, `SituationalSnapshot`, `applied_rules`, scenario decisions, `EnforcementResult`, timings, token usage          | `TurnRecord`            |
-| P11.5 | Optional long-term memory ingestion | Store summaries/facts for RAG                         | user message, answer, scenario info                                                                                           | memory entries          |
-| P11.6 | Build final API response            | Return to caller                                      | `channel_answer`, metadata (session info, etc.)                                                                               | HTTP/RPC response       |
-| P11.7 | Emit metrics / traces               | Observability                                         | timings, token usage, error flags                                                                                             | metrics/traces          |
+| ID    | Substep                             | Goal                                                  | Inputs                                                                                                                        | Outputs                    |
+| ----- | ----------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| P11.1 | Update SessionState                 | Apply lifecycle & transitions, store canonical intent | `SessionState`, `ScenarioLifecycleDecision`s, `ScenarioStepTransitionDecision`s, `engine_variables`, `canonical_intent_label` | new `SessionState`         |
+| P11.2 | Persist SessionState                | Save to session store                                 | new `SessionState`                                                                                                            | durable session row        |
+| P11.3 | Persist InterlocutorDataStore       | Commit `persistent_updates`                           | updated `InterlocutorDataStore`                                                                                               | durable interlocutor record|
+| P11.4 | Record TurnRecord                   | Full trace of the turn                                | `TurnContext`, `SituationalSnapshot`, `applied_rules`, scenario decisions, `EnforcementResult`, timings, token usage          | `TurnRecord`               |
+| P11.5 | Optional long-term memory ingestion | Store summaries/facts for RAG                         | user message, answer, scenario info                                                                                           | memory entries             |
+| P11.6 | Build final API response            | Return to caller                                      | `channel_answer`, metadata (session info, etc.)                                                                               | HTTP/RPC response          |
+| P11.7 | Emit metrics / traces               | Observability                                         | timings, token usage, error flags                                                                                             | metrics/traces             |
 
 > **🔮 FUTURE – Memory Layer Integration (Zep, Graphiti):**
 > P11.5 currently supports basic memory ingestion. A future enhancement would integrate dedicated memory layers like **Zep** or **Graphiti** to enable:

@@ -811,6 +811,34 @@ class PostgresAgentConfigStore(AgentConfigStore):
             )
             raise ConnectionError(f"Failed to get tool activations: {e}", cause=e) from e
 
+    async def get_all_tool_activations(
+        self,
+        tenant_id: UUID,
+    ) -> list[ToolActivation]:
+        """Get all tool activations across all agents for a tenant."""
+        try:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(
+                    """
+                    SELECT id, tenant_id, agent_id, tool_id, enabled,
+                           policy_overrides, created_at, updated_at
+                    FROM tool_activations
+                    WHERE tenant_id = $1
+                    ORDER BY agent_id ASC, tool_id ASC
+                    """,
+                    tenant_id,
+                )
+                return [self._row_to_tool_activation(row) for row in rows]
+        except Exception as e:
+            logger.error(
+                "postgres_get_all_tool_activations_error",
+                tenant_id=str(tenant_id),
+                error=str(e),
+            )
+            raise ConnectionError(
+                f"Failed to get all tool activations: {e}", cause=e
+            ) from e
+
     async def save_tool_activation(self, activation: ToolActivation) -> UUID:
         """Save a tool activation, returning its ID."""
         try:

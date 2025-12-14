@@ -6,7 +6,7 @@
 > - `CLAUDE.md` - LLM Task Pattern, Configuration System
 >
 > **Dependencies**:
-> - **Requires**: Phase 1 (Context Loading) - TurnContext, CustomerProfile, GlossaryItem
+> - **Requires**: Phase 1 (Context Loading) - TurnContext, CustomerDataStore, GlossaryItem
 > - **Blocks**: Phase 3 (Customer Data Update) - Needs SituationalSnapshot with candidate_variables
 >
 > **Goal**: Implement schema-aware, glossary-aware context extraction that produces `SituationalSnapshot` with candidate variables for customer data updates.
@@ -43,16 +43,16 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Prerequisites from Phase 1 (Already Complete)
 
 - [x] **CustomerDataField** (renamed from ProfileFieldDefinition)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Fields: `name`, `scope`, `persist`, `value_type`, etc.
   - Note: Use `name` field (not `key`) per existing convention
 
 - [x] **VariableEntry** (renamed from ProfileField)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Fields: `name`, `value`, `history`, `confidence`, etc.
 
 - [x] **CustomerDataStore** (renamed from CustomerProfile)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Contains: `fields: dict[str, VariableEntry]`
 
 ### New Models for Phase 2 (Create These)
@@ -446,17 +446,17 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
   - Action: Already implemented (Phase 1)
   - Details: Lines 448-467, uses `_customer_data_fields` dict keyed by UUID
 
-### ProfileStore Extensions
+### CustomerDataStoreInterface Extensions
 
-- [x] **Add CustomerDataStore methods to ProfileStore interface**
+- [x] **Confirm core CRUD exists on CustomerDataStoreInterface**
   - File: `focal/customer_data/store.py`
   - Action: Already exists (uses get_by_customer_id)
   - Methods:
     - `async get_by_customer_id(tenant_id: UUID, customer_id: UUID, *, include_history: bool = False) -> CustomerDataStore | None`
     - `async save(profile: CustomerDataStore) -> UUID`
-  - Details: ProfileStore already manages CustomerDataStore (renamed from CustomerProfile in Phase 1)
+  - Details: CustomerDataStoreInterface already manages CustomerDataStore (renamed from CustomerProfile in Phase 1)
 
-- [x] **Implement in InMemoryProfileStore**
+- [x] **Implement in InMemoryCustomerDataStore**
   - File: `focal/customer_data/stores/inmemory.py`
   - Action: Already implemented (Phase 1)
   - Details: Lines 48-127, fully functional CRUD for CustomerDataStore
@@ -468,7 +468,7 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
 ### Unit Tests for Models
 
 - [x] **Test CustomerDataField, VariableEntry, CustomerDataStore**
-  - File: `tests/unit/customer_data/test_models.py`
+  - File: `tests/unit/customer_data/test_customer_data_models.py`
   - Action: Already tested (Phase 1)
   - **Note**: These models exist in `focal/customer_data/models.py` with existing comprehensive tests
 
@@ -588,14 +588,14 @@ Phase 2 replaces the current basic `ContextExtractor` (which outputs `Context`) 
     - test_get_customer_data_fields_enabled_only - enabled filtering
   - **Implemented**: Added TestCustomerDataFieldOperations class with 3 tests
 
-- [x] **Test ProfileStore customer_data_store methods**
+- [x] **Test CustomerDataStoreInterface CRUD methods**
   - File: `tests/unit/customer_data/stores/test_inmemory_customer_data.py`
   - Action: Already comprehensively tested (Phase 1)
   - Tests:
     - test_save_and_get_by_id - CRUD operations
     - test_get_by_customer_id - lookup by customer_id
     - test_get_by_channel_identity - channel identity resolution
-  - **Note**: ProfileStore methods already tested with CustomerDataStore model
+  - **Note**: CustomerDataStoreInterface methods already tested with CustomerDataStore model
 
 ---
 

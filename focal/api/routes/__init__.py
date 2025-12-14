@@ -20,10 +20,10 @@ def create_v1_router() -> APIRouter:
     router = APIRouter(prefix="/v1")
 
     # Import and include route modules
-    from focal.api.routes.chat import router as chat_router
+    from focal.api.routes.turns import router as turns_router
     from focal.api.routes.sessions import router as sessions_router
 
-    router.include_router(chat_router, tags=["Chat"])
+    router.include_router(turns_router, tags=["Turns"])
     router.include_router(sessions_router, tags=["Sessions"])
 
     # CRUD routes for agent configuration management
@@ -45,10 +45,15 @@ def create_v1_router() -> APIRouter:
     router.include_router(publish_router, tags=["Publishing"])
     router.include_router(migrations_router, tags=["Migrations"])
 
+    # MCP routes for tool discovery
+    from focal.api.mcp import router as mcp_router
+
+    router.include_router(mcp_router, tags=["MCP"])
+
     logger.debug(
         "v1_router_created",
         routes=[
-            "chat",
+            "turns",
             "sessions",
             "agents",
             "rules",
@@ -58,6 +63,7 @@ def create_v1_router() -> APIRouter:
             "tools",
             "publish",
             "migrations",
+            "mcp",
         ],
     )
 

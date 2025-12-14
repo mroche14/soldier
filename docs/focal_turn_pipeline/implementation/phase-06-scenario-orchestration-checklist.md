@@ -261,7 +261,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
         Args:
             scenario: Scenario definition
             current_step_id: Where we are now
-            customer_data: Data from CustomerProfile
+            customer_data: Data from CustomerDataStore
             session_variables: Data from Session
 
         Returns:
@@ -361,7 +361,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
         def __init__(
             self,
             config_store: AgentConfigStore,
-            profile_store: ProfileStore | None = None,
+            profile_store: CustomerDataStoreInterface | None = None,
         ):
             self._config_store = config_store
             self._profile_store = profile_store
@@ -373,7 +373,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
             candidates: list[ScoredScenario],
             active_instances: list[ScenarioInstance],
             applied_rules: list[Rule],
-            customer_profile: CustomerProfile | None = None,
+            customer_profile: CustomerDataStore | None = None,
         ) -> list[ScenarioLifecycleDecision]:
             """Decide lifecycle actions for all scenarios (P6.2).
 
@@ -406,7 +406,7 @@ Phase 6 handles **scenario lifecycle management** and **multi-scenario contribut
             tenant_id: UUID,
             active_instances: list[ScenarioInstance],
             lifecycle_decisions: list[ScenarioLifecycleDecision],
-            customer_profile: CustomerProfile | None = None,
+            customer_profile: CustomerDataStore | None = None,
         ) -> list[ScenarioStepTransitionDecision]:
             """Decide step transitions for continuing scenarios (P6.3)."""
             transitions = []
@@ -873,7 +873,7 @@ def current_step_id(self) -> UUID | None:
 - ⚠️ Phase 2: Situational Sensor (provides `canonical_intent_label`, `SituationalSnapshot`)
   - **Can proceed without this**: Use `context.intent` as fallback
 - ⚠️ Phase 3: Customer Data Update (provides `CustomerDataStore`)
-  - **Can proceed without this**: Use `CustomerProfile` directly
+  - **Can proceed without this**: Use `CustomerDataStore` directly
 
 ### Enables After Phase 6
 - ⚠️ Phase 7: Tool Execution (uses `ScenarioContributionPlan` for tool bindings)

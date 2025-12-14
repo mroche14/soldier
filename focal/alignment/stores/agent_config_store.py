@@ -234,6 +234,17 @@ class AgentConfigStore(ABC):
         pass
 
     @abstractmethod
+    async def get_all_tool_activations(
+        self,
+        tenant_id: UUID,
+    ) -> list[ToolActivation]:
+        """Get all tool activations across all agents for a tenant.
+
+        Used by MCP server for tenant-level tool discovery.
+        """
+        pass
+
+    @abstractmethod
     async def save_tool_activation(self, activation: ToolActivation) -> UUID:
         """Save a tool activation, returning its ID."""
         pass

@@ -179,9 +179,10 @@ class LLMExecutor:
 
     async def generate_structured(
         self,
-        messages: list[LLMMessage],
+        prompt: str,
         schema: type[BaseModel],
-    ) -> BaseModel:
+        system_prompt: str | None = None,
+    ) -> tuple[BaseModel, LLMResponse]:
         """Generate structured output matching schema."""
         pass
 ```
@@ -748,6 +749,7 @@ async def evaluate_scenario(
             current_step=current_step,
             candidates=candidates,
             session=session,
+            llm_executor=llm_executor,
             config=config,
         )
         if llm_result.scenario_action != "uncertain":
@@ -786,11 +788,10 @@ async def llm_select_transition(
     current_step: ScenarioStep,
     candidates: list[TransitionCandidate],
     session: Session,
+    llm_executor: LLMExecutor,
     config: ScenarioFilterConfig,
 ) -> ScenarioFilterResult:
     """Use LLM to select between multiple candidate transitions."""
-
-    llm = get_llm_provider(config.llm_provider, config.llm_model)
 
     options = "\n".join([
         f"{i+1}. \"{c.transition.condition_text}\" → {c.to_step.name}"
@@ -806,30 +807,30 @@ async def llm_select_transition(
         recent_history=format_recent_history(session, limit=3),
     )
 
-    result = await llm.generate_structured(prompt, ScenarioLLMDecision)
+    decision, _raw = await llm_executor.generate_structured(prompt, ScenarioLLMDecision)
 
-    if result.action == "stay":
+    if decision.action == "stay":
         return ScenarioFilterResult(
             scenario_action="continue",
             target_step_id=None,
-            confidence=result.confidence,
-            reasoning=result.reasoning,
+            confidence=decision.confidence,
+            reasoning=decision.reasoning,
         )
-    elif result.action == "exit":
+    elif decision.action == "exit":
         return ScenarioFilterResult(
             scenario_action="exit",
             target_step_id=None,
-            confidence=result.confidence,
-            reasoning=result.reasoning,
+            confidence=decision.confidence,
+            reasoning=decision.reasoning,
         )
-    elif result.action == "transition" and result.selected_index:
-        if 1 <= result.selected_index <= len(candidates):
-            selected = candidates[result.selected_index - 1]
+    elif decision.action == "transition" and decision.selected_index:
+        if 1 <= decision.selected_index <= len(candidates):
+            selected = candidates[decision.selected_index - 1]
             return ScenarioFilterResult(
                 scenario_action="transition",
                 target_step_id=selected.transition.to_step_id,
-                confidence=result.confidence,
-                reasoning=result.reasoning,
+                confidence=decision.confidence,
+                reasoning=decision.reasoning,
             )
 
     # LLM uncertain
@@ -1119,8 +1120,8 @@ class ScenarioFilterConfig(BaseModel):
 
     # LLM adjudication (used when multiple transitions match)
     llm_adjudication_enabled: bool = True
-    llm_provider: str = "anthropic"
-    llm_model: str = "claude-3-haiku"     # Fast model for decisions
+    model: str = "openrouter/anthropic/claude-3-haiku-20240307"  # Fast model for decisions
+    fallback_models: list[str] = []
 
     # Loop detection
     max_loop_iterations: int = 5          # Max times to revisit same step
@@ -1256,7 +1257,7 @@ MAX_STEP_HISTORY = 50
 ## Configuration
 
 ```toml
-[pipeline.scenario_filter]
+[pipeline.scenario_filtering]
 # Thresholds
 transition_threshold = 0.65      # Min score to consider a transition
 sanity_threshold = 0.35          # If all below this, something's wrong
@@ -1264,8 +1265,8 @@ min_margin = 0.1                 # Required margin over runner-up
 
 # LLM settings
 llm_adjudication_enabled = true
-llm_provider = "anthropic"
-llm_model = "claude-3-haiku"     # Fast model for decisions
+model = "openrouter/anthropic/claude-3-haiku-20240307"     # Fast model for decisions
+fallback_models = ["anthropic/claude-3-haiku-20240307"]
 
 # Loop detection
 max_loop_iterations = 5          # Max times to revisit same step
@@ -1290,7 +1291,7 @@ Every scenario navigation decision is logged:
 
 ```json
 {
-  "turn_id": "abc123",
+  "logical_turn_id": "abc123",
   "scenario_filter": {
     "scenario_id": "return_flow",
     "current_step": {"id": "verify_order", "name": "Verify Order"},
@@ -1321,7 +1322,7 @@ For re-localization events:
 
 ```json
 {
-  "turn_id": "def456",
+  "logical_turn_id": "def456",
   "scenario_filter": {
     "scenario_id": "kyc_flow",
     "current_step": {"id": "deleted_step", "name": null},
@@ -1422,7 +1423,7 @@ Consider this scenario graph:
 
 ---
 
-## Scenario Updates and Customer Profiles
+## Scenario Updates and Customer Data Store
 
 Scenario navigation becomes more complex when scenarios are updated while customers have active sessions (especially on long-lived channels like WhatsApp). Additionally, scenarios often need access to customer data collected in previous sessions or scenarios.
 
@@ -1440,22 +1441,22 @@ When a scenario is updated, active sessions are **reconciled** at the start of e
 
 The reconciliation uses:
 - **Anchors**: Steps that exist in both old and new versions
-- **Gap fill**: Pull missing data from CustomerProfile or extract from conversation
+- **Gap fill**: Pull missing data from CustomerDataStore or extract from conversation
 - **Checkpoints**: Steps marking irreversible actions (order placed, payment processed) that block teleportation
 - **Topological ordering**: Evaluate upstream forks from entry toward current position
 
 **See**: [Scenario Update Methods](../design/scenario-update-methods.md) for full algorithm and implementation.
 
-### Customer Profile Integration
+### Customer Data Store Integration
 
-The **CustomerProfile** is a persistent, cross-session store of verified facts about a customer:
+The **CustomerDataStore** is a persistent, cross-session store of verified facts about a customer:
 
 ```python
 # Customer provides email in Session 1 (returns scenario)
 # Session 2 (support scenario) can access it without re-asking
 
-profile = await profile_store.get_by_customer_id(tenant_id, customer_id)
-email = profile.fields.get("email")
+customer_data = await customer_data_store.get_by_customer_id(tenant_id, customer_id)
+email = customer_data.fields.get("email")
 
 if email and email.verified:
     # Use existing verified email
@@ -1466,11 +1467,11 @@ else:
 ```
 
 This enables:
-- **Gap fill during migration**: New steps requiring data can pull from profile
+- **Gap fill during migration**: New steps requiring data can pull from CustomerDataStore
 - **Cross-scenario continuity**: Data collected once is available everywhere
 - **Verification persistence**: KYC status, verified phone/email survive across sessions
 
-**See**: [Customer Profile](../design/customer-profile.md) for the full model.
+**See**: [Customer Data Store](../design/customer-profile.md) for the full model.
 
 ---
 
@@ -1609,11 +1610,11 @@ class RuleFilterResult(BaseModel):
 ### Enabling/Disabling
 
 ```toml
-[pipeline.rule_filter]
+[pipeline.rule_filtering]
 enabled = true               # Set to false to skip
-llm_provider = "anthropic"
-llm_model = "claude-3-haiku" # Fast model for yes/no
-max_rules = 10               # Max rules to return
+model = "openrouter/anthropic/claude-3-haiku-20240307" # Fast model for yes/no
+fallback_models = ["anthropic/claude-3-haiku-20240307"]
+batch_size = 5               # Batch size for filtering
 ```
 
 When disabled, all retrieved rules (after reranking) are used.
@@ -1694,7 +1695,7 @@ LLM evaluates its own answer:
 
 ```python
 if config.self_critique_enabled:
-    critique = await llm.generate_structured(
+    critique, _raw = await llm.generate_structured(
         prompt=SELF_CRITIQUE_PROMPT.format(
             response=response,
             rules=[r.action_text for r in matched_rules]
@@ -1716,37 +1717,33 @@ if config.self_critique_enabled:
 # Context Extraction
 [pipeline.context_extraction]
 mode = "llm"                           # "llm" | "embedding_only" | "disabled"
-llm_provider = "anthropic"
-llm_model = "claude-3-haiku"
-embedding_provider = "openai"          # For embedding_only mode
-embedding_model = "text-embedding-3-small"
+model = "openrouter/anthropic/claude-3-haiku-20240307"
+fallback_models = ["anthropic/claude-3-haiku-20240307"]
 history_turns = 5                      # How much history to include
 
 # Retrieval
 [pipeline.retrieval]
-embedding_provider = "openai"
-embedding_model = "text-embedding-3-small"
+embedding_provider = "default"
 top_k_per_scope = 10                   # Candidates per scope level
 include_memory = true
 
 # Reranking
 [pipeline.reranking]
 enabled = true
-rerank_provider = "cohere"
-rerank_model = "rerank-english-v3.0"
+rerank_provider = "default"
 top_k = 10                             # Final candidates after rerank
 
-# LLM Filtering
-[pipeline.llm_filtering]
+# Rule Filtering
+[pipeline.rule_filtering]
 enabled = true
-llm_provider = "anthropic"
-llm_model = "claude-3-haiku"
-max_rules = 5                          # Max rules to pass to generation
+model = "openrouter/anthropic/claude-3-haiku-20240307"
+fallback_models = ["anthropic/claude-3-haiku-20240307"]
+batch_size = 5
 
 # Response Generation
 [pipeline.generation]
-llm_provider = "anthropic"
-llm_model = "claude-sonnet-4-5-20250514"
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
+fallback_models = ["anthropic/claude-sonnet-4-5-20250514", "openai/gpt-4o"]
 temperature = 0.7
 max_tokens = 1024
 
@@ -1754,9 +1751,8 @@ max_tokens = 1024
 [pipeline.enforcement]
 enabled = true
 self_critique_enabled = false
-llm_provider = "anthropic"
-llm_model = "claude-3-haiku"
-max_regenerations = 1
+llm_judge_models = ["openrouter/anthropic/claude-3-haiku-20240307"]
+max_retries = 1
 ```
 
 ### Deployment Profiles
@@ -1769,11 +1765,11 @@ mode = "disabled"
 [pipeline.reranking]
 enabled = false
 
-[pipeline.llm_filtering]
+[pipeline.rule_filtering]
 enabled = false
 
 [pipeline.generation]
-llm_model = "claude-3-haiku"
+model = "openrouter/anthropic/claude-3-haiku-20240307"
 
 [pipeline.enforcement]
 self_critique_enabled = false
@@ -1783,33 +1779,33 @@ self_critique_enabled = false
 ```toml
 [pipeline.context_extraction]
 mode = "llm"
-llm_model = "claude-3-haiku"
+model = "openrouter/anthropic/claude-3-haiku-20240307"
 
 [pipeline.reranking]
 enabled = true
 
-[pipeline.llm_filtering]
+[pipeline.rule_filtering]
 enabled = true
 
 [pipeline.generation]
-llm_model = "claude-sonnet-4-5-20250514"
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 ```
 
 **Maximum Quality**
 ```toml
 [pipeline.context_extraction]
 mode = "llm"
-llm_model = "claude-sonnet-4-5-20250514"
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 
 [pipeline.reranking]
 enabled = true
 
-[pipeline.llm_filtering]
+[pipeline.rule_filtering]
 enabled = true
-llm_model = "claude-sonnet-4-5-20250514"
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 
 [pipeline.generation]
-llm_model = "claude-sonnet-4-5-20250514"
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 
 [pipeline.enforcement]
 self_critique_enabled = true
@@ -1825,7 +1821,7 @@ Every turn logs the full alignment decision:
 
 ```json
 {
-  "turn_id": "abc123",
+  "logical_turn_id": "abc123",
   "timestamp": "2025-01-15T10:30:00Z",
   "tenant_id": "tenant_1",
   "session_id": "session_456",

@@ -233,13 +233,13 @@
     async def resolve_variables(
         self,
         required_vars: set[str],
-        customer_profile: CustomerProfile,
+        customer_profile: CustomerDataStore,
         session: Session,
     ) -> tuple[dict[str, Any], set[str]]:
         """Resolve variables from CustomerDataStore and Session.
 
         Resolution order:
-        1. CustomerProfile.fields (active status only)
+        1. CustomerDataStore.fields (active status only)
         2. Session.variables
 
         Args:
@@ -482,7 +482,7 @@
             self,
             contribution_plan: ScenarioContributionPlan,
             applied_rules: list[MatchedRule],
-            customer_profile: CustomerProfile,
+            customer_profile: CustomerDataStore,
             session: Session,
             context: Context,
             phase: Literal["BEFORE_STEP", "DURING_STEP", "AFTER_STEP"],
@@ -725,8 +725,8 @@
 - [ ] `applied_rules` available from Phase 5
 
 **Requires Phase 3 Complete**:
-- [ ] `CustomerProfile` with active fields
-- [ ] `ProfileStore` interface
+- [ ] `CustomerDataStore` with active fields
+- [ ] `CustomerDataStoreInterface` interface
 - [ ] Field status tracking
 
 **Requires Session Store**:

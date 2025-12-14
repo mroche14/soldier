@@ -40,7 +40,7 @@ Focal is the **Cognitive Layer** in a multi-plane architecture:
 │           events.inbound.{tenant}.{channel}                                 │
 │                        ▼                                                     │
 │              ┌─────────────────┐                                            │
-│              │ Message-Router  │  Coalesce, interrupt, backpressure         │
+│              │ Message-Router  │  Route, backpressure                       │
 │              └─────────────────┘                                            │
 │                        │                                                     │
 │           events.routed.{tenant}.{channel}                                  │
@@ -119,7 +119,7 @@ Focal is the **Cognitive Layer** in a multi-plane architecture:
 
 | Capability | Implementation |
 |------------|----------------|
-| API Layer | Focal API + Session Router |
+| API Layer | Focal API + ACF Turn Gateway |
 | Core Engine | Focal Core (Scenario, Rule, Memory, LLM) |
 | Config Loading | Config Watcher (loads from Redis) |
 | Framework | FastAPI + PostgreSQL + Redis |
@@ -132,21 +132,20 @@ Focal is the **Cognitive Layer** in a multi-plane architecture:
 ```
 1. Channel-Gateway receives message from WhatsApp/Slack/etc.
 2. Normalizes to Envelope:
-   {
-     tenant_id, agent_id, channel, user_channel_id,
-     message, timestamp, metadata
-   }
+	   {
+	     tenant_id, agent_id, channel, channel_user_id,
+	     message, timestamp, metadata
+	   }
 3. Publishes to Redis stream: events.inbound.{tenant}.{channel}
 
 4. Message-Router consumes:
-   - Checks session state (idle/processing)
-   - Coalesces rapid messages (debounce)
-   - Sends interrupt if needed
+   - Routes messages to Focal (tenant/agent aware)
+   - Applies backpressure/retries as needed
    - Publishes to: events.routed.{tenant}.{channel}
 
 5. Focal consumes:
-   - Loads session state
-   - Runs turn pipeline
+   - ACF: acquires session mutex and accumulates into a LogicalTurn
+   - Runs the cognitive pipeline once per LogicalTurn (supersede-aware)
    - Returns response
    - Publishes to: events.outbound.{tenant}.{channel}
 
@@ -184,7 +183,7 @@ Every layer enforces tenant isolation:
 | Redis Streams | Per-tenant channels |
 | PostgreSQL | `tenant_id` column + indexes |
 | Neo4j | `group_id = {tenant_id}:{session_id}` on all nodes |
-| Sessions | Namespaced: `session:{tenant}:{channel}:{user_id}` |
+| Sessions | Namespaced: `session:{tenant_id}:{agent_id}:{customer_id}:{channel}` |
 | Logs/Traces | `tenant_id` attribute on all spans |
 
 ## Cache Strategy
@@ -207,7 +206,7 @@ agent_bundle:{tenant_id}:{agent_id}:v{version}
 
 ```python
 # Key pattern
-session:{tenant_id}:{channel}:{user_channel_id}
+session:{tenant_id}:{agent_id}:{customer_id}:{channel}
 
 # TTL strategy
 - Default: 30 days (configurable per tenant)

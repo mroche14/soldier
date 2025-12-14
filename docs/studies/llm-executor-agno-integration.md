@@ -1,5 +1,7 @@
 # LLM Executor Refactoring Study: Agno Integration
 
+> **Status:** HISTORICAL. The repo has since standardized on `LLMExecutor` (Agno-backed) and removed the `LLMProvider` abstraction; treat this as design notes for why that change was made.
+
 ## Executive Summary
 
 This study proposes simplifying our LLM layer by:

@@ -375,6 +375,17 @@ class InMemoryAgentConfigStore(AgentConfigStore):
                 results.append(activation)
         return results
 
+    async def get_all_tool_activations(
+        self,
+        tenant_id: UUID,
+    ) -> list[ToolActivation]:
+        """Get all tool activations across all agents for a tenant."""
+        results = []
+        for key, activation in self._tool_activations.items():
+            if key[0] == tenant_id:
+                results.append(activation)
+        return results
+
     async def save_tool_activation(self, activation: ToolActivation) -> UUID:
         """Save a tool activation, returning its ID."""
         key = (activation.tenant_id, activation.agent_id, activation.tool_id)

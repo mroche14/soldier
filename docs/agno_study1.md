@@ -1,3 +1,5 @@
+> **Status:** HISTORICAL / NOTES. This document assumes an `LLMProvider` abstraction; current Focal uses `LLMExecutor` (Agno-backed) as the single LLM interface.
+
 1. Your abstractions are already good
 
 Things you’ve done right:

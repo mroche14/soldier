@@ -9,7 +9,7 @@ This document defines Focal's logging, tracing, and metrics strategy. Focal is d
 | Principle | Implementation |
 |-----------|----------------|
 | **Structured over unstructured** | JSON logs with consistent schema, not plain text |
-| **Context propagation** | Every log/span includes `tenant_id`, `agent_id`, `session_id`, `turn_id` |
+| **Context propagation** | Every log/span includes `tenant_id`, `agent_id`, `session_id`, `logical_turn_id` |
 | **Audit vs. Operational separation** | Domain events in `AuditStore`, runtime debugging in logs |
 | **Container-native** | stdout only; no file writes; let orchestrator handle shipping |
 | **Vendor-agnostic** | OpenTelemetry for traces, Prometheus for metrics |
@@ -60,7 +60,7 @@ Every log entry includes these fields:
   "tenant_id": "tenant_abc123",
   "agent_id": "agent_xyz789",
   "session_id": "sess_456",
-  "turn_id": "turn_789",
+  "logical_turn_id": "turn_789",
   "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
 
   "latency_ms": 342,
@@ -311,7 +311,7 @@ turn_process (root span)
 │   └── memory_retrieval
 ├── reranking
 │   └── rerank_call (provider: cohere)
-├── llm_filtering
+├── rule_filtering
 │   └── llm_call (provider: anthropic, model: haiku)
 ├── tool_execution
 │   └── tool_call (tool: get_order_status)
@@ -329,7 +329,7 @@ turn_process (root span)
 span.set_attribute("tenant_id", tenant_id)
 span.set_attribute("agent_id", agent_id)
 span.set_attribute("session_id", session_id)
-span.set_attribute("turn_id", turn_id)
+span.set_attribute("logical_turn_id", logical_turn_id)
 span.set_attribute("pipeline.step", "generation")
 span.set_attribute("llm.provider", "anthropic")
 span.set_attribute("llm.model", "claude-sonnet-4-5-20250514")
@@ -509,7 +509,7 @@ scrape_configs:
 ```python
 # AuditStore - durable, queryable domain events
 await audit_store.log_turn(
-    turn_id=turn_id,
+    logical_turn_id=logical_turn_id,
     tenant_id=tenant_id,
     agent_id=agent_id,
     session_id=session_id,
@@ -525,7 +525,7 @@ await audit_store.log_turn(
 # Logs - operational debugging (ephemeral)
 logger.info(
     "turn_completed",
-    turn_id=turn_id,
+    logical_turn_id=logical_turn_id,
     latency_ms=latency,
     rules_matched=len(matched_rules),
     fallback_triggered=fallback_used,

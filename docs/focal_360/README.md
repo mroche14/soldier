@@ -1,473 +1,361 @@
-# FOCAL 360 Customer-Facing Agent
+# FOCAL 360: Complete Platform Architecture
 
-## Reliability-first architecture add-ons around the existing 11-phase turn pipeline
-
-### Why this document exists
-
-You already have a robust **11-phase, turn-scoped alignment pipeline** with strong multi-tenant boundaries, schema-driven customer data, LLM-as-sensor/judge, and full observability via TurnRecord.
-This rewrite reframes your latest ideas as a coherent **platform layer** around that pipeline, so you can scale from "a safe turn engine" to a **360 customer support / sales / after-sales system** across channels, with controlled side effects and tenant-friendly configuration.
+> **Purpose**: Reliability-first architecture for conversational AI at scale
+> **Core Abstraction**: Agent Conversation Fabric (ACF) - the conversation control plane
+> **Core Insight**: A message is not a turn - the semantic unit is a *conversational beat*
+> **Version**: 3.0 (Agent/Toolbox ownership model)
 
 ---
 
-## 1. North-star product goals (what your additions optimize for)
+## Quick Start
 
-1. **Reliability & alignment by construction**
-   The pipeline already encodes that LLMs should not be policy engines; they are sensors/judges inside deterministic control.
-   Your proposed add-ons mainly strengthen *system-level* integrity: concurrency, abuse, side effects, and configurability.
+**Start here**: [ACF Architecture](architecture/ACF_ARCHITECTURE.md) - The canonical architecture document
 
-2. **Transparency & auditability**
-   Every turn yields a TurnRecord audit trail.
-   The new pieces should also emit structured audit events and map cleanly into Phase 11.
+Then see:
+- [Agent Runtime Spec](architecture/AGENT_RUNTIME_SPEC.md) - Agent lifecycle management
+- [Toolbox Spec](architecture/TOOLBOX_SPEC.md) - Tool execution layer
+- [ACF Spec](architecture/ACF_SPEC.md) - Detailed ACF mechanics
 
-3. **Controllability for tenants**
-   Your configuration is currently **TOML-based at startup**, with a plan to move to a DB/event-driven config system.
-   The agent-level customization you want is a direct extension of P1.6's "Load static config" step.
+Or see the [Architecture Index](architecture/README.md) for the full document map.
 
 ---
 
-## 2. Existing core: your 11 phases (short recap with "why it stays")
+## What is FOCAL 360?
 
-You already have an excellent turn pipeline backbone. This document treats it as stable:
+FOCAL 360 builds a **platform layer** around the existing 11-phase turn pipeline, transforming it from a "safe turn engine" into a **360 customer support/sales/after-sales system** across channels.
 
-### Phase 1 – Identification & context loading
+### Architecture Overview (v3.0)
 
-This already includes the essential shape for multi-channel, multi-tenant routing, customer/session resolution, static config load, and **scenario reconciliation**.
-P1.7 explicitly acknowledges version changes and points to your scenario migration methods doc.
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                            RUNTIME LAYER                                    │
+│                                                                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │                    AgentRuntime                                      │  │
+│  │   Lifecycle manager for Agent instances (caching, invalidation)     │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                    │                                       │
+│                                    ▼                                       │
+│  ┌─────────────────────────────────────────────────────────────────────┐  │
+│  │                    AgentContext                                      │  │
+│  │   agent: Agent | pipeline: CognitivePipeline | toolbox: Toolbox     │  │
+│  └─────────────────────────────────────────────────────────────────────┘  │
+│                                    │                                       │
+└────────────────────────────────────┼───────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                            ACF LAYER                                        │
+│                     (Pure Conversation Infrastructure)                      │
+│                                                                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │SessionMutex  │  │ TurnManager  │  │ Supersede    │  │ Hatchet      │  │
+│  │- acquire     │  │- aggregate   │  │ Coordinator  │  │ Workflow     │  │
+│  │- release     │  │- accumulate  │  │- signal      │  │- orchestrate │  │
+│  │- extend      │  │- boundary    │  │- query state │  │- retry       │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  │
+│                                                                            │
+│  ACF provides to Agent: FabricTurnContext (logical_turn, has_pending, emit)│
+└────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         INFRASTRUCTURE LAYER                               │
+│                                                                            │
+│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐│
+│  │ToolGateway          │  │ChannelGateway       │  │ Stores + Providers  ││
+│  │- Composio, HTTP     │  │- AG-UI, Twilio      │  │- ConfigStore, etc.  ││
+│  │- Idempotency cache  │  │- Protocol adapters  │  │- LLM, Embedding     ││
+│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘│
+└────────────────────────────────────────────────────────────────────────────┘
+```
 
-**Why this stays**
-It's the correct anchor for adding:
+### Key Boundaries (v3.0)
 
-* channel-aware customer reconciliation,
-* agent-level configuration selection,
-* concurrency/turn sequencing policies (as a pre-step or P1 substep).
+| Layer | Owns | Does NOT Own |
+|-------|------|--------------|
+| **ACF** | Mutex, turns, workflow, supersede signals, FabricEvent routing | Tool execution, tool semantics, business logic |
+| **Agent** (AgentContext) | Pipeline, Toolbox, ChannelBindings | Turn lifecycle, workflow orchestration |
+| **Toolbox** | Tool resolution, side effect recording, execute via gateway | Infrastructure, idempotency storage |
+| **ToolGateway** | Provider adapters, operation idempotency | Tool semantics, policies |
 
-### Phase 2 – Schema-aware situational sensor
+### Execution Model
 
-You already designed the right privacy boundary: the sensor sees **masked schema**, not raw values.
+FOCAL uses a **single execution style**: Pipeline calls `toolbox.execute()` inline during turn processing.
 
-**Why this stays**
-It is the best place to keep low-risk "understanding" tasks: intent hints, extraction candidates, scenario cues, etc., without letting policy drift into the LLM.
+```
+Pipeline → ctx.toolbox.execute() → ToolGateway → Provider
+              ↓
+         Policy enforcement
+         Idempotency
+         Audit events
+```
 
-### Phase 4 – Unified retrieval + selection
+**Key principle**: The Toolbox is the enforcement boundary. ACF is NOT in the tool execution path.
 
-Your "per-object-type rerank + strategy" pipeline is a strong scaling primitive.
-And you already document how it's tuned per object type.
+| Layer | Owns |
+|-------|------|
+| **Agent/Pipeline** | Decisions (what to do, when to call tools) |
+| **Toolbox** | Execution + guardrails (policy, idempotency, confirmation, audit) |
+| **ACF** | Conversation infrastructure (turns, mutex, workflow, event routing) |
 
-### Phase 7 – Tool execution
-
-This is the natural home for **side-effect gating** and "commit points", because tool bindings live at steps.
-
-### Phase 8 – Response planning
-
-Your ResponsePlan already supports synthesizing multiple scenario contributions.
-This is where "multi-message answer generation" belongs as a *plan-level option*.
-
-### Phase 9 – Generation + semantic categories
-
-Your design cleanly separates:
-
-* categories detected by the generation LLM
-* categories the pipeline already knew earlier
-  This is crucial for observability and for your "parallel scenarios in one turn" use case.
-
-### Phase 10 – Enforcement
-
-You already provision a strict enforcement block with retries.
-
-### Phase 11 – Persistence & audit
-
-This is where all your new features should leave durable traces.
-
----
-
-## 3. The missing platform layer: **Ingress Control** (new wrapper around the turn)
-
-Your earlier description about handling "two or three messages back to back" is less about classic throttling and more about **debouncing / coalescing / turn-gating**.
-
-### 3.1 Key concept: "debouncing" at the conversational level
-
-Debouncing means: when multiple events arrive quickly, you **delay/merge** so you don't emit multiple outputs for essentially one user burst.
-In your context:
-
-* User sends 2–3 messages in rapid succession.
-* System should avoid generating 2–3 separate answers if the second message clarifies the first.
-
-### 3.2 Why this is distinct from throttling
-
-* **Throttling / rate limiting**: caps volume over time.
-* **Debouncing / coalescing**: avoids duplicate *responses* within a micro-window because the user is still "typing the thought."
-
-You can implement both, but they solve different problems.
-
-### 3.3 Where it fits in your pipeline
-
-Introduce a **pre-P1 Ingress Control layer** (or P1.0):
-
-**Inbound burst policy**
-
-1. Detect burst window by (tenant_id, agent_id, customer_key, channel).
-2. If new message arrives before the previous turn reaches a safe checkpoint:
-
-   * **Coalesce** into one "logical turn input"
-   * Or **cancel** the in-flight turn if it has no irreversible side effects yet.
-
-This is consistent with your execution model idea of defining which operations are sequential vs parallel.
-
-### 3.4 "Irreversible checkpoints" and tool side effects
-
-Your instincts are exactly right: you can cancel/merge turns **unless** a tool has already produced a side effect you cannot safely undo.
-
-So define a small contract:
-
-**ToolSideEffectPolicy**
-
-* `reversible`: safe to cancel or replay
-* `compensatable`: can be undone via a defined compensating action
-* `irreversible`: cannot be rolled back; commit point reached
-
-This is the missing "transaction semantics" layer above Phase 7.
+**Why this is simple**: Your team controls all pipelines. Toolbox enforcement + ASA validation ensures correctness without platform-level execution indirection.
 
 ---
 
-## 4. A formal **Side-Effect Registry** (strengthening Phase 7)
+## Documentation Governance
 
-### 4.1 Why you need it
+### Document Tiers (RFC-Style)
 
-Tools like **refund**, order cancellation, ticket creation, or CRM writes are business-dangerous.
-You already bind tools to scenario steps.
-What's missing is a **central policy map** that tells the runtime what concurrency rules apply when these tools are in play.
+When documents conflict, higher tiers win. Implement from Tier 1, reference Tier 2, understand context from Tier 3.
 
-### 4.2 Proposed minimal model (conceptual)
+| Tier | Status | Documents | Rule |
+|------|--------|-----------|------|
+| **Tier 1** | Canonical (Normative) | ACF_ARCHITECTURE, AGENT_RUNTIME_SPEC, TOOLBOX_SPEC | **Implement from these** |
+| **Tier 2** | Supporting (Informative) | ACF_SPEC, topic files (01-13) | Reference, may have legacy sections |
+| **Tier 3** | Vision (Historical) | LOGICAL_TURN_VISION, analysis/ | Context only, not for implementation |
 
-* Tool metadata:
-
-  * side-effect level
-  * idempotency key strategy
-  * compensation tool (optional)
-
-### 4.3 How it integrates
-
-* P6 decides intended step path.
-* P7 consults **SideEffectRegistry** before executing tools.
-* Ingress Control uses the same registry to decide whether a turn can be canceled/merged.
+**Enforcement Rules**:
+- Tier 2 documents cannot introduce new types not defined in Tier 1
+- When Tier 2 conflicts with Tier 1, Tier 1 wins
+- Sections marked `> **HISTORICAL v2**` are deprecated patterns
 
 ---
 
-## 5. Abuse "firewall" & safety escalation
+## Canonical ID Glossary
 
-You want a flagging system if users abuse the agent. This is best treated as **two layers**:
+**Use these names consistently across all documents and code.**
 
-### 5.1 Real-time guardrails (pre-P1)
+| ID | Type | Description | Scope |
+|----|------|-------------|-------|
+| `message_id` | UUID | Single inbound raw message | Per message |
+| `logical_turn_id` | UUID | Aggregated processing unit (one or more messages forming one beat) | Per turn |
+| `turn_group_id` | UUID | Idempotency scope - shared across supersede chain, NEW on QUEUE | Per conversation attempt |
+| `session_key` | String | Concurrency boundary: `{tenant}:{agent}:{customer}:{channel}` | Per conversation stream |
+| `workflow_run_id` | String | Hatchet workflow instance | Per workflow |
+| `tenant_id` | UUID | Tenant identifier | Global |
+| `agent_id` | UUID | Agent identifier | Per tenant |
+| `customer_id` | UUID | Customer identifier | Per tenant |
 
-* Detect spam patterns, harassment bursts, prompt-injection storms per customer/channel.
-* Apply rate limits and temporary cool-down.
-
-### 5.2 Behavioral risk classification (P9/P10 + audit)
-
-The generation LLM already emits semantic categories like SAFETY_REFUSAL; your pipeline already merges categories into TurnOutcome.
-Add a **pipeline-owned "ABUSE_SUSPECTED"** category that can be set deterministically based on:
-
-* repeated policy blocks
-* repeated harassment
-* volumetric anomalies
-
-Log these in TurnRecord for the reporter agent to summarize later.
-
----
-
-## 6. Multi-model inputs/outputs & "multi-message responses"
-
-### 6.1 Multi-model by phase is already natural in your config system
-
-Each step can pick models and fallback providers.
-Your modes (Minimal/Balanced/Maximum) prove you already think in "pipeline tiering."
-
-### 6.2 The missing hierarchy: tenant → agent → scenario → step
-
-Right now you load static config in P1.6.
-You can evolve this to:
-
-1. tenant defaults
-2. agent overrides
-3. scenario overrides
-4. step overrides (already implicit)
-
-This achieves "each tenant can tune each agent differently" without breaking your architecture.
-
-### 6.3 Multi-message response generation
-
-You mentioned: "answer one user message with several agent messages."
-This fits cleanly in Phase 8:
-
-* P8 produces a ResponsePlan that can specify `segments[]`
-* P9 generates per-segment text with channel formatting per segment
-
-This is consistent with P8's "merge scenario contributions into one plan."
+**Deprecated Terms** (do not use in new code):
+- ~~`beat_id`~~ → use `logical_turn_id`
+- ~~`turn_id`~~ → use `logical_turn_id` (full name preferred for clarity)
 
 ---
 
-## 7. Channels as first-class objects (building on TurnInput)
+## Core Architecture Documents
 
-You already have `TurnInput.channel` and `channel_id` to represent WhatsApp/email/webchat/phone/etc.
-Your new idea is to "lift" this into a richer object.
-
-### 7.1 Why that's useful
-
-Because channels aren't just I/O formats; they have capabilities:
-
-* delivered/read receipts (WhatsApp)
-* fallbacks (WhatsApp → SMS)
-* outbound permissions
-* rich media support
-
-### 7.2 Suggested extension
-
-Keep TurnInput as-is (clean contract), but add:
-
-**ChannelConfig / ChannelCapability** loaded in P1.6 and attached to TurnContext. That's fully compatible with your existing TurnContext pattern.
-
-### 7.3 Customer reconciliation across channels
-
-You already planned in P1.2 to map channel_id to existing customer or create new.
-Extend your CustomerDataStore or a separate CustomerIdentityMap to store:
-
-* whatsapp_id
-* email
-* phone
-* webchat_id
-  and allow "confirm identity on channel A then notify on channel B."
+| Document | Purpose |
+|----------|---------|
+| [ACF_ARCHITECTURE.md](architecture/ACF_ARCHITECTURE.md) | **Canonical architecture** - Start here |
+| [AGENT_RUNTIME_SPEC.md](architecture/AGENT_RUNTIME_SPEC.md) | Agent lifecycle, AgentContext, caching |
+| [TOOLBOX_SPEC.md](architecture/TOOLBOX_SPEC.md) | Tool execution, SideEffectPolicy, ToolGateway |
+| [ACF_SPEC.md](architecture/ACF_SPEC.md) | Detailed ACF mechanics (mutex, turns, supersede) |
 
 ---
 
-## 8. Scenario updates, caching, and safe migrations
+## Key Principles
 
-You already defined explicit scenario migration patterns (gap-fill, teleportation, re-routing) referenced in P1.7.
-Your composite migration benefits are well-argued in your doc.
+### 1. A Message is Not a Turn
 
-### 8.1 What your new concerns add
+The semantic unit is a **conversational beat** - one or more rapid messages forming one coherent user intent:
 
-You're worried about:
+```
+User: "Hello"          ┐
+User: "How are you?"   ├─→ ONE LogicalTurn → ONE Response
+                       ┘
+```
 
-* caches holding old scenario graphs
-* sessions mid-ticket creation
-* frequent non-state-heavy scenarios
+### 2. ACF Owns Infrastructure, Agent Owns Business Logic
 
-### 8.2 Practical integration points
+| ACF (Infrastructure) | Agent (Business Logic) |
+|---------------------|------------------------|
+| When to respond | What to say |
+| Turn boundaries | Customer intent understanding |
+| Supersede **signals** | Supersede **decisions** |
+| FabricEvent routing | FabricEvent emission |
+| Workflow orchestration | Pipeline execution |
 
-* Maintain **scenario version stamps** in SessionState.
-* Invalidate caches on "scenario updated" events.
-* Use your two-phase deployment option where appropriate.
+### 3. Toolbox is the Enforcement Boundary
 
----
+Toolbox handles all tool execution concerns:
 
-## 9. Agenda, goals, and proactive outreach
+| Concern | How Toolbox Handles |
+|---------|---------------------|
+| **Policy enforcement** | Checks `side_effect_policy` before execution |
+| **Confirmation** | Validates `requires_confirmation` via scenario state |
+| **Idempotency** | Uses `turn_group_id` + business key for deduplication |
+| **Audit** | Emits FabricEvents for all tool operations |
 
-This is your bridge from "reactive customer support" to "360 lifecycle agent."
+Pipeline calls `ctx.toolbox.execute()` - Toolbox ensures correctness.
 
-### 9.1 Agenda as a separate engine
+### 4. Supersede: Facts vs Decisions
 
-Treat **AgendaTask** as a durable object in your StateStore/Audit flow.
-This aligns with your storage category separation:
-Config/Knowledge vs State vs Audit.
+- **ACF provides FACTS**: `has_pending_messages() → bool`
+- **Pipeline makes DECISIONS**: SUPERSEDE / ABSORB / QUEUE / FORCE_COMPLETE
 
-### 9.2 Goals as conversation contracts
+```python
+# ACF signal (fact)
+if await ctx.has_pending_messages():
+    # Pipeline decides (action)
+    if metadata.is_irreversible:
+        return SupersedeAction.SUPERSEDE  # Enum: SUPERSEDE, ABSORB, QUEUE, FORCE_COMPLETE
+```
 
-Your intuition is strong: after a response is generated, you can attach an "expected next answer" or "required user response".
+### 5. FabricEvents: Single Write Path
 
-Where this can live:
+```
+Toolbox/Pipeline → emit_event() → ACF EventRouter → TurnManager
+                                                  → AuditStore
+                                                  → Live UI listeners
+```
 
-* As a small object attached to ResponsePlan
-* Then persisted into SessionState in Phase 11
+No direct Toolbox → TurnManager calls. Events are the glue.
 
-This turns "follow-up if no answer" into a deterministic, auditable behavior.
+### 6. Hatchet as ACF Runtime
 
----
+The `LogicalTurnWorkflow` IS the Agent Conversation Fabric. No sticky sessions needed.
 
-## 10. Offerings catalog (products + services)
+### 7. ACF is Channel-Agnostic
 
-You described "offerings" as a unified catalog.
-This can be modeled as **config/knowledge** with embeddings for retrieval.
-That maps cleanly to your ConfigStore responsibility.
+ACF does not contain channel-specific logic. Channel adapters handle protocol translation:
 
----
+```
+Channels: WhatsApp | Email | Voice | Webchat
+                       │
+        ┌──────────────┴──────────────┐
+        │      Channel Adapters       │  ← Protocol-specific (AG-UI, Twilio, etc.)
+        └──────────────┬──────────────┘
+                       │
+                       ▼
+                      ACF  ← Channel-agnostic
+```
 
-## 11. Database-agnostic persistence (formalizing your intent)
-
-You already drafted the right approach:
-separate interfaces for ConfigStore, StateStore, AuditStore (or a single PersistencePort early on).
-You also already note concurrency concerns in StateStore.
-
-**Your new features depend on this**
-Because debouncing, side-effect commits, agenda tasks, and multi-channel identity mapping all raise concurrency pressure; they must be handled behind stable ports.
-
----
-
-## 12. The **Agent Setter Agent (ASA)** as a first-class meta-agent
-
-This is the most powerful new idea you added.
-
-### 12.1 ASA scope
-
-ASA should have access to the same endpoints as humans in the UI, plus specialized "builder" tools.
-
-Use-case categories:
-
-1. Build/update rules, scenarios, glossary, customer data schema
-2. Recommend safe side-effect policies
-3. Stress-test agent behavior with edge cases
-4. Propose migration-safe edits (anchors, gap-fill strategies)
-
-### 12.2 The "side-effect design assistant" role
-
-You described exactly the right loop:
-
-1. Tenant says what they want the agent to do.
-2. ASA proposes new/updated rules + scenarios + tool bindings.
-3. ASA proactively asks:
-
-   * "What if a customer does X then cancels?"
-   * "What if two refunds are requested across channels?"
-4. ASA recommends:
-
-   * additional constraints
-   * confirmation steps
-   * compensation tool design
-   * debouncing exceptions for irreversible steps
-
-This pairs perfectly with your Phase 7 + Ingress Control design.
+AG-UI is just one webchat adapter - not an ACF concern.
 
 ---
 
-## 13. Reporter agent (tenant-facing observability companion)
+## Pipeline Conformance Requirements
 
-You want a "reporter agent" that can discuss activity with tenants anytime.
+All pipelines (FOCAL, LangGraph, Agno, custom) must satisfy these invariants. Enforced by Toolbox + ASA validation.
 
-### 13.1 Why it's natural in your architecture
+### Required Invariants
 
-Your pipeline is already **observable** and produces full TurnRecords.
-So the reporter agent is essentially a **read-only analytics persona** over AuditStore.
+| Invariant | Description | Enforcement |
+|-----------|-------------|-------------|
+| **Tool calls through Toolbox** | Never call vendor SDK directly | ASA lints pipeline code |
+| **Confirmation binding** | If `requires_confirmation`, pipeline must enter confirm step and freeze args | Scenario state validation |
+| **Idempotency keys** | Side-effect tools must provide stable business key | Toolbox extracts or hashes |
+| **Supersede awareness** | Check `has_pending_messages()` before irreversible tools | Pipeline responsibility |
 
-### 13.2 Capabilities
+### How FOCAL Satisfies These
 
-* Summarize top intents, outcome categories, escalation rates
-* Detect knowledge gaps vs out-of-scope patterns
-* Show scenario completion rates (scenario-level) vs turn outcomes (turn-level)
-* Highlight abuse flags and suspicious bursts
-
----
-
-## 14. Concrete additions you can encode without breaking your phases
-
-### 14.1 Add "Ingress Control" as a wrapper
-
-**New conceptual step** before Phase 1:
-
-* debounce/coalesce window
-* rate limits
-* early abuse detection
-* cancel/merge decisions based on ToolSideEffectPolicy
-
-### 14.2 Extend configuration hierarchy
-
-Move from single tenant pipeline config to:
-
-* tenant defaults
-* agent overrides
-* optional scenario overrides
-  This is consistent with your future move from TOML to dynamic config storage.
-
-### 14.3 Add side-effect registry
-
-Minimal metadata that both P7 and Ingress Control consult.
-
-### 14.4 Channel capabilities object
-
-Build on the existing TurnInput design rather than replacing it.
+| Invariant | FOCAL Implementation |
+|-----------|---------------------|
+| Tool calls through Toolbox | P7 calls `ctx.toolbox.execute()` |
+| Confirmation binding | Scenario step with `awaits_confirmation: true` |
+| Idempotency keys | ToolBinding specifies `idempotency_key_fields` |
+| Supersede awareness | `_check_supersede_before_tool()` in P7 |
 
 ---
 
-## 15. A compact mental model (how everything fits)
+## Component Topics
 
-* **Turn Pipeline (11 phases)** = deterministic alignment engine per message.
-* **Ingress Control** = prevents the world from breaking the turn abstraction.
-* **Side-effect registry** = defines safe commit semantics.
-* **Config hierarchy** = enables tenant/agent customization without code changes.
-* **Scenario migration** = protects long-lived sessions.
-* **Agenda/goals** = enables proactive lifecycle workflows.
-* **ASA** = meta-agent that *builds and hardens* the rest.
-* **Reporter agent** = transparency layer over AuditStore.
-* **Persistence ports** = keeps the whole platform DB-agnostic and scalable.
+### ACF Components (Infrastructure)
 
----
+| Component | Topic | Description |
+|-----------|-------|-------------|
+| **LogicalTurn** | [01](architecture/topics/01-logical-turn.md) | Atomic unit of user intent (beat) |
+| **Session Mutex** | [02](architecture/topics/02-session-mutex.md) | Single-writer rule per session |
+| **Adaptive Accumulation** | [03](architecture/topics/03-adaptive-accumulation.md) | Intelligent wait timing |
+| **Side-Effect Policy** | [04](architecture/topics/04-side-effect-policy.md) | Tool effect classification (Toolbox owns) |
+| **Checkpoint Reuse** | [05](architecture/topics/05-checkpoint-reuse.md) | Pipeline-declared artifact reuse |
+| **Hatchet Integration** | [06](architecture/topics/06-hatchet-integration.md) | ACF runtime |
+| **Turn Gateway** | [07](architecture/topics/07-turn-gateway.md) | Message ingress |
+| **Channel Capabilities** | [10](architecture/topics/10-channel-capabilities.md) | Channel facts + policies |
+| **Idempotency** | [12](architecture/topics/12-idempotency.md) | Three-layer idempotency |
 
-## 16. Extra out-of-the-box ideas (small but high leverage)
+### Agent Components (Business Logic)
 
-### 16.1 "Simulation sandbox" for ASA
-
-Let ASA generate adversarial and edge-case conversations and run them through a **non-production simulation mode** that writes to a separate audit stream.
-This helps validate rule/scenario updates before deployment.
-
-### 16.2 "Channel escalation ladder"
-
-When WhatsApp delivery fails, auto-fallback to SMS or email if the channel policy allows, using the channel capabilities layer.
-
-### 16.3 "Outcome-driven KB gaps"
-
-Since P9 outputs structured categories, you can automatically open a KB ticket when KNOWLEDGE_GAP repeats above a threshold.
+| Component | Topic | Description |
+|-----------|-------|-------------|
+| **Config Hierarchy** | [08](architecture/topics/08-config-hierarchy.md) | Multi-level configuration |
+| **Agenda & Goals** | [09](architecture/topics/09-agenda-goals.md) | Proactive follow-up |
+| **Abuse Detection** | [11](architecture/topics/11-abuse-detection.md) | Pattern-based handling |
+| **ASA Validator** | [13](architecture/topics/13-asa-validator.md) | Design-time validation |
 
 ---
 
-## 17. Summary of the new objects/concerns you've effectively defined
+## Document Structure
 
-1. **Ingress Control**
-
-   * debouncing/coalescing
-   * rate limits
-   * abuse firewall
-   * optional turn cancellation before commit points
-
-2. **Tool Side-Effect Policy & Registry**
-
-   * reversible / compensatable / irreversible
-   * dependency-aware tool sequences
-
-3. **ChannelCapability / ChannelConfig**
-
-   * delivery/read semantics
-   * fallback strategies
-   * outbound permissions
-
-4. **Config hierarchy**
-
-   * tenant → agent → scenario → step
-
-5. **Agenda + Goal contracts**
-
-   * proactive follow-ups
-   * outbound tasks
-
-6. **ASA**
-
-   * builder + edge-case strategist
-   * side-effect hardening assistant
-
-7. **Reporter Agent**
-
-   * tenant-facing observability narrator
-
-8. **Offerings Catalog**
-
-   * unified products + services config layer
-
-9. **DB-agnostic ports**
-
-   * necessary foundation for all of the above
+```
+docs/focal_360/
+├── README.md                      # This file
+├── architecture/
+│   ├── README.md                  # Master index
+│   ├── ACF_ARCHITECTURE.md        # Canonical architecture (v3.0)
+│   ├── AGENT_RUNTIME_SPEC.md      # Agent lifecycle spec
+│   ├── TOOLBOX_SPEC.md            # Tool execution spec
+│   ├── ACF_SPEC.md                # Detailed ACF mechanics
+│   ├── LOGICAL_TURN_VISION.md     # Founding vision
+│   └── topics/
+│       ├── 01-logical-turn.md
+│       ├── 02-session-mutex.md
+│       ├── ... (13 topics)
+│       └── 13-asa-validator.md
+├── analysis/
+│   ├── ag_ui_considerations.md    # AG-UI integration notes
+│   ├── logical_turn_impact_analysis.md
+│   └── multi_agent_handoffs.md    # Future planning
+├── WAVE_EXECUTION_GUIDE_V2.md     # Implementation order
+└── old/                           # Archived historical documents
+```
 
 ---
 
-## Related Documents
+## Implementation Roadmap
 
-- [Gap Analysis](gap_analysis.md) - Mapping of FOCAL 360 concepts to existing Focal implementations
-- [Turn Pipeline](../focal_turn_pipeline/README.md) - The 11-phase turn pipeline this platform wraps
-- [Subagent Protocol](SUBAGENT_PROTOCOL.md) - Protocol for implementing FOCAL 360 features
-- [Wave Execution Guide](WAVE_EXECUTION_GUIDE.md) - Orchestration guide for wave-based implementation
+See [Wave Execution Guide V2](WAVE_EXECUTION_GUIDE_V2.md) for detailed implementation order.
+
+### Phase 1: ACF Core
+1. LogicalTurn model + SupersedeDecision
+2. Session Mutex
+3. FabricTurnContext interface
+4. Adaptive Accumulation
+5. Hatchet Integration (LogicalTurnWorkflow)
+
+### Phase 2: Agent Layer
+6. Agent model + AgentConfig
+7. AgentContext + AgentRuntime
+8. PipelineFactory (FOCAL, LangGraph, Agno)
+9. AgentTurnContext
+
+### Phase 3: Toolbox Layer (Enforcement Boundary)
+10. ToolDefinition + ToolActivation
+11. Toolbox class with policy enforcement
+12. ToolExecutionContext (bridges turn_group_id)
+13. ToolGateway + Providers
+
+### Phase 4: Safety & Conformance
+14. Side-Effect Policy enforcement in Toolbox
+15. Three-Layer Idempotency
+16. Pipeline Conformance validation (ASA)
+17. Config Hierarchy
+
+---
+
+## Related Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [ACF Architecture](architecture/ACF_ARCHITECTURE.md) | **Canonical** architecture document |
+| [Founding Vision](architecture/LOGICAL_TURN_VISION.md) | Why we designed it this way |
+| [Turn Pipeline](../focal_turn_pipeline/README.md) | The 11-phase CognitivePipeline |
+| [Architecture Overview](../architecture/overview.md) | Focal architecture overview |
+| [Domain Models](../design/domain-model.md) | Core domain models |
+
+---
+
+## Historical Documents
+
+Previous analysis documents are archived in [old/](old/). They contain useful historical context but should not be used for implementation decisions.

@@ -2,9 +2,25 @@
 
 ## Project Overview
 
-Focal is a **production-grade cognitive engine** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture designed for horizontal scaling.
+This project provides a **production-grade runtime platform** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture designed for horizontal scaling.
 
 **Core problem it solves**: Building reliable conversational agents without stuffing everything into prompts (unpredictable at scale) or defining behavior in code (no hot-reload, no horizontal scaling).
+
+### Core Terminology
+
+| Term | Definition |
+|------|------------|
+| **FOCAL** | Alignment-focused CognitivePipeline implementation (11-phase spec) focused on rule matching, scenario orchestration, and constraint enforcement |
+| **CognitivePipeline** | Protocol interface that ACF calls (`run(ctx) -> PipelineResult`). Different mechanics (FOCAL, ReAct, planner-executor) implement this protocol |
+| **Mechanic** | Semantic description of how a pipeline thinks (alignment, react, planner-executor, chain-of-thought, etc.) |
+| **ACF** | Agent Conversation Fabric - handles turn boundary detection and LogicalTurn accumulation (sits above the cognitive pipeline) |
+| **AgentRuntime** | Multi-tenant execution environment for conversational agents |
+| **Ruche** | Default pack of 8 agents per tenant (blueprint pack) |
+| **Interlocutor** | The entity interacting with an agent (replaces "customer" in documentation - can be a person, system, or bot) |
+| **LogicalTurn** | One or more messages accumulated by ACF before being processed by the cognitive pipeline |
+| **Toolbox** | Tool registry and execution orchestration layer |
+
+**Important distinction**: FOCAL is ONE cognitive pipeline mechanic focused on alignment. The platform runtime (AgentRuntime, ACF, Stores, Providers, Toolbox) is NOT "Focal" - it's the multi-tenant platform that can host different pipeline mechanics.
 
 ---
 
@@ -590,9 +606,11 @@ class TestPostgresConfigStore(ConfigStoreContract):
 
 ## Pipeline Development
 
-### Turn Pipeline Steps
+**Note**: This section describes the FOCAL alignment pipeline specifically.
 
-The alignment engine processes turns through these steps:
+### FOCAL Pipeline Steps
+
+The FOCAL alignment pipeline processes turns through these steps:
 
 1. **Context Extraction (Phase 1)** - Understand user intent
 2. **Situational Sensor (Phase 2)** - Extract structured metadata and candidate variables
@@ -751,7 +769,9 @@ except SpecificError as e:
 
 ---
 
-## Focal Turn Pipeline Patterns (Phase 2+)
+## FOCAL Alignment Pipeline Patterns (Phase 2+)
+
+**Note**: This section describes patterns specific to the FOCAL alignment pipeline implementation.
 
 ### Jinja2 Template Pattern for LLM Tasks
 
@@ -938,9 +958,9 @@ Tests are in `tests/unit/alignment/migration/`:
 
 ---
 
-## Focal Turn Pipeline (Phase 1 Implementation)
+## FOCAL Alignment Pipeline (Phase 1 Implementation)
 
-The turn pipeline processes a user message through 11 phases. Phase 1 (Identification & Context Loading) is implemented:
+The FOCAL alignment pipeline processes a user message through 11 phases. Phase 1 (Identification & Context Loading) is implemented:
 
 ### Key Models
 

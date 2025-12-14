@@ -1,6 +1,7 @@
 # Focal Turn Pipeline: Gap Analysis
 
 > **Generated**: 2024-12-08
+> **Status**: STALE. This file is not automatically re-generated; verify against `IMPLEMENTATION_PLAN.md`, `docs/focal_360/`, and the current `focal/` code.
 > **Reference**: `docs/focal_turn_pipeline/README.md`
 > **Purpose**: Identify implementation gaps between the focal pipeline specification and the current codebase.
 
@@ -12,37 +13,33 @@
 
 The focal pipeline specification uses a **two-part customer data architecture**:
 
+> **Note:** Since this analysis was generated, naming has been consolidated in `focal/customer_data/` (`CustomerProfile` → `CustomerDataStore`, `ProfileField` → `VariableEntry`, etc.). Treat legacy names below as historical references.
+
 | Component | Purpose | Current Implementation |
 |-----------|---------|------------------------|
-| **CustomerDataField** | Schema definition (what fields exist) | `ProfileFieldDefinition` exists but missing `scope` and `persist` |
-| **CustomerDataStore** | Runtime values per customer | `CustomerProfile` exists but is persistent, not runtime |
-| **VariableEntry** | Per-variable metadata with history | `ProfileField` exists but missing `scope` and `history` |
-| **CustomerSchemaMask** | Privacy-safe LLM view | Not implemented |
-| **CandidateVariableInfo** | LLM extraction intermediate | Not implemented |
+| **CustomerDataField** | Schema definition (what fields exist) | `CustomerDataField` exists (includes `scope` and `persist`) |
+| **CustomerDataStore** | Runtime values per customer | `CustomerDataStore` exists (loaded as a per-turn snapshot) |
+| **VariableEntry** | Per-variable metadata with history | `VariableEntry` exists (includes `history`; no explicit `scope` field) |
+| **CustomerSchemaMask** | Privacy-safe LLM view | Implemented (`focal/alignment/context/customer_schema_mask.py`) |
+| **CandidateVariableInfo** | LLM extraction intermediate | Implemented (`focal/alignment/context/situation_snapshot.py`) |
 
-**Architecture Mismatch**: The current `CustomerProfile` is designed for **persistent cross-session** storage, while the spec requires **runtime per-turn** storage that's loaded as a snapshot (P1.5), mutated in-memory (P3.3), and persisted selectively (P11.3).
+**Architecture Mismatch**: Customer data is stored persistently, but the pipeline requires a **runtime per-turn snapshot** that's loaded (P1.5), mutated in-memory (P3.3), and persisted selectively (P11.3).
 
-**What CustomerProfile HAS**:
-- `ProfileField` with value, type, source, confidence, timestamps ✓
-- `ProfileFieldDefinition` with name, type, validation ✓
-- `ProfileStore` interface with CRUD operations ✓
+**What CustomerDataStore HAS**:
+- `VariableEntry` with value, type, source, confidence, timestamps ✓
+- `CustomerDataField` with name, type, validation, `scope`, `persist` ✓
+- `CustomerDataStoreInterface` with CRUD operations ✓
 - `VerificationLevel`, `ItemStatus`, `SourceType` enums ✓
 
-**What CustomerProfile is MISSING**:
-- `scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"]` on both field definition and value
-- `persist: bool` on field definition (controls which fields save to DB)
-- `history: list[dict]` for per-turn value changes tracking
-- Session-end cleanup for SESSION-scoped variables
-- `CustomerSchemaMask` builder for privacy-safe LLM view
+**What CustomerDataStore is MISSING**:
+- Explicit `scope` on `VariableEntry` (currently scope is defined on `CustomerDataField` and must be derived at runtime)
+- Session-end cleanup for SESSION-scoped variables (or equivalent TTL/expiry semantics)
 
 **Critical Impact**: Phases P1.5, P2.1, P3.1-P3.4, P7.3, P11.3 all depend on this architecture.
 
 **Migration path**:
-1. Add `scope` and `persist` fields to `ProfileFieldDefinition`
-2. Create `VariableEntry` with `history` tracking
-3. Create `CustomerDataStore` as runtime wrapper
-4. Create `CustomerSchemaMask` builder
-5. Implement session-end cleanup for SESSION scope
+1. Decide whether `VariableEntry` stores `scope` or derives it from `CustomerDataField`
+2. Implement session-end cleanup for SESSION scope (if not already handled elsewhere)
 
 ---
 
@@ -103,10 +100,10 @@ The spec (Section 5) requires each LLM task to have:
 | ID | Sub-phase | Status | Implementation | Gap |
 |----|-----------|--------|----------------|-----|
 | P1.1 | Extract routing identifiers | ✅ IMPLEMENTED | `api/routes/chat.py` - ChatRequest model | — |
-| P1.2 | Resolve customer from channel | ⚠️ PARTIAL | `chat.py` - Implicit in session lookup | No explicit `customer_key`, `is_new_customer` tracking |
+| P1.2 | Resolve customer from channel | ⚠️ PARTIAL | `chat.py` - Implicit in session lookup | No explicit `customer_id`, `is_new_customer` tracking |
 | P1.3 | Resolve/create session | ✅ IMPLEMENTED | `conversation/stores/` - Redis & InMemory | — |
 | P1.4 | Load SessionState | ✅ IMPLEMENTED | `conversation/models/session.py` | — |
-| P1.5 | Load CustomerDataStore | ⚠️ PARTIAL | `profile/models.py`, `profile/store.py` | Has `CustomerProfile`, needs `CustomerDataStore` (see Key Architectural Notes) |
+| P1.5 | Load CustomerDataStore | ⚠️ PARTIAL | `customer_data/models.py`, `customer_data/store.py` | Has CustomerDataStore, needs explicit per-turn snapshot wiring (see Key Architectural Notes) |
 | P1.6 | Load static config | ⚠️ PARTIAL | `config/loader.py` | **Missing**: GlossaryItem, CustomerDataField schema |
 | P1.7 | Scenario reconciliation | ✅ IMPLEMENTED | `alignment/migration/` | Full migration system |
 | P1.8 | Build TurnContext | ⚠️ PARTIAL | Engine + DI | **Missing**: Explicit `TurnContext` model |
@@ -180,14 +177,14 @@ situation_facts: list[str]
 | ID | Sub-phase | Status | Implementation | Gap |
 |----|-----------|--------|----------------|-----|
 | P3.1 | Match candidates to fields | ❌ NOT FOUND | — | Depends on P2 (SituationalSnapshot) |
-| P3.2 | Validate & coerce types | ⚠️ PARTIAL | `profile/validation.py` | Exists but not integrated |
-| P3.3 | Apply updates in memory | ❌ NOT FOUND | — | Has `CustomerProfile`, needs `CustomerDataStore` with history/confidence |
+| P3.2 | Validate & coerce types | ⚠️ PARTIAL | `customer_data/validation.py` | Exists but not integrated |
+| P3.3 | Apply updates in memory | ❌ NOT FOUND | — | Has `CustomerDataStore`, needs in-memory update flow with history/confidence |
 | P3.4 | Mark updates for persistence | ❌ NOT FOUND | — | No `persistent_updates` tracking |
 
 **Key Gaps**:
 - Blocked by Phase 2 gaps (no `SituationalSnapshot`)
 - `CustomerDataStore` architecture not implemented (see Key Architectural Notes)
-  - Has `CustomerProfile` but needs: `CustomerDataField` schema, `VariableEntry` with history/confidence
+  - Has `CustomerDataStore` but needs: `CustomerDataField` schema, `VariableEntry` with history/confidence
 - `CustomerDataUpdate` model not defined
 - Validation exists but not connected to pipeline
 
@@ -446,14 +443,14 @@ if any(phrase in lower_response for phrase in self._extract_phrases(rule)):
 |----|-----------|--------|----------------|-----|
 | P11.1 | Update SessionState | ✅ IMPLEMENTED | `engine.py` | — |
 | P11.2 | Persist SessionState | ✅ IMPLEMENTED | `conversation/stores/` | Redis, PostgreSQL |
-| P11.3 | Persist CustomerDataStore | ⚠️ PARTIAL | `profile/store.py` | No explicit `persistent_updates` batch |
+| P11.3 | Persist CustomerDataStore | ⚠️ PARTIAL | `customer_data/store.py` | No explicit `persistent_updates` batch |
 | P11.4 | Record TurnRecord | ✅ IMPLEMENTED | `audit/stores/` | PostgreSQL, InMemory |
 | P11.5 | Memory ingestion | ✅ IMPLEMENTED | `memory/ingestion/` | Async queue, summarization |
 | P11.6 | Build final API response | ✅ IMPLEMENTED | `api/routes/chat.py` | — |
 | P11.7 | Emit metrics/traces | ✅ IMPLEMENTED | `observability/` | Prometheus, OpenTelemetry |
 
 **Key Gaps**:
-- No explicit `persistent_updates` batching (direct to ProfileStore)
+- No explicit `persistent_updates` batching (direct to CustomerDataStoreInterface)
 
 **Strengths**:
 - Session persistence fully implemented (Redis two-tier)

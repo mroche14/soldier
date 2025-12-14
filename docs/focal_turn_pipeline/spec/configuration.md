@@ -148,22 +148,23 @@ Enables all steps with appropriate model tiers. Good balance of quality and cost
 ```toml
 [pipeline.situational_sensor]
 enabled = true
-llm_model = "claude-3-haiku"
+model = "openrouter/anthropic/claude-3-haiku-20240307"
 
 [pipeline.reranking]
 enabled = true
 
-[pipeline.rule_filter]
+[pipeline.rule_filtering]
 enabled = true
-llm_model = "claude-3-haiku"
+model = "openrouter/anthropic/claude-3-haiku-20240307"
 
 [pipeline.generation]
-llm_model = "claude-sonnet-4-5-20250514"
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 
 [pipeline.enforcement]
-llm_judge_enabled = true
-llm_judge_model = "claude-3-haiku"
-relevance_check_enabled = false
+enabled = true
+self_critique_enabled = false
+max_retries = 2
+llm_judge_models = ["openrouter/anthropic/claude-3-haiku-20240307"]
 ```
 
 #### Maximum Quality Mode

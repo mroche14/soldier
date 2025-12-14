@@ -85,15 +85,25 @@ backend = "inmemory"
 [storage.audit]
 backend = "inmemory"
 
-[providers.llm.default]
-provider = "mock"
-
 [providers.embedding.default]
 provider = "mock"
-dimensions = 384
+model = "mock-embedding"
 
 [providers.rerank.default]
 provider = "mock"
+model = "mock-rerank"
+
+[pipeline.context_extraction]
+model = "mock/haiku"
+
+[pipeline.rule_filtering]
+model = "mock/haiku"
+
+[pipeline.scenario_filtering]
+model = "mock/haiku"
+
+[pipeline.generation]
+model = "mock/sonnet"
 ```
 
 See: [Unit Testing Guide](./unit-testing.md) for detailed patterns and examples.

@@ -120,10 +120,9 @@ Response: 200 OK
   "enabled": true,
   "current_version": 5,
   "settings": {
-    "llm_provider": "anthropic",
-    "llm_model": "claude-3-5-sonnet",
+    "model": "openrouter/anthropic/claude-3-5-sonnet",
     "temperature": 0.7,
-    "max_tokens": 1024
+    "max_tokens": 4096
   },
   "stats": {
     "total_sessions": 1500,
@@ -145,8 +144,7 @@ Request:
   "name": "Customer Support Bot",
   "description": "Handles customer inquiries",
   "settings": {
-    "llm_provider": "anthropic",
-    "llm_model": "claude-3-5-sonnet",
+    "model": "openrouter/anthropic/claude-3-5-sonnet",
     "temperature": 0.7
   }
 }
@@ -915,15 +913,15 @@ Query Parameters:
 
 Response: 200 OK
 {
-  "items": [
-    {
-      "session_id": "uuid",
-      "channel": "whatsapp",
-      "user_channel_id": "+1234567890",
-      "active_scenario_id": "uuid",
-      "active_step_id": "uuid",
-      "turn_count": 12,
-      "created_at": "...",
+      "items": [
+        {
+          "session_id": "uuid",
+          "channel": "whatsapp",
+          "channel_user_id": "+1234567890",
+          "active_scenario_id": "uuid",
+          "active_step_id": "uuid",
+          "turn_count": 12,
+          "created_at": "...",
       "last_activity_at": "..."
     }
   ]
@@ -941,7 +939,7 @@ Response: 200 OK
   "tenant_id": "uuid",
   "agent_id": "uuid",
   "channel": "whatsapp",
-  "user_channel_id": "+1234567890",
+  "channel_user_id": "+1234567890",
   "active_scenario_id": "uuid",
   "active_step_id": "uuid",
   "turn_count": 12,
@@ -996,10 +994,10 @@ Query Parameters:
   - sort: asc|desc (by turn_number)
 
 Response: 200 OK
-{
-  "items": [
-    {
-      "turn_id": "uuid",
+  {
+    "items": [
+      {
+      "logical_turn_id": "uuid",
       "turn_number": 1,
       "user_message": "I want to return my order",
       "agent_response": "I'd be happy to help...",
@@ -1064,11 +1062,11 @@ Response: 201 Created
 
 | Event | Payload |
 |-------|---------|
-| `session.created` | `{session_id, agent_id, channel, user_channel_id}` |
+| `session.created` | `{session_id, agent_id, channel, channel_user_id}` |
 | `session.ended` | `{session_id, turn_count, duration_minutes}` |
 | `scenario.entered` | `{session_id, scenario_id, scenario_name}` |
 | `scenario.completed` | `{session_id, scenario_id, outcome}` |
-| `rule.matched` | `{session_id, rule_id, rule_name, turn_id}` |
+| `rule.matched` | `{session_id, rule_id, rule_name, logical_turn_id}` |
 | `tool.called` | `{session_id, tool_id, tool_name, success}` |
 | `enforcement.triggered` | `{session_id, rule_id, action: regenerate|fallback}` |
 

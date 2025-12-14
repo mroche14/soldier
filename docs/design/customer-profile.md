@@ -1,6 +1,8 @@
-# Customer Profile
+# Customer Data Store
 
-The Customer Profile is a **persistent, cross-session, cross-scenario store** of known facts about a customer (interlocutor). It bridges the gap between ephemeral session variables and unstructured memory.
+The Customer Data Store is a **persistent, cross-session, cross-scenario store** of known facts about a customer (interlocutor). It bridges the gap between ephemeral session variables and unstructured memory.
+
+> **Terminology note:** Older docs use `CustomerProfile` / `ProfileStore` / `ProfileField`. These names are deprecated. The canonical names are `CustomerDataStore` / `CustomerDataStoreInterface` / `VariableEntry`.
 
 ## Problem Statement
 
@@ -33,16 +35,16 @@ Current data scopes in the system:
 
 ## Design
 
-### CustomerProfile Model
+### CustomerDataStore Model
 
 ```python
-class CustomerProfile(BaseModel):
+class CustomerDataStore(BaseModel):
     """Persistent store of verified facts about a customer.
 
-    Stored via ProfileStore interface. Implementations:
-    - PostgresProfileStore (relational)
-    - MongoDBProfileStore (document)
-    - DynamoDBProfileStore (key-value)
+    Stored via CustomerDataStoreInterface. Implementations:
+    - PostgresCustomerDataStore (relational)
+    - InMemoryCustomerDataStore (testing)
+    - CustomerDataStoreCacheLayer (cache wrapper)
 
     Isolation: tenant_id + customer_id (not session-scoped)
     """
@@ -55,8 +57,11 @@ class CustomerProfile(BaseModel):
     # Channel identifiers (multiple channels can map to same customer)
     channel_identities: List[ChannelIdentity] = []
 
+    # Cross-channel awareness (§6.6 - sessions stay separate, but agent knows about other channels)
+    channel_presence: List[InterlocutorChannelPresence] = []
+
     # Core profile fields (structured)
-    fields: Dict[str, ProfileField] = {}
+    fields: Dict[str, VariableEntry] = {}
 
     # Attached assets (documents, images, etc.)
     assets: List[ProfileAsset] = []
@@ -82,14 +87,31 @@ class ChannelIdentity(BaseModel):
     primary: bool = False  # Primary contact for this channel type
 
 
-class ProfileField(BaseModel):
+class InterlocutorChannelPresence(BaseModel):
+    """Cross-channel awareness: where this interlocutor can be reached / has interacted.
+
+    Provides agents with awareness that interactions happen across multiple channels
+    without merging sessions. Sessions stay separate per channel, but agents can
+    reference prior interactions on other channels.
+
+    Example: "I see you also reached out via WhatsApp earlier today..."
+    """
+    channel: str                       # "whatsapp", "webchat", "phone", etc.
+    channel_user_id: str               # Channel-specific identifier
+    last_active_at: datetime           # Most recent interaction on this channel
+    session_status: Literal["active", "idle", "closed"]  # Current session state
+    message_count: int                 # Total messages exchanged on this channel
+    first_interaction_at: datetime     # When customer first used this channel
+
+
+class VariableEntry(BaseModel):
     """A single fact about a customer."""
     name: str                          # e.g., "email", "date_of_birth", "dietary_preference"
     value: Any                         # The actual value
     value_type: str                    # "string", "date", "number", "boolean", "json"
 
     # Provenance
-    source: ProfileFieldSource         # How we learned this
+    source: VariableSource             # How we learned this
     source_session_id: Optional[UUID] = None
     source_scenario_id: Optional[UUID] = None
     source_step_id: Optional[UUID] = None
@@ -110,8 +132,8 @@ class ProfileField(BaseModel):
     expires_at: Optional[datetime] = None  # For time-sensitive data
 
 
-class ProfileFieldSource(str, Enum):
-    """How a profile field was populated."""
+class VariableSource(str, Enum):
+    """How a customer data field was populated."""
     USER_PROVIDED = "user_provided"        # Customer explicitly stated
     LLM_EXTRACTED = "llm_extracted"        # Extracted from conversation
     TOOL_RESULT = "tool_result"            # From external system (CRM, etc.)
@@ -170,13 +192,13 @@ class Consent(BaseModel):
 
 ---
 
-## Profile Field Definitions (Schema)
+## Customer Data Field Definitions (Schema)
 
-Scenarios can **declare required fields** that should be persisted to the profile. This creates a schema of expected customer data.
+Scenarios can **declare required fields** that should be persisted to `CustomerDataStore`. This creates a schema of expected customer data.
 
 ```python
-class ProfileFieldDefinition(AgentScopedModel):
-    """Definition of a profile field that scenarios can require.
+class CustomerDataField(AgentScopedModel):
+    """Definition of a customer data field that scenarios can require.
 
     Stored via ConfigStore. Defines what customer data can be collected.
     """
@@ -207,7 +229,7 @@ class ProfileFieldDefinition(AgentScopedModel):
 
 class ScenarioFieldRequirement(BaseModel):
     """A scenario's requirement for a profile field."""
-    field_name: str                    # References ProfileFieldDefinition.name
+    field_name: str                    # References CustomerDataField.name
     required_at_step_id: Optional[UUID] = None  # If null, required at scenario entry
     required: bool = True              # False = optional but will use if available
     fallback_action: str = "ask"       # "ask", "skip", "block"
@@ -242,25 +264,25 @@ class ScenarioStep(BaseModel):
     # Profile fields this step collects
     collects_profile_fields: List[str] = []
 
-    # If true, collected fields are persisted to CustomerProfile
+    # If true, collected fields are persisted to CustomerDataStore
     persist_to_profile: bool = True
 ```
 
 ---
 
-## ProfileStore Interface
+## CustomerDataStoreInterface
 
 ```python
-class ProfileStore(ABC):
-    """Interface for customer profile persistence."""
+class CustomerDataStoreInterface(ABC):
+    """Interface for persistent customer data."""
 
     @abstractmethod
     async def get_by_customer_id(
         self,
         tenant_id: UUID,
         customer_id: UUID,
-    ) -> CustomerProfile | None:
-        """Get profile by customer ID."""
+    ) -> CustomerDataStore | None:
+        """Get customer data by customer ID."""
         pass
 
     @abstractmethod
@@ -269,8 +291,8 @@ class ProfileStore(ABC):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerProfile | None:
-        """Find profile by channel identity (e.g., phone number)."""
+    ) -> CustomerDataStore | None:
+        """Find customer data by channel identity (e.g., phone number)."""
         pass
 
     @abstractmethod
@@ -279,17 +301,17 @@ class ProfileStore(ABC):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerProfile:
-        """Get existing or create new profile for a channel identity."""
+    ) -> CustomerDataStore:
+        """Get existing or create new customer data for a channel identity."""
         pass
 
     @abstractmethod
     async def update_field(
         self,
         profile_id: UUID,
-        field: ProfileField,
+        field: VariableEntry,
     ) -> None:
-        """Update a single profile field."""
+        """Update a single customer data field."""
         pass
 
     @abstractmethod
@@ -306,8 +328,8 @@ class ProfileStore(ABC):
         self,
         primary_id: UUID,
         secondary_id: UUID,
-    ) -> CustomerProfile:
-        """Merge two profiles (e.g., when linking channels)."""
+    ) -> CustomerDataStore:
+        """Merge two customer records (e.g., when linking channels)."""
         pass
 
     @abstractmethod
@@ -316,22 +338,22 @@ class ProfileStore(ABC):
         profile_id: UUID,
         channel_identity: ChannelIdentity,
     ) -> None:
-        """Link a new channel identity to an existing profile."""
+        """Link a new channel identity to an existing customer."""
         pass
 ```
 
 ---
 
-## Session-Profile Linking
+## Session–Customer Linking
 
-When a session starts, it's linked to a CustomerProfile:
+When a session starts, it links to a `customer_id` that resolves to a `CustomerDataStore`:
 
 ```python
 class Session(BaseModel):
     # ... existing fields ...
 
-    # Link to persistent customer profile
-    customer_profile_id: Optional[UUID] = None
+    # Link to persistent customer identity
+    customer_id: Optional[UUID] = None
 
     # Snapshot of profile fields at session start (for migration safety)
     profile_snapshot_version: Optional[int] = None
@@ -346,10 +368,10 @@ async def initialize_session(
     channel: Channel,
     channel_user_id: str,
 ) -> Session:
-    """Initialize a session, linking to CustomerProfile."""
+    """Initialize a session, linking to CustomerDataStore."""
 
-    # Get or create customer profile
-    profile = await profile_store.get_or_create(
+    # Get or create customer data
+    customer_data = await customer_data_store.get_or_create(
         tenant_id=tenant_id,
         channel=channel,
         channel_user_id=channel_user_id,
@@ -359,8 +381,8 @@ async def initialize_session(
         tenant_id=tenant_id,
         agent_id=agent_id,
         channel=channel,
-        user_channel_id=channel_user_id,
-        customer_profile_id=profile.id,
+        channel_user_id=channel_user_id,
+        customer_id=customer_data.customer_id,
         # ... other fields
     )
 
@@ -371,7 +393,7 @@ async def initialize_session(
 
 ## Usage in ScenarioFilter
 
-The CustomerProfile simplifies scenario entry and migration:
+The CustomerDataStore simplifies scenario entry and migration:
 
 ### Scenario Entry with Profile Check
 
@@ -388,13 +410,13 @@ async def check_scenario_entry(
     if best.score >= config.entry_threshold:
         scenario = await config_store.get_scenario(best.scenario_id)
 
-        # Check if profile has required fields
-        profile = await profile_store.get_by_customer_id(
+        # Check if customer data has required fields
+        customer_data = await customer_data_store.get_by_customer_id(
             session.tenant_id,
-            session.customer_profile_id,
+            session.customer_id,
         )
 
-        missing_fields = check_required_fields(scenario, profile)
+        missing_fields = check_required_fields(scenario, customer_data)
 
         if missing_fields and scenario.entry_requires_all_fields:
             # Can't enter scenario yet - need to collect fields first
@@ -402,7 +424,7 @@ async def check_scenario_entry(
                 scenario_action="none",
                 confidence=best.score,
                 reasoning=f"Missing required fields: {missing_fields}",
-                missing_profile_fields=missing_fields,  # New field
+                missing_customer_data_fields=missing_fields,  # New field
             )
 
         return ScenarioFilterResult(
@@ -420,12 +442,12 @@ async def check_scenario_entry(
 async def evaluate_step_transition(
     context: Context,
     current_step: ScenarioStep,
-    profile: CustomerProfile,
+    customer_data: CustomerDataStore,
 ) -> bool:
-    """Check if transition is allowed based on profile state."""
+    """Check if transition is allowed based on customer data state."""
 
     for field_name in current_step.required_profile_fields:
-        field = profile.fields.get(field_name)
+        field = customer_data.fields.get(field_name)
 
         if field is None:
             return False  # Missing required field
@@ -440,25 +462,25 @@ async def evaluate_step_transition(
 
 ## Benefits for Scenario Migration
 
-With CustomerProfile, scenario migrations (from the scenario-update-methods.md) become simpler:
+With CustomerDataStore, scenario migrations (from the scenario-update-methods.md) become simpler:
 
 ### Gap Fill Becomes Trivial
 
 **Before**: LLM scans conversation history to extract missing values
-**After**: Check CustomerProfile for the required field
+**After**: Check CustomerDataStore for the required field
 
 ```python
 async def gap_fill_check(
     scenario_v2: Scenario,
     inserted_step: ScenarioStep,
-    profile: CustomerProfile,
+    customer_data: CustomerDataStore,
 ) -> GapFillResult:
-    """Check if gap can be filled from profile."""
+    """Check if gap can be filled from customer data."""
 
     required_fields = inserted_step.required_profile_fields
 
     for field_name in required_fields:
-        field = profile.fields.get(field_name)
+        field = customer_data.fields.get(field_name)
 
         if field is not None:
             # Already have this data - gap is filled
@@ -479,12 +501,12 @@ async def gap_fill_check(
 ```python
 async def evaluate_new_fork(
     fork_step: ScenarioStep,
-    profile: CustomerProfile,
+    customer_data: CustomerDataStore,
 ) -> str:
-    """Determine which branch to take based on profile."""
+    """Determine which branch to take based on customer data."""
 
     # Example: age check fork
-    age = profile.fields.get("date_of_birth")
+    age = customer_data.fields.get("date_of_birth")
     if age and calculate_age(age.value) < 18:
         return "underage_branch"
     else:
@@ -496,7 +518,7 @@ async def evaluate_new_fork(
 ## Configuration
 
 ```toml
-[profile]
+[customer_data]
 store_provider = "postgres"  # "postgres", "mongodb", "dynamodb"
 
 # Field extraction from conversations
@@ -570,12 +592,12 @@ class ProfileAuditEntry(BaseModel):
 │  │  ┌─────────────────────────────────────────────────────────────┐    │    │
 │  │  │  AGENT SCOPE                                                 │    │    │
 │  │  │  - Scenarios, Rules, Templates, Variables (definitions)      │    │    │
-│  │  │  - ProfileFieldDefinitions (schema)                          │    │    │
+│  │  │  - CustomerDataField (schema)                                │    │    │
 │  │  │                                                               │    │    │
 │  │  │  ┌─────────────────────────────────────────────────────┐    │    │    │
 │  │  │  │  CUSTOMER SCOPE (NEW)                                │    │    │    │
-│  │  │  │  - CustomerProfile                                   │    │    │    │
-│  │  │  │  - ProfileFields (verified facts)                    │    │    │    │
+│  │  │  │  - CustomerDataStore                                 │    │    │    │
+│  │  │  │  - VariableEntry (verified facts)                    │    │    │    │
 │  │  │  │  - ProfileAssets (documents)                         │    │    │    │
 │  │  │  │  - Consents                                          │    │    │    │
 │  │  │  │                                                       │    │    │    │
@@ -600,14 +622,14 @@ class ProfileAuditEntry(BaseModel):
 
 ## Enhanced Features (Spec 010)
 
-The Customer Context Vault extends the profile system with advanced data management capabilities.
+The Customer Context Vault extends the customer data system with advanced data management capabilities.
 
 ### Lineage Tracking
 
-Profile fields and assets track their derivation chain:
+Customer data fields and assets track their derivation chain:
 
 ```python
-class ProfileField(BaseModel):
+class VariableEntry(BaseModel):
     # ... existing fields ...
 
     # Lineage tracking
@@ -628,7 +650,7 @@ Use cases:
 
 ### Status Management
 
-Profile items have explicit lifecycle states:
+Customer data items have explicit lifecycle states:
 
 | Status | Meaning |
 |--------|---------|
@@ -646,7 +668,7 @@ Background jobs manage status transitions:
 Field definitions define validation rules:
 
 ```python
-class ProfileFieldDefinition(AgentScopedModel):
+class CustomerDataField(AgentScopedModel):
     # ... existing fields ...
 
     # Validation rules
@@ -662,10 +684,10 @@ The `SchemaValidationService` validates fields against definitions:
 
 ### LLM Schema Extraction
 
-The `ProfileItemSchemaExtractor` uses LLM to automatically identify profile requirements:
+The `CustomerDataSchemaExtractor` uses an LLM to automatically identify customer data requirements:
 
 ```python
-extractor = ProfileItemSchemaExtractor(llm_executor=llm)
+extractor = CustomerDataSchemaExtractor(llm_executor=llm)
 
 # Extract from scenario text
 result = await extractor.extract_requirements(
@@ -687,14 +709,14 @@ Features:
 Prometheus metrics for monitoring:
 - `focal_derivation_chain_depth` - Histogram of chain depths
 - `focal_schema_validation_errors_total` - Validation error counts
-- `focal_profile_field_status` - Gauge of fields by status
+- `focal_customer_data_field_status` - Gauge of fields by status
 - `focal_schema_extraction_success_total` - Extraction successes
-- `focal_profile_cache_hits_total` - Cache performance
+- `focal_customer_data_cache_hits_total` - Cache performance
 
 Structured log events:
-- `profile_field_superseded` - When a field is replaced
-- `profile_field_expired` - When a field expires
-- `profile_field_orphaned` - When a field becomes orphaned
+- `customer_data_field_superseded` - When a field is replaced
+- `customer_data_field_expired` - When a field expires
+- `customer_data_field_orphaned` - When a field becomes orphaned
 - `derivation_chain_traversed` - When lineage is followed
 - `schema_validation_failed` - When validation fails
 - `schema_extraction_completed` - When extraction finishes
@@ -704,6 +726,6 @@ Structured log events:
 ## See Also
 
 - [Domain Model](./domain-model.md) - Core entity definitions
-- [Scenario Update Methods](./scenario-update-methods.md) - How profile enables migrations
+- [Scenario Update Methods](./scenario-update-methods.md) - How CustomerDataStore enables migrations
 - [Alignment Engine](../architecture/alignment-engine.md) - Scenario navigation
 - [Spec 010: Customer Context Vault](/specs/010-customer-context-vault/) - Full specification

@@ -84,11 +84,9 @@ class AgentScopedModel(TenantScopedModel):
 ```python
 class AgentSettings(BaseModel):
     """Agent-level configuration."""
-    llm_provider: str = "anthropic"
-    llm_model: str = "claude-3-5-sonnet"
+    model: str = "openrouter/anthropic/claude-3-5-sonnet"
     temperature: float = 0.7
-    max_tokens: int = 1024
-    embedding_model: str = "text-embedding-3-small"
+    max_tokens: int = 4096
 
 
 class Agent(TenantScopedModel):
@@ -96,11 +94,17 @@ class Agent(TenantScopedModel):
     id: UUID = Field(default_factory=uuid4)
     name: str = Field(min_length=1, max_length=100)
     description: Optional[str] = None
-    slug: str = Field(pattern=r"^[a-z0-9-]{3,50}$")
+
+    # Base system prompt
+    system_prompt: str | None = None
 
     # Versioning
     current_version: int = 0  # Last published version
     draft_version: int = 0    # Current working version
+
+    # Pipeline routing (FOCAL 360 Agent Runtime)
+    pipeline_type: str = "focal"  # "focal", "langgraph", "agno"
+    pipeline_config: Dict[str, Any] = Field(default_factory=dict)
 
     # Configuration
     settings: AgentSettings = Field(default_factory=AgentSettings)
@@ -147,7 +151,7 @@ class Scenario(AgentScopedModel):
 class StepTransition(BaseModel):
     """A possible transition between steps."""
     to_step_id: UUID
-    condition_text: str  # Natural language: "Customer provides order ID"
+    condition_text: str  # Natural language: "Interlocutor provides order ID"
     condition_embedding: Optional[List[float]] = None
     priority: int = 0    # Higher priority evaluated first
     condition_fields: List[str] = []  # Profile fields used in condition evaluation
@@ -182,7 +186,7 @@ class ScenarioStep(BaseModel):
 
     # Actions
     performs_action: bool = False       # Does this step perform a side effect?
-    is_required_action: bool = False    # Must execute even if customer skipped past
+    is_required_action: bool = False    # Must execute even if interlocutor skipped past
 
     # Checkpoints (irreversible actions - see scenario-update-methods.md)
     is_checkpoint: bool = False         # Once passed, can't teleport back
@@ -450,11 +454,12 @@ class Session(BaseModel):
 
     # Channel info
     channel: Channel
-    user_channel_id: str  # Phone number, email, session token, etc.
+    channel_user_id: str  # Phone number, email, session token, etc.
 
-    # Link to persistent customer profile (cross-session, cross-scenario)
-    # See customer-profile.md for full model
-    customer_profile_id: Optional[UUID] = None
+    # Link to persistent interlocutor identity / InterlocutorDataStore
+    # See interlocutor data architecture for full model
+    interlocutor_id: UUID
+    interlocutor_type: Literal["HUMAN", "AGENT", "SYSTEM", "BOT"] = "HUMAN"
 
     # Config version (soft-pin)
     config_version: int  # Which agent version this session uses
@@ -484,7 +489,7 @@ class Session(BaseModel):
 
     class Config:
         # Key pattern used by SessionStore cache
-        cache_key_pattern = "session:{tenant_id}:{channel}:{user_channel_id}"
+        cache_key_pattern = "session:{tenant_id}:{agent_id}:{interlocutor_id}:{channel}"
 
     # Bounded history to prevent unbounded growth
     MAX_STEP_HISTORY: ClassVar[int] = 50
@@ -511,7 +516,7 @@ class Turn(BaseModel):
     - PostgresAuditStore (BRIN indexes on timestamp)
     - MongoDBAuditStore (TTL + time indexes)
     """
-    turn_id: UUID = Field(default_factory=uuid4)
+    logical_turn_id: UUID = Field(default_factory=uuid4)
     tenant_id: UUID
     session_id: UUID
     turn_number: int
@@ -551,7 +556,9 @@ class ChatRequest(BaseModel):
     tenant_id: UUID                        # Resolved upstream (channel-gateway)
     agent_id: UUID                         # Which agent to use
     channel: Channel                       # whatsapp, slack, webchat, etc.
-    user_channel_id: str                   # User identifier on channel
+    channel_user_id: str                   # User identifier on channel
+    interlocutor_id: UUID | None = None    # Optional: internal interlocutor identifier (if already known upstream)
+    interlocutor_type: Literal["HUMAN", "AGENT", "SYSTEM", "BOT"] = "HUMAN"
     session_id: Optional[UUID] = None      # If None, create new session
     message: str
     metadata: Dict[str, Any] = {}
@@ -565,7 +572,7 @@ class ChatResponse(BaseModel):
     """Response from message processing."""
     response: str
     session_id: UUID
-    turn_id: UUID
+    logical_turn_id: UUID
 
     # Scenario info
     scenario: Optional[Dict[str, str]] = None  # {id, step}
@@ -588,7 +595,9 @@ class InboundEnvelope(BaseModel):
     tenant_id: UUID
     agent_id: UUID
     channel: Channel
-    user_channel_id: str
+    channel_user_id: str
+    interlocutor_id: UUID | None = None
+    interlocutor_type: Literal["HUMAN", "AGENT", "SYSTEM", "BOT"] = "HUMAN"
     message: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     metadata: Dict[str, Any] = {}
@@ -602,7 +611,7 @@ class OutboundEnvelope(BaseModel):
     """Response envelope to channel-gateway."""
     envelope_id: UUID
     session_id: UUID
-    turn_id: UUID
+    logical_turn_id: UUID
     response: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     metadata: Dict[str, Any] = {}
@@ -647,8 +656,7 @@ class ScenarioFilterConfig(BaseModel):
 
     # LLM adjudication (used when multiple transitions match)
     llm_adjudication_enabled: bool = True
-    llm_provider: str = "anthropic"
-    llm_model: str = "claude-3-haiku"    # Fast model for decisions
+    model: str = "openrouter/anthropic/claude-3-haiku"  # Fast model for decisions
 
     # Loop detection
     max_loop_iterations: int = 5         # Max times to revisit same step
@@ -693,8 +701,7 @@ class RuleFilterResult(BaseModel):
 class RuleFilterConfig(BaseModel):
     """Configuration for rule filtering."""
     enabled: bool = True
-    llm_provider: str = "anthropic"
-    llm_model: str = "claude-3-haiku"
+    model: str = "openrouter/anthropic/claude-3-haiku"
     max_rules: int = 10  # Max rules to return
 ```
 
@@ -752,7 +759,7 @@ class MigrationPlan(BaseModel):
     """Pre-computed migration plan for a scenario version transition.
 
     Generated when a scenario is updated. Contains instructions for
-    what to do with customers at each step of the old version.
+    what to do with interlocutors at each step of the old version.
 
     See scenario-update-methods.md for full details.
     """
@@ -782,7 +789,7 @@ class MigrationPlan(BaseModel):
 
 
 class StepMigrationAction(BaseModel):
-    """What to do for customers at a specific step in the old version."""
+    """What to do for interlocutors at a specific step in the old version."""
 
     from_step_id: UUID
     from_step_name: str
@@ -890,7 +897,7 @@ CACHE_CONFIG = {
 
     # Session cache: 1 hour TTL (persistent storage has no TTL)
     "session": {
-        "key_pattern": "session:{tenant_id}:{channel}:{user_channel_id}",
+        "key_pattern": "session:{tenant_id}:{agent_id}:{interlocutor_id}:{channel}",
         "ttl_seconds": 3600,  # 1 hour (reload from persistent on miss)
         "refresh_on_access": True,
     },
@@ -915,7 +922,7 @@ CACHE_CONFIG = {
 
 ```python
 # Sessions (via SessionStore, backed by CacheStore)
-session:{tenant_id}:{channel}:{user_channel_id}
+session:{tenant_id}:{agent_id}:{interlocutor_id}:{channel}
 
 # Agent bundles (from Control Plane via CacheStore)
 {tenant_id}:{agent_id}:cfg                    # Pointer to version

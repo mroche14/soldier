@@ -1,21 +1,22 @@
 # API Layer
 
-Focal is a **message processing engine**. It receives messages from upstream services (channel-gateway, message-router) with tenant and channel context already resolved.
+Focal is a **message ingestion + turn processing engine**. It receives message events from upstream services (channel-gateway, message-router) with tenant and channel context already resolved. Focal’s **Agent Conversation Fabric (ACF)** aggregates one or more messages into a **LogicalTurn** (“a message is not a turn”) and runs the cognitive pipeline once per LogicalTurn.
 
 ## Architecture Position
 
 ```
 Channel Gateway (WhatsApp, Slack, Web, etc.)
        │
-       │  Resolves: tenant_id, channel, user_channel_id
+       │  Resolves: tenant_id, channel, channel_user_id
        ▼
-Message Router (coalescing, interrupts)
+Message Router (routing, backpressure)
        │
        │  Adds: agent_id, routing metadata
        ▼
     FOCAL (this service)
        │
-       │  Processes message, returns response
+       │  ACF: mutex + accumulation + supersede signals
+       │  Pipeline: processes LogicalTurn, returns response
        ▼
 Channel Gateway → User
 ```
@@ -58,7 +59,7 @@ GET  /health
 GET  /metrics
 ```
 
-### Chat Request
+### Chat Request (Multimodal Envelope)
 
 ```json
 POST /v1/chat
@@ -67,15 +68,51 @@ Idempotency-Key: unique-request-id-123  // Optional, for safe retries
 {
   "tenant_id": "uuid",                   // Required: resolved upstream
   "agent_id": "uuid",                    // Required: which agent to use
-  "channel": "whatsapp",                 // Required: whatsapp, slack, webchat, etc.
-  "user_channel_id": "+1234567890",      // Required: user identifier on channel
-  "session_id": "sess_abc123",           // Optional: existing session (auto-created if omitted)
-  "message": "I want to return my order",
+  "channel": "whatsapp|slack|webchat|email|voice",  // Required: channel identifier
+  "channel_user_id": "+1234567890",      // Required: user identifier on channel
+
+  "content_type": "text|image|audio|document|location|contact|mixed",  // Required: content type
+  "content": {                           // Required: multimodal content envelope
+    "text": "I want to return my order", // Optional: text content (null if no text)
+    "media": [                           // Optional: media attachments
+      {
+        "type": "image|audio|video|document",
+        "url": "string",
+        "mime_type": "image/jpeg",
+        "filename": "string | null",
+        "caption": "string | null",
+        "thumbnail_url": "string | null"
+      }
+    ],
+    "location": {                        // Optional: location data (WhatsApp, etc.)
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "name": "San Francisco Office"
+    },
+    "structured": {}                     // Optional: channel-specific structured data
+  },
+
+  "provider_message_id": "string|null",  // Optional: upstream message ID for tracking
+  "idempotency_key": "string|null",      // Optional: alternative to header (header takes precedence)
+  "session_hint": "string|null",         // Optional: suggested session (Focal may override)
+  "received_at": "2025-01-15T10:30:00Z", // Required: ISO8601 timestamp
   "metadata": {                          // Optional: additional context
+    "integration_id": "uuid",
     "locale": "en-US"
   }
 }
 ```
+
+**Content Type Examples:**
+
+| Type | Use Case | Fields Used |
+|------|----------|-------------|
+| `text` | Standard message | `content.text` |
+| `image` | Photo with caption | `content.media[0]`, `content.text` (optional) |
+| `audio` | Voice message | `content.media[0]` (type=audio) |
+| `document` | PDF attachment | `content.media[0]` (type=document) |
+| `location` | Share location | `content.location` |
+| `mixed` | Text + images | `content.text`, `content.media[]` |
 
 ### Chat Response
 
@@ -83,7 +120,7 @@ Idempotency-Key: unique-request-id-123  // Optional, for safe retries
 {
   "response": "I'd be happy to help with your return. Could you provide your order number?",
   "session_id": "sess_abc123",
-  "turn_id": "turn_789",
+  "logical_turn_id": "turn_789",
   "scenario": {
     "id": "returns",
     "step": "identify_order"
@@ -105,7 +142,7 @@ data: {"type": "token", "content": "I'd"}
 data: {"type": "token", "content": " be"}
 data: {"type": "token", "content": " happy"}
 ...
-data: {"type": "done", "turn_id": "turn_789", "matched_rules": [...]}
+data: {"type": "done", "logical_turn_id": "turn_789", "matched_rules": [...]}
 ```
 
 ### Idempotency
@@ -187,7 +224,7 @@ message ChatRequest {
 message ChatResponse {
   string response = 1;
   string session_id = 2;
-  string turn_id = 3;
+  string logical_turn_id = 3;
   ScenarioStep scenario = 4;
   repeated string matched_rules = 5;
   repeated ToolCall tools_called = 6;
@@ -221,33 +258,80 @@ for chunk in stub.SendMessageStream(request):
     if chunk.HasField("token"):
         print(chunk.token, end="")
     else:
-        print(f"\n[Done: {chunk.done.turn_id}]")
+        print(f"\n[Done: {chunk.done.logical_turn_id}]")
 ```
 
-## MCP Server
+## MCP Server (Tool Discovery)
 
-MCP (Model Context Protocol) allows LLMs to use Focal as a tool provider.
+MCP (Model Context Protocol) exposes **tenant-available tools for discovery** by LLM clients (Claude Desktop, Copilot, GPT). MCP is used for **discovery only** - actual tool execution goes through Focal's native Toolbox→ToolGateway flow.
 
-### Exposed Tools
+### Three-Tier Tool Visibility Model
+
+| Tier | Scope | Purpose | Source |
+|------|-------|---------|--------|
+| **Catalog** | Global | All tools Focal knows about | Tool Catalog (ConfigStore) |
+| **Tenant-Available** | Tenant | Tools this tenant has access to | Tenant configuration + integrations |
+| **Agent-Enabled** | Agent | Tools enabled for this agent | Agent configuration |
+
+**MCP Server exposes Tier 2 (Tenant-Available)** - the middle layer. This shows what tools the tenant CAN use, but not which agents have them enabled.
+
+### Discovery Flow
+
+```
+1. LLM Client → MCP Server: tools/list
+2. MCP Server → ConfigStore: get_tenant_tools(tenant_id)
+3. ConfigStore returns: Tenant-available tools (Catalog ∩ Tenant integrations)
+4. MCP Server responds: JSON Schema tool definitions
+5. LLM Client displays: Available tools for discovery
+```
+
+**Execution Flow** (separate from MCP):
+
+```
+1. LLM decides to use tool
+2. AlignmentEngine → Toolbox.execute_tool()
+3. Toolbox → ToolGateway → External API
+4. Result returned to pipeline
+```
+
+### MCP Endpoint
 
 ```json
+GET /mcp/v1/tools?tenant_id=uuid
+
+Response:
 {
   "tools": [
     {
-      "name": "focal_chat",
-      "description": "Send a message to the Focal agent and get a response",
+      "name": "search_knowledge_base",
+      "description": "Search the company knowledge base for relevant articles",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "session_id": {"type": "string"},
-          "message": {"type": "string"}
+          "query": {"type": "string", "description": "Search query"},
+          "limit": {"type": "integer", "default": 5}
         },
-        "required": ["session_id", "message"]
-      }
+        "required": ["query"]
+      },
+      "provider": "zendesk"
+    },
+    {
+      "name": "create_ticket",
+      "description": "Create a support ticket in the ticketing system",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {"type": "string"},
+          "description": {"type": "string"},
+          "priority": {"type": "string", "enum": ["low", "medium", "high"]}
+        },
+        "required": ["title", "description"]
+      },
+      "provider": "jira"
     },
     {
       "name": "focal_search_memory",
-      "description": "Search the agent's knowledge graph for relevant information",
+      "description": "Search Focal's conversation memory for this tenant",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -255,47 +339,68 @@ MCP (Model Context Protocol) allows LLMs to use Focal as a tool provider.
           "session_id": {"type": "string"}
         },
         "required": ["query"]
-      }
-    },
-    {
-      "name": "focal_add_episode",
-      "description": "Add a new piece of information to the agent's memory",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "text": {"type": "string"},
-          "session_id": {"type": "string"},
-          "source": {"type": "string"}
-        },
-        "required": ["text"]
-      }
-    },
-    {
-      "name": "focal_get_scenario_state",
-      "description": "Get the current scenario and state for a session",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "session_id": {"type": "string"}
-        },
-        "required": ["session_id"]
-      }
+      },
+      "provider": "focal_internal"
     }
   ]
 }
 ```
 
+### Built-In Focal Tools (Always Available)
+
+These are exposed via MCP for external LLM clients to interact with Focal's internal capabilities:
+
+| Tool | Description | Use Case |
+|------|-------------|----------|
+| `focal_search_memory` | Search conversation memory | "What did the user say about X?" |
+| `focal_get_customer_data` | Retrieve customer variables | "What's the user's email?" |
+| `focal_get_scenario_state` | Get current scenario/step | "Where are we in the flow?" |
+
 ### Integration Example
 
-With Claude Desktop or Copilot configured to use Focal's MCP server:
+**Claude Desktop with Focal MCP:**
+
+```json
+// ~/.config/claude/config.json
+{
+  "mcpServers": {
+    "focal": {
+      "url": "https://focal.example.com/mcp/v1",
+      "auth": {
+        "type": "bearer",
+        "token": "tenant_api_key_xyz"
+      },
+      "params": {
+        "tenant_id": "tenant_uuid"
+      }
+    }
+  }
+}
+```
+
+**Usage:**
 
 ```
-User: "What does Focal know about my last order?"
+User: "Search our knowledge base for return policies"
 
-Claude internally calls: focal_search_memory(query="last order", session_id="...")
+Claude internally sees: search_knowledge_base tool via MCP discovery
+Claude calls: search_knowledge_base(query="return policies")
+Focal routes: Via native Toolbox→ToolGateway (not MCP execution)
 
-Claude: "Based on Focal's memory, your last order was #12345 placed on Jan 10..."
+Claude: "Based on the knowledge base, your return policy allows..."
 ```
+
+### MCP vs Native Execution
+
+| Aspect | MCP Role | Native Toolbox Role |
+|--------|----------|---------------------|
+| **Discovery** | Expose available tools | N/A |
+| **Schema** | Provide JSON Schema | Validate parameters |
+| **Execution** | ❌ Not used | ✅ ToolGateway executes |
+| **Auth** | Tenant-level API key | Per-integration credentials |
+| **Routing** | N/A | Route to correct provider |
+
+**Why separate?** MCP is for external LLM clients discovering what Focal offers. Internal execution stays in Toolbox for consistency, observability, rate limiting, and tenant isolation.
 
 ## Webhook Callbacks
 
@@ -318,7 +423,7 @@ POST /v1/chat
 ```json
 {
   "status": "processing",
-  "turn_id": "turn_789"
+  "logical_turn_id": "turn_789"
 }
 ```
 
@@ -329,7 +434,7 @@ POST https://your-app.com/focal-callback
 X-Focal-Signature: sha256=...
 
 {
-  "turn_id": "turn_789",
+  "logical_turn_id": "turn_789",
   "response": "Your return has been processed...",
   "matched_rules": [...],
   "tools_called": [...]
@@ -364,7 +469,7 @@ X-RateLimit-Reset: 1705312800
     "message": "Response violated safety rule: no_legal_advice",
     "details": {
       "rule_id": "rule_safety_legal",
-      "turn_id": "turn_789"
+      "logical_turn_id": "turn_789"
     }
   }
 }

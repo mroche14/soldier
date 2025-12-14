@@ -8,11 +8,11 @@ To integrate your “not everything must be a class” constraint:
 
   * `TurnInput`
   * `TurnContext`
-  * `CustomerDataField`
+  * `InterlocutorDataField`
   * `VariableEntry`
-  * `CustomerDataStore`
-  * `CustomerSchemaMaskEntry`
-  * `CustomerSchemaMask`
+  * `InterlocutorDataStore`
+  * `InterlocutorSchemaMaskEntry`
+  * `InterlocutorSchemaMask`
   * `GlossaryItem`
   * `CandidateVariableInfo`
   * `SituationalSnapshot`
@@ -36,7 +36,7 @@ To integrate your “not everything must be a class” constraint:
   * `RuleCandidate`
   * `ScenarioCandidate`
   * `RuleRetrievalQuery` / `ScenarioRetrievalQuery`
-  * `CustomerDataUpdate`
+  * `InterlocutorDataUpdate`
   * `ScenarioSelectionContext`
   * `ScenarioContribution`
   * `ScenarioContributionPlan`
@@ -55,15 +55,19 @@ I’ll mark them accordingly.
 
 ```python
 class TurnInput(BaseModel):
-    tenant_id: str
-    agent_id: str
+    tenant_id: UUID
+    agent_id: UUID
 
     channel: Literal["phone", "whatsapp", "webchat", "email", "api"]
-    channel_id: str                # phone number, webchat session ID, email, etc.
+    channel_user_id: str           # phone number, webchat session ID, email, etc.
 
-    customer_id: str | None = None # optional if upstream already knows the customer
+    interlocutor_id: UUID | None = None  # optional if upstream already knows the interlocutor
+    interlocutor_type: Literal["HUMAN", "AGENT", "SYSTEM", "BOT"] = "HUMAN"
 
-    message: str
+    # A LogicalTurn is one conversational beat (one or more messages).
+    # Turn boundaries (accumulation, supersede) are handled by ACF.
+    logical_turn_id: UUID | None = None
+    messages: list[str]
     metadata: dict[str, Any] = {}
 ```
 
@@ -74,44 +78,50 @@ class TurnContext(BaseModel):
     input: TurnInput
 
     session: SessionState
-    customer_data: CustomerDataStore
+    interlocutor_data: InterlocutorDataStore
 
     pipeline_config: "PipelineConfig"              # can be a Pydantic model or dict
-    customer_data_fields: dict[str, CustomerDataField]
+    interlocutor_data_fields: dict[str, InterlocutorDataField]
     llm_tasks: dict[str, "LlmTaskConfig"]          # lightweight, per-task configs
     glossary: dict[str, GlossaryItem]
 ```
 
 ---
 
-### 3.2 Customer Data Architecture
+### 3.2 Interlocutor Data Architecture
 
-This section describes the **two-part architecture** for customer data:
+This section describes the **two-part architecture** for interlocutor data:
 
 | Component | Purpose | Scope |
 |-----------|---------|-------|
-| **CustomerDataField** | Schema definition | Tenant + Agent |
-| **CustomerDataStore** | Runtime values per customer | Customer |
-| **CustomerSchemaMask** | Privacy-safe view for LLM | Turn |
+| **InterlocutorDataField** | Schema definition | Tenant + Agent |
+| **InterlocutorDataStore** | Runtime values per interlocutor | Interlocutor |
+| **InterlocutorSchemaMask** | Privacy-safe view for LLM | Turn |
+| **InterlocutorChannelPresence** | Cross-channel awareness | Interlocutor |
 
 **Key distinction:**
-- **CustomerDataField** = "What fields exist?" (schema, defined at agent configuration time)
-- **CustomerDataStore** = "What values does this customer have?" (runtime, per-customer)
-- **CustomerSchemaMask** = "What does the LLM see?" (turn-scoped, no actual values)
+- **InterlocutorDataField** = "What fields exist?" (schema, defined at agent configuration time)
+- **InterlocutorDataStore** = "What values does this interlocutor have?" (runtime, per-interlocutor)
+- **InterlocutorSchemaMask** = "What does the LLM see?" (turn-scoped, no actual values)
+- **InterlocutorChannelPresence** = "Where has this interlocutor interacted?" (cross-channel awareness)
 
-The LLM never sees raw customer values during situational sensing. Instead, it receives a **CustomerSchemaMask** showing:
+The LLM never sees raw interlocutor values during situational sensing. Instead, it receives an **InterlocutorSchemaMask** showing:
 - Which fields exist for this agent
 - Whether each field has a value (boolean `exists`)
 - The field's type and scope
 
 This allows schema-aware extraction without data leakage.
 
-#### 3.2.1 CustomerDataField **[Core Pydantic]**
+#### Cross-Channel Awareness (§6.6)
 
-**Schema definition** - defines what customer data fields exist for an agent.
+Sessions stay **separate per channel** (no session merging), but agents gain awareness of cross-channel interactions via `InterlocutorChannelPresence`. This enables responses like: "I see you also reached out via WhatsApp earlier today..."
+
+#### 3.2.1 InterlocutorDataField **[Core Pydantic]**
+
+**Schema definition** - defines what interlocutor data fields exist for an agent.
 
 ```python
-class CustomerDataField(BaseModel):
+class InterlocutorDataField(BaseModel):
     key: str                           # "first_name", "email", "subscription_plan", ...
     scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"]
     type: Literal["string", "number", "boolean", "datetime", "json"]
@@ -120,9 +130,9 @@ class CustomerDataField(BaseModel):
     description: str | None = None
 ```
 
-#### 3.2.2 VariableEntry & CustomerDataStore **[Core Pydantic]**
+#### 3.2.2 VariableEntry & InterlocutorDataStore **[Core Pydantic]**
 
-**Runtime storage** - holds actual customer values with history and confidence tracking.
+**Runtime storage** - holds actual interlocutor values with history and confidence tracking.
 
 ```python
 class VariableEntry(BaseModel):
@@ -137,32 +147,58 @@ class VariableEntry(BaseModel):
 ```
 
 ```python
-class CustomerDataStore(BaseModel):
-    tenant_id: str
-    customer_key: str
+class InterlocutorDataStore(BaseModel):
+    tenant_id: UUID
+    interlocutor_id: UUID
+    interlocutor_type: Literal["HUMAN", "AGENT", "SYSTEM", "BOT"] = "HUMAN"
 
     variables: dict[str, VariableEntry]
+
+    # Cross-channel awareness (§6.6)
+    channel_presence: list[InterlocutorChannelPresence] = []
 ```
 
-#### 3.2.3 CustomerSchemaMask **[Core Pydantic]**
+#### 3.2.2b InterlocutorChannelPresence **[Core Pydantic]**
+
+**Cross-channel awareness** - tracks where this interlocutor has interacted without merging sessions.
+
+```python
+class InterlocutorChannelPresence(BaseModel):
+    """Where this interlocutor can be reached / has interacted.
+
+    Provides agents with awareness that interactions happen across multiple
+    channels without merging sessions. Sessions stay separate per channel,
+    but agents can reference prior interactions on other channels.
+
+    Example: "I see you also reached out via WhatsApp earlier today..."
+    """
+    channel: str                       # "whatsapp", "webchat", "phone", etc.
+    channel_user_id: str               # Channel-specific identifier
+    last_active_at: datetime           # Most recent interaction on this channel
+    session_status: Literal["active", "idle", "closed"]  # Current session state
+    message_count: int                 # Total messages exchanged on this channel
+    first_interaction_at: datetime     # When interlocutor first used this channel
+```
+
+#### 3.2.3 InterlocutorSchemaMask **[Core Pydantic]**
 
 **Privacy-safe view for LLM** - shows schema structure without exposing actual values.
 
-The `CustomerSchemaMask` is built from `CustomerDataField` definitions + `CustomerDataStore` state:
-- Keys come from `CustomerDataField.key`
-- `scope` and `type` come from `CustomerDataField`
-- `exists` = whether `CustomerDataStore.variables` has a value for this key
+The `InterlocutorSchemaMask` is built from `InterlocutorDataField` definitions + `InterlocutorDataStore` state:
+- Keys come from `InterlocutorDataField.key`
+- `scope` and `type` come from `InterlocutorDataField`
+- `exists` = whether `InterlocutorDataStore.variables` has a value for this key
 
 ```python
-class CustomerSchemaMaskEntry(BaseModel):
+class InterlocutorSchemaMaskEntry(BaseModel):
     scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"]
     type: Literal["string", "number", "boolean", "datetime", "json"]
     exists: bool                      # True if value currently stored
 ```
 
 ```python
-class CustomerSchemaMask(BaseModel):
-    variables: dict[str, CustomerSchemaMaskEntry]
+class InterlocutorSchemaMask(BaseModel):
+    variables: dict[str, InterlocutorSchemaMaskEntry]
 ```
 
 ---
@@ -171,9 +207,9 @@ class CustomerSchemaMask(BaseModel):
 
 ```python
 class GlossaryItem(BaseModel):
-    id: str
-    tenant_id: str
-    agent_id: str
+    id: UUID
+    tenant_id: UUID
+    agent_id: UUID
 
     term: str                         # e.g. "VIP"
     description: str                  # what it means for this business
@@ -184,7 +220,7 @@ class GlossaryItem(BaseModel):
 ```
 
 👉 Opinion: GlossaryItem is **semantic + UX**, not logic.
-The logic (“VIP if spend > 1000”) should live in expressions (rules/steps/transitions) using CustomerDataStore variables.
+The logic ("VIP if spend > 1000") should live in expressions (rules/steps/transitions) using InterlocutorDataStore variables.
 
 ---
 
@@ -398,9 +434,9 @@ class ToolBinding(BaseModel):
 
 ```python
 class Rule(BaseModel):
-    id: str
-    tenant_id: str
-    agent_id: str
+    id: UUID
+    tenant_id: UUID
+    agent_id: UUID
 
     name: str
     description: str | None = None
@@ -432,15 +468,15 @@ class Rule(BaseModel):
 
 ```python
 class Relationship(BaseModel):
-    id: str
-    tenant_id: str
-    agent_id: str
+    id: UUID
+    tenant_id: UUID
+    agent_id: UUID
 
     source_type: Literal["RULE", "SCENARIO", "STEP"]
-    source_id: str
+    source_id: UUID
 
     target_type: Literal["RULE", "SCENARIO", "STEP"]
-    target_id: str
+    target_id: UUID
 
     kind: Literal["depends_on", "implies", "excludes", "specializes", "related"]
 
@@ -452,15 +488,15 @@ class Relationship(BaseModel):
 
 ```python
 class Scenario(BaseModel):
-    id: str
-    tenant_id: str
-    agent_id: str
+    id: UUID
+    tenant_id: UUID
+    agent_id: UUID
 
     name: str
     description: str
 
     version: int = 1
-    entry_step_id: str
+    entry_step_id: UUID
 
     entry_examples: list[str] = []
     tags: list[str] = []
@@ -468,19 +504,19 @@ class Scenario(BaseModel):
 
 ```python
 class ScenarioStep(BaseModel):
-    id: str
-    tenant_id: str
-    agent_id: str
-    scenario_id: str
+    id: UUID
+    tenant_id: UUID
+    agent_id: UUID
+    scenario_id: UUID
 
     name: str
     description: str
 
     step_type: Literal["QUESTION", "ACTION", "LOGIC"]
 
-    template_id: str | None = None
+    template_id: UUID | None = None
 
-    rule_ids: list[str] = []
+    rule_ids: list[UUID] = []
     tool_bindings: list[ToolBinding] = []
 
     completion_expression: str | None = None
@@ -488,13 +524,13 @@ class ScenarioStep(BaseModel):
 
 ```python
 class ScenarioTransition(BaseModel):
-    id: str
-    tenant_id: str
-    agent_id: str
-    scenario_id: str
+    id: UUID
+    tenant_id: UUID
+    agent_id: UUID
+    scenario_id: UUID
 
-    from_step_id: str
-    to_step_id: str
+    from_step_id: UUID
+    to_step_id: UUID
 
     intent_label: str | None = None
     condition_expression: str | None = None
@@ -504,11 +540,11 @@ class ScenarioTransition(BaseModel):
 ```
 
 > **🔄 Config Versioning Note:**
-> All agent configuration (Rules, Scenarios, Steps, Transitions, CustomerDataFields, Glossary) should be versioned at the **agent level**. When configuration changes:
+> All agent configuration (Rules, Scenarios, Steps, Transitions, InterlocutorDataFields, Glossary) should be versioned at the **agent level**. When configuration changes:
 > * Bump the agent's `config_version`
 > * Store old versions for rollback and audit
 > * Active sessions continue with their loaded config until the next turn
-> * Scenario migration handles customers mid-journey when scenarios change (see migration module)
+> * Scenario migration handles interlocutors mid-journey when scenarios change (see migration module)
 >
 > This ensures reproducibility, rollback capability, and clean migration paths.
 
@@ -520,8 +556,8 @@ class ScenarioTransition(BaseModel):
 
 ```python
 class ScenarioInstance(BaseModel):
-    scenario_id: str
-    current_step_id: str
+    scenario_id: UUID
+    current_step_id: UUID
     status: Literal["ACTIVE", "PAUSED", "COMPLETED", "CANCELLED"]
     started_at_turn: int
     updated_at_turn: int
@@ -529,9 +565,9 @@ class ScenarioInstance(BaseModel):
 
 ```python
 class SessionState(BaseModel):
-    tenant_id: str
-    agent_id: str
-    session_id: str
+    tenant_id: UUID
+    agent_id: UUID
+    session_id: UUID
 
     scenarios: list[ScenarioInstance] = []
 
@@ -549,16 +585,16 @@ class SessionState(BaseModel):
 
 ```python
 class ScenarioLifecycleDecision(BaseModel):
-    scenario_id: str
+    scenario_id: UUID
     action: Literal["START", "CONTINUE", "PAUSE", "COMPLETE", "CANCEL"]
     reason: str | None = None
 ```
 
 ```python
 class ScenarioStepTransitionDecision(BaseModel):
-    scenario_id: str
-    from_step_id: str
-    to_step_id: str | None    # None = stay
+    scenario_id: UUID
+    from_step_id: UUID
+    to_step_id: UUID | None    # None = stay
     reason: str | None = None
 ```
 
@@ -584,8 +620,8 @@ Later you can turn them into Pydantic if you want:
 
 ```python
 class ScenarioContribution(BaseModel):
-    scenario_id: str
-    step_id: str
+    scenario_id: UUID
+    step_id: UUID
     contribution_type: Literal["ASK", "INFORM", "CONFIRM", "ACTION_HINT"]
     description: str
 
@@ -647,7 +683,7 @@ You can embed the lightweight `ScenarioContributionPlan` there (`scenario_contri
 
 ```python
 class ConstraintViolation(BaseModel):
-    rule_id: str | None
+    rule_id: UUID | None
     violation_type: str          # "expression_failed", "judge_failed", "relevance_failed", ...
     details: str
     lane: Literal["deterministic", "subjective", "global"]
@@ -690,8 +726,8 @@ class OutcomeCategory(BaseModel):
         "SAFETY_REFUSAL",        # "Refusing for safety reasons"
     ]
 
-    scenario_id: str | None = None   # Which scenario (if scoped)
-    step_id: str | None = None       # Which step (if scoped)
+    scenario_id: UUID | None = None   # Which scenario (if scoped)
+    step_id: UUID | None = None       # Which step (if scoped)
     details: str | None = None       # Explanation for debugging/analytics
 
 
@@ -775,20 +811,22 @@ Final TurnOutcome:
 
 ```python
 class TurnRecord(BaseModel):
-    tenant_id: str
-    agent_id: str
-    session_id: str
+    tenant_id: UUID
+    agent_id: UUID
+    session_id: UUID
+    logical_turn_id: UUID
+    turn_group_id: UUID
     turn_index: int
     timestamp: datetime
 
     channel: str
-    user_message: str
+    user_messages: list[str]
     model_response: str
 
     situational_snapshot: SituationalSnapshot
 
-    matched_rule_ids: list[str]
-    enforced_rule_ids: list[str]
+    matched_rule_ids: list[UUID]
+    enforced_rule_ids: list[UUID]
 
     scenario_lifecycle: list[ScenarioLifecycleDecision]
     scenario_step_transition: list[ScenarioStepTransitionDecision]

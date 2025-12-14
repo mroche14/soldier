@@ -2,6 +2,8 @@
 
 A comprehensive, phased implementation plan for building the Focal cognitive engine from the ground up.
 
+> **Canonical architecture note (FOCAL 360):** This plan was originally written before `docs/focal_360/`. FOCAL 360 is now considered authoritative and introduces the **Agent Conversation Fabric (ACF)** (LogicalTurns, session mutex, supersede signals, Hatchet orchestration) as foundational conversation infrastructure. ACF work is captured in Phase **6.5** below.
+
 ---
 
 ## Phase 0: Project Skeleton & Foundation
@@ -37,7 +39,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
   - [x] `focal/providers/` - External services
   - [x] `focal/api/` - HTTP/gRPC interfaces
   - [x] `focal/config/` - Configuration loading
-  - [x] `focal/profile/` - Customer profiles
+  - [x] `focal/customer_data/` - Customer data store
 
 - [x] Create `tests/` structure mirroring `focal/`:
   - [x] `tests/unit/`
@@ -199,7 +201,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 - [x] `focal/conversation/models/__init__.py`
 - [x] `focal/conversation/models/session.py`
   - [x] Session (active conversation state)
-  - [x] Link to CustomerProfile
+  - [x] Link to CustomerDataStore (customer identity)
 - [x] `focal/conversation/models/turn.py`
   - [x] Turn (single exchange)
 
@@ -210,25 +212,28 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 - [x] `focal/audit/models/event.py`
   - [x] AuditEvent (tool calls, errors)
 
-### 3.5 Profile Models
+### 3.5 Customer Data Models
 > Reference: `docs/design/customer-profile.md`
 
-- [x] `focal/profile/__init__.py`
-- [x] `focal/profile/models.py`
-  - [x] CustomerProfile
-  - [x] ChannelIdentity
-  - [x] ProfileField
-  - [x] ProfileFieldSource enum
-  - [x] ProfileAsset
+- [x] `focal/customer_data/__init__.py`
+- [x] `focal/customer_data/enums.py`
+  - [x] VariableSource enum
   - [x] VerificationLevel enum
+  - [x] ItemStatus, SourceType, RequiredLevel, FallbackAction, ValidationMode
+- [x] `focal/customer_data/models.py`
+  - [x] CustomerDataStore
+  - [x] ChannelIdentity
+  - [x] VariableEntry
+  - [x] CustomerDataField
+  - [x] ProfileAsset
   - [x] Consent
-  - [x] ProfileFieldDefinition
+  - [x] ScenarioFieldRequirement
 
 ### 3.6 Tests
 - [x] `tests/unit/alignment/test_models.py`
 - [x] `tests/unit/memory/test_models.py`
 - [x] `tests/unit/conversation/test_models.py`
-- [x] `tests/unit/profile/test_models.py`
+- [x] `tests/unit/customer_data/test_customer_data_models.py`
 
 ---
 
@@ -272,21 +277,22 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 - [x] `focal/audit/stores/__init__.py`
 - [x] `focal/audit/stores/inmemory.py` - InMemoryAuditStore
 
-### 4.5 ProfileStore
-- [x] `focal/profile/store.py` - Interface (ABC)
+### 4.5 CustomerDataStore
+- [x] `focal/customer_data/store.py` - CustomerDataStoreInterface (ABC)
   - [x] `get_by_customer_id()`, `get_by_channel_identity()`
   - [x] `get_or_create()`
   - [x] `update_field()`, `add_asset()`
   - [x] `merge_profiles()`, `link_channel()`
-- [x] `focal/profile/stores/__init__.py`
-- [x] `focal/profile/stores/inmemory.py` - InMemoryProfileStore
+  - [x] Schema + requirements APIs (`get_field_definitions()`, `get_missing_fields()`, etc.)
+- [x] `focal/customer_data/stores/__init__.py`
+- [x] `focal/customer_data/stores/inmemory.py` - InMemoryCustomerDataStore
 
 ### 4.6 Tests
 - [x] `tests/unit/alignment/stores/test_inmemory_config.py`
 - [x] `tests/unit/memory/stores/test_inmemory_memory.py`
 - [x] `tests/unit/conversation/stores/test_inmemory_session.py`
 - [x] `tests/unit/audit/stores/test_inmemory_audit.py`
-- [x] `tests/unit/profile/stores/test_inmemory_profile.py`
+- [x] `tests/unit/customer_data/stores/test_inmemory_customer_data.py`
 
 ---
 
@@ -294,14 +300,16 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 **Goal**: Define provider interfaces and mock implementations for testing
 > Reference: `docs/design/decisions/001-storage-choice.md` (Provider section)
 
-### 5.1 LLM Provider
+### 5.1 LLM Executor (Agno)
 - [x] `focal/providers/__init__.py`
 - [x] `focal/providers/llm/__init__.py`
-- [x] `focal/providers/llm/base.py` - LLMProvider interface
-  - [x] `generate()` - Text completion
-  - [x] `generate_structured()` - Structured output
-  - [x] LLMResponse model
-  - [x] TokenUsage model
+- [x] `focal/providers/llm/base.py` - LLM data models + error types
+  - [x] LLMMessage, LLMResponse, TokenUsage
+  - [x] ProviderError subclasses (auth, rate-limit, model, content filter)
+- [x] `focal/providers/llm/executor.py` - LLMExecutor (Agno-backed)
+  - [x] Fallback chain on failure
+  - [x] `create_executor()` / `create_executor_from_step_config()` / `create_executors_from_pipeline_config()`
+  - [x] ExecutionContext helpers (`set_execution_context()`, `get_execution_context()`)
 - [x] `focal/providers/llm/mock.py` - MockLLMProvider
 
 ### 5.2 Embedding Provider
@@ -319,11 +327,9 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
   - [x] RerankResult model
 - [x] `focal/providers/rerank/mock.py` - MockRerankProvider
 
-### 5.4 Provider Factory
-- [x] `focal/providers/factory.py`
-  - [x] `create_llm_provider(config)`
-  - [x] `create_embedding_provider(config)`
-  - [x] `create_rerank_provider(config)`
+### 5.4 Provider Wiring
+- [x] LLM executor creation helpers live in `focal/providers/llm/executor.py`
+- [x] Example end-to-end wiring in `focal/bootstrap.py`
 
 ### 5.5 Tests
 - [x] `tests/unit/providers/test_llm_mock.py`
@@ -358,9 +364,40 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 
 ---
 
+## Phase 6.5: Agent Conversation Fabric (ACF)
+**Goal**: Implement ACF turn infrastructure (LogicalTurn, mutex, accumulation, supersede, Hatchet workflow)
+> Reference: `docs/focal_360/architecture/ACF_ARCHITECTURE.md`, `docs/focal_360/architecture/ACF_SPEC.md`, `docs/focal_360/architecture/AGENT_RUNTIME_SPEC.md`, `docs/focal_360/architecture/TOOLBOX_SPEC.md`
+
+### 6.5.1 Core ACF Models
+- [ ] `LogicalTurn` model (includes `turn_group_id`, status, message list)
+- [ ] `SupersedeDecision` / `SupersedeAction` types (facts vs decisions boundary)
+- [ ] `FabricEvent` model (single event write path)
+
+### 6.5.2 Concurrency + Accumulation
+- [ ] Session mutex keyed by `{tenant}:{agent}:{customer}:{channel}`
+- [ ] TurnGateway + message queue primitives
+- [ ] Adaptive accumulation policy (channel-aware defaults)
+
+### 6.5.3 ACF Runtime (Hatchet)
+- [ ] `LogicalTurnWorkflow`: acquire_mutex → accumulate → run_pipeline → commit_and_respond
+- [ ] `has_pending_messages()` signal (monotonic within a turn)
+- [ ] Commit point tracking for irreversible side effects
+
+### 6.5.4 Idempotency (Three-Layer)
+- [ ] API-level idempotency (request retries)
+- [ ] LogicalTurn/beat-level idempotency (`turn_group_id`)
+- [ ] Tool-level idempotency keys (Toolbox/Gateway)
+
+### 6.5.5 Tests
+- [ ] Unit tests for LogicalTurn + supersede decisions
+- [ ] Unit/integration tests for session mutex and accumulation
+- [ ] Workflow tests for LogicalTurnWorkflow happy path + supersede scenarios
+
+---
+
 ## Phase 7: Alignment Pipeline - Context Extraction
 **Goal**: Implement context extraction (understanding user messages)
-> Reference: `docs/architecture/alignment-engine.md`, `docs/design/turn-pipeline.md`
+> Reference: `docs/architecture/alignment-engine.md`, `docs/focal_turn_pipeline/spec/pipeline.md`
 
 ### 7.1 Context Extractor
 - [x] `focal/alignment/context/__init__.py`
@@ -443,7 +480,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 
 ## Phase 10: Alignment Pipeline - Execution & Generation
 **Goal**: Implement tool execution and response generation
-> Reference: `docs/design/turn-pipeline.md`
+> Reference: `docs/focal_turn_pipeline/spec/pipeline.md`
 
 ### 10.1 Tool Execution
 - [x] `focal/alignment/execution/__init__.py`
@@ -454,7 +491,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
   - [x] Result aggregation
 - [x] `focal/alignment/execution/variable_resolver.py`
   - [x] VariableResolver class
-  - [x] Resolve variables from profile/session
+  - [x] Resolve variables from customer_data/session
 
 ### 10.2 Response Generation
 - [x] `focal/alignment/generation/__init__.py`
@@ -709,12 +746,12 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
   - [x] `execute_composite_migration()` - Net effect computation
 
 ### 15.5 Gap Fill (User Story 6) ✅
-- [x] `focal/alignment/migration/gap_fill.py`
-  - [x] GapFillService class
-  - [x] `try_profile_fill()` - Check customer profile
+- [x] `focal/alignment/migration/field_resolver.py`
+  - [x] MissingFieldResolver class
+  - [x] `try_profile_fill()` - Check CustomerDataStore
   - [x] `try_session_fill()` - Check session variables
   - [x] `try_conversation_extraction()` - LLM extraction
-  - [x] `persist_extracted_values()` - Save to profile
+  - [x] `persist_extracted_values()` - Save to CustomerDataStore
   - [x] Confidence thresholds (0.85/0.95)
 - [x] Integration into `_execute_gap_fill()` in executor
 
@@ -743,7 +780,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 - [x] `focal/alignment/stores/postgres.py` - PostgresConfigStore
 - [x] `focal/memory/stores/postgres.py` - PostgresMemoryStore (pgvector)
 - [x] `focal/audit/stores/postgres.py` - PostgresAuditStore
-- [x] `focal/profile/stores/postgres.py` - PostgresProfileStore
+- [x] `focal/customer_data/stores/postgres.py` - PostgresCustomerDataStore
 
 ### 16.2 Redis Session Store
 - [x] `focal/conversation/stores/redis.py` - RedisSessionStore
@@ -763,7 +800,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 - [x] `tests/integration/stores/test_postgres_config.py`
 - [x] `tests/integration/stores/test_postgres_memory.py`
 - [x] `tests/integration/stores/test_postgres_audit.py`
-- [x] `tests/integration/stores/test_postgres_profile.py`
+- [x] `tests/integration/stores/test_postgres_customer_data.py`
 - [x] `tests/integration/stores/test_redis_session.py`
 
 ---
@@ -771,11 +808,9 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 ## Phase 17: Production Provider Implementations
 **Goal**: Implement real AI provider integrations
 
-### 17.1 LLM Providers
-- [x] `focal/providers/llm/anthropic.py` - AnthropicProvider
-- [x] `focal/providers/llm/openai.py` - OpenAIProvider
-- [x] `focal/providers/llm/bedrock.py` - BedrockProvider (optional)
-- [x] `focal/providers/llm/ollama.py` - OllamaProvider (optional)
+### 17.1 LLM Execution (Agno-backed)
+- [x] `focal/providers/llm/executor.py` - LLMExecutor routes to providers via model string
+- [x] `focal/config/models/providers.py` - LLMProviderConfig (model string + API key config)
 
 ### 17.2 Embedding Providers
 - [x] `focal/providers/embedding/openai.py` - OpenAIEmbeddings
@@ -787,57 +822,56 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 - [x] `focal/providers/rerank/cross_encoder.py` - Local CrossEncoder
 
 ### 17.4 Integration Tests
-- [x] `tests/integration/providers/test_anthropic.py`
-- [x] `tests/integration/providers/test_openai.py`
+- [ ] Provider integration tests (optional) in `tests/integration/providers/`
 
 ---
 
-## Phase 17.5: Customer Context Vault Enhancement ✅
-**Goal**: Evolve CustomerProfile into a comprehensive Customer Context Vault with lineage tracking, explicit status management, schema-driven field definitions, and Redis caching.
+## Phase 17.5: Customer Data Store Enhancement ✅
+**Goal**: Evolve CustomerDataStore into a comprehensive Customer Context Vault with lineage tracking, explicit status management, schema-driven field definitions, and Redis caching.
 > Reference: `specs/010-customer-context-vault/spec.md`
 
 ### 17.5.1 Model Enhancements ✅
-- [x] Add `ItemStatus` enum (active, superseded, expired, orphaned) to `focal/profile/enums.py`
+- [x] Add `ItemStatus` enum (active, superseded, expired, orphaned) to `focal/customer_data/enums.py`
 - [x] Add `SourceType` enum (profile_field, profile_asset, session, tool, external)
 - [x] Add `RequiredLevel` enum (hard, soft)
 - [x] Add `FallbackAction` enum (ask, skip, block, extract)
 - [x] Add `ValidationMode` enum (strict, warn, disabled)
-- [x] Enhance `ProfileField` with:
+- [x] Enhance `VariableEntry` with:
   - [x] `id: UUID` field for lineage tracking
   - [x] `source_item_id`, `source_item_type`, `source_metadata` fields
   - [x] `status`, `superseded_by_id`, `superseded_at` fields
   - [x] `field_definition_id` field
 - [x] Enhance `ProfileAsset` with lineage and status fields
-- [x] Create `ProfileFieldDefinition` model (schema)
+- [x] Create `CustomerDataField` model (schema)
 - [x] Create `ScenarioFieldRequirement` model (bindings)
-- [x] Update `CustomerProfile` with lineage helpers (`get_derived_fields()`)
+- [x] Update `CustomerDataStore` with lineage helpers (`get_derived_fields()`)
 
 ### 17.5.2 Store Interface Updates ✅
-- [x] Extend `ProfileStore` interface with:
+- [x] Extend `CustomerDataStoreInterface` with:
   - [x] Status-aware queries: `get_field()`, `get_field_history()`, `expire_stale_fields()`
   - [x] Lineage operations: `get_derivation_chain()`, `get_derived_items()`, `check_has_dependents()`
   - [x] Schema operations: `get_field_definitions()`, `save_field_definition()`
   - [x] Requirements operations: `get_scenario_requirements()`, `get_missing_fields()`
-- [x] Update `InMemoryProfileStore` with all new methods
-- [x] Create contract test suite for ProfileStore (`tests/contract/test_profile_store_contract.py`)
+- [x] Update `InMemoryCustomerDataStore` with all new methods
+- [x] Create contract test suite for CustomerDataStore (`tests/contract/test_customer_data_store_contract.py`)
 
 ### 17.5.3 Database Schema (Alembic Migrations) ✅
 - [x] `008_profile_fields_enhancement.py` - Add lineage + status columns
 - [x] `009_profile_assets_enhancement.py` - Add lineage + status columns
 - [x] `010_profile_field_definitions.py` - New table
 - [x] `011_scenario_field_requirements.py` - New table
-- [x] Update `PostgresProfileStore` with all new methods
+- [x] Update `PostgresCustomerDataStore` with all new methods
 
 ### 17.5.4 Redis Caching Layer ✅
-- [x] Create `focal/profile/stores/cached.py` - `ProfileStoreCacheLayer` wrapper
+- [x] Create `focal/customer_data/stores/cached.py` - `CustomerDataStoreCacheLayer` wrapper
 - [x] Implement two-tier caching (Redis + PostgreSQL)
 - [x] Cache invalidation on mutations
 - [x] Fallback logic for Redis failures
-- [x] Add `ProfileStoreConfig` to `focal/config/models/storage.py`
-- [x] Update `config/default.toml` with `[profile]` section
+- [x] Add Redis cache config to `focal/config/models/storage.py`
+- [x] Update `config/default.toml` with `[customer_data]` section
 
 ### 17.5.5 Schema Validation Service ✅
-- [x] Create `focal/profile/validation.py` - `ProfileFieldValidator`
+- [x] Create `focal/customer_data/validation.py` - `CustomerDataFieldValidator`
 - [x] Type validators for: string, number, boolean, date, email, phone, json
 - [x] Regex and allowed values validation
 - [x] Validation mode support (strict, warn, disabled)
@@ -845,7 +879,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 ### 17.5.6 MissingFieldResolver Integration ✅
 - [x] `GapFillResult` with `field_definition`, confidence, source tracking
 - [x] `MissingFieldResolver` class with:
-  - [x] `try_profile_fill()` - Check customer profile
+  - [x] `try_profile_fill()` - Check CustomerDataStore
   - [x] `try_session_fill()` - Check session variables
   - [x] `try_conversation_extraction()` - LLM extraction
 - [x] Confidence thresholds (0.85/0.95)
@@ -864,15 +898,15 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 - [x] Structured logging for validation failures and lineage operations
 
 ### 17.5.8 Tests ✅
-- [x] `tests/unit/profile/test_profile_models.py` - Model enhancements (27 tests)
-- [x] `tests/unit/profile/test_validation.py` - Schema validation (17 tests)
-- [x] `tests/unit/profile/stores/test_cached_profile.py` - Cache wrapper (22 tests)
-- [x] `tests/unit/profile/stores/test_inmemory_profile.py` - InMemory store (24 tests)
-- [x] `tests/unit/profile/test_extraction.py` - Field extraction (17 tests)
-- [x] `tests/contract/test_profile_store_contract.py` - Contract tests (26 tests)
-- [x] `tests/integration/stores/test_postgres_profile.py` - PostgreSQL integration
-- [ ] `tests/integration/stores/test_cached_profile.py` - Redis integration
-- [ ] `tests/integration/alignment/test_profile_requirements.py` - Scenario requirements
+- [x] `tests/unit/customer_data/test_customer_data_models.py` - Model enhancements
+- [x] `tests/unit/customer_data/test_validation.py` - Schema validation
+- [x] `tests/unit/customer_data/stores/test_cached_customer_data.py` - Cache wrapper
+- [x] `tests/unit/customer_data/stores/test_inmemory_customer_data.py` - InMemory store
+- [x] `tests/unit/customer_data/test_extraction.py` - Field extraction
+- [x] `tests/contract/test_customer_data_store_contract.py` - Contract tests
+- [x] `tests/integration/stores/test_postgres_customer_data.py` - PostgreSQL integration
+- [ ] `tests/integration/stores/test_cached_customer_data.py` - Redis integration
+- [ ] `tests/integration/alignment/test_customer_data_requirements.py` - Scenario requirements
 
 ---
 
@@ -949,7 +983,8 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 | 4 | `docs/design/decisions/001-storage-choice.md` |
 | 5 | `docs/design/decisions/001-storage-choice.md` (Provider section) |
 | 6 | `docs/architecture/selection-strategies.md` |
-| 7-11 | `docs/architecture/alignment-engine.md`, `docs/design/turn-pipeline.md` |
+| 6.5 | `docs/focal_360/architecture/ACF_ARCHITECTURE.md`, `docs/focal_360/architecture/ACF_SPEC.md`, `docs/focal_360/architecture/AGENT_RUNTIME_SPEC.md` |
+| 7-11 | `docs/architecture/alignment-engine.md`, `docs/focal_turn_pipeline/spec/pipeline.md` |
 | 8 | `docs/design/decisions/002-rule-matching-strategy.md` |
 | 12 | `docs/architecture/memory-layer.md` |
 | 13-14 | `docs/architecture/api-layer.md`, `docs/design/api-crud.md` |
@@ -964,12 +999,13 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 1. **Phases 0-2**: Foundation - Can't build anything without folder structure, configuration, and logging
 2. **Phases 3-5**: Core abstractions - Define interfaces before implementations
 3. **Phase 6**: Selection strategies - Needed for retrieval
-4. **Phases 7-11**: Pipeline - Build each step, then integrate
-5. **Phase 12**: Memory - Enhances alignment but not strictly required
-6. **Phases 13-14**: API - Expose the engine externally
-7. **Phase 15**: Migration - Advanced scenario handling
-8. **Phases 16-17**: Production backends - Replace mocks with real implementations
-9. **Phase 17.5**: Customer Context Vault - Enhanced profile system with lineage, status, schema, and caching
-10. **Phases 18-20**: Polish - Optional features and deployment
+4. **Phase 6.5**: ACF - Foundation for concurrency/turn orchestration
+5. **Phases 7-11**: Pipeline - Build each step, then integrate
+6. **Phase 12**: Memory - Enhances alignment but not strictly required
+7. **Phases 13-14**: API - Expose the engine externally
+8. **Phase 15**: Migration - Advanced scenario handling
+9. **Phases 16-17**: Production backends - Replace mocks with real implementations
+10. **Phase 17.5**: Customer Data Store Enhancement - Lineage, status, schema, caching
+11. **Phases 18-20**: Polish - Optional features and deployment
 
 Each phase should be completable independently, with tests passing at each stage.

@@ -1,6 +1,10 @@
 
 # Persistence Abstraction for the Alignment Engine (SQL / NoSQL Agnostic)
 
+> **Status:** HISTORICAL. This document predates `docs/focal_360/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses `ConfigStore`, `MemoryStore`, `SessionStore`, `AuditStore` (plus `CustomerDataStoreInterface`) with UUIDs.
+>
+> For the current approach, see: `docs/design/decisions/001-storage-choice.md` and `docs/architecture/overview.md`.
+
 > Working notes / spec for SmartBeez-style alignment engine persistence, with a single “all included” DB (Postgres *or* Mongo) and a clean abstraction for the engine.
 
 ---

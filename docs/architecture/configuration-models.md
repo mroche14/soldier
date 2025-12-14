@@ -1,5 +1,7 @@
 ## Pydantic Models
 
+> **Status:** PARTIALLY STALE. The authoritative configuration models live in `focal/config/models/`, and the canonical defaults live in `config/*.toml`. Treat the code as the source of truth and validate any snippet here against it.
+
 ### Deployment Configuration
 
 Focal supports two deployment modes to accommodate different integration patterns. See [overview.md](./overview.md#deployment-modes) for architectural details.
@@ -52,7 +54,7 @@ class DeploymentConfig(BaseModel):
     )
 
     # External Platform integration settings (only used when mode = "external")
-    external: External PlatformConfig = Field(default_factory=External PlatformConfig)
+    external: ExternalPlatformConfig = Field(default_factory=ExternalPlatformConfig)
 
     # Standalone mode settings
     enable_crud_api: bool = Field(
@@ -139,15 +141,11 @@ class APIConfig(BaseModel):
 
 ### Provider Configuration
 
-Focal supports multiple AI modalities through a unified provider configuration system built on **LiteLLM**. Each modality type has dedicated providers with **fallback chains** for resilience.
+Focal supports multiple AI modalities through a unified provider configuration system. For text generation, the canonical runtime interface is `LLMExecutor`, which uses **Agno** model classes internally and implements fallback chains (Agno does not provide cross-provider fallbacks).
 
-#### Why LiteLLM + OpenRouter?
+#### Why Agno + OpenRouter?
 
-**LiteLLM** provides a unified interface across 100+ LLM providers:
-- Single API for Anthropic, OpenAI, Google, Cohere, etc.
-- Automatic retries and fallbacks
-- Consistent response format
-- Built-in cost tracking
+**Agno** provides a unified interface for calling LLMs across providers while keeping model selection configuration-driven (via model strings).
 
 **OpenRouter** aggregates providers with built-in redundancy:
 - Single API key for all major models
@@ -214,14 +212,14 @@ from pydantic import BaseModel, Field, SecretStr
 
 
 # =============================================================================
-# Model Specification (LiteLLM format)
+# Model Specification (LLMExecutor model string format)
 # =============================================================================
 
 class ModelSpec(BaseModel):
     """
-    A single model specification in LiteLLM format.
+    A single model specification in the model string format used by `LLMExecutor`.
 
-    LiteLLM model format: "provider/model-name"
+    Model string format: "provider/model-name"
     Examples:
     - "anthropic/claude-sonnet-4-5-20250514"
     - "openai/gpt-4o"
@@ -231,7 +229,7 @@ class ModelSpec(BaseModel):
     """
 
     model: str = Field(
-        description="LiteLLM model identifier (provider/model-name)"
+        description="Model identifier (provider/model-name)"
     )
     api_key_env: str | None = Field(
         default=None,
@@ -262,7 +260,7 @@ class LLMProviderConfig(BaseModel):
     Configuration for LLM with fallback chain.
 
     Models are tried in order until one succeeds.
-    Uses LiteLLM for unified interface across providers.
+    Used by `LLMExecutor` (Agno-backed) for unified provider access.
     """
 
     # Fallback chain: list of models to try in order
@@ -273,7 +271,7 @@ class LLMProviderConfig(BaseModel):
             "openai/gpt-4o-mini",
             "google/gemini-1.5-flash",
         ],
-        description="Fallback chain of models (LiteLLM format). First = primary."
+        description="Fallback chain of model strings. First = primary."
     )
 
     # Optional detailed config per model (overrides defaults)
@@ -321,7 +319,7 @@ class VisionLLMProviderConfig(BaseModel):
             "openai/gpt-4o",
             "google/gemini-1.5-pro",
         ],
-        description="Fallback chain of vision models (LiteLLM format)"
+        description="Fallback chain of vision model strings"
     )
 
     # Image handling
@@ -365,7 +363,7 @@ class EmbeddingProviderConfig(BaseModel):
             "cohere/embed-english-v3.0",
             "voyage/voyage-large-2",
         ],
-        description="Fallback chain of embedding models (LiteLLM format)"
+        description="Fallback chain of embedding model strings"
     )
 
     # Embedding settings
@@ -663,114 +661,20 @@ class ProvidersConfig(BaseModel):
     )
 ```
 
-#### LiteLLM Integration
+#### LLMExecutor Integration
 
-The provider system uses LiteLLM for unified model access:
+LLM calls are executed via `LLMExecutor`, which uses Agno model classes internally and implements the fallback chain itself.
 
 ```python
-# focal/providers/litellm_provider.py
-import litellm
-from litellm import acompletion
-
-from focal.config.models.pipeline import GenerationConfig
-
-
-class LiteLLMProvider:
-    """
-    LLM provider with automatic fallback chain support.
-
-    Uses LiteLLM for unified interface across all providers.
-    Models are configured directly on each pipeline step.
-    """
-
-    def __init__(
-        self,
-        models: list[str],
-        temperature: float = 0.7,
-        max_tokens: int = 1024,
-        timeout_seconds: int = 30,
-        fallback_on_timeout: bool = True,
-        fallback_on_rate_limit: bool = True,
-        fallback_on_error: bool = True,
-    ):
-        self.models = models
-        self.temperature = temperature
-        self.max_tokens = max_tokens
-        self.timeout_seconds = timeout_seconds
-        self.fallback_on_timeout = fallback_on_timeout
-        self.fallback_on_rate_limit = fallback_on_rate_limit
-        self.fallback_on_error = fallback_on_error
-
-        # Configure LiteLLM
-        litellm.set_verbose = False
-
-    @classmethod
-    def from_config(cls, config: GenerationConfig) -> "LiteLLMProvider":
-        """Create provider from pipeline step config."""
-        return cls(
-            models=config.models,
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
-            timeout_seconds=config.timeout_seconds,
-            fallback_on_timeout=config.fallback_on_timeout,
-            fallback_on_rate_limit=config.fallback_on_rate_limit,
-            fallback_on_error=config.fallback_on_error,
-        )
-
-    async def generate(
-        self,
-        prompt: str,
-        temperature: float | None = None,
-        max_tokens: int | None = None,
-    ) -> str:
-        """
-        Generate completion with automatic fallback.
-
-        Tries each model in the fallback chain until one succeeds.
-        """
-        last_error = None
-
-        for model in self.models:
-            try:
-                response = await acompletion(
-                    model=model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=temperature or self.temperature,
-                    max_tokens=max_tokens or self.max_tokens,
-                    timeout=self.timeout_seconds,
-                )
-                return response.choices[0].message.content
-
-            except litellm.Timeout as e:
-                if self.fallback_on_timeout:
-                    last_error = e
-                    continue
-                raise
-
-            except litellm.RateLimitError as e:
-                if self.fallback_on_rate_limit:
-                    last_error = e
-                    continue
-                raise
-
-            except litellm.APIError as e:
-                if self.fallback_on_error:
-                    last_error = e
-                    continue
-                raise
-
-        # All models failed
-        raise RuntimeError(
-            f"All models in fallback chain failed. Last error: {last_error}"
-        )
-
-
-# Usage - models come directly from the pipeline step config
 from focal.config.settings import get_settings
+from focal.providers.llm import LLMMessage, create_executor_from_step_config
 
 settings = get_settings()
-llm = LiteLLMProvider.from_config(settings.pipeline.generation)
-response = await llm.generate("Hello, world!")
+executor = create_executor_from_step_config(settings.pipeline.generation, "generation")
+
+response = await executor.generate(
+    messages=[LLMMessage(role="user", content="Hello, world!")],
+)
 ```
 
 ### Selection Strategy Configuration
@@ -1848,4 +1752,3 @@ class Settings(BaseSettings):
 ```
 
 ---
-

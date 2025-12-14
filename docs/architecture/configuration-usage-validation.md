@@ -10,7 +10,8 @@ settings = get_settings()
 
 # Access nested values
 port = settings.api.port
-generation_models = settings.pipeline.generation.models  # List of model strings
+generation_model = settings.pipeline.generation.model
+generation_fallback_models = settings.pipeline.generation.fallback_models
 rule_strategy = settings.pipeline.retrieval.rule_selection.strategy
 
 # Check environment
@@ -24,17 +25,21 @@ if settings.debug:
 from fastapi import Depends
 
 from focal.config.settings import Settings, get_settings
-from focal.providers.litellm_provider import LiteLLMProvider
+from focal.providers.llm import LLMExecutor, create_executor_from_step_config
 
 
-def get_generation_provider(settings: Settings = Depends(get_settings)):
-    """Create LLM provider from pipeline step config."""
-    return LiteLLMProvider.from_config(settings.pipeline.generation)
+def get_generation_executor(
+    settings: Settings = Depends(get_settings),
+) -> LLMExecutor:
+    """Create LLMExecutor for generation from pipeline step config."""
+    return create_executor_from_step_config(settings.pipeline.generation, "generation")
 
 
-def get_filtering_provider(settings: Settings = Depends(get_settings)):
-    """Create LLM provider for filtering step."""
-    return LiteLLMProvider.from_config(settings.pipeline.llm_filtering)
+def get_rule_filtering_executor(
+    settings: Settings = Depends(get_settings),
+) -> LLMExecutor:
+    """Create LLMExecutor for rule filtering step."""
+    return create_executor_from_step_config(settings.pipeline.rule_filtering, "rule_filtering")
 ```
 
 ### Creating Selection Strategies from Config
@@ -178,4 +183,3 @@ def main():
 ```
 
 ---
-

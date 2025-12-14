@@ -1,4 +1,4 @@
-# Focal: Vision
+# Vision: Runtime Platform for Conversational AI
 
 ## Problem
 
@@ -19,7 +19,13 @@ Many frameworks require **code to define agent behavior**:
 
 ## Solution
 
-Focal is a **production-grade cognitive engine** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture.
+This project provides a **production-grade runtime platform** for conversational AI. It replaces code-centric frameworks with an **API-first, multi-tenant, fully persistent** architecture.
+
+**Key components**:
+- **FOCAL**: An alignment-focused cognitive pipeline for rule matching and constraint enforcement
+- **AgentRuntime**: Multi-tenant execution environment
+- **ACF**: Agent Conversation Fabric for turn boundary detection
+- **Stores & Providers**: Pluggable backends for storage and AI capabilities
 
 ### Core Principles
 

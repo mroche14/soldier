@@ -146,34 +146,55 @@ Post-generation validation:
 
 ```
 focal/
-├── alignment/          # The "brain" - turn pipeline processing
-│   ├── context/        # Context extraction from user messages
-│   ├── retrieval/      # Rule, scenario, and memory retrieval
-│   ├── filtering/      # LLM-based rule and scenario filtering
-│   ├── execution/      # Tool execution
-│   ├── generation/     # Response generation
-│   └── enforcement/    # Post-generation validation
-├── memory/             # Long-term memory (knowledge graph)
-│   ├── stores/         # Neo4j, PostgreSQL, MongoDB, InMemory
-│   ├── retrieval/      # Hybrid retrieval (vector + BM25 + graph)
-│   └── ingestion/      # Entity extraction, embedding, summarization
-├── conversation/       # Session management
-│   └── stores/         # Redis, PostgreSQL implementations
-├── audit/              # Immutable audit trail
-│   └── stores/         # Turn records, events
-├── providers/          # AI provider interfaces
-│   ├── llm/            # LLMExecutor with Agno (OpenRouter, Anthropic, OpenAI, Groq)
-│   ├── embedding/      # OpenAI, Cohere, Voyage, SentenceTransformers
-│   └── rerank/         # Cohere, Voyage, CrossEncoder
-├── config/             # Configuration loading and models
-│   └── models/         # Pydantic settings models
-├── api/                # External interfaces
-│   ├── routes/         # REST endpoints
-│   ├── grpc/           # gRPC service
-│   └── middleware/     # Auth, rate limiting, logging
-├── observability/      # Logging, tracing, metrics
-└── profile/            # Customer profile management
+├── runtime/                # Conversation runtime infrastructure
+│   ├── acf/               # Agent Conversation Fabric (mutex, turns, supersede)
+│   ├── agent/             # AgentRuntime (lifecycle, caching, invalidation)
+│   └── agenda/            # Task scheduling (bypasses ACF for proactive tasks)
+│
+├── mechanics/             # CognitivePipeline implementations
+│   ├── protocol.py        # CognitivePipeline abstract interface
+│   └── focal/             # FOCAL alignment mechanic (12-phase pipeline)
+│       ├── pipeline.py    # FocalCognitivePipeline
+│       ├── phases/        # Pipeline phases (p01-p12)
+│       ├── models/        # TurnContext, SituationalSnapshot, etc.
+│       └── migration/     # Scenario version migration
+│
+├── infrastructure/        # Consolidated infrastructure layer
+│   ├── stores/            # ConfigStore, SessionStore, MemoryStore, etc.
+│   ├── providers/         # LLM, Embedding, Rerank providers
+│   ├── toolbox/           # Tool execution (Toolbox, ToolGateway)
+│   └── channels/          # Channel adapters (webchat, WhatsApp, etc.)
+│
+├── domain/                # Pure domain models
+│   ├── interlocutor/      # Interlocutor data (was: customer_data)
+│   ├── rules/             # Rule, MatchedRule
+│   ├── scenarios/         # Scenario, ScenarioStep
+│   └── memory/            # Episode, Entity, Relationship
+│
+├── asa/                   # Agent Setter Agent (mechanic-agnostic meta-agent)
+│   ├── validator/         # Tool, scenario, pipeline conformance validation
+│   ├── suggester/         # Policy suggestions, edge case generation
+│   └── ci/                # Pre-deployment CI validation
+│
+├── api/                   # External interfaces
+│   ├── routes/            # REST endpoints (turns, agents, scenarios, rules)
+│   ├── mcp/               # MCP server for tool discovery
+│   └── middleware/        # Auth, rate limiting, logging
+│
+├── observability/         # Logging, tracing, metrics
+└── config/                # Configuration loading and models
 ```
+
+### Key Architectural Concepts
+
+| Component | Purpose |
+|-----------|---------|
+| **FOCAL** | Alignment-focused CognitivePipeline (12-phase turn processing) |
+| **ACF** | Agent Conversation Fabric (mutex, turn accumulation, supersede) |
+| **AgentRuntime** | Agent lifecycle management, configuration caching |
+| **CognitivePipeline** | Protocol interface - FOCAL implements this, future mechanics can too |
+| **Interlocutor** | The conversation participant (human, agent, system, or bot) |
+| **Toolbox** | Agent's tool execution facade with three-tier visibility |
 
 ---
 

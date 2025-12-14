@@ -18,7 +18,7 @@
 
 **Current Status:** 85% implemented
 - ✅ P1.1-P1.4: Session loading, customer resolution implemented
-- ⚠️ P1.5: CustomerProfile exists, needs CustomerDataStore runtime wrapper
+- ⚠️ P1.5: CustomerDataStore exists (persistent), needs runtime snapshot wiring
 - ⚠️ P1.6: Config loader exists, missing GlossaryItem model and CustomerDataField schema loading
 - ✅ P1.7: Full migration system exists
 - ⚠️ P1.8: No explicit TurnContext model, implicitly passed via engine
@@ -181,7 +181,7 @@
   - File: `focal/customer_data/models.py`
   - Action: Renamed class and updated all imports
 
-- [x] **Rename ProfileStore → CustomerDataStore (interface)**
+- [x] **Rename ProfileStore → CustomerDataStoreInterface**
   - File: `focal/customer_data/store.py`
   - Action: Renamed interface and updated all imports
 
@@ -377,9 +377,9 @@
   - Details:
     ```python
     class CustomerDataLoader:
-        """Loads CustomerDataStore snapshot from ProfileStore."""
+        """Loads CustomerDataStore snapshot from CustomerDataStoreInterface."""
 
-        def __init__(self, profile_store: ProfileStore):
+        def __init__(self, profile_store: CustomerDataStoreInterface):
             self._profile_store = profile_store
 
         async def load(
@@ -392,7 +392,7 @@
 
             Returns runtime wrapper with VariableEntry objects.
             """
-            # Get CustomerProfile from ProfileStore
+            # Get CustomerDataStore from CustomerDataStoreInterface
             profile = await self._profile_store.get_by_customer_id(
                 tenant_id=tenant_id,
                 customer_id=customer_id,
@@ -632,8 +632,8 @@
   - Action: Created new file
   - **Implemented**: 5 tests covering loading, filtering, and schema validation
   - Tests:
-    - Load from ProfileStore ✓
-    - Convert ProfileField → VariableEntry ✓
+    - Load from CustomerDataStoreInterface ✓
+    - Convert stored fields → VariableEntry ✓
     - Handle missing profile (new customer) ✓
     - Filter inactive fields ✓
     - Warn on schema mismatch ✓
@@ -866,7 +866,7 @@ Recommended order to minimize dependencies:
   - `ProfileFieldDefinition` → `CustomerDataField` ✓
   - `ProfileField` → `VariableEntry` ✓
   - `CustomerProfile` → `CustomerDataStore` ✓
-  - `ProfileStore` → `CustomerDataStore` (interface) ✓
+  - `ProfileStore` → `CustomerDataStoreInterface` ✓
 
 - **Scope Lifetimes**:
   - IDENTITY: Permanent (name, email, phone)
@@ -888,8 +888,8 @@ Recommended order to minimize dependencies:
 
 **Summary:**
 - Items Completed: 5 of 5 rename tasks
-- Tests: PASSING (130/130 profile tests)
-- Coverage: All profile module tests passing
+- Tests: PASSING (130/130 customer_data tests)
+- Coverage: All customer_data module tests passing
 
 **Renames Completed:**
 - ProfileFieldDefinition → CustomerDataField ✓
@@ -898,35 +898,35 @@ Recommended order to minimize dependencies:
 - ProfileFieldSource → VariableSource ✓
 
 **Files Modified:**
-- `focal/profile/models.py` - Renamed all three classes
-- `focal/profile/enums.py` - Renamed VariableSource enum
-- `focal/profile/__init__.py` - Updated exports (removed aliases)
-- `focal/profile/store.py` - Updated all type hints
-- `focal/profile/validation.py` - Updated imports and type hints
-- `focal/profile/extraction.py` - Updated imports and type hints
-- `focal/profile/stores/cached.py` - Updated imports and type hints
-- `focal/profile/stores/inmemory.py` - Updated imports and type hints
-- `focal/profile/stores/postgres.py` - Updated imports and type hints
+- `focal/customer_data/models.py` - Renamed all three classes
+- `focal/customer_data/enums.py` - Renamed VariableSource enum
+- `focal/customer_data/__init__.py` - Updated exports (removed aliases)
+- `focal/customer_data/store.py` - Updated all type hints
+- `focal/customer_data/validation.py` - Updated imports and type hints
+- `focal/customer_data/extraction.py` - Updated imports and type hints
+- `focal/customer_data/stores/cached.py` - Updated imports and type hints
+- `focal/customer_data/stores/inmemory.py` - Updated imports and type hints
+- `focal/customer_data/stores/postgres.py` - Updated imports and type hints
 - `focal/alignment/filtering/scenario_filter.py` - Updated imports
 - `focal/alignment/loaders/customer_data_loader.py` - Updated imports
 - `focal/alignment/migration/field_resolver.py` - Updated imports
 - `focal/alignment/migration/models.py` - Updated imports
 - `focal/jobs/workflows/schema_extraction.py` - Updated imports
-- `tests/integration/stores/test_postgres_profile.py` - Updated imports
-- `tests/contract/test_profile_store_contract.py` - Updated imports
-- `tests/performance/test_profile_performance.py` - Updated imports
-- `tests/unit/profile/test_profile_models.py` - Updated imports
-- `tests/unit/profile/stores/test_inmemory_profile.py` - Updated imports
-- `tests/unit/profile/stores/test_cached_profile.py` - Updated imports
-- `tests/unit/profile/test_validation.py` - Updated imports
-- `tests/unit/profile/test_extraction.py` - Updated imports
+- `tests/integration/stores/test_postgres_customer_data.py` - Updated imports
+- `tests/contract/test_customer_data_store_contract.py` - Updated imports
+- `tests/performance/test_customer_data_performance.py` - Updated imports
+- `tests/unit/customer_data/test_customer_data_models.py` - Updated imports
+- `tests/unit/customer_data/stores/test_inmemory_customer_data.py` - Updated imports
+- `tests/unit/customer_data/stores/test_cached_customer_data.py` - Updated imports
+- `tests/unit/customer_data/test_validation.py` - Updated imports
+- `tests/unit/customer_data/test_extraction.py` - Updated imports
 
 **Test Results:**
 ```
 ============================= 130 passed in 1.60s ==============================
 ```
 
-All profile unit tests passing:
+All customer_data unit tests passing:
 - ChannelIdentity models: 4 tests
 - VariableEntry (formerly ProfileField): 10 tests
 - ProfileAsset models: 4 tests
@@ -1017,4 +1017,3 @@ Total: 19 passed in 1.97s
 - Add dedicated Phase 1 integration tests (optional enhancement)
 - Add OpenTelemetry spans for Phase 1 operations (future enhancement)
 - Add Prometheus metrics for Phase 1 operations (future enhancement)
-

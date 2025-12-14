@@ -1,0 +1,69 @@
+"""Agent Conversation Fabric (ACF) - Infrastructure Layer.
+
+ACF is pure infrastructure for managing conversational turns:
+- Session mutex (single-writer rule)
+- Logical turns (message accumulation, boundaries)
+- Supersede coordination (facts, not decisions)
+- Commit point tracking
+- Fabric event emission
+
+ACF is channel-agnostic and decision-agnostic. It provides the
+infrastructure for CognitivePipeline to run safely in a distributed,
+multi-tenant environment.
+
+Key Principle: ACF owns WHEN and HOW (timing, coordination, safety).
+CognitivePipeline owns WHAT (decisions, semantics, behavior).
+"""
+
+from focal.runtime.acf.commit_point import CommitPointTracker
+from focal.runtime.acf.events import FabricEvent, FabricEventType
+from focal.runtime.acf.models import (
+    AccumulationHint,
+    FabricTurnContext,
+    LogicalTurn,
+    LogicalTurnStatus,
+    MessageShape,
+    PhaseArtifact,
+    ScenarioStepRef,
+    SideEffect,
+    SideEffectPolicy,
+    SupersedeAction,
+    SupersedeDecision,
+)
+from focal.runtime.acf.turn_manager import UserCadenceStats
+from focal.runtime.acf.mutex import SessionMutex, build_session_key
+from focal.runtime.acf.supersede import (
+    SupersedeCoordinator,
+    build_tool_idempotency_key,
+)
+from focal.runtime.acf.turn_manager import TurnManager
+from focal.runtime.acf.workflow import LogicalTurnWorkflow
+
+__all__ = [
+    # Core models
+    "LogicalTurn",
+    "LogicalTurnStatus",
+    "FabricTurnContext",
+    "AccumulationHint",
+    "MessageShape",
+    "UserCadenceStats",
+    # Supersede models
+    "SupersedeAction",
+    "SupersedeDecision",
+    "PhaseArtifact",
+    "SideEffect",
+    "SideEffectPolicy",
+    "ScenarioStepRef",
+    # Events
+    "FabricEvent",
+    "FabricEventType",
+    # Components
+    "SessionMutex",
+    "TurnManager",
+    "SupersedeCoordinator",
+    "CommitPointTracker",
+    "LogicalTurnWorkflow",
+    # Utilities
+    "build_session_key",
+    "build_tool_idempotency_key",
+]

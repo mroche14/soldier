@@ -848,7 +848,7 @@ Example structured log output:
 
 ```json
 {
-  "turn_id": "abc123",
+  "logical_turn_id": "abc123",
   "retrieval": {
     "rules": {
       "strategy": "adaptive_k",

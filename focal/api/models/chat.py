@@ -1,4 +1,9 @@
-"""Chat request and response models."""
+"""Conversational turn request and response models.
+
+These models represent the public API interface for message processing.
+Internally, each message/response pair constitutes a 'turn' in the
+alignment engine's processing pipeline.
+"""
 
 from typing import Any, Literal
 from uuid import UUID

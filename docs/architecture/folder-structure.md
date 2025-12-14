@@ -348,7 +348,7 @@ from focal.config.settings import get_settings
 
 settings = get_settings()
 port = settings.api.port
-llm_model = settings.providers.default_llm.model
+generation_model = settings.pipeline.generation.model
 rule_strategy = settings.pipeline.retrieval.rule_selection.strategy
 ```
 
@@ -394,11 +394,13 @@ Each step in the alignment pipeline can be configured via TOML files with Pydant
 
 ```toml
 # config/default.toml
-[pipeline.context_extraction]
+[pipeline.situational_sensor]
 enabled = true
-mode = "llm"
-llm_provider = "haiku"           # References providers.llm.haiku
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 history_turns = 5
+temperature = 0.0
+max_tokens = 800
 
 [pipeline.retrieval]
 embedding_provider = "default"
@@ -426,26 +428,17 @@ enabled = true
 rerank_provider = "default"
 top_k = 10
 
-[pipeline.llm_filtering]
+[pipeline.rule_filtering]
 enabled = true
-llm_provider = "haiku"
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 
 [pipeline.generation]
-llm_provider = "sonnet"          # References providers.llm.sonnet
+enabled = true
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 temperature = 0.7
 max_tokens = 1024
-
-[pipeline.enforcement]
-self_critique_enabled = false
-
-# Named provider configurations
-[providers.llm.haiku]
-provider = "anthropic"
-model = "claude-3-haiku-20240307"
-
-[providers.llm.sonnet]
-provider = "anthropic"
-model = "claude-sonnet-4-5-20250514"
 
 # Storage backends
 [storage.config]

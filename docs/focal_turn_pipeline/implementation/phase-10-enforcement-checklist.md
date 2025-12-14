@@ -133,13 +133,13 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
   - Action: Create new file
   - Details:
     - Class: `VariableExtractor`
-    - Method: `extract_variables(response: str, session: Session, profile: CustomerProfile | None) -> dict[str, Any]`
+    - Method: `extract_variables(response: str, session: Session, profile: CustomerDataStore | None) -> dict[str, Any]`
     - Implements regex extraction for common patterns (amounts, percentages, flags)
     - Optional: LLM extraction for complex cases
   - Dependencies:
     - `re` (stdlib)
     - `focal.conversation.models.session.Session`
-    - `focal.profile.models.CustomerProfile`
+    - `focal.customer_data.models.CustomerDataStore`
 
 ### 3.2 Implement Regex Pattern Extraction
 
@@ -313,7 +313,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
     - Add: `deterministic_enforcer: DeterministicEnforcer`
     - Add: `subjective_enforcer: SubjectiveEnforcer`
     - Add: `session: Session` (pass to validate method instead)
-    - Add: `profile: CustomerProfile | None` (pass to validate method)
+    - Add: `profile: CustomerDataStore | None` (pass to validate method)
     - Add: `config: EnforcementConfig`
 
 ### 6.2 Implement get_rules_to_enforce
@@ -585,7 +585,7 @@ GLOBAL Rule: "Never promise >10% discount" (is_hard_constraint=True)
   - Action: Update enforcement call in `process_turn`
   - Details:
     - Add `session` parameter to `validator.validate()`
-    - Add `profile` parameter (load from ProfileStore if needed)
+    - Add `profile` parameter (load from CustomerDataStoreInterface if needed)
     - Remove `hard_rules` parameter (validator fetches itself now)
 
 ---
@@ -864,10 +864,10 @@ Phase 10 is complete when:
 
 ### Existing Dependencies
 
-- `focal.providers.llm.base.LLMExecutor` - For LLM-as-Judge (Lane 2)
-- `focal.alignment.stores.config_store.ConfigStore` - Fetch GLOBAL rules
-- `focal.conversation.models.session.Session` - Session variables
-- `focal.profile.models.CustomerProfile` - Profile fields
+  - `focal.providers.llm.LLMExecutor` - For LLM-as-Judge (Lane 2)
+  - `focal.alignment.stores.config_store.ConfigStore` - Fetch GLOBAL rules
+  - `focal.conversation.models.session.Session` - Session variables
+  - `focal.customer_data.models.CustomerDataStore` - Customer fields
 
 ### Optional Dependencies (for Relevance/Grounding)
 

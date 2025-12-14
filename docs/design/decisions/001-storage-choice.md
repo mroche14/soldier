@@ -72,12 +72,11 @@ Each provider corresponds to a type of AI capability:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │  LLMProvider                                                        │    │
-│  │  "Generate text responses"                                          │    │
+│  │  LLMExecutor                                                        │    │
+│  │  "Execute LLM calls"                                                │    │
 │  │                                                                      │    │
-│  │  Used by: Context extraction, LLM filtering, Response generation,   │    │
-│  │           Enforcement (self-critique)                               │    │
-│  │  Backends: Anthropic, OpenAI, Bedrock, Vertex, Ollama               │    │
+│  │  Used by: Situation sensing, filtering, generation, judging         │    │
+│  │  Backends: OpenRouter (primary), Anthropic/OpenAI (fallback), etc.  │    │
 │  └─────────────────────────────────────────────────────────────────────┘    │
 │                                                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
@@ -403,7 +402,7 @@ class AuditStore(ABC):
         pass
 
     @abstractmethod
-    async def get_turn(self, turn_id: UUID) -> TurnRecord | None:
+    async def get_turn(self, logical_turn_id: UUID) -> TurnRecord | None:
         """Get a turn by ID."""
         pass
 
@@ -447,48 +446,43 @@ class AuditStore(ABC):
 
 ## Provider Interfaces
 
-### LLMProvider
+### LLMExecutor
 
 ```python
-class LLMProvider(ABC):
+class LLMExecutor:
     """
-    Interface for Large Language Model providers.
+    Single LLM execution interface used by pipeline steps.
 
-    Used for: context extraction, LLM filtering, response generation, self-critique.
+    - Routes to the correct provider based on model string prefix
+    - Uses Agno model classes internally (OpenRouter, Claude, OpenAIChat, Groq, ...)
+    - Implements fallback chains (Agno does not provide cross-provider fallbacks)
+
+    Used for: situation sensing, filtering, generation, LLM-as-judge tasks.
     """
 
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Provider name (e.g., 'anthropic', 'openai')."""
-        pass
-
-    @abstractmethod
     async def generate(
         self,
-        prompt: str,
+        messages: list[LLMMessage],
         max_tokens: int = 1024,
         temperature: float = 0.7,
         stop_sequences: list[str] | None = None,
-        system_prompt: str | None = None,
     ) -> LLMResponse:
-        """Generate text completion."""
-        pass
+        """Generate a text response from chat messages."""
+        ...
 
-    @abstractmethod
     async def generate_structured(
         self,
         prompt: str,
         schema: type[BaseModel],
         system_prompt: str | None = None,
-    ) -> BaseModel:
+    ) -> tuple[BaseModel, LLMResponse]:
         """Generate structured output matching a Pydantic schema."""
-        pass
+        ...
 
 
 class LLMResponse(BaseModel):
     """Response from LLM generation."""
-    text: str
+    content: str
     usage: TokenUsage
     model: str
     finish_reason: str
@@ -503,14 +497,15 @@ class TokenUsage(BaseModel):
 
 **Implementations**:
 
-| Provider | Models | Best For |
-|----------|--------|----------|
-| `AnthropicProvider` | claude-3-haiku, claude-sonnet-4-5-20250514, claude-opus-4 | Best quality |
-| `OpenAIProvider` | gpt-4o, gpt-4o-mini | Alternative |
-| `BedrockProvider` | Various | AWS integration |
-| `VertexProvider` | Gemini | Google Cloud |
-| `OllamaProvider` | Llama, Mistral | Local/self-hosted |
-| `MockLLMProvider` | - | Testing |
+`LLMExecutor` uses Agno internally and selects the provider based on model string prefix:
+
+| Model Prefix | Provider Path | Notes |
+|--------------|---------------|-------|
+| `openrouter/` | Agno OpenRouter | Primary (aggregator + provider routing) |
+| `anthropic/` | Agno Claude | Direct fallback |
+| `openai/` | Agno OpenAIChat | Direct fallback |
+| `groq/` | Agno Groq | Optional |
+| `mock/` | Mock responses | Testing |
 
 ---
 
@@ -652,12 +647,9 @@ backend = "postgres"
 host = "${POSTGRES_HOST}"
 
 # ─── Providers ───────────────────────────────────────────────────────────────
-
-[providers.llm.anthropic]
-api_key = "${ANTHROPIC_API_KEY}"
-
-[providers.llm.openai]
-api_key = "${OPENAI_API_KEY}"
+#
+# LLM API keys are resolved from environment variables (e.g. OPENROUTER_API_KEY,
+# ANTHROPIC_API_KEY, OPENAI_API_KEY). LLM models are configured per pipeline step.
 
 [providers.embedding.openai]
 api_key = "${OPENAI_API_KEY}"
@@ -670,10 +662,13 @@ api_key = "${COHERE_API_KEY}"
 
 # ─── Pipeline (per-step configuration) ───────────────────────────────────────
 
-[pipeline.context_extraction]
-mode = "llm"
-llm_provider = "anthropic"
-llm_model = "claude-3-haiku"
+[pipeline.situational_sensor]
+enabled = true
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
+history_turns = 5
+temperature = 0.0
+max_tokens = 800
 
 [pipeline.retrieval]
 embedding_provider = "openai"
@@ -686,14 +681,14 @@ rerank_provider = "cohere"
 rerank_model = "rerank-english-v3.0"
 top_k = 10
 
-[pipeline.llm_filtering]
+[pipeline.rule_filtering]
 enabled = true
-llm_provider = "anthropic"
-llm_model = "claude-3-haiku"
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 
 [pipeline.generation]
-llm_provider = "anthropic"
-llm_model = "claude-sonnet-4-5-20250514"
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 temperature = 0.7
 max_tokens = 1024
 

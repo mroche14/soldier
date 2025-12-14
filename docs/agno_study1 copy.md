@@ -1,3 +1,5 @@
+> **Status:** HISTORICAL / NOTES. This document assumes an `LLMProvider` abstraction; current Focal uses `LLMExecutor` (Agno-backed) as the single LLM interface.
+
 Short version: your AlignmentEngine is the orchestrator; what you’re missing is “step executors” that actually hit an LLM and run tools. Agno can be that executor layer instead of you wiring OpenAI/Anthropic/etc. by hand.
 
 I’ll debrief what you have, then show two concrete integration options, and I’ll pick one that’s easy to implement now.

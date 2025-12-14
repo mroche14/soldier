@@ -1,6 +1,15 @@
 # Architecture Overview
 
-Focal is an **API-first, multi-tenant cognitive engine** with pluggable storage and AI providers. Every component is designed for horizontal scaling.
+This document describes the runtime platform architecture that hosts conversational agents. The platform includes:
+
+- **FOCAL**: An alignment-focused cognitive pipeline (11-phase spec) that implements the CognitivePipeline protocol
+- **Agent Conversation Fabric (ACF)**: Turn boundary detection and LogicalTurn accumulation
+- **AgentRuntime**: Multi-tenant agent execution environment
+- **Stores**: ConfigStore, MemoryStore, SessionStore, AuditStore interfaces
+- **Providers**: LLM, embedding, reranking, multimodal capabilities
+- **Toolbox**: Tool execution and orchestration
+
+The platform is **API-first, multi-tenant**, with pluggable storage and AI providers. Every component is designed for horizontal scaling.
 
 ## Design Principles
 
@@ -177,34 +186,34 @@ Handles all external communication.
 **Authentication**: JWT with `tenant_id` and `agent_id` claims.
 **Rate Limiting**: Per-tenant token bucket.
 
-### 2. Alignment Engine
+### 2. FOCAL Alignment Pipeline
 
-The core processing pipeline. See [alignment-engine.md](./alignment-engine.md) for details.
+**FOCAL** is an alignment-focused implementation of the CognitivePipeline protocol. It processes LogicalTurns through an 11-phase pipeline focused on rule matching, scenario orchestration, and constraint enforcement.
+
+See [alignment-engine.md](./alignment-engine.md) for details.
 
 ```
-Message → Context Extraction → Retrieval → Rerank → LLM Filter → Tools → Generate → Enforce → Response
+LogicalTurn (1+ messages) → Context Extraction → Retrieval → Rerank → LLM Filter → Tools → Generate → Enforce → Response
 ```
+
+**Note**: Turn boundaries (message accumulation, supersede signals) are handled by the **Agent Conversation Fabric (ACF)**, which is a platform component that sits above the cognitive pipeline. ACF calls `pipeline.run(ctx) -> PipelineResult`. See `docs/focal_360/architecture/ACF_ARCHITECTURE.md`.
+
+**Other pipeline mechanics** (e.g., ReAct, planner-executor) can be implemented alongside FOCAL by implementing the same CognitivePipeline protocol.
 
 Each step is independently configurable via TOML:
 
 ```toml
 # config/default.toml
 [pipeline.context_extraction]
-llm_provider = "haiku"
+model = "openrouter/anthropic/claude-3-haiku-20240307"
+fallback_models = ["anthropic/claude-3-haiku-20240307"]
 
 [pipeline.retrieval]
 embedding_provider = "default"
 
 [pipeline.generation]
-llm_provider = "sonnet"
-
-[providers.llm.haiku]
-provider = "anthropic"
-model = "claude-3-haiku-20240307"
-
-[providers.llm.sonnet]
-provider = "anthropic"
-model = "claude-sonnet-4-5-20250514"
+model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
+fallback_models = ["anthropic/claude-sonnet-4-5-20250514", "openai/gpt-4o"]
 ```
 
 ### 3. Providers
@@ -254,7 +263,7 @@ See [ADR-001](../design/decisions/001-storage-choice.md) for full interface defi
 
 ```
 1. REQUEST ARRIVES
-   POST /v1/chat { tenant_id, agent_id, channel, user_channel_id, message }
+   POST /v1/chat { tenant_id, agent_id, channel, channel_user_id, message, customer_id? }
    (tenant_id and agent_id resolved upstream by channel-gateway/message-router)
    │
    ▼
@@ -263,56 +272,68 @@ See [ADR-001](../design/decisions/001-storage-choice.md) for full interface defi
    - Load agent configuration
    │
    ▼
-3. LOAD SESSION (SessionStore)
-   - Get or create session
-   - Get conversation history (last N turns)
+3. ACF TURN GATEWAY (LogicalTurn)
+   - Acquire session mutex
+   - Accumulate one or more messages into a LogicalTurn
+   - Provide supersede signal to the pipeline
    │
    ▼
-4. CONTEXT EXTRACTION (LLMExecutor)
-   - Analyze message + history
-   - Extract: intent, entities, sentiment
-   - Output: Context object
+4. PHASE 1: IDENTIFICATION & CONTEXT LOADING
+   - Resolve / create Customer (customer_id)
+   - Resolve / create session (SessionStore)
+   - Load SessionState + CustomerDataStore + config + glossary
    │
    ▼
-5. RETRIEVAL (EmbeddingProvider + Stores)
+5. PHASE 2: SITUATIONAL SENSOR (LLMExecutor)
+   - Schema-aware + glossary-aware situational snapshot
+   │
+   ▼
+6. PHASE 3: CUSTOMER DATA UPDATE
+   - Apply candidate variable updates (in-memory)
+   │
+   ▼
+7. PHASE 4: RETRIEVAL (EmbeddingProvider + Stores)
    ├── Rules (ConfigStore.vector_search_rules)
    ├── Scenarios (ConfigStore.get_scenarios)
    └── Memory (MemoryStore.vector_search_episodes)
    │
    ▼
-6. RERANK (RerankProvider)
+8. PHASE 4b: RERANK (RerankProvider)
    - Re-order candidates by relevance
    │
    ▼
-7. LLM FILTER (LLMExecutor)
+9. PHASE 5: RULE FILTERING (LLMExecutor)
    - Judge which rules apply
-   - Decide scenario action (start/continue/exit)
    │
    ▼
-8. TOOL EXECUTION
-   - Run tools attached to matched rules
-   - Update session variables
-   │
-   ▼
-9. RESPONSE GENERATION (LLMExecutor)
-   - Check for EXCLUSIVE template
-   - Build prompt with rules, memory, tools
-   - Call LLM
-   │
-   ▼
-10. ENFORCEMENT
-    - Validate against hard constraints
-    - Regenerate or use fallback if needed
+10. PHASE 6: SCENARIO ORCHESTRATION
+    - Scenario lifecycle + step transitions
     │
     ▼
-11. PERSIST
+11. PHASE 7: TOOL EXECUTION (Toolbox)
+    - Execute tools, update variables
+    │
+    ▼
+12. PHASE 8: RESPONSE PLANNING
+    - Build ResponsePlan (ASK/ANSWER/MIXED/ESCALATE)
+    │
+    ▼
+13. PHASE 9: GENERATION (LLMExecutor)
+    - Generate final response from ResponsePlan
+    │
+    ▼
+14. PHASE 10: ENFORCEMENT
+    - Validate against hard constraints; retry/fallback
+    │
+    ▼
+15. PHASE 11: PERSISTENCE
     ├── Session state (SessionStore)
     ├── Turn record (AuditStore)
     └── Memory ingestion (MemoryStore, async)
     │
     ▼
-12. RESPOND
-    { response, turn_id, scenario, matched_rules }
+16. RESPOND
+    { response, logical_turn_id, scenario, matched_rules }
 ```
 
 ---
@@ -326,7 +347,7 @@ Every operation is scoped by `tenant_id`:
 | API | `tenant_id` required in request (resolved upstream) |
 | ConfigStore | `tenant_id` column on all entities |
 | MemoryStore | `group_id = tenant_id:session_id` |
-| SessionStore | Session key includes `tenant_id` |
+| SessionStore | Session key includes `tenant_id`, `agent_id`, `customer_id`, `channel` |
 | AuditStore | `tenant_id` on all records |
 
 ---
@@ -353,11 +374,18 @@ Each agent can have different pipeline settings:
 ```toml
 # config/default.toml
 
-[pipeline.context_extraction]
+[pipeline.situational_sensor]
 enabled = true
-mode = "llm"
-llm_provider = "haiku"
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 history_turns = 5
+temperature = 0.0
+max_tokens = 800
+# OpenRouter routing (optional; only applies to openrouter/* models)
+provider_order = ["cerebras", "groq", "google-vertex", "sambanova"]
+provider_sort = "latency"
+allow_fallbacks = true
+ignore_providers = []
 
 [pipeline.retrieval]
 embedding_provider = "default"
@@ -385,81 +413,17 @@ enabled = true
 rerank_provider = "default"
 top_k = 10
 
-[pipeline.llm_filtering]
-enabled = true
-llm_provider = "haiku"
-
 [pipeline.generation]
-llm_provider = "sonnet"
+enabled = true
+model = "openrouter/openai/gpt-oss-120b"
+fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 temperature = 0.7
 max_tokens = 1024
-
-[pipeline.enforcement]
-self_critique_enabled = false
-
-# Named provider configurations
-[providers.llm.haiku]
-provider = "anthropic"
-model = "claude-3-haiku-20240307"
-
-[providers.llm.sonnet]
-provider = "anthropic"
-model = "claude-sonnet-4-5-20250514"
 ```
 
 ### Deployment Profiles
 
-**Minimal (Low cost, fast)** — `config/minimal.toml`
-```toml
-[pipeline.context_extraction]
-enabled = false
-
-[pipeline.reranking]
-enabled = false
-
-[pipeline.llm_filtering]
-enabled = false
-
-[pipeline.generation]
-llm_provider = "haiku"
-```
-
-**Balanced (Recommended)** — `config/default.toml`
-```toml
-[pipeline.context_extraction]
-mode = "llm"
-llm_provider = "haiku"
-
-[pipeline.reranking]
-enabled = true
-
-[pipeline.llm_filtering]
-enabled = true
-
-[pipeline.generation]
-llm_provider = "sonnet"
-```
-
-**Maximum Quality** — `config/production.toml`
-```toml
-[pipeline.context_extraction]
-mode = "llm"
-llm_provider = "sonnet"
-
-[pipeline.reranking]
-enabled = true
-
-[pipeline.llm_filtering]
-enabled = true
-llm_provider = "sonnet"
-
-[pipeline.generation]
-llm_provider = "sonnet"
-
-[pipeline.enforcement]
-self_critique_enabled = true
-self_critique_provider = "haiku"
-```
+Use environment-specific overrides: `config/development.toml`, `config/staging.toml`, `config/production.toml`.
 
 ### Environment Variable Overrides
 
@@ -467,7 +431,7 @@ Override any configuration via `FOCAL_*` environment variables:
 
 ```bash
 export FOCAL_API__PORT=9000
-export FOCAL_PIPELINE__GENERATION__LLM_PROVIDER=haiku
+export FOCAL_PIPELINE__GENERATION__MODEL=openrouter/openai/gpt-oss-120b
 export FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
 ```
 
@@ -511,5 +475,5 @@ export FOCAL_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
 - [Folder Structure](./folder-structure.md) - Code organization
 - [Alignment Engine](./alignment-engine.md) - Pipeline details
 - [Memory Layer](./memory-layer.md) - Knowledge graph
-- [Turn Pipeline](../design/turn-pipeline.md) - Step-by-step flow
+- [Turn Pipeline](../focal_turn_pipeline/spec/pipeline.md) - Step-by-step flow
 - [ADR-001: Storage](../design/decisions/001-storage-choice.md) - Interface definitions

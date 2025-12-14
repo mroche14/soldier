@@ -210,7 +210,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
     """Customer data update models for Phase 3."""
 
     from pydantic import BaseModel, Field
-    from focal.profile.models import ProfileFieldDefinition
+    from focal.customer_data.models import CustomerDataField
 
     class CustomerDataUpdate(BaseModel):
         """Lightweight update record from Phase 3.
@@ -222,7 +222,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
         field_name: str = Field(..., description="Field name")
         value: Any = Field(..., description="Extracted value")
         confidence: float = Field(..., description="Confidence score 0-1")
-        field_definition: ProfileFieldDefinition = Field(
+        field_definition: CustomerDataField = Field(
             ..., description="Schema definition with scope and persist flags"
         )
         is_update: bool = Field(
@@ -315,7 +315,7 @@ Phase 11 handles the final persistence and audit trail creation after response g
             self._task_queue.enqueue(
                 "memory_ingestion",
                 {
-                    "turn_id": str(turn_id),
+                    "logical_turn_id": str(turn_id),
                     "session_id": str(session_id),
                     "user_message": user_message,
                     "agent_response": result.response,
@@ -935,7 +935,7 @@ This phase requires:
 - [x] **Phase 1-10 Complete**: All prior pipeline phases working
 - [x] **SessionStore Interface**: For session persistence
 - [x] **AuditStore Interface**: For turn record persistence
-- [x] **ProfileStore Interface**: For customer data persistence
+- [x] **CustomerDataStoreInterface**: For customer data persistence
 - [ ] **CustomerDataUpdate Model**: For Phase 3 → Phase 11 handoff
 - [ ] **TurnOutcome Model**: For outcome tracking
 - [ ] **TaskQueue**: For background memory ingestion
@@ -971,7 +971,7 @@ This phase requires:
         )
         customer_data_enabled: bool = Field(
             default=True,
-            description="Persist customer data updates to ProfileStore"
+            description="Persist customer data updates to CustomerDataStoreInterface"
         )
         session_cleanup_on_end: bool = Field(
             default=True,

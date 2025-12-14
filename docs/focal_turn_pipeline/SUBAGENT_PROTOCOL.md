@@ -41,9 +41,9 @@ grep -r "def method_you_plan_to_add" focal/
 
 | Wrong ❌ | Right ✅ |
 |----------|----------|
-| Create `NewProfileStore` alongside existing `ProfileStore` | Rename/extend existing `ProfileStore` |
+| Create `NewCustomerDataStore` alongside existing `CustomerDataStoreInterface` | Rename/extend existing `CustomerDataStoreInterface` |
 | Add `my_validator.py` when `validation.py` exists | Add your validation to existing `validation.py` |
-| Create `CustomerDataUpdater` when `ProfileUpdater` does similar | Rename/extend `ProfileUpdater` |
+| Create `CustomerDataUpdater` when an existing updater does similar | Rename/extend the existing updater |
 
 ### 3. Check for Obsolete Code
 
@@ -97,7 +97,7 @@ When implementing a phase, read in this order:
 |----------|---------|
 | `docs/focal_turn_pipeline/analysis/gap_analysis.md` | What's implemented vs. missing |
 | `docs/design/scenario-update-methods.md` | Scenario migration details (Phase 1.7) |
-| `docs/design/customer-profile.md` | CustomerProfile/CustomerDataStore context |
+| `docs/design/customer-profile.md` | CustomerDataStore context |
 
 ---
 
@@ -179,7 +179,7 @@ MAX_RETRIES = 3  # WRONG!
 
 ## Naming Corrections (CRITICAL)
 
-The existing `focal/profile/` module IS the CustomerDataStore. Do NOT create duplicate models.
+The existing `focal/customer_data/` module IS the CustomerDataStore. Do NOT create duplicate models.
 
 ### Rename Map (from CHECKLIST_CORRECTIONS.md)
 
@@ -188,7 +188,7 @@ The existing `focal/profile/` module IS the CustomerDataStore. Do NOT create dup
 | `ProfileFieldDefinition` | `CustomerDataField` | RENAME + add `scope`, `persist` |
 | `ProfileField` | `VariableEntry` | RENAME + add `history` |
 | `CustomerProfile` | `CustomerDataStore` | RENAME |
-| `ProfileStore` | `CustomerDataStore` (interface) | RENAME |
+| `ProfileStore` | `CustomerDataStoreInterface` | RENAME |
 | `ProfileFieldSource` | `VariableSource` | RENAME |
 
 ### New Models to CREATE (these don't exist yet)

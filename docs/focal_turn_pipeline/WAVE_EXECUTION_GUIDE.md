@@ -294,7 +294,7 @@ Execute ALL items in the Phase 3 checklist.
 6. Unit tests with 85%+ coverage
 
 ## Important Notes
-- Use existing validation in `focal/profile/validation.py` if available
+- Use existing validation in `focal/customer_data/validation.py` if available
 - candidate_variables comes from SituationalSnapshot (P2 output)
 - Only variables with persist=True should be saved to database
 - History should track: {value, timestamp, source, confidence}

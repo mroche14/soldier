@@ -7,23 +7,23 @@
 
 ## 1. Customer Data Naming Consolidation
 
-The existing `focal/profile/` module **IS** the CustomerDataStore implementation. It needs renaming and field additions, NOT parallel schemas.
+The existing `focal/customer_data/` module **IS** the CustomerDataStore implementation. It needs field additions and consistent usage, NOT parallel schemas.
 
 ### Canonical Name Mapping
 
 | Old Name (profile/) | New Name (CustomerData) | Location | Action |
 |---------------------|------------------------|----------|--------|
-| `ProfileFieldDefinition` | `CustomerDataField` | `focal/profile/models.py` | **RENAME** + add `scope`, `persist` |
-| `ProfileField` | `VariableEntry` | `focal/profile/models.py` | **RENAME** + add `history` |
-| `CustomerProfile` | `CustomerDataStore` | `focal/profile/models.py` | **RENAME** |
-| `ProfileStore` | `CustomerDataStore` (interface) | `focal/profile/store.py` | **RENAME** |
-| `ProfileFieldSource` | `VariableSource` | `focal/profile/enums.py` | **RENAME** |
+| `ProfileFieldDefinition` | `CustomerDataField` | `focal/customer_data/models.py` | **RENAME** + add `scope`, `persist` |
+| `ProfileField` | `VariableEntry` | `focal/customer_data/models.py` | **RENAME** + add `history` |
+| `CustomerProfile` | `CustomerDataStore` | `focal/customer_data/models.py` | **RENAME** |
+| `ProfileStore` | `CustomerDataStoreInterface` | `focal/customer_data/store.py` | **RENAME** |
+| `ProfileFieldSource` | `VariableSource` | `focal/customer_data/enums.py` | **RENAME** |
 
 ### Fields to ADD to Existing Models
 
 **On `ProfileFieldDefinition` → `CustomerDataField`:**
 ```python
-# ADD these fields (lines ~345 in profile/models.py)
+# ADD these fields (in customer_data/models.py)
 scope: Literal["IDENTITY", "BUSINESS", "CASE", "SESSION"] = Field(
     default="IDENTITY",
     description="Persistence scope"
@@ -55,7 +55,7 @@ Remove these duplicate model definitions:
 | Phase 2 | §2.1 | `CustomerDataField`, `VariableEntry`, `CustomerDataStore` models |
 | Phase 3 | §1.1-1.4 | `VariableEntry`, `CustomerDataStore`, `CustomerSchemaMask` models |
 
-### KEEP (New Models Not in Profile)
+### KEEP (New Models Not in `customer_data`)
 
 These models ARE new and should be created:
 
@@ -139,9 +139,9 @@ All checklists must use these paths:
 
 | Model | Canonical Path |
 |-------|---------------|
-| `CustomerDataField` | `focal/profile/models.py` (renamed from ProfileFieldDefinition) |
-| `VariableEntry` | `focal/profile/models.py` (renamed from ProfileField) |
-| `CustomerDataStore` | `focal/profile/models.py` (renamed from CustomerProfile) |
+| `CustomerDataField` | `focal/customer_data/models.py` (renamed from ProfileFieldDefinition) |
+| `VariableEntry` | `focal/customer_data/models.py` (renamed from ProfileField) |
+| `CustomerDataStore` | `focal/customer_data/models.py` (renamed from CustomerProfile) |
 | `CustomerSchemaMask` | `focal/alignment/context/customer_schema_mask.py` |
 | `CandidateVariableInfo` | `focal/alignment/context/situational_snapshot.py` |
 | `SituationalSnapshot` | `focal/alignment/context/situational_snapshot.py` |
@@ -166,9 +166,9 @@ All checklists must use these paths:
 
 | Store | Canonical Path |
 |-------|---------------|
-| CustomerDataStore (interface) | `focal/profile/store.py` (renamed from ProfileStore) |
-| InMemoryCustomerDataStore | `focal/profile/stores/inmemory.py` |
-| PostgresCustomerDataStore | `focal/profile/stores/postgres.py` |
+| CustomerDataStore (interface) | `focal/customer_data/store.py` (renamed from ProfileStore) |
+| InMemoryCustomerDataStore | `focal/customer_data/stores/inmemory.py` |
+| PostgresCustomerDataStore | `focal/customer_data/stores/postgres.py` |
 
 ---
 
@@ -240,7 +240,7 @@ All models must use these field names:
 ## 7. Implementation Order (Revised)
 
 1. **Rename Profile → CustomerData** (foundation)
-   - Rename classes in `focal/profile/models.py`
+   - Rename classes in `focal/customer_data/models.py`
    - Add `scope`, `persist`, `history` fields
    - Update all imports across codebase
 
@@ -268,7 +268,7 @@ All models must use these field names:
 
 Before implementing, verify:
 
-- [ ] All model definitions reference `focal/profile/models.py` (renamed)
+- [ ] All model definitions reference `focal/customer_data/models.py` (renamed)
 - [ ] All field names use canonical naming (`name`, `tenant_id`, `customer_id`)
 - [ ] All ID fields are `UUID`, not `str`
 - [ ] No duplicate model definitions across phases

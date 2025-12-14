@@ -28,23 +28,23 @@
 ## 1. Models to Create/Modify
 
 > **IMPORTANT**: CustomerDataField, VariableEntry, and CustomerDataStore are renamed Profile models from Phase 1.
-> Do NOT create duplicate models. These should already exist after Phase 1 renames in `focal/profile/models.py`.
+> Do NOT create duplicate models. These should already exist after Phase 1 renames in `focal/customer_data/models.py`.
 
 ### Prerequisites from Phase 1 (Already Complete)
 
 - [x] **CustomerDataField** (renamed from ProfileFieldDefinition)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Fields: `name`, `scope`, `persist`, `value_type`, validation fields
   - Note: Use `name` field (not `key` or `name`)
 
 - [x] **VariableEntry** (renamed from ProfileField)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Fields: `name`, `value`, `history`, `confidence`, `source`, etc.
 
 - [x] **CustomerDataStore** (renamed from CustomerProfile)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Contains: `fields: dict[str, VariableEntry]`
-  - Methods: Use existing get/set patterns from CustomerProfile
+  - Methods: Use existing get/set patterns from CustomerDataStore
 
 - [x] **CustomerSchemaMask** (created in Phase 2)
   - File: `focal/alignment/context/customer_schema_mask.py`
@@ -57,7 +57,7 @@
   - Action: Created new file with CustomerDataUpdate model
   - Details:
     ```python
-    from focal.profile.models import CustomerDataField  # Renamed from ProfileFieldDefinition
+    from focal.customer_data.models import CustomerDataField  # Renamed from ProfileFieldDefinition
 
     class CustomerDataUpdate(BaseModel):
         """Represents a single update to apply to CustomerDataStore."""
@@ -109,12 +109,12 @@
 
 ---
 
-## 2. ProfileFieldDefinition Enhancements
+## 2. CustomerDataField Enhancements
 
-### 2.1 Add `scope` Field to ProfileFieldDefinition
+### 2.1 Add `scope` Field to CustomerDataField
 
 - [x] **Add `scope` field** (already exists in codebase)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Modify
   - Details: Add field after `value_type`:
     ```python
@@ -124,10 +124,10 @@
     )
     ```
 
-### 2.2 Add `persist` Field to ProfileFieldDefinition
+### 2.2 Add `persist` Field to CustomerDataField
 
 - [x] **Add `persist` field** (already exists in codebase)
-  - File: `focal/profile/models.py`
+  - File: `focal/customer_data/models.py`
   - Action: Modify
   - Details: Add field after `scope`:
     ```python
@@ -137,12 +137,12 @@
     )
     ```
 
-### 2.3 Update ProfileFieldDefinition Tests
+### 2.3 Update CustomerDataField Tests
 
-- [x] **Update existing ProfileFieldDefinition tests**
+- [x] **Update existing CustomerDataField tests**
   - File: `tests/unit/customer_data/test_customer_data_models.py`
   - Action: Already exists
-  - **Note**: 41 tests pass including ProfileFieldDefinition tests. Scope and persist fields are already tested
+  - **Note**: 41 tests pass including CustomerDataField tests. Scope and persist fields are already tested
 
 ---
 
@@ -153,20 +153,20 @@
 - [x] **Create `CustomerDataStoreLoader` class**
   - File: `focal/alignment/customer/data_store_loader.py` (NEW FILE)
   - Action: Created
-  - **Implemented**: Created with load() method that loads from ProfileStore
+  - **Implemented**: Created with load() method that loads from CustomerDataStoreInterface
   - Details:
     ```python
     class CustomerDataStoreLoader:
-        """Loads CustomerDataStore snapshot from ProfileStore at turn start (P1.5)."""
+        """Loads CustomerDataStore snapshot from CustomerDataStoreInterface at turn start (P1.5)."""
 
-        def __init__(self, profile_store: ProfileStore):
+        def __init__(self, profile_store: CustomerDataStoreInterface):
             self._profile_store = profile_store
 
         async def load(
             self,
             tenant_id: UUID,
-            customer_id: str,
-            field_definitions: list[ProfileFieldDefinition],
+            customer_id: UUID,
+            field_definitions: list[CustomerDataField],
         ) -> CustomerDataStore:
             """Load customer data snapshot.
 
@@ -181,7 +181,7 @@
             # Get profile
             profile = await self._profile_store.get_by_customer_id(
                 tenant_id=tenant_id,
-                customer_id=customer_id  # May need adjustment based on ProfileStore API
+                customer_id=customer_id  # May need adjustment based on CustomerDataStoreInterface API
             )
 
             # Build VariableEntry dict from ProfileFields
@@ -234,7 +234,7 @@
   - Details:
     ```python
     def build_customer_schema_mask(
-        field_definitions: list[ProfileFieldDefinition],
+        field_definitions: list[CustomerDataField],
         customer_data_store: CustomerDataStore,
     ) -> CustomerSchemaMask:
         """Build privacy-safe schema view for LLM (P2.1).
@@ -270,7 +270,7 @@
   - Action: Create
   - Details:
     ```python
-    from focal.profile.validation import ProfileFieldValidator
+    from focal.customer_data.validation import CustomerDataFieldValidator
 
     class CustomerDataUpdater:
         """Handles Phase 3 customer data updates.
@@ -278,7 +278,7 @@
         Takes candidate variables from P2 and updates CustomerDataStore in-memory.
         """
 
-        def __init__(self, validator: ProfileFieldValidator):
+        def __init__(self, validator: CustomerDataFieldValidator):
             self._validator = validator
             self._logger = get_logger(__name__)
 
@@ -286,7 +286,7 @@
             self,
             customer_data_store: CustomerDataStore,
             candidate_variables: dict[str, CandidateVariableInfo],
-            field_definitions: list[ProfileFieldDefinition],
+            field_definitions: list[CustomerDataField],
         ) -> tuple[CustomerDataStore, list[CustomerDataUpdate]]:
             """Execute Phase 3 update flow.
 
@@ -323,7 +323,7 @@
     def _match_candidates_to_fields(
         self,
         candidate_variables: dict[str, CandidateVariableInfo],
-        field_definitions: list[ProfileFieldDefinition],
+        field_definitions: list[CustomerDataField],
     ) -> list[CustomerDataUpdate]:
         """P3.1: Match candidate keys to known field definitions.
 
@@ -368,7 +368,7 @@
     ) -> list[CustomerDataUpdate]:
         """P3.2: Validate and type-coerce values.
 
-        Uses ProfileFieldValidator to check types, regex, allowed_values.
+        Uses CustomerDataFieldValidator to check types, regex, allowed_values.
         """
         for update in updates:
             result = self._validator.validate(
@@ -440,7 +440,7 @@
     def _mark_for_persistence(
         self,
         updates: list[CustomerDataUpdate],
-        field_definitions: list[ProfileFieldDefinition],
+        field_definitions: list[CustomerDataField],
     ) -> list[CustomerDataUpdate]:
         """P3.4: Filter updates that should be persisted at P11.
 
@@ -489,16 +489,16 @@
   - Details:
     ```python
     class CustomerDataStorePersister:
-        """Persists CustomerDataStore updates to ProfileStore at P11.3."""
+        """Persists CustomerDataStore updates to CustomerDataStoreInterface at P11.3."""
 
-        def __init__(self, profile_store: ProfileStore):
+        def __init__(self, profile_store: CustomerDataStoreInterface):
             self._profile_store = profile_store
             self._logger = get_logger(__name__)
 
         async def persist(
             self,
             tenant_id: UUID,
-            customer_id: str,
+            customer_id: UUID,
             updates: list[CustomerDataUpdate],
             customer_data_store: CustomerDataStore,
         ) -> None:
@@ -529,7 +529,7 @@
                     field_definition_id=update.field_definition.id,
                 )
 
-                # Save to ProfileStore
+                # Save to CustomerDataStoreInterface
                 await self._profile_store.update_field(
                     tenant_id=tenant_id,
                     customer_id=customer_id,
@@ -580,7 +580,7 @@
   - Details: Added to `__init__`:
     ```python
     self._customer_data_updater = CustomerDataUpdater(
-        validator=ProfileFieldValidator()
+        validator=CustomerDataFieldValidator()
     )
     ```
 
@@ -664,7 +664,7 @@
 - [x] **Test `CustomerDataStore` model**
   - File: `tests/unit/customer_data/test_customer_data_models.py`
   - Action: Already exists
-  - **Note**: CustomerDataStore (CustomerProfile) tests exist and pass
+  - **Note**: CustomerDataStore tests exist and pass
 
 - [x] **Test `CustomerSchemaMask` model**
   - File: `tests/unit/alignment/context/test_customer_schema_mask.py`
@@ -746,10 +746,10 @@
 
 ### 8.6 Contract Tests
 
-- [x] **Add ProfileStore contract test for scope filtering**
+- [x] **Add CustomerDataStoreInterface contract test for scope filtering**
   - File: N/A
   - Action: Not required
-  - **Note**: Scope filtering is handled in application logic (Phase 3), not at the ProfileStore layer. ProfileStore contract tests already exist.
+  - **Note**: Scope filtering is handled in application logic (Phase 3), not at the CustomerDataStoreInterface layer. Contract tests already exist.
 
 ---
 
@@ -818,13 +818,13 @@
 ### Required Before Phase 3
 
 - **Phase 2 (Situational Sensor)**: Must produce `SituationalSnapshot` with `candidate_variables`
-- **ProfileFieldDefinition**: Must have `scope` and `persist` fields added
+    - **CustomerDataField**: Must have `scope` and `persist` fields added
 
 ### Enables After Phase 3
 
 - **Phase 4 (Retrieval)**: Can use updated CustomerDataStore for rule matching
 - **Phase 7 (Tool Execution)**: Can resolve variables from CustomerDataStore
-- **Phase 11 (Persistence)**: Saves persistent_updates to ProfileStore
+- **Phase 11 (Persistence)**: Saves persistent_updates to CustomerDataStoreInterface
 
 ---
 
@@ -833,8 +833,8 @@
 Phase 3 is complete when:
 
 1. [ ] All models created and validated
-2. [ ] `scope` and `persist` fields added to `ProfileFieldDefinition`
-3. [ ] CustomerDataStoreLoader loads snapshot from ProfileStore
+2. [ ] `scope` and `persist` fields added to `CustomerDataField`
+3. [ ] CustomerDataStoreLoader loads snapshot from CustomerDataStoreInterface
 4. [ ] CustomerDataUpdater implements P3.1-P3.4 correctly
 5. [ ] SESSION scope variables NOT persisted to DB
 6. [ ] IDENTITY/BUSINESS/CASE scope variables persisted (if persist=True)
@@ -867,5 +867,5 @@ Phase 3 is complete when:
 - **Multi-Tenant**: All queries include `tenant_id`
 - **Scope Cleanup**: SESSION-scoped variables cleaned at session end (automatic via non-persistence)
 - **History Tracking**: `VariableEntry.history` tracks all previous values with timestamps
-- **Validation Modes**: Support strict/warn/disabled via ProfileFieldDefinition
+- **Validation Modes**: Support strict/warn/disabled via CustomerDataField
 - **Privacy**: CustomerSchemaMask exposes structure but NEVER actual values to LLM

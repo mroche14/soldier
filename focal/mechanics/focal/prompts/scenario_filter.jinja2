@@ -1,0 +1,57 @@
+You are evaluating scenario navigation for a customer conversation.
+
+## Context
+User Message: {{ context.message }}
+Detected Intent: {{ context.intent or "unknown" }}
+{% if context.entities %}
+Entities: {{ context.entities | map(attribute='text') | join(', ') }}
+{% endif %}
+
+{% if session.active_scenario_id %}
+## Current Scenario
+Scenario ID: {{ session.active_scenario_id }}
+Current Step ID: {{ session.active_step_id or "Not in step" }}
+{% else %}
+## Current Scenario
+No active scenario
+{% endif %}
+
+{% if scenarios %}
+## Available Scenarios
+{% for scenario in scenarios %}
+### Scenario {{ loop.index }}: {{ scenario.name }}
+- ID: {{ scenario.id }}
+- Description: {{ scenario.description }}
+- Entry Conditions: {{ scenario.entry_conditions or "None" }}
+{% endfor %}
+{% endif %}
+
+{% if possible_transitions %}
+## Possible Transitions
+{% for transition in possible_transitions %}
+- From Step: {{ transition.from_step_name }} ({{ transition.from_step_id }})
+- To Step: {{ transition.to_step_name }} ({{ transition.to_step_id }})
+- Condition: {{ transition.condition or "Always" }}
+{% endfor %}
+{% endif %}
+
+## Instructions
+Determine the appropriate scenario navigation action:
+
+1. **NONE**: No scenario action needed
+2. **START**: Start a new scenario (specify scenario_id and target_step_id)
+3. **CONTINUE**: Stay in current step
+4. **TRANSITION**: Move to new step (specify target_step_id)
+5. **EXIT**: Exit current scenario
+6. **RELOCALIZE**: Recovery to valid step (when state is inconsistent)
+
+Output JSON with this structure:
+{
+  "action": "NONE" | "START" | "CONTINUE" | "TRANSITION" | "EXIT" | "RELOCALIZE",
+  "scenario_id": "<uuid or null>",
+  "target_step_id": "<uuid or null>",
+  "confidence": 0.0-1.0,
+  "reasoning": "brief explanation of why this action was chosen"
+}
+
+Analyze the context and determine the most appropriate action.
