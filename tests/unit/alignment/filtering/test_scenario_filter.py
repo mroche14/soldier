@@ -4,13 +4,13 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.context.models import ScenarioSignal
-from ruche.alignment.filtering.models import ScenarioAction
-from ruche.alignment.filtering.scenario_filter import ScenarioFilter
-from ruche.alignment.models.scenario import Scenario, ScenarioStep
-from ruche.alignment.retrieval.models import ScoredScenario
-from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.context.models import ScenarioSignal
+from ruche.brains.focal.phases.filtering.models import ScenarioAction
+from ruche.brains.focal.phases.filtering.scenario_filter import ScenarioFilter
+from ruche.brains.focal.models.scenario import Scenario, ScenarioStep
+from ruche.brains.focal.retrieval.models import ScoredScenario
+from ruche.brains.focal.stores import InMemoryAgentConfigStore
 
 
 @pytest.mark.asyncio

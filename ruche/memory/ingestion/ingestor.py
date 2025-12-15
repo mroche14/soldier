@@ -13,7 +13,7 @@ from ruche.memory.ingestion.queue import TaskQueue
 from ruche.memory.models.episode import Episode
 from ruche.memory.store import MemoryStore
 from ruche.observability.logging import get_logger
-from ruche.providers.embedding.base import EmbeddingProvider
+from ruche.infrastructure.providers.embedding.base import EmbeddingProvider
 
 logger = get_logger(__name__)
 

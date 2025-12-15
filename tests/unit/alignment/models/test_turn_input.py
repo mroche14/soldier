@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.models.turn_input import TurnInput
+from ruche.brains.focal.models.turn_input import TurnInput
 from ruche.conversation.models.enums import Channel
 
 
@@ -25,7 +25,7 @@ class TestTurnInput:
         assert turn_input.channel == Channel.WEBCHAT
         assert turn_input.channel_user_id == "user_123"
         assert turn_input.message == "Hello, I need help"
-        assert turn_input.customer_id is None
+        assert turn_input.interlocutor_id is None
         assert turn_input.session_id is None
         assert turn_input.metadata == {}
 
@@ -33,7 +33,7 @@ class TestTurnInput:
         """Test creating turn input with all fields."""
         tenant_id = uuid4()
         agent_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         session_id = uuid4()
 
         turn_input = TurnInput(
@@ -41,7 +41,7 @@ class TestTurnInput:
             agent_id=agent_id,
             channel=Channel.WHATSAPP,
             channel_user_id="+1234567890",
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             session_id=session_id,
             message="I want a refund",
             message_id="msg_abc123",
@@ -50,7 +50,7 @@ class TestTurnInput:
         )
 
         assert turn_input.tenant_id == tenant_id
-        assert turn_input.customer_id == customer_id
+        assert turn_input.interlocutor_id == interlocutor_id
         assert turn_input.session_id == session_id
         assert turn_input.message_id == "msg_abc123"
         assert turn_input.language == "en"

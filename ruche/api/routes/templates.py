@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from ruche.alignment.models import Scope, Template, TemplateResponseMode
+from ruche.brains.focal.models import Scope, Template, TemplateResponseMode
 from ruche.api.dependencies import AgentConfigStoreDep
 from ruche.api.exceptions import AgentNotFoundError, TemplateNotFoundError
 from ruche.api.middleware.auth import TenantContextDep

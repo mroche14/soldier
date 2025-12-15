@@ -50,7 +50,7 @@ To solve "Retrieval Fragmentation" (the Parlant problem), we do not store flat l
 
 We abandon the linear "Input $\to$ Answer" flow. We adopt an **Iterative State Loop** to resolve tools and ambiguity *before* disturbing the user.
 
-### The Pipeline Steps
+### The Brain Steps
 
 1.  **Context Scoping:** Determine current User State.
 2.  **Graph Retrieval:** Fetch Rules + Expand Definitions.

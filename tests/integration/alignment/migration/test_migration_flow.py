@@ -10,21 +10,21 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.migration.diff import compute_node_content_hash
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.migration.diff import compute_node_content_hash
+from ruche.brains.focal.migration.models import (
     MigrationPlanStatus,
     MigrationScenario,
     ReconciliationAction,
 )
-from ruche.alignment.migration.planner import MigrationDeployer, MigrationPlanner
-from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.migration.planner import MigrationDeployer, MigrationPlanner
+from ruche.brains.focal.models import Scenario, ScenarioStep, StepTransition
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.migration import ScenarioMigrationConfig
 from ruche.conversation.models import Channel, Session, StepVisit
 from ruche.conversation.stores.inmemory import InMemorySessionStore
-from ruche.providers.embedding.mock import MockEmbeddingProvider
-from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.infrastructure.providers.embedding.mock import MockEmbeddingProvider
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

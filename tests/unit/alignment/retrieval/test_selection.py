@@ -2,7 +2,7 @@
 
 import pytest
 
-from ruche.alignment.retrieval.selection import (
+from ruche.brains.focal.retrieval.selection import (
     AdaptiveKSelectionStrategy,
     ClusterSelectionStrategy,
     ElbowSelectionStrategy,

@@ -1,19 +1,19 @@
-"""Tests for CustomerDataUpdater."""
+"""Tests for InterlocutorDataUpdater."""
 
 import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from ruche.alignment.context.situation_snapshot import CandidateVariableInfo
-from ruche.alignment.customer.models import CustomerDataUpdate
-from ruche.alignment.customer.updater import CustomerDataUpdater
-from ruche.customer_data.models import (
-    CustomerDataField,
-    CustomerDataStore,
+from ruche.brains.focal.phases.context.situation_snapshot import CandidateVariableInfo
+from ruche.brains.focal.phases.interlocutor.models import InterlocutorDataUpdate
+from ruche.brains.focal.phases.interlocutor.updater import InterlocutorDataUpdater
+from ruche.interlocutor_data.models import (
+    InterlocutorDataField,
+    InterlocutorDataStore,
     VariableEntry,
 )
-from ruche.customer_data.validation import CustomerDataFieldValidator
-from ruche.customer_data.enums import ValidationMode, VariableSource
+from ruche.interlocutor_data.validation import InterlocutorDataFieldValidator
+from ruche.interlocutor_data.enums import ValidationMode, VariableSource
 
 
 def utc_now():
@@ -22,14 +22,14 @@ def utc_now():
 
 @pytest.fixture
 def validator():
-    """CustomerDataFieldValidator instance."""
-    return CustomerDataFieldValidator()
+    """InterlocutorDataFieldValidator instance."""
+    return InterlocutorDataFieldValidator()
 
 
 @pytest.fixture
 def updater(validator):
-    """CustomerDataUpdater instance."""
-    return CustomerDataUpdater(validator)
+    """InterlocutorDataUpdater instance."""
+    return InterlocutorDataUpdater(validator)
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def agent_id():
 
 
 @pytest.fixture
-def customer_id():
+def interlocutor_id():
     """Test customer ID."""
     return uuid4()
 
@@ -54,7 +54,7 @@ def customer_id():
 def field_definitions(tenant_id, agent_id):
     """Sample field definitions."""
     return [
-        CustomerDataField(
+        InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -66,7 +66,7 @@ def field_definitions(tenant_id, agent_id):
             created_at=utc_now(),
             updated_at=utc_now(),
         ),
-        CustomerDataField(
+        InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -78,7 +78,7 @@ def field_definitions(tenant_id, agent_id):
             created_at=utc_now(),
             updated_at=utc_now(),
         ),
-        CustomerDataField(
+        InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -90,7 +90,7 @@ def field_definitions(tenant_id, agent_id):
             created_at=utc_now(),
             updated_at=utc_now(),
         ),
-        CustomerDataField(
+        InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -106,11 +106,11 @@ def field_definitions(tenant_id, agent_id):
 
 
 @pytest.fixture
-def customer_data_store(tenant_id, customer_id):
-    """Empty CustomerDataStore."""
-    return CustomerDataStore(
+def customer_data_store(tenant_id, interlocutor_id):
+    """Empty InterlocutorDataStore."""
+    return InterlocutorDataStore(
         tenant_id=tenant_id,
-        customer_id=customer_id,
+        interlocutor_id=interlocutor_id,
         created_at=utc_now(),
         updated_at=utc_now(),
     )
@@ -182,7 +182,7 @@ class TestValidateAndCoerce:
     async def test_valid_email_coerced(self, updater, field_definitions):
         """Test valid email is coerced."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],
                 raw_value="test@example.com",
@@ -199,7 +199,7 @@ class TestValidateAndCoerce:
     async def test_invalid_email_sets_error(self, updater, field_definitions):
         """Test invalid email sets validation_error."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],
                 raw_value="not-an-email",
@@ -217,7 +217,7 @@ class TestValidateAndCoerce:
         """Test number type coercion."""
         age_field = field_definitions[3]  # age field
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="age",
                 field_definition=age_field,
                 raw_value="25",
@@ -236,9 +236,9 @@ class TestApplyUpdatesInMemory:
 
     @pytest.mark.asyncio
     async def test_new_value_added(self, updater, customer_data_store, field_definitions):
-        """Test new values added to CustomerDataStore."""
+        """Test new values added to InterlocutorDataStore."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],
                 raw_value="test@example.com",
@@ -268,7 +268,7 @@ class TestApplyUpdatesInMemory:
         )
 
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],
                 raw_value="new@example.com",
@@ -289,7 +289,7 @@ class TestApplyUpdatesInMemory:
     ):
         """Test invalid updates are skipped."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],
                 raw_value="not-an-email",
@@ -308,21 +308,21 @@ class TestApplyUpdatesInMemory:
     ):
         """Test all scope types (IDENTITY, BUSINESS, CASE, SESSION) are applied."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],  # IDENTITY
                 raw_value="test@example.com",
                 is_update=False,
                 validated_value="test@example.com",
             ),
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="order_id",
                 field_definition=field_definitions[1],  # CASE
                 raw_value="ORDER123",
                 is_update=False,
                 validated_value="ORDER123",
             ),
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="temp_cart_total",
                 field_definition=field_definitions[2],  # SESSION
                 raw_value=99.99,
@@ -346,7 +346,7 @@ class TestMarkForPersistence:
     async def test_session_scope_not_marked(self, updater, field_definitions):
         """Test SESSION scope NOT marked for persistence."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="temp_cart_total",
                 field_definition=field_definitions[2],  # SESSION scope
                 raw_value=99.99,
@@ -362,7 +362,7 @@ class TestMarkForPersistence:
     @pytest.mark.asyncio
     async def test_persist_false_not_marked(self, updater, tenant_id, agent_id):
         """Test persist=False NOT marked for persistence."""
-        field_def = CustomerDataField(
+        field_def = InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -376,7 +376,7 @@ class TestMarkForPersistence:
         )
 
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="temp_field",
                 field_definition=field_def,
                 raw_value="test",
@@ -393,7 +393,7 @@ class TestMarkForPersistence:
     async def test_identity_scope_marked(self, updater, field_definitions):
         """Test IDENTITY scope with persist=True ARE marked."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],  # IDENTITY, persist=True
                 raw_value="test@example.com",
@@ -411,7 +411,7 @@ class TestMarkForPersistence:
     async def test_case_scope_marked(self, updater, field_definitions):
         """Test CASE scope with persist=True ARE marked."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="order_id",
                 field_definition=field_definitions[1],  # CASE, persist=True
                 raw_value="ORDER123",
@@ -429,7 +429,7 @@ class TestMarkForPersistence:
     async def test_validation_errors_not_marked(self, updater, field_definitions):
         """Test validation errors NOT marked for persistence."""
         updates = [
-            CustomerDataUpdate(
+            InterlocutorDataUpdate(
                 field_name="email",
                 field_definition=field_definitions[0],
                 raw_value="not-an-email",

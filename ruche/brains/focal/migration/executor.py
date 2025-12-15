@@ -8,13 +8,13 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ruche.alignment.migration.composite import CompositeMapper
-from ruche.alignment.migration.diff import (
+from ruche.brains.focal.migration.composite import CompositeMapper
+from ruche.brains.focal.migration.diff import (
     compute_node_content_hash,
     compute_scenario_checksum,
 )
-from ruche.alignment.migration.field_resolver import MissingFieldResolver
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.field_resolver import MissingFieldResolver
+from ruche.brains.focal.migration.models import (
     AnchorTransformation,
     MigrationPlan,
     MigrationScenario,
@@ -26,10 +26,10 @@ from ruche.conversation.models import Session, StepVisit
 from ruche.observability.logging import get_logger
 
 if TYPE_CHECKING:
-    from ruche.alignment.models import Scenario
-    from ruche.alignment.stores.agent_config_store import AgentConfigStore
+    from ruche.brains.focal.models import Scenario
+    from ruche.brains.focal.stores.agent_config_store import AgentConfigStore
     from ruche.conversation.store import SessionStore
-    from ruche.memory.profile import CustomerDataStoreInterface
+    from ruche.memory.profile import InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 
@@ -48,7 +48,7 @@ class MigrationExecutor:
         config_store: "AgentConfigStore",
         session_store: "SessionStore",
         config: ScenarioMigrationConfig | None = None,
-        profile_store: "CustomerDataStoreInterface | None" = None,
+        profile_store: "InterlocutorDataStoreInterface | None" = None,
         llm_executor: Any = None,
     ) -> None:
         """Initialize the migration executor.

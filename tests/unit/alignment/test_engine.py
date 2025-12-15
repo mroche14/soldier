@@ -5,14 +5,14 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.models import Turn
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.models import Rule
-from ruche.alignment.result import AlignmentResult, PipelineStepTiming
-from ruche.alignment.stores import AgentConfigStore
+from ruche.brains.focal.phases.context.models import Turn
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.models import Rule
+from ruche.brains.focal.result import AlignmentResult, PipelineStepTiming
+from ruche.brains.focal.stores import AgentConfigStore
 from ruche.config.models.pipeline import PipelineConfig
-from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
 
 class MockEmbeddingProvider(EmbeddingProvider):
@@ -146,6 +146,9 @@ class MockAgentConfigStore(AgentConfigStore):
 
     async def delete_tool_activation(self, tenant_id, agent_id, tool_id):
         return True
+
+    async def get_all_tool_activations(self, tenant_id):
+        return []
 
     # Migration plan operations (stubs for abstract methods)
     async def get_migration_plan(self, tenant_id, plan_id):

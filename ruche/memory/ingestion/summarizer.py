@@ -7,7 +7,7 @@ from ruche.memory.ingestion.errors import SummarizationError
 from ruche.memory.models.episode import Episode
 from ruche.memory.store import MemoryStore
 from ruche.observability.logging import get_logger
-from ruche.providers.llm import LLMMessage
+from ruche.infrastructure.providers.llm import LLMMessage
 
 logger = get_logger(__name__)
 

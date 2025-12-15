@@ -8,7 +8,7 @@ import pytest
 from ruche.memory.ingestion.summarizer import ConversationSummarizer
 from ruche.memory.models.episode import Episode
 from ruche.memory.stores.inmemory import InMemoryMemoryStore
-from ruche.providers.llm.mock import MockLLMProvider
+from ruche.infrastructure.providers.llm.mock import MockLLMProvider
 
 
 @pytest.fixture

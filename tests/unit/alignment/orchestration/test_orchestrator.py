@@ -4,17 +4,17 @@ import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.context.models import ScenarioSignal
-from ruche.alignment.filtering.models import (
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.context.models import ScenarioSignal
+from ruche.brains.focal.phases.filtering.models import (
     ScenarioLifecycleAction,
     ScenarioLifecycleDecision,
 )
-from ruche.alignment.models import Rule
-from ruche.alignment.models.scenario import Scenario, ScenarioStep, StepTransition
-from ruche.alignment.orchestration.orchestrator import ScenarioOrchestrator
-from ruche.alignment.retrieval.models import ScoredScenario
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.models import Rule
+from ruche.brains.focal.models.scenario import Scenario, ScenarioStep, StepTransition
+from ruche.brains.focal.phases.orchestration.orchestrator import ScenarioOrchestrator
+from ruche.brains.focal.retrieval.models import ScoredScenario
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.conversation.models.session import ScenarioInstance
 
 

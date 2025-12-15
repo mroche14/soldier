@@ -218,7 +218,7 @@ class ConfigStore(ABC):
         tenant_id: UUID,
         agent_id: UUID,
     ) -> AgentConfig | None:
-        """Get agent configuration including pipeline settings."""
+        """Get agent configuration including brain settings."""
         pass
 
     @abstractmethod
@@ -451,7 +451,7 @@ class AuditStore(ABC):
 ```python
 class LLMExecutor:
     """
-    Single LLM execution interface used by pipeline steps.
+    Single LLM execution interface used by brain steps.
 
     - Routes to the correct provider based on model string prefix
     - Uses Agno model classes internally (OpenRouter, Claude, OpenAIChat, Groq, ...)
@@ -649,7 +649,7 @@ host = "${POSTGRES_HOST}"
 # ─── Providers ───────────────────────────────────────────────────────────────
 #
 # LLM API keys are resolved from environment variables (e.g. OPENROUTER_API_KEY,
-# ANTHROPIC_API_KEY, OPENAI_API_KEY). LLM models are configured per pipeline step.
+# ANTHROPIC_API_KEY, OPENAI_API_KEY). LLM models are configured per brain step.
 
 [providers.embedding.openai]
 api_key = "${OPENAI_API_KEY}"
@@ -660,9 +660,9 @@ model = "all-MiniLM-L6-v2"
 [providers.rerank.cohere]
 api_key = "${COHERE_API_KEY}"
 
-# ─── Pipeline (per-step configuration) ───────────────────────────────────────
+# ─── Brain (per-step configuration) ───────────────────────────────────────
 
-[pipeline.situational_sensor]
+[brain.situational_sensor]
 enabled = true
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
@@ -670,29 +670,29 @@ history_turns = 5
 temperature = 0.0
 max_tokens = 800
 
-[pipeline.retrieval]
+[brain.retrieval]
 embedding_provider = "openai"
 embedding_model = "text-embedding-3-small"
 top_k = 20
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 rerank_provider = "cohere"
 rerank_model = "rerank-english-v3.0"
 top_k = 10
 
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 enabled = true
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 
-[pipeline.generation]
+[brain.generation]
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 temperature = 0.7
 max_tokens = 1024
 
-[pipeline.enforcement]
+[brain.enforcement]
 self_critique_enabled = false
 ```
 
@@ -738,7 +738,7 @@ audit = { backend = "timescale" }      # Time-series optimized
 - **Clear mental model**: 4 stores map to 4 questions (behavior, memory, now, history)
 - **Flexibility**: Swap backends without code changes
 - **Testability**: In-memory implementations for fast tests
-- **Per-step providers**: Each pipeline step can use optimal model
+- **Per-step providers**: Each brain step can use optimal model
 
 ### Negative
 

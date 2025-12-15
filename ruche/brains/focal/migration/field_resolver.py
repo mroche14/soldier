@@ -6,25 +6,25 @@ Attempts to resolve missing data without asking the customer:
 3. Extract from conversation history (LLM-based)
 
 Enhanced with:
-- Schema validation via CustomerDataFieldValidator
+- Schema validation via InterlocutorDataFieldValidator
 - Lineage tracking for extracted values
-- Collection prompts from CustomerDataField
+- Collection prompts from InterlocutorDataField
 """
 
 import json
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ruche.alignment.migration.models import FieldResolutionResult, ResolutionSource
-from ruche.customer_data.enums import SourceType
+from ruche.brains.focal.migration.models import FieldResolutionResult, ResolutionSource
+from ruche.interlocutor_data.enums import SourceType
 from ruche.observability.logging import get_logger
-from ruche.providers.llm import LLMMessage
+from ruche.infrastructure.providers.llm import LLMMessage
 
 if TYPE_CHECKING:
     from ruche.conversation.models import Session
-    from ruche.customer_data.models import CustomerDataField
-    from ruche.customer_data.store import CustomerDataStoreInterface
-    from ruche.customer_data.validation import CustomerDataFieldValidator
+    from ruche.interlocutor_data.models import InterlocutorDataField
+    from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+    from ruche.interlocutor_data.validation import InterlocutorDataFieldValidator
 
 logger = get_logger(__name__)
 
@@ -69,17 +69,17 @@ class MissingFieldResolver:
     3. Conversation extraction (LLM-based, lower confidence)
 
     Enhanced with:
-    - Schema validation via CustomerDataFieldValidator (T146)
-    - Collection prompts from CustomerDataField (T149)
+    - Schema validation via InterlocutorDataFieldValidator (T146)
+    - Collection prompts from InterlocutorDataField (T149)
     - Lineage tracking for extracted fields (T150)
     - Value validation before persistence (T151)
     """
 
     def __init__(
         self,
-        profile_store: "CustomerDataStoreInterface | None" = None,
+        profile_store: "InterlocutorDataStoreInterface | None" = None,
         llm_executor: Any = None,
-        field_validator: "CustomerDataFieldValidator | None" = None,
+        field_validator: "InterlocutorDataFieldValidator | None" = None,
     ) -> None:
         """Initialize the gap fill service.
 
@@ -92,7 +92,7 @@ class MissingFieldResolver:
         self._llm_executor = llm_executor
         self._field_validator = field_validator
         # Cache for field definitions during fill operations
-        self._field_definition_cache: dict[str, CustomerDataField] = {}
+        self._field_definition_cache: dict[str, InterlocutorDataField] = {}
 
     async def fill_gap(
         self,
@@ -106,7 +106,7 @@ class MissingFieldResolver:
         """Try to fill a missing field without asking the user.
 
         Enhanced with schema integration (T148, T149):
-        - Looks up CustomerDataField for field metadata
+        - Looks up InterlocutorDataField for field metadata
         - Uses collection_prompt from definition for better extraction
         - Tracks lineage (source_item_id, source_item_type)
         - Validates extracted values against schema
@@ -224,7 +224,7 @@ class MissingFieldResolver:
         field_name: str,
         tenant_id: UUID | None,
         agent_id: UUID | None,
-    ) -> "CustomerDataField | None":
+    ) -> "InterlocutorDataField | None":
         """Get field definition from cache or store.
 
         Args:
@@ -233,7 +233,7 @@ class MissingFieldResolver:
             agent_id: Agent identifier
 
         Returns:
-            CustomerDataField if found, None otherwise
+            InterlocutorDataField if found, None otherwise
         """
         # Check cache first
         cache_key = f"{tenant_id}:{agent_id}:{field_name}"
@@ -264,7 +264,7 @@ class MissingFieldResolver:
     async def _validate_result(
         self,
         result: FieldResolutionResult,
-        field_definition: "CustomerDataField",
+        field_definition: "InterlocutorDataField",
     ) -> list[str]:
         """Validate gap fill result against schema (T151).
 
@@ -283,8 +283,8 @@ class MissingFieldResolver:
 
         try:
             # Create a temporary VariableEntry for validation
-            from ruche.customer_data.enums import VariableSource
-            from ruche.customer_data.models import VariableEntry
+            from ruche.interlocutor_data.enums import VariableSource
+            from ruche.interlocutor_data.models import VariableEntry
 
             temp_field = VariableEntry(
                 name=field_definition.name,
@@ -330,24 +330,24 @@ class MissingFieldResolver:
             )
 
         try:
-            # Look up the profile field using CustomerDataStoreInterface interface
-            customer_id = getattr(session, "customer_id", None)
-            if customer_id is None:
+            # Look up the profile field using InterlocutorDataStoreInterface interface
+            interlocutor_id = getattr(session, "interlocutor_id", None)
+            if interlocutor_id is None:
                 return FieldResolutionResult(
                     field_name=field_name,
                     filled=False,
                     source=ResolutionSource.NOT_FOUND,
                 )
 
-            profile = await self._profile_store.get_by_customer_id(
+            profile = await self._profile_store.get_by_interlocutor_id(
                 tenant_id=session.tenant_id,
-                customer_id=customer_id,
+                interlocutor_id=interlocutor_id,
             )
 
             if profile and field_name in profile.fields:
                 field = profile.fields[field_name]
                 # Check if field is active (not expired, orphaned, or superseded)
-                from ruche.customer_data.enums import ItemStatus
+                from ruche.interlocutor_data.enums import ItemStatus
                 if field.status == ItemStatus.ACTIVE:
                     return FieldResolutionResult(
                         field_name=field_name,
@@ -610,20 +610,20 @@ class MissingFieldResolver:
 
             try:
                 # Get profile to update
-                customer_id = getattr(session, "customer_id", None)
-                if customer_id is None:
+                interlocutor_id = getattr(session, "interlocutor_id", None)
+                if interlocutor_id is None:
                     continue
 
-                profile = await self._profile_store.get_by_customer_id(
+                profile = await self._profile_store.get_by_interlocutor_id(
                     tenant_id=session.tenant_id,
-                    customer_id=customer_id,
+                    interlocutor_id=interlocutor_id,
                 )
                 if profile is None:
                     continue
 
                 # Create VariableEntry with lineage tracking (T150)
-                from ruche.customer_data.enums import VariableSource
-                from ruche.customer_data.models import VariableEntry
+                from ruche.interlocutor_data.enums import VariableSource
+                from ruche.interlocutor_data.models import VariableEntry
 
                 field = VariableEntry(
                     name=result.field_name,
@@ -715,7 +715,7 @@ class MissingFieldResolver:
     ) -> dict[str, FieldResolutionResult]:
         """Fill missing fields required for a scenario entry/step.
 
-        Uses get_missing_fields() from CustomerDataStoreInterface to determine what fields
+        Uses get_missing_fields() from InterlocutorDataStoreInterface to determine what fields
         are needed based on ScenarioFieldRequirement bindings.
 
         Args:
@@ -735,34 +735,34 @@ class MissingFieldResolver:
 
         _tenant_id = tenant_id or getattr(session, "tenant_id", None)
         _agent_id = agent_id or getattr(session, "agent_id", None)
-        _customer_id = getattr(session, "customer_id", None)
+        _interlocutor_id = getattr(session, "interlocutor_id", None)
 
         if not _tenant_id:
             logger.warning("fill_scenario_requirements_missing_tenant_id")
             return {}
 
-        if not _customer_id:
-            logger.warning("fill_scenario_requirements_missing_customer_id")
+        if not _interlocutor_id:
+            logger.warning("fill_scenario_requirements_missing_interlocutor_id")
             return {}
 
         try:
-            # Get the customer profile using CustomerDataStoreInterface interface
-            profile = await self._profile_store.get_by_customer_id(
+            # Get the customer profile using InterlocutorDataStoreInterface interface
+            profile = await self._profile_store.get_by_interlocutor_id(
                 tenant_id=_tenant_id,
-                customer_id=_customer_id,
+                interlocutor_id=_interlocutor_id,
             )
 
             if profile is None:
                 logger.info(
                     "fill_scenario_requirements_no_profile",
                     session_id=str(session.session_id),
-                    customer_id=str(_customer_id),
+                    interlocutor_id=str(_interlocutor_id),
                 )
                 # No profile means all fields are missing - continue with empty profile
-                from ruche.customer_data.models import CustomerDataStore
-                profile = CustomerDataStore(
+                from ruche.interlocutor_data.models import InterlocutorDataStore
+                profile = InterlocutorDataStore(
                     tenant_id=_tenant_id,
-                    customer_id=_customer_id,
+                    interlocutor_id=_interlocutor_id,
                 )
 
             # get_missing_fields returns list[ScenarioFieldRequirement]

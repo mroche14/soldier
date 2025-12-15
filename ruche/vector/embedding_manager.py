@@ -9,10 +9,10 @@ Handles all embedding operations for entities (rules, scenarios, episodes):
 
 from uuid import UUID
 
-from ruche.alignment.models import Rule, Scenario
+from ruche.brains.focal.models import Rule, Scenario
 from ruche.memory.models import Episode
 from ruche.observability.logging import get_logger
-from ruche.providers.embedding import EmbeddingProvider
+from ruche.infrastructure.providers.embedding import EmbeddingProvider
 from ruche.vector.stores.base import (
     EntityType,
     VectorDocument,

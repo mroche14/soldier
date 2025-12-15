@@ -6,7 +6,7 @@ I’ll debrief what you have, then show two concrete integration options, and I�
 
 1. What your AlignmentEngine already does
 
-You actually have a very clean Parlant-style pipeline:
+You actually have a very clean Parlant-style brain:
 
 Context extraction
 ContextExtractor.extract(...) → uses llm_provider + embedding_provider.
@@ -33,7 +33,7 @@ Session & audit
 SessionStore & AuditStore are your persistence + audit trail.
 MigrationExecutor does scenario migration.
 
-So: the pipeline is done, but the “LLM brain” is abstracted behind LLMProvider, and the “tool brain” is abstracted behind ToolExecutor. That’s exactly where Agno fits.
+So: the brain is done, but the “LLM brain” is abstracted behind LLMProvider, and the “tool brain” is abstracted behind ToolExecutor. That’s exactly where Agno fits.
 
 2. Where Agno fits conceptually
 
@@ -125,7 +125,7 @@ class AgnoLLMProvider(LLMProvider):
         return run.output_text  # or run.content, or run.get_content_as_string()
 
 
-Now all existing components that depend on LLMProvider (ContextExtractor, RuleFilter, ResponseGenerator, EnforcementValidator) start working without rewriting your pipeline – they simply get backed by Agno.
+Now all existing components that depend on LLMProvider (ContextExtractor, RuleFilter, ResponseGenerator, EnforcementValidator) start working without rewriting your brain – they simply get backed by Agno.
 
 How to wire tenant / session:
 
@@ -268,7 +268,7 @@ self._enforcement_validator = EnforcementValidator(
 
 Each step passes its model_id down to llm_provider.complete(...) so you can run cheap models for filtering and heavier ones for generation.
 
-4. Alternative Pattern B: Rewrite the whole pipeline as an Agno Workflow
+4. Alternative Pattern B: Rewrite the whole brain as an Agno Workflow
 
 You don’t have to, but for completeness:
 
@@ -343,6 +343,6 @@ Once that’s working and you’re happy with multi-tenant isolation, you can:
 
 Swap specific steps to use Agno Workflows (e.g. complex tool sequences).
 
-Or gradually port the whole alignment pipeline to a Workflows-first design.
+Or gradually port the whole alignment brain to a Workflows-first design.
 
 If you want, next step I can sketch concrete signatures for ContextExtractor, RuleFilter, ResponseGenerator, etc., showing exactly how to pass tenant_id/session_id down to the Agno provider.

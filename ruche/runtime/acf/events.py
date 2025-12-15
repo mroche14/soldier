@@ -73,7 +73,7 @@ class FabricEvent(BaseModel):
     # Optional routing context
     tenant_id: UUID | None = Field(default=None)
     agent_id: UUID | None = Field(default=None)
-    customer_id: UUID | None = Field(default=None)
+    interlocutor_id: UUID | None = Field(default=None)
 
     class Config:
         """Pydantic config."""

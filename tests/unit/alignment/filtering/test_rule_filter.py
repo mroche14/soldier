@@ -6,12 +6,12 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.context.models import Sentiment, Urgency
-from ruche.alignment.filtering.models import MatchedRule, RuleFilterResult
-from ruche.alignment.filtering.rule_filter import RuleFilter
-from ruche.alignment.models import Rule
-from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.context.models import Sentiment, Urgency
+from ruche.brains.focal.phases.filtering.models import MatchedRule, RuleFilterResult
+from ruche.brains.focal.phases.filtering.rule_filter import RuleFilter
+from ruche.brains.focal.models import Rule
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):
@@ -398,7 +398,7 @@ class TestRuleFilterResult:
 
     def test_result_with_scenario_signal(self) -> None:
         """Test result can include scenario signal."""
-        from ruche.alignment.context.models import ScenarioSignal
+        from ruche.brains.focal.phases.context.models import ScenarioSignal
 
         result = RuleFilterResult(
             matched_rules=[],

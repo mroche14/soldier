@@ -9,7 +9,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from ruche.alignment.models import (
+from ruche.brains.focal.models import (
     Agent,
     Rule,
     Scenario,
@@ -20,7 +20,7 @@ from ruche.alignment.models import (
     Variable,
     VariableUpdatePolicy,
 )
-from ruche.alignment.stores.postgres import PostgresAgentConfigStore
+from ruche.brains.focal.stores.postgres import PostgresAgentConfigStore
 
 
 @pytest_asyncio.fixture

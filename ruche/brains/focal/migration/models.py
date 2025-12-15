@@ -392,7 +392,7 @@ class FieldResolutionResult(BaseModel):
 
     # Schema integration (T152)
     field_definition_id: UUID | None = Field(
-        default=None, description="Reference to CustomerDataField used"
+        default=None, description="Reference to InterlocutorDataField used"
     )
 
     # Validation results (T153)

@@ -7,17 +7,17 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.models import Turn
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.filtering.models import ScenarioAction, ScenarioFilterResult
-from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.brains.focal.phases.context.models import Turn
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.phases.filtering.models import ScenarioAction, ScenarioFilterResult
+from ruche.brains.focal.stores import InMemoryAgentConfigStore
 from ruche.audit.models import TurnRecord
 from ruche.audit.stores.inmemory import InMemoryAuditStore
 from ruche.config.models.pipeline import PipelineConfig
 from ruche.conversation.models import Channel, Session
 from ruche.conversation.stores.inmemory import InMemorySessionStore
-from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.infrastructure.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 
@@ -569,7 +569,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_start(self, stores) -> None:
         """Scenario start updates session state."""
-        from ruche.alignment.engine import AlignmentEngine
+        from ruche.brains.focal.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -610,7 +610,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_exit(self, stores) -> None:
         """Scenario exit clears session state."""
-        from ruche.alignment.engine import AlignmentEngine
+        from ruche.brains.focal.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -647,7 +647,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_relocalize_increments_count(self, stores) -> None:
         """Relocalization increments the counter."""
-        from ruche.alignment.engine import AlignmentEngine
+        from ruche.brains.focal.engine import AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -815,9 +815,9 @@ class TestToolOutputVariables:
     @pytest.mark.asyncio
     async def test_tool_outputs_update_session_variables(self, stores) -> None:
         """Tool outputs are stored in session variables."""
-        from ruche.alignment.context.situation_snapshot import SituationSnapshot
-        from ruche.alignment.execution import ToolExecutor
-        from ruche.alignment.filtering.models import MatchedRule
+        from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+        from ruche.brains.focal.phases.execution import ToolExecutor
+        from ruche.brains.focal.phases.filtering.models import MatchedRule
         from ruche.config.models.pipeline import PipelineConfig, ToolExecutionConfig
 
         tenant_id = uuid4()
@@ -1012,7 +1012,7 @@ class TestRerankerCreation:
     async def test_reranker_created_when_provider_and_config_enabled(self, stores) -> None:
         """Reranker is created when rerank_provider provided and enabled."""
         from ruche.config.models.pipeline import PipelineConfig, RerankingConfig, RetrievalConfig
-        from ruche.providers.rerank.mock import MockRerankProvider
+        from ruche.infrastructure.providers.rerank.mock import MockRerankProvider
 
         rerank_provider = MockRerankProvider()
 
@@ -1085,10 +1085,10 @@ class TestEnforcementFallback:
     @pytest.mark.asyncio
     async def test_fallback_handler_used_when_enforcement_fails(self, stores) -> None:
         """Fallback handler is invoked when enforcement validation fails."""
-        from ruche.alignment.enforcement import EnforcementValidator, FallbackHandler
-        from ruche.alignment.generation import PromptBuilder, ResponseGenerator
-        from ruche.alignment.models.enums import TemplateResponseMode
-        from ruche.alignment.models import Template
+        from ruche.brains.focal.phases.enforcement import EnforcementValidator, FallbackHandler
+        from ruche.brains.focal.phases.generation import PromptBuilder, ResponseGenerator
+        from ruche.brains.focal.models.enums import TemplateResponseMode
+        from ruche.brains.focal.models import Template
         from ruche.config.models.pipeline import EnforcementConfig, PipelineConfig
 
         tenant_id = uuid4()
@@ -1240,10 +1240,10 @@ class TestEngineWithoutAuditStore:
     @pytest.mark.asyncio
     async def test_persist_turn_record_without_audit_store_returns(self, stores) -> None:
         """_persist_turn_record is no-op when no audit_store."""
-        from ruche.alignment.context.situation_snapshot import SituationSnapshot
-        from ruche.alignment.generation.models import GenerationResult
-        from ruche.alignment.result import AlignmentResult
-        from ruche.alignment.retrieval.models import RetrievalResult
+        from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+        from ruche.brains.focal.phases.generation.models import GenerationResult
+        from ruche.brains.focal.result import AlignmentResult
+        from ruche.brains.focal.retrieval.models import RetrievalResult
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -1305,7 +1305,7 @@ class TestMemoryContextBuilding:
             pipeline_config=PipelineConfig(),
         )
 
-        from ruche.alignment.retrieval.models import ScoredEpisode
+        from ruche.brains.focal.retrieval.models import ScoredEpisode
 
         episodes = [
             ScoredEpisode(

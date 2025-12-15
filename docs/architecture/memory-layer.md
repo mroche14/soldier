@@ -161,7 +161,7 @@ Result: Related context the user didn't explicitly mention
 - Weighted by recency and relevance
 - Bounded depth to control result size
 
-### Retrieval Pipeline
+### Retrieval Brain
 
 ```
 User Query
@@ -181,7 +181,7 @@ User Query
 
 **Key property**: No LLM calls during retrieval. All heavy lifting (extraction, summarization) happens at ingestion time.
 
-## Ingestion Pipeline
+## Ingestion Brain
 
 When new data arrives:
 

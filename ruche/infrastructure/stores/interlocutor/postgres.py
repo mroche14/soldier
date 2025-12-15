@@ -16,7 +16,7 @@ from ruche.conversation.models import Channel
 from ruche.db.errors import ConnectionError
 from ruche.db.pool import PostgresPool
 from ruche.observability.logging import get_logger
-from ruche.customer_data.enums import (
+from ruche.interlocutor_data.enums import (
     FallbackAction,
     ItemStatus,
     VariableSource,
@@ -25,20 +25,20 @@ from ruche.customer_data.enums import (
     ValidationMode,
     VerificationLevel,
 )
-from ruche.customer_data.models import (
+from ruche.interlocutor_data.models import (
     ChannelIdentity,
-    CustomerDataStore,
+    InterlocutorDataStore,
     ProfileAsset,
     VariableEntry,
-    CustomerDataField,
+    InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.customer_data.store import InterlocutorDataStore
+from ruche.interlocutor_data.store import InterlocutorDataStore
 
 logger = get_logger(__name__)
 
 
-class PostgresCustomerDataStore(InterlocutorDataStore):
+class PostgresInterlocutorDataStore(InterlocutorDataStore):
     """PostgreSQL implementation of InterlocutorDataStore.
 
     Enhanced with:
@@ -56,13 +56,13 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
     # PROFILE CRUD
     # =========================================================================
 
-    async def get_by_customer_id(
+    async def get_by_interlocutor_id(
         self,
         tenant_id: UUID,
-        customer_id: UUID,
+        interlocutor_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by customer ID."""
         try:
             async with self._pool.acquire() as conn:
@@ -73,15 +73,15 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
                     WHERE tenant_id = $1 AND id = $2 AND merged_into_id IS NULL
                     """,
                     tenant_id,
-                    customer_id,
+                    interlocutor_id,
                 )
                 if row:
                     return await self._load_full_profile(conn, row, include_history)
                 return None
         except Exception as e:
             logger.error(
-                "postgres_get_by_customer_id_error",
-                customer_id=str(customer_id),
+                "postgres_get_by_interlocutor_id_error",
+                interlocutor_id=str(interlocutor_id),
                 error=str(e),
             )
             raise ConnectionError(f"Failed to get profile: {e}", cause=e) from e
@@ -92,9 +92,9 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
         profile_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by profile ID."""
-        return await self.get_by_customer_id(tenant_id, profile_id, include_history=include_history)
+        return await self.get_by_interlocutor_id(tenant_id, profile_id, include_history=include_history)
 
     async def get_by_channel_identity(
         self,
@@ -103,7 +103,7 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
         channel_user_id: str,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by channel identity."""
         try:
             async with self._pool.acquire() as conn:
@@ -135,16 +135,16 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerDataStore:
+    ) -> InterlocutorDataStore:
         """Get existing profile or create new one for channel identity."""
         existing = await self.get_by_channel_identity(tenant_id, channel, channel_user_id)
         if existing:
             return existing
 
-        profile = CustomerDataStore(
+        profile = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=tenant_id,
-            customer_id=uuid4(),
+            interlocutor_id=uuid4(),
             channel_identities=[
                 ChannelIdentity(
                     channel=channel,
@@ -158,7 +158,7 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
         await self.save(profile)
         return profile
 
-    async def save(self, profile: CustomerDataStore) -> UUID:
+    async def save(self, profile: InterlocutorDataStore) -> UUID:
         """Save a profile."""
         try:
             async with self._pool.acquire() as conn:
@@ -879,7 +879,7 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[CustomerDataField]:
+    ) -> list[InterlocutorDataField]:
         """Get all field definitions for an agent."""
         try:
             async with self._pool.acquire() as conn:
@@ -912,7 +912,7 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
         tenant_id: UUID,
         agent_id: UUID,
         field_name: str,
-    ) -> CustomerDataField | None:
+    ) -> InterlocutorDataField | None:
         """Get a specific field definition by name."""
         try:
             async with self._pool.acquire() as conn:
@@ -934,7 +934,7 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
 
     async def save_field_definition(
         self,
-        definition: CustomerDataField,
+        definition: InterlocutorDataField,
     ) -> UUID:
         """Save a field definition."""
         try:
@@ -1147,7 +1147,7 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
     async def get_missing_fields(
         self,
         tenant_id: UUID,
-        profile: CustomerDataStore,
+        profile: InterlocutorDataStore,
         scenario_id: UUID,
         *,
         step_id: UUID | None = None,
@@ -1282,15 +1282,15 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
             superseded_at=row.get("superseded_at"),
         )
 
-    def _row_to_field_definition(self, row) -> CustomerDataField:
-        """Convert database row to CustomerDataField."""
+    def _row_to_field_definition(self, row) -> InterlocutorDataField:
+        """Convert database row to InterlocutorDataField."""
         validation_mode_map = {
             "strict": ValidationMode.STRICT,
             "warn": ValidationMode.WARN,
             "disabled": ValidationMode.DISABLED,
         }
 
-        return CustomerDataField(
+        return InterlocutorDataField(
             id=row["id"],
             tenant_id=row["tenant_id"],
             agent_id=row["agent_id"],
@@ -1354,7 +1354,7 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
 
     async def _load_full_profile(
         self, conn, profile_row, include_history: bool = False
-    ) -> CustomerDataStore:
+    ) -> InterlocutorDataStore:
         """Load full profile with all related data."""
         profile_id = profile_row["id"]
         tenant_id = profile_row["tenant_id"]
@@ -1409,10 +1409,10 @@ class PostgresCustomerDataStore(InterlocutorDataStore):
         )
         assets = [self._row_to_asset(row) for row in asset_rows]
 
-        return CustomerDataStore(
+        return InterlocutorDataStore(
             id=profile_id,
             tenant_id=tenant_id,
-            customer_id=profile_id,
+            interlocutor_id=profile_id,
             channel_identities=channel_identities,
             fields=fields,
             assets=assets,

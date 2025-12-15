@@ -6,7 +6,7 @@ from typing import Any
 import httpx
 
 from ruche.observability.logging import get_logger
-from ruche.providers.rerank.base import RerankProvider, RerankResponse, RerankResult
+from ruche.infrastructure.providers.rerank.base import RerankProvider, RerankResponse, RerankResult
 
 logger = get_logger(__name__)
 

@@ -3,13 +3,13 @@
 Unified design for rule processing, scenario/journey control, and enforcement in Focal.
 
 This document synthesizes:
-- `docs/design/turn-pipeline.md`
+- `docs/design/turn-brain.md`
 - `docs/design/enhanced-enforcement.md`
 - `docs/design/decisions/state_machine.md`
 - `docs/design/decisions/state_machine_2.md`
 - `docs/design/decisions/002-rule-matching-strategy.md`
 
-It resolves overlaps and tensions between the “Graph-Augmented State Machine”, the “State-Aware Agent Engine”, and the enhanced enforcement pipeline into a single control architecture, while keeping alternative options visible for future tuning.
+It resolves overlaps and tensions between the “Graph-Augmented State Machine”, the “State-Aware Agent Engine”, and the enhanced enforcement brain into a single control architecture, while keeping alternative options visible for future tuning.
 
 ---
 
@@ -26,13 +26,13 @@ It resolves overlaps and tensions between the “Graph-Augmented State Machine�
 - Zero in‑memory state: all long‑lived state in ConfigStore, SessionStore, ProfileStore, MemoryStore, AuditStore.
 - Deterministic control: LLMs are sensors and judges, not policy engines.
 - Graph‑based flows: scenarios are directed graphs; rules can form a dependency graph.
-- Hot‑swappable pipeline: all behavior controlled via TOML + Pydantic configs.
+- Hot‑swappable brain: all behavior controlled via TOML + Pydantic configs.
 
 ---
 
 ## 2. Control Architecture Overview
 
-The control layer is **not** a separate pipeline; it is the way we interpret and orchestrate the existing turn pipeline:
+The control layer is **not** a separate brain; it is the way we interpret and orchestrate the existing turn brain:
 
 ```text
 [1. RECEIVE] 
@@ -145,7 +145,7 @@ Implementation detail:
 
 Profiles live in **ProfileStore**; sessions in **SessionStore**.
 
-CustomerProfile (from `customer-profile.md` and state_machine_2):
+CustomerProfile (from `interlocutor-data.md` and state_machine_2):
 - Ledger of fields with:
   - `value`, `history`, `confidence`, `source`.
 - Schema is **tenant‑specific** and evolves over time.
@@ -185,14 +185,14 @@ The control layer treats:
 
 ## 4. Processing Flow (Recommended Design)
 
-This section maps the state machine concepts into the existing turn pipeline.
+This section maps the state machine concepts into the existing turn brain.
 
 ### 4.1 Receive & Reconcile (Steps 1, 1b)
 
-As in `turn-pipeline.md`:
+As in `turn-brain.md`:
 - Validate request, extract `tenant_id` from auth.
 - Load or create `Session` via SessionStore.
-- Load agent config (including pipeline config) via ConfigStore.
+- Load agent config (including brain config) via ConfigStore.
 - Reconcile scenario version (migration) before processing.
 
 Codex Control requirement:
@@ -201,7 +201,7 @@ Codex Control requirement:
 ### 4.2 Sensor: Context + Intent Extraction (Step 2)
 
 We combine ideas from:
-- LLMContextExtractor in `turn-pipeline.md`.
+- LLMContextExtractor in `turn-brain.md`.
 - “Extractor (Sensor)” from state_machine_2.
 
 **Recommended design (Parallel extraction within one step):**
@@ -238,7 +238,7 @@ Implementation note:
 
 ### 4.3 Candidate Retrieval (Step 3)
 
-This step is already defined in `turn-pipeline.md` and `002-rule-matching-strategy.md`.
+This step is already defined in `turn-brain.md` and `002-rule-matching-strategy.md`.
 
 **Recommended algorithm:**
 - For rules:
@@ -353,7 +353,7 @@ We integrate the state_machine_2 ideas as **behavioral policies**:
 
 ### 4.7 Tool Execution (Step 6)
 
-Tool execution follows `turn-pipeline.md`:
+Tool execution follows `turn-brain.md`:
 - Only tools from **matched rules** are executed.
 - Tool outputs are fed into:
   - session variables,
@@ -367,7 +367,7 @@ Link to state_machine.md:
     - try configured resolvers/tools,
     - only ask the user if resolvers fail.
 
-This iterative behavior is an **internal loop inside a single turn** (up to `max_loops`) and can be implemented without changing the main pipeline shape.
+This iterative behavior is an **internal loop inside a single turn** (up to `max_loops`) and can be implemented without changing the main brain shape.
 
 **Alignment / instructions / drift:**
 - Mapping variables to tools makes “where information comes from” explicit and repeatable.
@@ -557,17 +557,17 @@ These correspond to different `EnforcementConfig` presets and can be exposed as:
 
 ## 6. Configuration and Modes
 
-The control layer is driven by existing pipeline configs:
-- `pipeline.context_extraction`
-- `pipeline.retrieval` / `pipeline.reranking`
-- `pipeline.rule_filter`
-- `pipeline.scenario_filter`
-- `pipeline.enforcement`
+The control layer is driven by existing brain configs:
+- `brain.context_extraction`
+- `brain.retrieval` / `brain.reranking`
+- `brain.rule_filter`
+- `brain.scenario_filter`
+- `brain.enforcement`
 
 We propose adding **high‑level presets**:
 
 ```toml
-[pipeline.codex_control]
+[brain.codex_control]
 mode = "baseline"  # "minimal" | "baseline" | "maximal"
 ```
 
@@ -633,7 +633,7 @@ For the default, multi‑tenant SaaS deployment:
     - graph‑based rule relationships and expansion,
     - iterative resolution loop,
     - explicit guardrail checks (relevance, grounding).
-  - Incorporated as optional enhancements on top of the baseline pipeline.
+  - Incorporated as optional enhancements on top of the baseline brain.
 
 - **state_machine_2.md (“State-Aware Agent Engine”):**
   - Contributes:
@@ -648,7 +648,7 @@ For the default, multi‑tenant SaaS deployment:
     - variable extraction and expression evaluation,
     - always‑enforce GLOBAL hard constraints,
     - relevance and grounding verification.
-  - Becomes the canonical design for Step 8 (Enforce) in the turn pipeline.
+  - Becomes the canonical design for Step 8 (Enforce) in the turn brain.
 
 - **002-rule-matching-strategy.md:**
   - Contributes:
@@ -657,9 +657,9 @@ For the default, multi‑tenant SaaS deployment:
     - future LLM‑derived patterns.
   - Defines the recommended rule retrieval behavior.
 
-- **turn-pipeline.md:**
+- **turn-brain.md:**
   - Provides the **skeleton** into which all of the above plug.
-  - Codex Control does not change the pipeline shape; it clarifies responsibilities and options at key control points.
+  - Codex Control does not change the brain shape; it clarifies responsibilities and options at key control points.
 
 Together, these yield a single, coherent **Codex Control Layer**: deterministic at its core, LLM‑assisted at the boundaries, multi‑tenant, and fully configurable via TOML.
 

@@ -10,9 +10,9 @@ settings = get_settings()
 
 # Access nested values
 port = settings.api.port
-generation_model = settings.pipeline.generation.model
-generation_fallback_models = settings.pipeline.generation.fallback_models
-rule_strategy = settings.pipeline.retrieval.rule_selection.strategy
+generation_model = settings.brain.generation.model
+generation_fallback_models = settings.brain.generation.fallback_models
+rule_strategy = settings.brain.retrieval.rule_selection.strategy
 
 # Check environment
 if settings.debug:
@@ -31,15 +31,15 @@ from ruche.providers.llm import LLMExecutor, create_executor_from_step_config
 def get_generation_executor(
     settings: Settings = Depends(get_settings),
 ) -> LLMExecutor:
-    """Create LLMExecutor for generation from pipeline step config."""
-    return create_executor_from_step_config(settings.pipeline.generation, "generation")
+    """Create LLMExecutor for generation from brain step config."""
+    return create_executor_from_step_config(settings.brain.generation, "generation")
 
 
 def get_rule_filtering_executor(
     settings: Settings = Depends(get_settings),
 ) -> LLMExecutor:
     """Create LLMExecutor for rule filtering step."""
-    return create_executor_from_step_config(settings.pipeline.rule_filtering, "rule_filtering")
+    return create_executor_from_step_config(settings.brain.rule_filtering, "rule_filtering")
 ```
 
 ### Creating Selection Strategies from Config
@@ -95,8 +95,8 @@ def create_selection_strategy(config: SelectionStrategyConfig) -> SelectionStrat
 
 # Usage
 settings = get_settings()
-rule_strategy = create_selection_strategy(settings.pipeline.retrieval.rule_selection)
-memory_strategy = create_selection_strategy(settings.pipeline.retrieval.memory_selection)
+rule_strategy = create_selection_strategy(settings.brain.retrieval.rule_selection)
+memory_strategy = create_selection_strategy(settings.brain.retrieval.memory_selection)
 ```
 
 ---
@@ -122,7 +122,7 @@ Example validation errors:
 
 ```
 Configuration error:
-  pipeline -> retrieval -> rule_selection -> alpha: Input should be greater than or equal to 0.5
+  brain -> retrieval -> rule_selection -> alpha: Input should be greater than or equal to 0.5
   api -> port: Input should be less than or equal to 65535
   storage -> config -> backend: Input should be 'postgres', 'mongodb' or 'inmemory'
 ```

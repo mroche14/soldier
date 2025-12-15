@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from ruche.alignment.engine import AlignmentResult
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.engine import AlignmentResult
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.api.app import create_app
 from ruche.api.dependencies import (
     get_alignment_engine,

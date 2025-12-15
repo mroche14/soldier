@@ -6,25 +6,25 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.customer_schema_mask import (
+from ruche.brains.focal.phases.context.customer_schema_mask import (
     CustomerSchemaMask,
     CustomerSchemaMaskEntry,
 )
-from ruche.alignment.context.models import Turn
-from ruche.alignment.context.situation_sensor import SituationSensor
-from ruche.alignment.context.situation_snapshot import (
+from ruche.brains.focal.phases.context.models import Turn
+from ruche.brains.focal.phases.context.situation_sensor import SituationSensor
+from ruche.brains.focal.phases.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from ruche.alignment.models.glossary import GlossaryItem
+from ruche.brains.focal.models.glossary import GlossaryItem
 from ruche.config.models.pipeline import SituationSensorConfig
-from ruche.customer_data.models import (
-    CustomerDataField,
-    CustomerDataStore,
+from ruche.interlocutor_data.models import (
+    InterlocutorDataField,
+    InterlocutorDataStore,
     VariableEntry,
 )
-from ruche.customer_data.enums import VariableSource
-from ruche.providers.llm.base import LLMResponse, TokenUsage
+from ruche.interlocutor_data.enums import VariableSource
+from ruche.infrastructure.providers.llm.base import LLMResponse, TokenUsage
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def customer_data_fields():
     agent_id = uuid4()
 
     return {
-        "name": CustomerDataField(
+        "name": InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -67,7 +67,7 @@ def customer_data_fields():
             scope="IDENTITY",
             persist=True,
         ),
-        "email": CustomerDataField(
+        "email": InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -77,7 +77,7 @@ def customer_data_fields():
             scope="IDENTITY",
             persist=True,
         ),
-        "order_id": CustomerDataField(
+        "order_id": InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -93,10 +93,10 @@ def customer_data_fields():
 @pytest.fixture
 def customer_data_store():
     """Create test customer data store."""
-    return CustomerDataStore(
+    return InterlocutorDataStore(
         id=uuid4(),
         tenant_id=uuid4(),
-        customer_id=uuid4(),
+        interlocutor_id=uuid4(),
         fields={
             "email": VariableEntry(
                 id=uuid4(),
@@ -175,10 +175,10 @@ class TestSituationSensorBuildSchemaMask:
         """Test schema mask with empty customer data store."""
         sensor = SituationSensor(mock_llm_executor, sensor_config)
 
-        empty_store = CustomerDataStore(
+        empty_store = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=uuid4(),
-            customer_id=uuid4(),
+            interlocutor_id=uuid4(),
             fields={},
         )
 
@@ -569,10 +569,10 @@ class TestSituationSensorSense:
 
         sensor = SituationSensor(mock_llm_executor, sensor_config)
 
-        empty_store = CustomerDataStore(
+        empty_store = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=uuid4(),
-            customer_id=uuid4(),
+            interlocutor_id=uuid4(),
             fields={},
         )
 

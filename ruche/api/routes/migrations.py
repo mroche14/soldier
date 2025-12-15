@@ -15,15 +15,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.models import (
     AnchorMigrationPolicy,
     MigrationPlan,
     MigrationPlanStatus,
     MigrationSummary,
 )
-from ruche.alignment.migration.planner import MigrationDeployer, MigrationPlanner
-from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
-from ruche.alignment.stores import AgentConfigStore
+from ruche.brains.focal.migration.planner import MigrationDeployer, MigrationPlanner
+from ruche.brains.focal.models import Scenario, ScenarioStep, StepTransition
+from ruche.brains.focal.stores import AgentConfigStore
 from ruche.api.dependencies import get_config_store, get_session_store, get_settings
 from ruche.conversation.store import SessionStore
 from ruche.observability.logging import get_logger

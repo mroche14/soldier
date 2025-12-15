@@ -20,8 +20,8 @@ from ruche.memory.ingestion.ingestor import MemoryIngestor
 from ruche.memory.ingestion.queue import InMemoryTaskQueue
 from ruche.memory.ingestion.summarizer import ConversationSummarizer
 from ruche.memory.stores.inmemory import InMemoryMemoryStore
-from ruche.providers.embedding.mock import MockEmbeddingProvider
-from ruche.providers.llm.mock import MockLLMProvider
+from ruche.infrastructure.providers.embedding.mock import MockEmbeddingProvider
+from ruche.infrastructure.providers.llm.mock import MockLLMProvider
 
 
 @pytest.fixture

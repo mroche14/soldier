@@ -198,7 +198,7 @@ class TestListByCustomer:
     @pytest.mark.asyncio
     async def test_list_by_customer(self, store, tenant_id, agent_id):
         """Should list all sessions for a customer profile."""
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         sessions = [
             Session(
                 tenant_id=tenant_id,
@@ -206,30 +206,30 @@ class TestListByCustomer:
                 channel=Channel.WEBCHAT,
                 user_channel_id=f"user{i}",
                 config_version=1,
-                customer_profile_id=customer_id,
+                customer_profile_id=interlocutor_id,
             )
             for i in range(2)
         ]
         for session in sessions:
             await store.save(session)
 
-        results = await store.list_by_customer(tenant_id, customer_id)
+        results = await store.list_by_customer(tenant_id, interlocutor_id)
         assert len(results) == 2
 
     @pytest.mark.asyncio
     async def test_list_by_customer_tenant_isolation(self, store, tenant_id, agent_id):
         """Should only return sessions for specified tenant."""
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         session = Session(
             tenant_id=tenant_id,
             agent_id=agent_id,
             channel=Channel.WEBCHAT,
             user_channel_id="user1",
             config_version=1,
-            customer_profile_id=customer_id,
+            customer_profile_id=interlocutor_id,
         )
         await store.save(session)
         other_tenant = uuid4()
 
-        results = await store.list_by_customer(other_tenant, customer_id)
+        results = await store.list_by_customer(other_tenant, interlocutor_id)
         assert len(results) == 0

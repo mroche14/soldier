@@ -7,8 +7,8 @@ variables, and migration plans.
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from ruche.alignment.migration.models import MigrationPlan, MigrationPlanStatus
-from ruche.alignment.models import (
+from ruche.brains.focal.migration.models import MigrationPlan, MigrationPlanStatus
+from ruche.brains.focal.models import (
     Agent,
     GlossaryItem,
     Intent,
@@ -20,7 +20,7 @@ from ruche.alignment.models import (
     ToolActivation,
     Variable,
 )
-from ruche.customer_data import CustomerDataField
+from ruche.interlocutor_data import InterlocutorDataField
 
 
 class ConfigStore(ABC):
@@ -331,12 +331,12 @@ class ConfigStore(ABC):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[CustomerDataField]:
+    ) -> list[InterlocutorDataField]:
         """Get all customer data field definitions for an agent."""
         pass
 
     @abstractmethod
-    async def save_customer_data_field(self, field: CustomerDataField) -> UUID:
+    async def save_customer_data_field(self, field: InterlocutorDataField) -> UUID:
         """Save a customer data field definition."""
         pass
 

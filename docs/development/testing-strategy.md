@@ -1,6 +1,6 @@
 # Testing Strategy
 
-This document defines Focal's overall testing approach, including the test pyramid, CI/CD pipeline, coverage requirements, and environment configurations.
+This document defines Focal's overall testing approach, including the test pyramid, CI/CD brain, coverage requirements, and environment configurations.
 
 ---
 
@@ -58,7 +58,7 @@ Verify that individual classes and functions work correctly in isolation.
 | **Store Interfaces** | All interface methods via in-memory implementation |
 | **Provider Interfaces** | All interface methods via mock implementation |
 | **Selection Strategies** | Score analysis, edge cases, boundary conditions |
-| **Pipeline Steps** | Input/output transformation, error handling |
+| **Brain Steps** | Input/output transformation, error handling |
 | **Utility Functions** | All public functions |
 
 ### What NOT to Unit Test
@@ -93,16 +93,16 @@ model = "mock-embedding"
 provider = "mock"
 model = "mock-rerank"
 
-[pipeline.context_extraction]
+[brain.context_extraction]
 model = "mock/haiku"
 
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 model = "mock/haiku"
 
-[pipeline.scenario_filtering]
+[brain.scenario_filtering]
 model = "mock/haiku"
 
-[pipeline.generation]
+[brain.generation]
 model = "mock/sonnet"
 ```
 
@@ -341,9 +341,9 @@ open htmlcov/index.html
 
 ---
 
-## CI/CD Pipeline
+## CI/CD Brain
 
-### Pipeline Stages
+### Brain Stages
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐

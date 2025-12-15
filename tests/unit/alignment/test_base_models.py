@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.models.base import (
+from ruche.brains.focal.models.base import (
     AgentScopedModel,
     TenantScopedModel,
     utc_now,

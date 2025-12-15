@@ -6,21 +6,21 @@ from uuid import UUID
 
 from ruche.conversation.models import Channel
 from ruche.observability.logging import get_logger
-from ruche.customer_data.enums import ItemStatus, RequiredLevel
-from ruche.customer_data.models import (
+from ruche.interlocutor_data.enums import ItemStatus, RequiredLevel
+from ruche.interlocutor_data.models import (
     ChannelIdentity,
-    CustomerDataStore,
+    InterlocutorDataStore,
     ProfileAsset,
     VariableEntry,
-    CustomerDataField,
+    InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.customer_data.store import InterlocutorDataStore
+from ruche.interlocutor_data.store import InterlocutorDataStore
 
 logger = get_logger(__name__)
 
 
-class InMemoryCustomerDataStore(InterlocutorDataStore):
+class InMemoryInterlocutorDataStore(InterlocutorDataStore):
     """In-memory implementation of InterlocutorDataStore for testing and development.
 
     Enhanced to support:
@@ -32,31 +32,31 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
 
     def __init__(self) -> None:
         """Initialize empty storage."""
-        self._profiles: dict[UUID, CustomerDataStore] = {}
+        self._profiles: dict[UUID, InterlocutorDataStore] = {}
         # Field history storage: {profile_id: {field_name: [VariableEntry, ...]}}
         self._field_history: dict[UUID, dict[str, list[VariableEntry]]] = {}
         # Asset history storage: {profile_id: {asset_name: [ProfileAsset, ...]}}
         self._asset_history: dict[UUID, dict[str, list[ProfileAsset]]] = {}
         # Schema storage
-        self._field_definitions: dict[tuple[UUID, UUID, str], CustomerDataField] = {}
+        self._field_definitions: dict[tuple[UUID, UUID, str], InterlocutorDataField] = {}
         self._scenario_requirements: dict[UUID, ScenarioFieldRequirement] = {}
 
     # =========================================================================
     # PROFILE CRUD
     # =========================================================================
 
-    async def get_by_customer_id(
+    async def get_by_interlocutor_id(
         self,
         tenant_id: UUID,
-        customer_id: UUID,
+        interlocutor_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by customer ID."""
         for profile in self._profiles.values():
             if (
                 profile.tenant_id == tenant_id
-                and profile.customer_id == customer_id
+                and profile.interlocutor_id == interlocutor_id
             ):
                 return profile
         return None
@@ -67,7 +67,7 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
         profile_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by profile ID."""
         profile = self._profiles.get(profile_id)
         if profile and profile.tenant_id == tenant_id:
@@ -81,7 +81,7 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
         channel_user_id: str,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by channel identity."""
         for profile in self._profiles.values():
             if profile.tenant_id != tenant_id:
@@ -99,7 +99,7 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerDataStore:
+    ) -> InterlocutorDataStore:
         """Get existing profile or create new one for channel identity."""
         existing = await self.get_by_channel_identity(
             tenant_id, channel, channel_user_id
@@ -113,14 +113,14 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
             channel_user_id=channel_user_id,
             primary=True,
         )
-        profile = CustomerDataStore(
+        profile = InterlocutorDataStore(
             tenant_id=tenant_id,
             channel_identities=[identity],
         )
         await self.save(profile)
         return profile
 
-    async def save(self, profile: CustomerDataStore) -> UUID:
+    async def save(self, profile: InterlocutorDataStore) -> UUID:
         """Save a profile."""
         profile.updated_at = datetime.now(UTC)
         self._profiles[profile.id] = profile
@@ -627,7 +627,7 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[CustomerDataField]:
+    ) -> list[InterlocutorDataField]:
         """Get all field definitions for an agent."""
         result = []
         for key, definition in self._field_definitions.items():
@@ -641,13 +641,13 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
         tenant_id: UUID,
         agent_id: UUID,
         field_name: str,
-    ) -> CustomerDataField | None:
+    ) -> InterlocutorDataField | None:
         """Get a specific field definition by name."""
         return self._field_definitions.get((tenant_id, agent_id, field_name))
 
     async def save_field_definition(
         self,
-        definition: CustomerDataField,
+        definition: InterlocutorDataField,
     ) -> UUID:
         """Save a field definition."""
         definition.updated_at = datetime.now(UTC)
@@ -722,7 +722,7 @@ class InMemoryCustomerDataStore(InterlocutorDataStore):
     async def get_missing_fields(
         self,
         tenant_id: UUID,
-        profile: CustomerDataStore,
+        profile: InterlocutorDataStore,
         scenario_id: UUID,
         *,
         step_id: UUID | None = None,

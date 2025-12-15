@@ -12,7 +12,7 @@ from ruche.runtime.agent.models import AgentCapabilities, AgentMetadata
 if TYPE_CHECKING:
     # Avoid circular imports
     from ruche.config.stores.base import ConfigStore
-    from ruche.customer_data.stores.base import ProfileStore
+    from ruche.interlocutor_data.stores.base import ProfileStore
     from ruche.memory.stores.base import MemoryStore
 
 

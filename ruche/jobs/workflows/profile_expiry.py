@@ -9,7 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from ruche.observability.logging import get_logger
-from ruche.customer_data.store import CustomerDataStoreInterface
+from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 
@@ -46,7 +46,7 @@ class ExpireStaleFieldsWorkflow:
     WORKFLOW_NAME = "expire-stale-fields"
     CRON_SCHEDULE = "0 * * * *"  # Every hour at minute 0
 
-    def __init__(self, profile_store: CustomerDataStoreInterface) -> None:
+    def __init__(self, profile_store: InterlocutorDataStoreInterface) -> None:
         """Initialize workflow.
 
         Args:
@@ -122,7 +122,7 @@ class ExpireStaleFieldsWorkflow:
             )
 
 
-def register_workflow(hatchet: Any, profile_store: CustomerDataStoreInterface) -> Any:
+def register_workflow(hatchet: Any, profile_store: InterlocutorDataStoreInterface) -> Any:
     """Register the expire stale fields workflow with Hatchet.
 
     Args:

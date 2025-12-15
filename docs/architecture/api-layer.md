@@ -1,6 +1,6 @@
 # API Layer
 
-Focal is a **message ingestion + turn processing engine**. It receives message events from upstream services (channel-gateway, message-router) with tenant and channel context already resolved. Focal’s **Agent Conversation Fabric (ACF)** aggregates one or more messages into a **LogicalTurn** (“a message is not a turn”) and runs the cognitive pipeline once per LogicalTurn.
+Focal is a **message ingestion + turn processing engine**. It receives message events from upstream services (channel-gateway, message-router) with tenant and channel context already resolved. Focal's **Agent Conversation Fabric (ACF)** aggregates one or more messages into a **LogicalTurn** ("a message is not a turn") and runs the cognitive pipeline once per LogicalTurn.
 
 ## Architecture Position
 
@@ -16,7 +16,7 @@ Message Router (routing, backpressure)
     FOCAL (this service)
        │
        │  ACF: mutex + accumulation + supersede signals
-       │  Pipeline: processes LogicalTurn, returns response
+       │  Brain: processes LogicalTurn, returns response
        ▼
 Channel Gateway → User
 ```
@@ -291,7 +291,7 @@ MCP (Model Context Protocol) exposes **tenant-available tools for discovery** by
 1. LLM decides to use tool
 2. AlignmentEngine → Toolbox.execute_tool()
 3. Toolbox → ToolGateway → External API
-4. Result returned to pipeline
+4. Result returned to brain
 ```
 
 ### MCP Endpoint
@@ -353,7 +353,7 @@ These are exposed via MCP for external LLM clients to interact with Focal's inte
 | Tool | Description | Use Case |
 |------|-------------|----------|
 | `focal_search_memory` | Search conversation memory | "What did the user say about X?" |
-| `focal_get_customer_data` | Retrieve customer variables | "What's the user's email?" |
+| `focal_get_interlocutor_data` | Retrieve customer variables | "What's the user's email?" |
 | `focal_get_scenario_state` | Get current scenario/step | "Where are we in the flow?" |
 
 ### Integration Example

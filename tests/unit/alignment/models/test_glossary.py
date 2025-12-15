@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.models.glossary import GlossaryItem
+from ruche.brains.focal.models.glossary import GlossaryItem
 
 
 class TestGlossaryItem:

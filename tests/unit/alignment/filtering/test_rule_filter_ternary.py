@@ -6,11 +6,11 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.filtering.models import RuleApplicability, RuleFilterResult
-from ruche.alignment.filtering.rule_filter import RuleFilter
-from ruche.alignment.models import Rule, Scope
-from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.filtering.models import RuleApplicability, RuleFilterResult
+from ruche.brains.focal.phases.filtering.rule_filter import RuleFilter
+from ruche.brains.focal.models import Rule, Scope
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

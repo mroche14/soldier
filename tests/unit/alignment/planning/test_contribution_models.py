@@ -3,7 +3,7 @@
 import pytest
 from uuid import uuid4
 
-from ruche.alignment.planning.models import (
+from ruche.brains.focal.phases.planning.models import (
     ContributionType,
     ScenarioContribution,
     ScenarioContributionPlan,

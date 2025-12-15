@@ -1,8 +1,8 @@
 """Reranker for memory episodes."""
 
-from ruche.alignment.retrieval.models import ScoredEpisode
+from ruche.brains.focal.retrieval.models import ScoredEpisode
 from ruche.observability.logging import get_logger
-from ruche.providers.rerank import RerankProvider
+from ruche.infrastructure.providers.rerank import RerankProvider
 
 logger = get_logger(__name__)
 

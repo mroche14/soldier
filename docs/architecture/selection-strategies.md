@@ -603,19 +603,19 @@ Each retrieval type (rules, scenarios, memory) can use a different selection str
 ```toml
 # config/default.toml
 
-[pipeline.retrieval]
+[brain.retrieval]
 embedding_provider = "default"
 max_k = 30                       # Retrieve up to 30 candidates
 min_k = 1
 
 # Selection strategy for rules
-[pipeline.retrieval.rule_selection]
+[brain.retrieval.rule_selection]
 strategy = "adaptive_k"
 alpha = 1.5
 min_score = 0.5
 
 # Selection strategy for scenarios
-[pipeline.retrieval.scenario_selection]
+[brain.retrieval.scenario_selection]
 strategy = "entropy"
 low_entropy_k = 1                # Usually one scenario is active
 medium_entropy_k = 2
@@ -623,7 +623,7 @@ high_entropy_k = 3
 min_score = 0.6
 
 # Selection strategy for memory
-[pipeline.retrieval.memory_selection]
+[brain.retrieval.memory_selection]
 strategy = "clustering"
 eps = 0.1
 min_cluster_size = 2
@@ -741,7 +741,7 @@ export RUCHE_PIPELINE__RETRIEVAL__RULE_SELECTION__ALPHA=2.0
 
 ---
 
-## Usage in Pipeline
+## Usage in Brain
 
 ### Rule Retrieval
 
@@ -759,7 +759,7 @@ async def retrieve_rules(
 
     # Get settings from centralized config
     settings = get_settings()
-    retrieval_config = settings.pipeline.retrieval
+    retrieval_config = settings.brain.retrieval
 
     # Get raw candidates from vector search
     raw_candidates = await config_store.vector_search_rules(
@@ -812,7 +812,7 @@ async def retrieve_memory(
 
     # Get settings from centralized config
     settings = get_settings()
-    retrieval_config = settings.pipeline.retrieval
+    retrieval_config = settings.brain.retrieval
 
     # Get raw candidates
     raw_episodes = await memory_store.vector_search_episodes(

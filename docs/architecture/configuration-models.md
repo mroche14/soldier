@@ -626,7 +626,7 @@ class ProvidersConfig(BaseModel):
     """
     Global provider settings and defaults.
 
-    NOTE: Models are configured directly on each pipeline step, not here.
+    NOTE: Models are configured directly on each brain step, not here.
     This config only holds global settings like timeout defaults and
     fallback behavior defaults that steps can inherit.
     """
@@ -670,7 +670,7 @@ from ruche.config.settings import get_settings
 from ruche.providers.llm import LLMMessage, create_executor_from_step_config
 
 settings = get_settings()
-executor = create_executor_from_step_config(settings.pipeline.generation, "generation")
+executor = create_executor_from_step_config(settings.brain.generation, "generation")
 
 response = await executor.generate(
     messages=[LLMMessage(role="user", content="Hello, world!")],
@@ -802,15 +802,15 @@ def get_default_selection_config(strategy: str) -> SelectionStrategyConfig:
     return defaults[strategy]()
 ```
 
-### Pipeline Configuration
+### Brain Configuration
 
-The pipeline configuration defines which model/provider is used at each step. This enables:
+The brain configuration defines which model/provider is used at each step. This enables:
 - Different models for different tasks (fast model for filtering, best model for generation)
 - Multimodal processing (vision for images, STT for audio)
 - Cost optimization (cheaper models for simple tasks)
 
 ```python
-# ruche/config/models/pipeline.py
+# ruche/config/models/brain.py
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -824,14 +824,14 @@ from ruche.config.models.selection import (
 
 
 # =============================================================================
-# Input Processing (Pre-Pipeline)
+# Input Processing (Pre-Brain)
 # =============================================================================
 
 class InputProcessingConfig(BaseModel):
     """
     Configuration for input modality processing.
 
-    Converts non-text inputs to text BEFORE the alignment pipeline.
+    Converts non-text inputs to text BEFORE the alignment brain.
     Each modality has its own model fallback chain.
     """
 
@@ -1306,7 +1306,7 @@ class EnforcementConfig(BaseModel):
 
 
 # =============================================================================
-# Output Processing (Post-Pipeline)
+# Output Processing (Post-Brain)
 # =============================================================================
 
 class OutputProcessingConfig(BaseModel):
@@ -1386,22 +1386,22 @@ class OutputProcessingConfig(BaseModel):
 
 
 # =============================================================================
-# Full Pipeline Configuration
+# Full Brain Configuration
 # =============================================================================
 
 class PipelineConfig(BaseModel):
     """
-    Full pipeline configuration.
+    Full brain configuration.
 
     Defines which model/provider is used at each step.
     """
 
-    # Pre-pipeline: Input modality processing
+    # Pre-brain: Input modality processing
     input_processing: InputProcessingConfig = Field(
         default_factory=InputProcessingConfig
     )
 
-    # Pipeline steps
+    # Brain steps
     context_extraction: ContextExtractionConfig = Field(
         default_factory=ContextExtractionConfig
     )
@@ -1411,19 +1411,19 @@ class PipelineConfig(BaseModel):
     generation: GenerationConfig = Field(default_factory=GenerationConfig)
     enforcement: EnforcementConfig = Field(default_factory=EnforcementConfig)
 
-    # Post-pipeline: Output modality processing
+    # Post-brain: Output modality processing
     output_processing: OutputProcessingConfig = Field(
         default_factory=OutputProcessingConfig
     )
 ```
 
-#### Pipeline Model Reference
+#### Brain Model Reference
 
-Each pipeline step has its own model fallback chain configured directly. No indirection through named profiles - models are specified exactly where they're used.
+Each brain step has its own model fallback chain configured directly. No indirection through named profiles - models are specified exactly where they're used.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         MULTIMODAL PIPELINE                                  │
+│                         MULTIMODAL BRAIN                                  │
 │                   (models configured directly per step)                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │

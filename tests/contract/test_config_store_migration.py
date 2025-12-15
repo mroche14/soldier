@@ -10,13 +10,13 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.models import (
     MigrationPlan,
     MigrationPlanStatus,
     MigrationSummary,
     TransformationMap,
 )
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 
 
 class ConfigStoreMigrationContract(ABC):

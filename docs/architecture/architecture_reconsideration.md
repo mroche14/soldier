@@ -8,12 +8,12 @@
 
 ## 0) Why This Document Exists
 
-This repo started as **Soldier** (alignment engine focus), then evolved into **Focal** (alignment pipeline + persistence), and then expanded in scope via **FOCAL 360** (ACF + multi-agent platform framing).
+This repo started as **Soldier** (alignment engine focus), then evolved into **Focal** (alignment brain + persistence), and then expanded in scope via **FOCAL 360** (ACF + multi-agent platform framing).
 
 That history left the docs with mixed assumptions:
 - "Focal = alignment engine" vs "Focal = agent platform"
-- framework-driven terms (`pipeline_type = agno/langgraph`) vs mechanic-driven intent ("alignment pipeline" vs "react agent")
-- "Focal API" language that can incorrectly imply "pipeline endpoints" rather than "agent endpoints"
+- framework-driven terms (`pipeline_type = agno/langgraph`) vs mechanic-driven intent ("alignment brain" vs "react agent")
+- "Focal API" language that can incorrectly imply "brain endpoints" rather than "agent endpoints"
 - unclear value/necessity of some abstractions (e.g., `AgentRuntime`, `AgentContext`)
 
 This doc re-states the intended end-state architecture in your current terms (**Smartbeez / Ruche / ASA**) and enumerates the concrete decisions required to make documentation and implementation unambiguous.
@@ -33,10 +33,10 @@ This doc re-states the intended end-state architecture in your current terms (**
 - An **Agent** is something that can receive **work items** and act:
   - inbound **messages** (human → agent)
   - scheduled **tasks** as **Agenda entries** (time-triggered work planned now and executed later)
-- Each Agent contains a **CognitivePipeline** (the "thinking/logic layer").
-- **FOCAL** is one CognitivePipeline implementation: an **alignment-focused cognitive architecture** (scenario-following + rule injection at the right time, learning via rules/scenarios rather than "put everything in prompt and pray").
+- Each Agent contains a **Brain** (the "thinking/logic layer").
+- **FOCAL** is one Brain implementation: an **alignment-focused cognitive architecture** (scenario-following + rule injection at the right time, learning via rules/scenarios rather than "put everything in prompt and pray").
 - You want more "cognitive skeletons" (other mechanics): simpler, more complex, different security levels.
-- Not all CognitivePipelines will use **rules/scenarios**. Those are FOCAL-alignment-specific primitives; other mechanics may be rule-free or scenario-free.
+- Not all Brains will use **rules/scenarios**. Those are FOCAL-alignment-specific primitives; other mechanics may be rule-free or scenario-free.
 - **ACF** is the conversation infrastructure that ensures turns are safe/reliable (mutex, LogicalTurn, supersede signals, durable orchestration).
 - **ChannelGateway / MessageRouter** live in another project and provide normalized message ingress (phone number, Slack user, etc.).
 
@@ -46,14 +46,14 @@ This doc re-states the intended end-state architecture in your current terms (**
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| What does "Focal" refer to? | Current docs mix "platform runtime" vs "alignment pipeline". This choice drives doc structure and naming everywhere. | ☐ Focal = **platform runtime** (ACF + agent runtime + toolbox + stores), and the alignment pipeline is "Focal Alignment" | ☑ Focal = **alignment pipeline only**; platform gets a different name (e.g., "Ruche Runtime") | ☐ Other: ________ | **OPUS recommends B** |
+| What does "Focal" refer to? | Current docs mix "platform runtime" vs "alignment brain". This choice drives doc structure and naming everywhere. | ☐ Focal = **platform runtime** (ACF + agent runtime + toolbox + stores), and the alignment brain is "Focal Alignment" | ☑ Focal = **alignment brain only**; platform gets a different name (e.g., "Ruche Runtime") | ☐ Other: ________ | **OPUS recommends B** |
 
 **Recommendation (based on your message):**
-- Prefer **Option B**: treat **FOCAL** as the *alignment mechanic/pipeline*, not the entire platform. That matches: "At the end FOCAL is an instance of cognitive pipeline focusing on alignment."
-- If you still want the repo/service to be named "focal", that's compatible with Option B — you just keep docs careful: "Focal runtime" vs "FOCAL alignment pipeline".
+- Prefer **Option B**: treat **FOCAL** as the *alignment mechanic/brain*, not the entire platform. That matches: "At the end FOCAL is an instance of cognitive pipeline focusing on alignment."
+- If you still want the repo/service to be named "focal", that's compatible with Option B — you just keep docs careful: "Focal runtime" vs "FOCAL alignment brain".
 
 > **🔮 OPUS Analysis (§1):**
-> The vision is sound, but I'd push harder on one clarification: the document says "Not all CognitivePipelines will use rules/scenarios" — this is critical. The current codebase (`ruche/alignment/`) is **deeply coupled to rules/scenarios**. I examined `rule_retriever.py`, `scenario_filter.py`, and the entire filtering module. When you add ReAct or other mechanics, you'll need to: (1) extract the rule/scenario primitives into a FOCAL-specific subpackage, or (2) make them optional at the engine level. The current `AlignmentEngine.process_turn()` assumes rules/scenarios exist — it queries `config_store.get_rules()` unconditionally. This isn't a blocker, but **document the refactoring path now** so the decision on "Focal = alignment pipeline only" doesn't surprise you when implementing mechanics that don't use these primitives.
+> The vision is sound, but I'd push harder on one clarification: the document says "Not all Brains will use rules/scenarios" — this is critical. The current codebase (`ruche/alignment/`) is **deeply coupled to rules/scenarios**. I examined `rule_retriever.py`, `scenario_filter.py`, and the entire filtering module. When you add ReAct or other mechanics, you'll need to: (1) extract the rule/scenario primitives into a FOCAL-specific subpackage, or (2) make them optional at the engine level. The current `AlignmentEngine.process_turn()` assumes rules/scenarios exist — it queries `config_store.get_rules()` unconditionally. This isn't a blocker, but **document the refactoring path now** so the decision on "Focal = alignment brain only" doesn't surprise you when implementing mechanics that don't use these primitives.
 >
 > **Codebase evidence**: `ruche/alignment/engine.py` (77KB) is the brain. The package structure already reflects "alignment" as a domain concept. Option B is strongly supported by code reality.
 
@@ -64,8 +64,8 @@ This doc re-states the intended end-state architecture in your current terms (**
 1) **Mechanic-first, framework-agnostic**
    The architecture describes mechanics ("alignment", "react", "planner-executor"), not frameworks (Agno/LangGraph).
 
-2) **API addresses Agents, not pipelines**
-   External callers talk to an Agent; pipelines are internal to Agents.
+2) **API addresses Agents, not brains**
+   External callers talk to an Agent; brains are internal to Agents.
 
 3) **ACF is infrastructure, not business logic**
    ACF owns mutex/aggregation/supersede facts/orchestration. It does not interpret scenarios, rules, tools, or domain decisions.
@@ -74,16 +74,16 @@ This doc re-states the intended end-state architecture in your current terms (**
    Any pod can serve any request; canonical state is persisted in stores.
 
 5) **LLMExecutor is a reusable primitive**
-   `LLMExecutor` (Agno-backed) is a platform building block that any CognitivePipeline may use; FOCAL uses it heavily.
+   `LLMExecutor` (Agno-backed) is a platform building block that any Brain may use; FOCAL uses it heavily.
 
 > **🔮 OPUS Analysis (§2):**
 > These five invariants are excellent and match what I see implemented. However:
 >
-> **Invariant #2 ("API addresses Agents, not pipelines") is NOT yet implemented.** Current API (`/v1/chat`) talks to the `AlignmentEngine` directly without an Agent abstraction layer. The `ruche/alignment/engine.py` receives `tenant_id`, `agent_id`, `session_id` but there's no `AgentRuntime` or `AgentContext` wrapper yet (Phase 6.5 in `IMPLEMENTATION_PLAN.md` is incomplete). This is fine — just be aware that implementing the agent-centric API is a **precondition** for the vision in this doc.
+> **Invariant #2 ("API addresses Agents, not brains") is NOT yet implemented.** Current API (`/v1/chat`) talks to the `AlignmentEngine` directly without an Agent abstraction layer. The `ruche/alignment/engine.py` receives `tenant_id`, `agent_id`, `session_id` but there's no `AgentRuntime` or `AgentContext` wrapper yet (Phase 6.5 in `IMPLEMENTATION_PLAN.md` is incomplete). This is fine — just be aware that implementing the agent-centric API is a **precondition** for the vision in this doc.
 >
 > **Invariant #5 (LLMExecutor as reusable primitive)** is already solid — see `ruche/providers/llm/executor.py` with Agno integration, fallback chains, and model string routing.
 >
-> **Codebase stats**: 258 Python files, 44,138 LOC. The four-store pattern (ConfigStore, SessionStore, CustomerDataStore, AuditStore) plus MemoryStore are all implemented with in-memory and PostgreSQL backends. Multi-tenancy is enforced throughout.
+> **Codebase stats**: 258 Python files, 44,138 LOC. The four-store pattern (ConfigStore, SessionStore, InterlocutorDataStore, AuditStore) plus MemoryStore are all implemented with in-memory and PostgreSQL backends. Multi-tenancy is enforced throughout.
 
 ---
 
@@ -100,17 +100,17 @@ This repo (agent runtime)
   ├─ Agent Ingress: receives normalized envelope for a chosen agent
   ├─ ACF: LogicalTurn + mutex + supersede facts + orchestration
   ├─ Agent runtime assembly: constructs agent runtime bundle
-  ├─ CognitivePipelines: thinking/logic implementations (FOCAL alignment is one)
+  ├─ Brains: thinking/logic implementations (FOCAL alignment is one)
   ├─ Toolbox: safe tool execution boundary (semantics, confirmation, side effects)
   └─ Stores/Providers: persistence + LLMExecutor/embeddings/rerank
 ```
 
-### 🧭 3.2 "Agents have API, pipelines are internal"
+### 🧭 3.2 "Agents have API, brains are internal"
 
 When docs say "API", the mental model should be:
-- The runtime exposes **message ingress to an Agent**, not a pipeline endpoint.
+- The runtime exposes **message ingress to an Agent**, not a brain endpoint.
 - The request is already routed to a specific Agent (typically `tenant_id + agent_id` are known upstream).
-- The Agent runs its CognitivePipeline **inside** the ACF turn lifecycle.
+- The Agent runs its Brain **inside** the ACF turn lifecycle.
 
 ### 🧭 3.3 Decision: what is the runtime message API surface?
 
@@ -216,7 +216,7 @@ Two common shapes:
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| How are due tasks executed? | Tasks are stored in Agenda; the question is how the scheduler submits them, and whether execution is ACF-orchestrated (mutex/turn lifecycle) or not. | ☐ Scheduler submits to the same ingress endpoint with `kind = "task"` | ☐ Scheduler publishes to an internal queue/endpoint consumed by the runtime (still runs inside ACF) | ☑ Scheduler calls the mechanic/pipeline directly (bypasses ACF) | **DECIDED: Option C** |
+| How are due tasks executed? | Tasks are stored in Agenda; the question is how the scheduler submits them, and whether execution is ACF-orchestrated (mutex/turn lifecycle) or not. | ☐ Scheduler submits to the same ingress endpoint with `kind = "task"` | ☐ Scheduler publishes to an internal queue/endpoint consumed by the runtime (still runs inside ACF) | ☑ Scheduler calls the mechanic/brain directly (bypasses ACF) | **DECIDED: Option C** |
 
 **Decision rationale:**
 - **Tasks ≠ Conversations.** A task is a work item, not a conversational turn. It doesn't need message accumulation, LogicalTurn semantics, or supersede signals.
@@ -250,7 +250,7 @@ Two common shapes:
 
 ---
 
-## 🧩 4) Contracts: ACF ↔ Agent ↔ CognitivePipeline
+## 🧩 4) Contracts: ACF ↔ Agent ↔ Brain
 
 ### 🏷️ 4.0 If we renamed "ACF", what would we call it?
 
@@ -267,37 +267,38 @@ You asked for 4 better names that capture what ACF actually does (mutex + turn a
 
 This is *intentionally* a three-layer split and, in my view, it reduces confusion:
 
-- **CognitivePipeline (protocol)**: the *contract* ACF calls: `run(ctx) -> PipelineResult` (+ optional capabilities like supersede handling).
-- **Mechanic / Cognitive Architecture**: the *semantics* of how the pipeline thinks (alignment, react, planner-executor, etc.).
+- **Brain (protocol)**: the *contract* ACF calls: `run(ctx) -> BrainResult` (+ optional capabilities like supersede handling).
+- **Mechanic / Cognitive Architecture**: the *semantics* of how the brain thinks (alignment, react, planner-executor, etc.).
 - **Framework**: the *implementation vehicle* (plain Python, Agno workflow, LangGraph). Framework should not leak into architecture unless it materially affects ops/runtime.
 
 **Example:**
 - Mechanic: "Alignment"
-  Pipeline implementation: "FOCAL Alignment" (11-phase spec)
+  Brain implementation: "FOCAL Alignment" (11-phase spec)
   Framework: plain Python today; could become an Agno workflow later without changing the mechanic.
 
 **Important:** a mechanic can be *rule/scenario-driven* (FOCAL alignment) or *rule-free* (e.g., ReAct). Rules/scenarios are not universal platform concepts; they are part of specific mechanics.
 
 > **🔮 OPUS Analysis (§4.1 Terminology):**
-> The three-layer split is excellent and matches my mental model. However, the document uses "CognitivePipeline" as the protocol name, but the codebase uses `AlignmentEngine` (see `ruche/alignment/engine.py`). **Reconcile this terminology.** Either:
-> 1. Rename `AlignmentEngine` to `FocalCognitivePipeline` (implementing `CognitivePipeline` protocol), or
+> The three-layer split is excellent and matches my mental model. However, the document uses "Brain" as the protocol name, but the codebase uses `AlignmentEngine` (see `ruche/alignment/engine.py`). **Reconcile this terminology.** Either:
+> 1. Rename `AlignmentEngine` to `FocalBrain` (implementing `Brain` protocol), or
 > 2. Document clearly that `AlignmentEngine` IS the FOCAL-specific implementation of the abstract protocol.
 >
-> The current `AlignmentEngine.process_turn()` is essentially the `run()` method of a `CognitivePipeline`. Make this mapping explicit.
+> The current `AlignmentEngine.process_turn()` is essentially the `run()` method of a `Brain`. Make this mapping explicit.
 
-### 🧩 4.2 Decision: what do we name the ACF ↔ Pipeline contract objects?
+### 🧩 4.2 Decision: what do we name the ACF ↔ Brain contract objects?
 
-You asked what the "interface between ACF and CognitivePipelines" should be called. That interface has two pieces:
+You asked what the "interface between ACF and Brains" should be called. That interface has two pieces:
 - the **input context** object ACF provides per turn
-- the **output result** object the pipeline returns
+- the **output result** object the brain returns
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| What names should we standardize for the ACF ↔ Pipeline boundary? | Names must be unambiguous so humans + AI can extend components safely. | ☑ Keep FOCAL 360 naming: `CognitivePipeline`, `FabricTurnContext`, `PipelineResult`, `FabricEvent` | ☐ Rename to more generic: `AgentBrain`, `TurnContext`, `TurnResult`, `AgentEvent` | ☐ Other scheme: ________ | **OPUS recommends A** |
+| What names should we standardize for the ACF ↔ Brain boundary? | Names must be unambiguous so humans + AI can extend components safely. | ☐ Keep FOCAL 360 naming: `Brain`, `FabricTurnContext`, `BrainResult`, `FabricEvent` | ☐ Rename to more generic: `AgentBrain`, `TurnContext`, `TurnResult`, `AgentEvent` | ☑ Hybrid: Keep `Brain`, use `ACFEvent` (transport) + `AgentEvent` (semantic) | **DECIDED: Option C** |
 
-**Recommendation (minimize churn + preserve meaning):**
-- Prefer **Option A**. `FabricTurnContext` / `FabricEvent` being ACF-specific is useful (they name the boundary).
-- If you dislike "Fabric*", rename later globally — but avoid mixed vocab.
+**Decision (2025-12-15):**
+- Use **Option C** (Hybrid): `ACFEvent` for transport envelope, `AgentEvent` for semantic events.
+- See `docs/architecture/event-model.md` for the complete two-layer event model specification.
+- `FabricEvent` renamed to `ACFEvent` for clarity (ACF owns the transport layer).
 
 ### 🧩 4.3 Decision: do Agents "link to ACF" directly (policy/config)?
 
@@ -308,7 +309,7 @@ Your intuition is right that Agents may need a *data-level link* to ACF — not 
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| Where do we configure ACF behavior knobs? | This is the "agent↔ACF link": ACF reads config; pipeline runs in ACF context. | ☑ Per **ChannelBinding** (channel-dependent defaults) | ☐ Per **Agent** (same across all channels) | ☐ Global only (one policy for all) | **DECIDED: Option A** |
+| Where do we configure ACF behavior knobs? | This is the "agent↔ACF link": ACF reads config; brain runs in ACF context. | ☑ Per **ChannelBinding** (channel-dependent defaults) | ☐ Per **Agent** (same across all channels) | ☐ Global only (one policy for all) | **DECIDED: Option A** |
 
 **Decision rationale:**
 - Prefer **Option A**: WhatsApp vs webchat vs voice have different natural aggregation behaviors.
@@ -332,7 +333,7 @@ class ChannelPolicy(BaseModel):
     supports_read_receipts: bool = True
     max_message_length: int | None = None
 
-    # Agent/Pipeline may need these
+    # Agent/Brain may need these
     natural_response_delay_ms: int = 0  # "human-like" delay
 ```
 
@@ -348,9 +349,11 @@ You said you like **AgentEvent reporting everything**. Here's the clean way to d
 #### Proposed split
 
 - **AgentEvent** (semantic): the thing builders care about ("scenario_activated", "tool_planned", "policy_blocked", "task_scheduled", …).
-- **FabricEvent** (transport): an envelope ACF routes/persists that carries an AgentEvent plus routing keys (`tenant_id`, `agent_id`, `session_key`, `logical_turn_id`, etc.).
+- **ACFEvent** (transport): an envelope ACF routes/persists that carries an AgentEvent plus routing keys (`tenant_id`, `agent_id`, `session_key`, `logical_turn_id`, etc.).
 
-In other words: "everything is an AgentEvent", but ACF still uses FabricEvent as the delivery mechanism.
+In other words: "everything is an AgentEvent", but ACF still uses ACFEvent as the delivery mechanism.
+
+> **Note (2025-12-15)**: `FabricEvent` has been renamed to `ACFEvent`. See `docs/architecture/event-model.md`.
 
 #### What ACF must do if AgentEvent is the canonical stream
 
@@ -369,7 +372,7 @@ But there are implications:
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| What is the canonical event surface? | You want AgentEvent "reporting everything". This choice affects observability contracts and what ACF must persist. | ☑ AgentEvent is canonical; FabricEvent is transport | ☐ FabricEvent is canonical; agent semantics are informal | ☐ Other: ________ | |
+| What is the canonical event surface? | You want AgentEvent "reporting everything". This choice affects observability contracts and what ACF must persist. | ☑ AgentEvent is canonical; ACFEvent is transport | ☐ ACFEvent is canonical; agent semantics are informal | ☐ Other: ________ | **DECIDED: Option A** |
 
 **Recommendation (minimize ambiguity + keep ACF thin):**
 - Keep a minimal, versioned AgentEvent schema (stable top-level fields), and allow mechanics to extend via typed payloads.
@@ -384,13 +387,13 @@ But there are implications:
 >
 > Without this namespace, ACF will end up parsing arbitrary event payloads to track commit points. Define the contract now.
 
-### 🧩 4.5 Decision: how does an Agent select a CognitivePipeline mechanic (not framework)?
+### 🧩 4.5 Decision: how does an Agent select a Brain mechanic (not framework)?
 
 You don't want framework-specific `pipeline_type`, but if multiple mechanics exist you still need selection.
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| How does the runtime know which CognitivePipeline implementation to run for an Agent? | Selection must be mechanic-driven and remain framework-agnostic. | ☑ Agent references a **mechanic ID** (e.g., `"alignment"`, `"react"`) + mechanic-specific config | ☐ Pipeline is **structurally described** (graph/steps) and built generically | ☐ Code-wired only for now; multiple mechanics later | **OPUS recommends A** |
+| How does the runtime know which Brain implementation to run for an Agent? | Selection must be mechanic-driven and remain framework-agnostic. | ☑ Agent references a **mechanic ID** (e.g., `"alignment"`, `"react"`) + mechanic-specific config | ☐ Brain is **structurally described** (graph/steps) and built generically | ☐ Code-wired only for now; multiple mechanics later | **OPUS recommends A** |
 
 **Recommendation (matches your "cognitive skeletons" goal):**
 - Prefer **Option A** as the target architecture (mechanic-first, extensible).
@@ -405,14 +408,14 @@ You created `LLMExecutor` as a reusable harness for LLM calls (model string rout
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| Is `LLMExecutor` a platform primitive for all pipelines, or a FOCAL-only helper? | This determines where `LLMExecutor` is documented (platform layer vs FOCAL-only). | ☐ Platform primitive: any mechanic can use it | ☐ FOCAL-only: other mechanics bring their own LLM layer | ☑ Hybrid: platform provides it; some mechanics require it, others don't | **OPUS recommends C** |
+| Is `LLMExecutor` a platform primitive for all brains, or a FOCAL-only helper? | This determines where `LLMExecutor` is documented (platform layer vs FOCAL-only). | ☐ Platform primitive: any mechanic can use it | ☐ FOCAL-only: other mechanics bring their own LLM layer | ☑ Hybrid: platform provides it; some mechanics require it, others don't | **OPUS recommends C** |
 
 **Recommendation (consistent with your statement):**
 - Prefer **Option C**: keep `LLMExecutor` as a platform building block, but don't force all mechanics to use it.
 
-### 🔗 4.7 Execution link: how ACF, Agents, and CognitivePipelines connect
+### 🔗 4.7 Execution link: how ACF, Agents, and Brains connect
 
-You asked for a clearer "link" between ACF, agents, and pipelines.
+You asked for a clearer "link" between ACF, agents, and brains.
 
 #### Call chain (per work item)
 
@@ -420,8 +423,8 @@ You asked for a clearer "link" between ACF, agents, and pipelines.
 MessageRouter/Scheduler
   → Agent Ingress (this runtime)
     → ACF (mutex + aggregation) builds LogicalTurn
-      → load agent runtime bundle (Agent config + toolbox + pipeline)
-        → pipeline.run(FabricTurnContext + agent runtime)
+      → load agent runtime bundle (Agent config + toolbox + brain)
+        → brain.run(FabricTurnContext + agent runtime)
           → emits AgentEvents (via ACF transport)
           → may call tools via toolbox
       → ACF commit_and_respond (persist + release mutex)
@@ -429,8 +432,8 @@ MessageRouter/Scheduler
 
 Key ideas:
 - **ACF owns the lifecycle** (mutex, aggregation, durable orchestration).
-- **Agent owns the business bundle** (toolbox + chosen mechanic/pipeline + channel policies).
-- **CognitivePipeline owns thinking/logic** and returns a result; it does not own turn lifecycle.
+- **Agent owns the business bundle** (toolbox + chosen mechanic/brain + channel policies).
+- **Brain owns thinking/logic** and returns a result; it does not own turn lifecycle.
 - **Events** flow outward through ACF; ACF routes/persists them but does not interpret most of them.
 
 ### 🧵 4.8 Durable orchestration (Hatchet today, portable tomorrow)
@@ -449,7 +452,7 @@ In other words: Hatchet is how ACF implements `acquire_mutex → accumulate → 
 
 #### Advice: how to use Hatchet safely (without leaking it everywhere)
 
-- Keep Hatchet usage **inside ACF only**. Pipelines should never import Hatchet APIs; they only see `FabricTurnContext` methods (`has_pending_messages`, `emit_event`, etc.).
+- Keep Hatchet usage **inside ACF only**. Brains should never import Hatchet APIs; they only see `FabricTurnContext` methods (`has_pending_messages`, `emit_event`, etc.).
 - Make workflows **idempotent under retry**:
   - any external side effects go through Toolbox/ToolGateway with idempotency keys
   - workflow steps are safe to re-run (or are guarded by "already did this" checks in stores)
@@ -507,7 +510,7 @@ Examples:
 - `FOCAL Alignment` mechanic (scenario/rule-driven alignment)
 - `ReAct` mechanic (future)
 
-**Output**: a runnable `CognitivePipeline` implementation.
+**Output**: a runnable `Brain` implementation.
 
 ### 5.2 Agent blueprints (product/ops owned, ASA-assisted)
 
@@ -566,7 +569,7 @@ This is a go-to-market packaging concern that *can* stay mostly orthogonal to th
 
 **What should *not* change (if designed well):**
 - ACF remains the same infrastructure layer.
-- CognitivePipeline protocol remains the same (products do not require a new "pipeline interface").
+- Brain protocol remains the same (products do not require a new "brain interface").
 - Toolbox/ToolGateway remain the same (products are configuration of tools/policies, not a new execution path).
 
 #### Decision: how are standalone products delivered/deployed?
@@ -595,7 +598,7 @@ You asked for "how it works in real life" when a new tenant arrives. This is the
      - create ChannelBinding placeholders (channels are enabled when integrations exist upstream)
      - create ToolActivations (which tools this agent can use + policy overrides)
      - if the mechanic is rules/scenarios-based (FOCAL): create initial Scenarios/Rules/Templates/Variables
-     - create the per-agent "contact schema" (CustomerDataStore schema) if the mechanic needs structured customer/contact data
+     - create the per-agent "contact schema" (InterlocutorDataStore schema) if the mechanic needs structured customer/contact data
      - create Agenda defaults if used (see §8.4)
 3) **Credentials are not created** automatically; they appear when the tenant connects providers (OAuth/API keys) into CredentialStore.
 4) **Publish/activate** config versions:
@@ -607,10 +610,10 @@ You asked for "how it works in real life" when a new tenant arrives. This is the
 1) MessageRouter routes inbound envelope to one Agent (`tenant_id`, `agent_id`, `channel`, `channel_user_id`, …).
 2) ACF acquires the session mutex and aggregates into a LogicalTurn.
 3) Agent runtime assembly loads the Agent config and builds the runtime bundle:
-   - instantiate the mechanic's CognitivePipeline
+   - instantiate the mechanic's Brain
    - instantiate Toolbox from tool defs/activations
    - apply ChannelBinding policies and ACF policy config
-4) The pipeline runs:
+4) The brain runs:
    - resolves identity/session (see §6)
    - uses stores according to the mechanic (FOCAL uses scenarios/rules; other mechanics may not)
    - emits AgentEvents (for observability, UI, audit)
@@ -634,11 +637,11 @@ You were concerned that the model implied "ChannelGateway would question each ag
 
 It does **not** broadcast to multiple agents.
 
-### 🆔 6.2 What this repo does (ACF + stores + pipeline Phase 1)
+### 🆔 6.2 What this repo does (ACF + stores + brain Phase 1)
 
 Inside the runtime:
 1) ACF uses a session key (mutex + aggregation) to form a **LogicalTurn**
-2) The Agent's CognitivePipeline runs once per LogicalTurn
+2) The Agent's Brain runs once per LogicalTurn
 3) Phase 1 resolves:
    - `customer_id` (internal identity)
    - `session_id` (conversation state reference)
@@ -647,7 +650,7 @@ Inside the runtime:
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| Where should the mapping from external identity to internal customer live? | ChannelGateway knows the provider identity; identity resolution can be its own service. | ☐ Inside this repo (CustomerDataStore resolves/creates customer_id) | ☐ Upstream (ChannelGateway/Router provides customer_id; runtime trusts it) | ☑ Separate Identity service shared by both | |
+| Where should the mapping from external identity to internal customer live? | ChannelGateway knows the provider identity; identity resolution can be its own service. | ☐ Inside this repo (InterlocutorDataStore resolves/creates customer_id) | ☐ Upstream (ChannelGateway/Router provides customer_id; runtime trusts it) | ☑ Separate Identity service shared by both | |
 
 **Current choice (per your note):** Option C.
 
@@ -681,7 +684,7 @@ Resolution algorithm:
 > 2. **Batch lookups when accumulating** (reduce round-trips for multi-message LogicalTurns)
 > 3. **Accept the latency** (identity resolution is fast, ~5-10ms with PostgreSQL)
 >
-> The current codebase has `CustomerDataLoader` in `ruche/alignment/loaders/customer_data_loader.py` but it works differently — it loads customer data AFTER `customer_id` is resolved. The identity resolution step itself isn't implemented yet. Plan for the caching layer.
+> The current codebase has `InterlocutorDataLoader` in `ruche/alignment/loaders/interlocutor_data_loader.py` but it works differently — it loads customer data AFTER `customer_id` is resolved. The identity resolution step itself isn't implemented yet. Plan for the caching layer.
 
 ### 🆔 6.4 Decision: what does "session" mean with multiple agents?
 
@@ -742,12 +745,12 @@ class InterlocutorData(BaseModel):
     channel_presence: list[InterlocutorChannelPresence]
 ```
 
-**Pipeline usage:**
+**Brain usage:**
 ```python
 # In TurnContext or via InterlocutorDataStore
 presence = interlocutor_data.channel_presence
 
-# Pipeline can now say:
+# Brain can now say:
 if len(presence) > 1:
     other_channels = [p for p in presence if p.channel != current_channel]
     # "I see you also reached out via WhatsApp earlier..."
@@ -756,7 +759,7 @@ if len(presence) > 1:
 This gives awareness WITHOUT merging sessions — the agent can reference cross-channel history while keeping session state isolated.
 
 > **🔮 OPUS Analysis (§6.6) — REVISED:**
-> Separate sessions + cross-channel awareness is the right balance. The `InterlocutorChannelPresence` model gives the pipeline visibility into multi-channel interactions without the complexity of shared session state. The agent can say "I see you messaged us on WhatsApp too" while maintaining UX isolation per channel.
+> Separate sessions + cross-channel awareness is the right balance. The `InterlocutorChannelPresence` model gives the brain visibility into multi-channel interactions without the complexity of shared session state. The agent can say "I see you messaged us on WhatsApp too" while maintaining UX isolation per channel.
 
 ---
 
@@ -814,7 +817,7 @@ Typical lifecycle:
 |------|-------------|-------------|
 | **Catalog** | All tools in the ecosystem (marketplace) | Discovery UI, ASA |
 | **Tenant-available** | Tools the tenant has connected/purchased | Tenant admin, Agent config, MCP discovery |
-| **Agent-enabled** | Tools this specific agent can use | Toolbox, Pipeline |
+| **Agent-enabled** | Tools this specific agent can use | Toolbox, Brain |
 
 #### MCP Discovery + Toolbox Awareness
 
@@ -880,7 +883,7 @@ This allows the agent to say: "I could help you schedule a meeting if you enable
 
 ## 🗂️ 8) Stores and State (per agent, per tenant)
 
-You asked what stores an agent needs and how shared state works across a tenant swarm (CustomerDataStore, Agenda, Offerings, etc.).
+You asked what stores an agent needs and how shared state works across a tenant swarm (InterlocutorDataStore, Agenda, Offerings, etc.).
 
 ### 🗂️ 8.0 Terminology: what do we call the person talking to the agent?
 
@@ -919,8 +922,8 @@ class Interlocutor(BaseModel):
 
 **Renames required:**
 - `customer_id` → `interlocutor_id`
-- `CustomerDataStore` → `InterlocutorDataStore`
-- `CustomerDataField` → `InterlocutorDataField`
+- `InterlocutorDataStore` → `InterlocutorDataStore`
+- `InterlocutorDataField` → `InterlocutorDataField`
 - `CustomerSchemaMask` → `InterlocutorSchemaMask`
 - `channel_user_id` → remains (this is the channel-specific identity, not the internal ID)
 
@@ -933,7 +936,7 @@ Even if the store *types* are common across all agents, you stated you prefer **
 
 - **ConfigStore** (tenant+agent): agent configuration (mechanic choice/config; if alignment mechanic: scenarios/rules/templates; tool defs/activations; blueprints)
 - **IdentityService / IdentityStore** (tenant+agent+channel identity): maps `(channel, channel_user_id)` → `contact_id` (your "customer_id") for that agent
-- **CustomerDataStore** (tenant+agent+contact): structured contact/customer variables for that agent (if the mechanic uses them)
+- **InterlocutorDataStore** (tenant+agent+contact): structured contact/customer variables for that agent (if the mechanic uses them)
 - **SessionStore** (tenant+agent+contact+channel by default): conversation state for one agent ↔ one contact on one channel
 - **AuditStore** (tenant-wide, tagged with agent_id): immutable turn records + tool side effects + events (including AgentEvents)
 - **MemoryStore** (optional, likely per-agent): semantic memory/episodes for that agent
@@ -945,7 +948,7 @@ Even if the store *types* are common across all agents, you stated you prefer **
 
 Rule of thumb:
 - **Configuration / catalogs / playbooks** → ConfigStore
-- **Customer-specific fields** → CustomerDataStore
+- **Customer-specific fields** → InterlocutorDataStore
 - **Ephemeral conversation state** → SessionStore
 - **System-of-record business data** → access via Tools (do not duplicate in stores unless necessary)
 - **Learned/semantic memory** → MemoryStore
@@ -957,14 +960,14 @@ Rule of thumb:
 | For a tenant swarm, what is shared across agents? | You stated "nothing should be shared". We can still share *infrastructure stores* (ConfigStore, AuditStore, CredentialStore) while keeping *contact/session/memory* isolated per agent. | ☐ Share contact identity + contact data across agents | ☑ Nothing shared across agents (contact/session/memory isolated per agent) | ☐ Other: ________ | |
 
 **Implication of "nothing shared":**
-- Each agent has its own `contact_id` universe and its own CustomerDataStore/SessionStore/MemoryStore partitions.
+- Each agent has its own `contact_id` universe and its own InterlocutorDataStore/SessionStore/MemoryStore partitions.
 - Cross-channel reconciliation happens **within** an agent (multiple channel identities → one contact_id), not across different agents.
 
 ### 🗂️ 8.4 Decision: where does "Agenda/Goals" live?
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| Where should Agenda/Goals state live? | Agenda includes scheduled tasks. With "nothing shared across agents", Agenda is either contact-level (persistent) or session-level (ephemeral) *for this agent*. | ☐ CustomerDataStore (contact-level, persistent) | ☐ SessionStore (conversation-level, ephemeral) | ☑ Separate AgendaStore (new domain store) | **OPUS recommends C** |
+| Where should Agenda/Goals state live? | Agenda includes scheduled tasks. With "nothing shared across agents", Agenda is either contact-level (persistent) or session-level (ephemeral) *for this agent*. | ☐ InterlocutorDataStore (contact-level, persistent) | ☐ SessionStore (conversation-level, ephemeral) | ☑ Separate AgendaStore (new domain store) | **OPUS recommends C** |
 
 **Recommendation (minimize new abstractions):**
 - If Agenda contains scheduled tasks that must survive restarts and be queryable by `due_at`, you will almost always want **Option A** (or Option C).
@@ -972,10 +975,10 @@ Rule of thumb:
 - Avoid Option C until a strong need emerges.
 
 > **🔮 OPUS Analysis (§8.4 - Agenda Store Recommendation Change):**
-> I **disagree with the recommendation** here. I'd push for **Option C (separate AgendaStore)** over Option A (CustomerDataStore). Here's why:
+> I **disagree with the recommendation** here. I'd push for **Option C (separate AgendaStore)** over Option A (InterlocutorDataStore). Here's why:
 > 1. Agenda entries have different access patterns (time-indexed queries: "what's due in the next 5 minutes?")
 > 2. Agenda entries may be agent-level (no customer), contact-level, or session-level
-> 3. CustomerDataStore is already complex with lineage tracking, status management, etc. (see Phase 17.5 work)
+> 3. InterlocutorDataStore is already complex with lineage tracking, status management, etc. (see Phase 17.5 work)
 >
 > An AgendaStore with a simple interface (`schedule`, `get_due`, `mark_complete`, `cancel`) is worth the abstraction. It's a sixth domain store, but it has clear separation of concerns.
 
@@ -989,7 +992,7 @@ You said you don't see what AgentRuntime/AgentContext bring and you fear too man
 
 - **AgentContext**: a runtime bundle:
   - agent configuration
-  - a concrete CognitivePipeline instance (mechanic implementation)
+  - a concrete Brain instance (mechanic implementation)
   - Toolbox instance (resolved tools + policies)
   - channel bindings/policies
 - **AgentRuntime**: lifecycle:
@@ -1027,7 +1030,7 @@ Given your stated goal ("no ambiguity so AI can help build components"), the con
 
 | Question | Context | Option A | Option B | Option C | Your input |
 |---|---|---|---|---|---|
-| Do we keep `AgentRuntime` and `AgentContext` as first-class concepts? | You're concerned about abstraction count; we can simplify. | ☑ Keep them (mechanic-agnostic; no framework-driven `pipeline_type`) | ☐ Rename to clearer intent (`AgentLoader`/`AgentInstance`) | ☐ Remove for now; construct pipeline/toolbox per request | **OPUS recommends A** |
+| Do we keep `AgentRuntime` and `AgentContext` as first-class concepts? | You're concerned about abstraction count; we can simplify. | ☑ Keep them (mechanic-agnostic; no framework-driven `pipeline_type`) | ☐ Rename to clearer intent (`AgentLoader`/`AgentInstance`) | ☐ Remove for now; construct brain/toolbox per request | **OPUS recommends A** |
 
 **Recommendation (pragmatic):**
 - Prefer **Option A** or **Option B**, but remove framework-driven routing fields (`pipeline_type = agno/langgraph`) from the Agent model. If multiple mechanics exist, select by mechanic, not framework.
@@ -1035,7 +1038,7 @@ Given your stated goal ("no ambiguity so AI can help build components"), the con
 
 > **🔮 OPUS Analysis (§9 - Abstractions ARE Needed):**
 > The concern about "too many abstractions" is valid but **somewhat overblown**. The proposed abstractions (`AgentRuntime`, `AgentContext`) serve real purposes:
-> - `AgentContext` = the runtime bundle (pipeline + toolbox + channels)
+> - `AgentContext` = the runtime bundle (brain + toolbox + channels)
 > - `AgentRuntime` = lifecycle manager (create, cache, invalidate)
 >
 > These ARE necessary. Current `AlignmentEngine.process_turn()` receives raw identifiers with no caching, no lifecycle management. Adding this layer is a **prerequisite for multi-mechanic support**.
@@ -1049,8 +1052,8 @@ Given your stated goal ("no ambiguity so AI can help build components"), the con
 Your stated goal: "interfaces + docs allowing me to build new components with AI easily because there is no ambiguity."
 
 Recommended governance pattern:
-- **One canonical vocabulary** (Agent, CognitivePipeline, Mechanic, ACF, Toolbox, CustomerDataStore, SessionStore, LogicalTurn).
-- **Spec-first docs** for interfaces/protocols (ACF ↔ Pipeline, Pipeline ↔ Toolbox, Toolbox ↔ Gateway, Stores).
+- **One canonical vocabulary** (Agent, Brain, Mechanic, ACF, Toolbox, InterlocutorDataStore, SessionStore, LogicalTurn).
+- **Spec-first docs** for interfaces/protocols (ACF ↔ Brain, Brain ↔ Toolbox, Toolbox ↔ Gateway, Stores).
 - **Mechanic specs**: each skeleton gets a short "mechanic spec" describing:
   - guarantees (safety/constraint model)
   - config schema (what needs to be provided)
@@ -1064,7 +1067,7 @@ Recommended governance pattern:
 Once the decisions above are filled:
 1) Rewrite docs so the vocabulary is consistent (Soldier history becomes "historical").
 2) Update FOCAL 360 authoritative specs to match the mechanic-first model.
-3) Create "mechanic specs" for each CognitivePipeline skeleton (starting with FOCAL alignment).
+3) Create "mechanic specs" for each Brain skeleton (starting with FOCAL alignment).
 4) Only then resume implementation work with minimal ambiguity.
 
 ---
@@ -1081,7 +1084,7 @@ After thorough analysis, these are **gaps I'd address before finalizing this doc
 
 The doc doesn't define how errors propagate across boundaries:
 - What happens when ToolGateway fails?
-- What happens when the pipeline throws?
+- What happens when the brain throws?
 - What happens when ACF can't acquire mutex?
 
 **Need**: An error taxonomy (retriable vs fatal vs degraded) and how each layer handles upstream/downstream failures.
@@ -1091,7 +1094,7 @@ The doc doesn't define how errors propagate across boundaries:
 |-------------|----------|---------|----------|
 | **Retriable** | Rate limit, timeout, network glitch | Toolbox/ACF | Exponential backoff, max 3 retries |
 | **Fatal** | Auth failure, invalid config, schema violation | Surface to caller | No retry, return error |
-| **Degraded** | LLM fallback triggered, tool unavailable | Pipeline | Continue with reduced capability, emit event |
+| **Degraded** | LLM fallback triggered, tool unavailable | Brain | Continue with reduced capability, emit event |
 | **Conflict** | Mutex already held, concurrent identity creation | ACF/IdentityService | Wait or fail-fast based on config |
 
 ### 12.2 Observability Contract
@@ -1110,41 +1113,41 @@ The doc doesn't define how errors propagate across boundaries:
 
 ### 12.3 Testing Strategy for Multi-Mechanic
 
-When you add ReAct or other mechanics, how do you test pipeline conformance?
+When you add ReAct or other mechanics, how do you test brain conformance?
 
 **Clarification (per discussion):** ASA is **NOT FOCAL-specific**. ASA is a **mechanic-agnostic meta-agent** that can:
 - Understand all available mechanics (alignment, react, planner-executor, custom)
-- Configure ANY CognitivePipeline
+- Configure ANY Brain
 - Validate conformance for ANY mechanic
 - Design domain-specific artifacts per mechanic (scenarios/rules for alignment, tools/prompts for react)
 
-**Need**: A pipeline conformance testing strategy that works across all mechanics.
+**Need**: A brain conformance testing strategy that works across all mechanics.
 
-**Conformance test suite** (every CognitivePipeline must pass):
+**Conformance test suite** (every Brain must pass):
 
 ```python
 class PipelineConformanceTests:
-    """Tests that ANY CognitivePipeline implementation must pass."""
+    """Tests that ANY Brain implementation must pass."""
 
-    async def test_tools_go_through_toolbox(self, pipeline, ctx):
+    async def test_tools_go_through_toolbox(self, brain, ctx):
         """Verify no direct provider calls — all tools via Toolbox."""
         # ASA-assisted static analysis + runtime verification
 
-    async def test_required_events_are_emitted(self, pipeline, ctx):
+    async def test_required_events_are_emitted(self, brain, ctx):
         """Verify required events are emitted."""
-        result = await pipeline.run(ctx)
+        result = await brain.run(ctx)
         events = ctx.captured_events
         assert any(e.type == "turn.started" for e in events)
         assert any(e.type == "turn.completed" for e in events)
 
-    async def test_supersede_checked_before_irreversible(self, pipeline, ctx):
+    async def test_supersede_checked_before_irreversible(self, brain, ctx):
         """Verify supersede is checked before irreversible tools."""
-        # Inject pending message, verify pipeline checks before tool
+        # Inject pending message, verify brain checks before tool
 
-    async def test_pipelineresult_contract(self, pipeline, ctx):
-        """Verify PipelineResult follows contract."""
-        result = await pipeline.run(ctx)
-        assert isinstance(result, PipelineResult)
+    async def test_pipelineresult_contract(self, brain, ctx):
+        """Verify BrainResult follows contract."""
+        result = await brain.run(ctx)
+        assert isinstance(result, BrainResult)
         # Validate response_segments, staged_mutations, etc.
 ```
 
@@ -1194,11 +1197,11 @@ For implementers, add a section mapping current code to target architecture:
 
 | Current Code | Target Architecture | Status |
 |--------------|---------------------|--------|
-| `AlignmentEngine` | `FocalCognitivePipeline` implementing `CognitivePipeline` | Rename/wrap needed |
+| `AlignmentEngine` | `FocalBrain` implementing `Brain` | Rename/wrap needed |
 | `ToolExecutor` | `Toolbox` | Major refactor (add policy, idempotency) |
 | (none) | `AgentRuntime`, `AgentContext` | Phase 6.5 - not started |
 | (none) | ACF (`SessionMutex`, `TurnManager`, `SupersedeCoordinator`) | Phase 6.5 - not started |
-| `CustomerDataStore` | `CustomerDataStore` | ✓ Implemented |
+| `InterlocutorDataStore` | `InterlocutorDataStore` | ✓ Implemented |
 | `SessionStore` | `SessionStore` | ✓ Implemented |
 | `/v1/chat` | Agent Ingress (via AgentRuntime) | Needs wrapping |
 
@@ -1210,12 +1213,12 @@ For quick reference, here are all decisions with final status:
 
 | Section | Decision | Final Choice | Status |
 |---------|----------|--------------|--------|
-| §1.3 | What does "Focal" refer to? | **Option B** (alignment pipeline only) | ✅ DECIDED |
+| §1.3 | What does "Focal" refer to? | **Option B** (alignment brain only) | ✅ DECIDED |
 | §3.3 | Runtime API surface | **Option A** (one ingress endpoint) | ✅ DECIDED |
 | §3.4 | Ingress envelope | **Multimodal content** (content_type + content object) | ✅ REVISED |
 | §3.5 | Task execution | **Option C** (bypass ACF, Agenda→Hatchet direct) | ✅ DECIDED |
 | §4.0 | ACF rename | **Turn Fabric** or **Conversation Runtime** | ⏳ PENDING |
-| §4.2 | ACF ↔ Pipeline naming | **Option A** (keep FOCAL 360 naming) | ✅ DECIDED |
+| §4.2 | ACF ↔ Brain naming | **Option A** (keep FOCAL 360 naming) | ✅ DECIDED |
 | §4.3 | ACF policy config | **Option A** (shared ChannelPolicy model) | ✅ REVISED |
 | §4.4 | Event surface | **Option A** (AgentEvent canonical) | ✅ DECIDED |
 | §4.5 | Mechanic selection | **Option A** (mechanic ID) | ✅ DECIDED |
@@ -1241,7 +1244,7 @@ For quick reference, here are all decisions with final status:
 - §6.6: Added InterlocutorChannelPresence for cross-channel awareness without session merging
 - §7.3: MCP for discovery, Toolbox awareness of unavailable tools, execution stays native
 - §8.0: Changed from "customer" to "interlocutor" with InterlocutorType enum (human/agent/system/bot)
-- §12.3: ASA is mechanic-agnostic (can configure ANY CognitivePipeline)
+- §12.3: ASA is mechanic-agnostic (can configure ANY Brain)
 
 ---
 
@@ -1250,7 +1253,7 @@ For quick reference, here are all decisions with final status:
 This is a **high-quality architecture clarification document**. The vision is coherent, the boundaries are well-defined, and **all major decisions are now finalized**.
 
 **Strengths**:
-- Clear separation of concerns (ACF vs Agent vs Pipeline)
+- Clear separation of concerns (ACF vs Agent vs Brain)
 - Mechanic-first, framework-agnostic approach
 - Strong multi-tenancy foundation already in code
 - Realistic provisioning model (Ruche blueprints)
@@ -1264,7 +1267,7 @@ This is a **high-quality architecture clarification document**. The vision is co
 - **ChannelPolicy as shared model**: Single source of truth, not per-component lookups
 - **Cross-channel awareness without session merging**: InterlocutorChannelPresence
 - **MCP for discovery, Toolbox for execution**: Three-tier tool visibility model
-- **ASA is mechanic-agnostic**: Can configure any CognitivePipeline, not just FOCAL
+- **ASA is mechanic-agnostic**: Can configure any Brain, not just FOCAL
 
 **Remaining risks**:
 - ACF implementation complexity (Phase 6.5 is significant)

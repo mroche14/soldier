@@ -8,8 +8,8 @@ import json
 from datetime import UTC, datetime
 from uuid import UUID
 
-from ruche.alignment.migration.models import MigrationPlan, MigrationPlanStatus
-from ruche.alignment.models import (
+from ruche.brains.focal.migration.models import MigrationPlan, MigrationPlanStatus
+from ruche.brains.focal.models import (
     Agent,
     Intent,
     Rule,
@@ -1145,7 +1145,7 @@ class PostgresConfigStore(ConfigStore):
 
     def _row_to_scenario(self, row) -> Scenario:
         """Convert database row to Scenario model."""
-        from ruche.alignment.models import ScenarioStep
+        from ruche.brains.focal.models import ScenarioStep
 
         steps_data = json.loads(row["steps"]) if row["steps"] else []
         steps = [ScenarioStep.model_validate(s) for s in steps_data]
@@ -1169,7 +1169,7 @@ class PostgresConfigStore(ConfigStore):
 
     def _row_to_template(self, row) -> Template:
         """Convert database row to Template model."""
-        from ruche.alignment.models import TemplateResponseMode
+        from ruche.brains.focal.models import TemplateResponseMode
 
         return Template(
             id=row["id"],
@@ -1187,7 +1187,7 @@ class PostgresConfigStore(ConfigStore):
 
     def _row_to_variable(self, row) -> Variable:
         """Convert database row to Variable model."""
-        from ruche.alignment.models import UpdatePolicy
+        from ruche.brains.focal.models import UpdatePolicy
 
         return Variable(
             id=row["id"],
@@ -1205,7 +1205,7 @@ class PostgresConfigStore(ConfigStore):
 
     def _row_to_agent(self, row) -> Agent:
         """Convert database row to Agent model."""
-        from ruche.alignment.models.agent import AgentSettings
+        from ruche.brains.focal.models.agent import AgentSettings
 
         # Reconstruct settings from database columns
         settings = AgentSettings(
@@ -1240,7 +1240,7 @@ class PostgresConfigStore(ConfigStore):
 
     def _row_to_migration_plan(self, row) -> MigrationPlan:
         """Convert database row to MigrationPlan model."""
-        from ruche.alignment.migration.models import (
+        from ruche.brains.focal.migration.models import (
             AnchorMigrationPolicy,
             ScopeFilter,
             TransformationMap,
@@ -1383,7 +1383,7 @@ class PostgresConfigStore(ConfigStore):
 
         TODO: Implement with glossary_items table query after migration.
         """
-        from ruche.alignment.models.glossary import GlossaryItem
+        from ruche.brains.focal.models.glossary import GlossaryItem
 
         raise NotImplementedError(
             "Glossary operations require database migration. "
@@ -1412,7 +1412,7 @@ class PostgresConfigStore(ConfigStore):
 
         TODO: Implement with customer_data_fields table query after migration.
         """
-        from ruche.customer_data.models import CustomerDataField
+        from ruche.interlocutor_data.models import InterlocutorDataField
 
         raise NotImplementedError(
             "Customer data field operations require database migration. "

@@ -31,7 +31,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from ruche.observability.logging import get_logger
-from ruche.providers.llm.base import (
+from ruche.infrastructure.providers.llm.base import (
     LLMMessage,
     LLMResponse,
     ProviderError,
@@ -69,7 +69,7 @@ class ExecutionContext:
     step: str | None = None  # "context_extraction", "rule_filtering", etc.
 
     # Optional: for billing/analytics
-    customer_id: str | None = None
+    interlocutor_id: str | None = None
     plan_tier: str | None = None
 
 

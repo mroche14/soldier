@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from ruche.alignment.models import Scenario
+from ruche.brains.focal.models import Scenario
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

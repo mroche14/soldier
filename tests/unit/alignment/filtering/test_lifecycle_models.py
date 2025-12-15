@@ -3,7 +3,7 @@
 import pytest
 from uuid import uuid4
 
-from ruche.alignment.filtering.models import (
+from ruche.brains.focal.phases.filtering.models import (
     ScenarioLifecycleAction,
     ScenarioLifecycleDecision,
     ScenarioStepTransitionDecision,

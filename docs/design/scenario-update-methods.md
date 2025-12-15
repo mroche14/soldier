@@ -552,7 +552,7 @@ async def execute_gap_fill(
 
     For each inserted node:
     - If only a text message: ignore (user doesn't need to see it)
-    - If requires data: try to backfill from customer_data/session/conversation
+    - If requires data: try to backfill from interlocutor_data/session/conversation
     - If data not found: pause and ask user
     """
 
@@ -1335,7 +1335,7 @@ async def execute_composite_migration(
 
 These happen without user notification:
 - Clean graft (just attaching new downstream)
-- Gap fill from CustomerDataStore (instant)
+- Gap fill from InterlocutorDataStore (instant)
 - Gap fill from session variables (instant)
 - Relocation to anchor when step deleted
 
@@ -1550,7 +1550,7 @@ The Control Plane should display migration plans for review:
 
 ## See Also
 
-- [Interlocutor Data](./customer-profile.md) - Persistent interlocutor data enabling gap fill
+- [Interlocutor Data](./interlocutor-data.md) - Persistent interlocutor data enabling gap fill
 - [Alignment Engine](../architecture/alignment-engine.md) - Scenario navigation and step transitions
 - [Domain Model](./domain-model.md) - Core entity definitions
-- [Turn Pipeline](./turn-pipeline.md) - Where reconciliation fits in request processing
+- [FOCAL Brain](../focal_brain/spec/brain.md) - Where reconciliation fits in request processing

@@ -8,7 +8,7 @@ LLMProvider is small and focused: generate, generate_stream, generate_structured
 
 Pydantic models for messages/responses: makes it easy to log, persist, or wrap into TurnRecord.
 
-Explicit error types: AuthenticationError, RateLimitError, etc. Good for your alignment pipeline to decide what to do on errors.
+Explicit error types: AuthenticationError, RateLimitError, etc. Good for your alignment brain to decide what to do on errors.
 
 OpenRouter provider:
 
@@ -218,7 +218,7 @@ async def generate_structured(
     # merge kwargs like in generate()
 
 
-That way your pipeline can choose cheaper models for structured tasks if needed.
+That way your brain can choose cheaper models for structured tasks if needed.
 
 2.3.4. JSON parsing robustness
 
@@ -347,7 +347,7 @@ your tools become Agno tools with RunContext;
 multi-tenancy uses Agno’s session + session_state.
 
 Level 3 – Full Agno workflow / AgentOS front-end
-You express process_turn itself as an Agno Workflow, so the entire pipeline is first-class in Agno’s world (steps, events, observability). Your current AlignmentEngine essentially becomes a thin domain wrapper around those steps.
+You express process_turn itself as an Agno Workflow, so the entire brain is first-class in Agno’s world (steps, events, observability). Your current AlignmentEngine essentially becomes a thin domain wrapper around those steps.
 
 Right now you’re at Level 0/1. You’re asking, “Can’t I go to 2 or 3?” → yes.
 
@@ -357,7 +357,7 @@ Level 2: Agno inside your AlignmentEngine
 
 Your current AlignmentEngine.process_turn:
 
-already does a beautiful 8-step pipeline;
+already does a beautiful 8-step brain;
 
 already has tenant_id, agent_id, session_id;
 
@@ -458,7 +458,7 @@ await self._llm_provider.generate(
 )
 
 
-Now every LLM step in your pipeline is:
+Now every LLM step in your brain is:
 
 a call to an Agno Agent,
 
@@ -548,7 +548,7 @@ And a tool looks like:
 
 from agno.run import RunContext
 
-async def fetch_customer_data(
+async def fetch_interlocutor_data(
     run_context: RunContext,
     context: Context,
     data_type: str,
@@ -648,7 +648,7 @@ If you want Agno to be more than “just an HTTP client”, for SmartBeez / foca
 
 Swap OpenRouterProvider → AgnoProvider, but keep LLMProvider interface.
 
-Each pipeline step uses a dedicated Agno Agent (model + instructions per step).
+Each brain step uses a dedicated Agno Agent (model + instructions per step).
 
 Pass tenant_id/agent_id/session_id via request_metadata → session_state.
 
@@ -915,7 +915,7 @@ You handle steps, timings, sessions, audit.
 
 Agno is “per-step brain” + Tools + multi-tenant context.
 
-Express the AlignmentEngine pipeline as an Agno Workflow, then your HTTP layer just calls the Workflow.
+Express the AlignmentEngine brain as an Agno Workflow, then your HTTP layer just calls the Workflow.
 
 You still keep AlignmentResult as your final object (returned from the workflow).
 

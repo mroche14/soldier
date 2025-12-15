@@ -5,7 +5,7 @@ from typing import Any
 
 from sentence_transformers import SentenceTransformer
 
-from ruche.providers.embedding.base import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.embedding.base import EmbeddingProvider, EmbeddingResponse
 
 
 class SentenceTransformersProvider(EmbeddingProvider):

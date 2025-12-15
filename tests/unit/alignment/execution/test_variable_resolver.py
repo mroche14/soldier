@@ -2,7 +2,7 @@
 
 import pytest
 
-from ruche.alignment.execution.variable_resolver import VariableResolver
+from ruche.brains.focal.phases.execution.variable_resolver import VariableResolver
 
 
 @pytest.fixture
@@ -39,13 +39,13 @@ def test_resolve_rejects_invalid_template_type(resolver: VariableResolver, inval
 async def test_resolve_from_profile_only(resolver: VariableResolver) -> None:
     """Test resolving variables from customer profile only."""
     from uuid import uuid4
-    from ruche.customer_data.models import CustomerDataStore, VariableEntry
-    from ruche.customer_data.enums import ItemStatus, VariableSource
+    from ruche.interlocutor_data.models import InterlocutorDataStore, VariableEntry
+    from ruche.interlocutor_data.enums import ItemStatus, VariableSource
     from ruche.conversation.models.session import Session
     from ruche.conversation.models.enums import Channel
 
-    profile = CustomerDataStore(
-        customer_id=uuid4(),
+    profile = InterlocutorDataStore(
+        interlocutor_id=uuid4(),
         tenant_id=uuid4(),
         fields={
             "name": VariableEntry(name="name", value="Alice", value_type="string", source=VariableSource.USER_PROVIDED, status=ItemStatus.ACTIVE),
@@ -74,12 +74,12 @@ async def test_resolve_from_profile_only(resolver: VariableResolver) -> None:
 async def test_resolve_from_session_only(resolver: VariableResolver) -> None:
     """Test resolving variables from session only."""
     from uuid import uuid4
-    from ruche.customer_data.models import CustomerDataStore
+    from ruche.interlocutor_data.models import InterlocutorDataStore
     from ruche.conversation.models.session import Session
     from ruche.conversation.models.enums import Channel
 
-    profile = CustomerDataStore(
-        customer_id=uuid4(),
+    profile = InterlocutorDataStore(
+        interlocutor_id=uuid4(),
         tenant_id=uuid4(),
         fields={},
     )
@@ -105,13 +105,13 @@ async def test_resolve_from_session_only(resolver: VariableResolver) -> None:
 async def test_resolve_from_both_profile_priority(resolver: VariableResolver) -> None:
     """Test that profile takes priority over session when both have the same variable."""
     from uuid import uuid4
-    from ruche.customer_data.models import CustomerDataStore, VariableEntry
-    from ruche.customer_data.enums import ItemStatus, VariableSource
+    from ruche.interlocutor_data.models import InterlocutorDataStore, VariableEntry
+    from ruche.interlocutor_data.enums import ItemStatus, VariableSource
     from ruche.conversation.models.session import Session
     from ruche.conversation.models.enums import Channel
 
-    profile = CustomerDataStore(
-        customer_id=uuid4(),
+    profile = InterlocutorDataStore(
+        interlocutor_id=uuid4(),
         tenant_id=uuid4(),
         fields={
             "name": VariableEntry(name="name", value="ProfileName", value_type="string", source=VariableSource.USER_PROVIDED, status=ItemStatus.ACTIVE),
@@ -141,13 +141,13 @@ async def test_resolve_from_both_profile_priority(resolver: VariableResolver) ->
 async def test_partial_resolution_some_missing(resolver: VariableResolver) -> None:
     """Test partial resolution where some variables are missing."""
     from uuid import uuid4
-    from ruche.customer_data.models import CustomerDataStore, VariableEntry
-    from ruche.customer_data.enums import ItemStatus, VariableSource
+    from ruche.interlocutor_data.models import InterlocutorDataStore, VariableEntry
+    from ruche.interlocutor_data.enums import ItemStatus, VariableSource
     from ruche.conversation.models.session import Session
     from ruche.conversation.models.enums import Channel
 
-    profile = CustomerDataStore(
-        customer_id=uuid4(),
+    profile = InterlocutorDataStore(
+        interlocutor_id=uuid4(),
         tenant_id=uuid4(),
         fields={
             "name": VariableEntry(name="name", value="Alice", value_type="string", source=VariableSource.USER_PROVIDED, status=ItemStatus.ACTIVE),
@@ -175,12 +175,12 @@ async def test_partial_resolution_some_missing(resolver: VariableResolver) -> No
 async def test_all_missing(resolver: VariableResolver) -> None:
     """Test when all variables are missing."""
     from uuid import uuid4
-    from ruche.customer_data.models import CustomerDataStore
+    from ruche.interlocutor_data.models import InterlocutorDataStore
     from ruche.conversation.models.session import Session
     from ruche.conversation.models.enums import Channel
 
-    profile = CustomerDataStore(
-        customer_id=uuid4(),
+    profile = InterlocutorDataStore(
+        interlocutor_id=uuid4(),
         tenant_id=uuid4(),
         fields={},
     )
@@ -206,13 +206,13 @@ async def test_all_missing(resolver: VariableResolver) -> None:
 async def test_all_resolved(resolver: VariableResolver) -> None:
     """Test when all variables are resolved."""
     from uuid import uuid4
-    from ruche.customer_data.models import CustomerDataStore, VariableEntry
-    from ruche.customer_data.enums import ItemStatus, VariableSource
+    from ruche.interlocutor_data.models import InterlocutorDataStore, VariableEntry
+    from ruche.interlocutor_data.enums import ItemStatus, VariableSource
     from ruche.conversation.models.session import Session
     from ruche.conversation.models.enums import Channel
 
-    profile = CustomerDataStore(
-        customer_id=uuid4(),
+    profile = InterlocutorDataStore(
+        interlocutor_id=uuid4(),
         tenant_id=uuid4(),
         fields={
             "name": VariableEntry(name="name", value="Alice", value_type="string", source=VariableSource.USER_PROVIDED, status=ItemStatus.ACTIVE),
@@ -241,13 +241,13 @@ async def test_all_resolved(resolver: VariableResolver) -> None:
 async def test_inactive_profile_fields_ignored(resolver: VariableResolver) -> None:
     """Test that inactive profile fields are ignored."""
     from uuid import uuid4
-    from ruche.customer_data.models import CustomerDataStore, VariableEntry
-    from ruche.customer_data.enums import ItemStatus, VariableSource
+    from ruche.interlocutor_data.models import InterlocutorDataStore, VariableEntry
+    from ruche.interlocutor_data.enums import ItemStatus, VariableSource
     from ruche.conversation.models.session import Session
     from ruche.conversation.models.enums import Channel
 
-    profile = CustomerDataStore(
-        customer_id=uuid4(),
+    profile = InterlocutorDataStore(
+        interlocutor_id=uuid4(),
         tenant_id=uuid4(),
         fields={
             "name": VariableEntry(name="name", value="Alice", value_type="string", source=VariableSource.USER_PROVIDED, status=ItemStatus.ACTIVE),

@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.api.dependencies import (
     get_audit_store,
     get_config_store,

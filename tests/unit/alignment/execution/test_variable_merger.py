@@ -3,8 +3,8 @@
 import pytest
 from uuid import uuid4
 
-from ruche.alignment.execution.variable_merger import VariableMerger
-from ruche.alignment.execution.models import ToolResult
+from ruche.brains.focal.phases.execution.variable_merger import VariableMerger
+from ruche.brains.focal.phases.execution.models import ToolResult
 
 
 @pytest.fixture

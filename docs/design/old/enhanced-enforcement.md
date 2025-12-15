@@ -1,6 +1,6 @@
 # Enhanced Enforcement
 
-Extending the enforcement pipeline with deterministic rule evaluation, LLM-as-Judge for subjective rules, and optional grounding/relevance verification.
+Extending the enforcement brain with deterministic rule evaluation, LLM-as-Judge for subjective rules, and optional grounding/relevance verification.
 
 ## Overview
 
@@ -18,7 +18,7 @@ This document describes enhancements to the enforcement step, adding:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         CURRENT TURN PIPELINE                               │
+│                         CURRENT TURN BRAIN                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  1. Retrieve Rules      ← Semantic match on condition_text                  │
@@ -127,11 +127,11 @@ class Rule(AgentScopedModel):
 
 ---
 
-## Enhanced Enforcement Pipeline
+## Enhanced Enforcement Brain
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                      ENHANCED ENFORCEMENT PIPELINE                          │
+│                      ENHANCED ENFORCEMENT BRAIN                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  [Generated Response]                                                       │
@@ -568,10 +568,10 @@ Output ONE word: ENTAILMENT, NEUTRAL, or CONTRADICTION"""
 
 ## Configuration
 
-### Pipeline Configuration (Extended)
+### Brain Configuration (Extended)
 
 ```python
-# ruche/config/models/pipeline.py
+# ruche/config/models/brain.py
 
 class EnforcementConfig(BaseModel):
     """Configuration for enforcement step."""
@@ -617,7 +617,7 @@ class EnforcementConfig(BaseModel):
 ```toml
 # config/default.toml
 
-[pipeline.enforcement]
+[brain.enforcement]
 enabled = true
 max_retries = 1
 
@@ -649,7 +649,7 @@ grounding_strategy = "llm_judge"
 ```toml
 # config/production.toml
 
-[pipeline.enforcement]
+[brain.enforcement]
 max_retries = 2
 relevance_check_enabled = true
 grounding_check_enabled = true

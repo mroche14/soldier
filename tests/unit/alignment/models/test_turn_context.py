@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from ruche.alignment.models.turn_context import TurnContext
+from ruche.brains.focal.models.turn_context import TurnContext
 
 
 class TestTurnContext:
@@ -14,18 +14,18 @@ class TestTurnContext:
         """Test that TurnContext can be created with all required fields."""
         tenant_id = uuid4()
         agent_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         session_id = uuid4()
         now = datetime.now(UTC)
 
         turn_context = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=1,
             session={"session_id": str(session_id), "turn_count": 0},
-            customer_data={"customer_id": str(customer_id), "fields": {}},
+            customer_data={"interlocutor_id": str(interlocutor_id), "fields": {}},
             pipeline_config={"generation": {"enabled": True}},
             customer_data_fields={},
             glossary={},
@@ -35,7 +35,7 @@ class TestTurnContext:
 
         assert turn_context.tenant_id == tenant_id
         assert turn_context.agent_id == agent_id
-        assert turn_context.customer_id == customer_id
+        assert turn_context.interlocutor_id == interlocutor_id
         assert turn_context.session_id == session_id
         assert turn_context.turn_number == 1
         assert turn_context.turn_started_at == now
@@ -44,7 +44,7 @@ class TestTurnContext:
         """Test that TurnContext can be created with optional fields populated."""
         tenant_id = uuid4()
         agent_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         session_id = uuid4()
         now = datetime.now(UTC)
 
@@ -71,11 +71,11 @@ class TestTurnContext:
         turn_context = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=5,
             session={"session_id": str(session_id), "turn_count": 4},
-            customer_data={"customer_id": str(customer_id), "fields": {"email": "test@example.com"}},
+            customer_data={"interlocutor_id": str(interlocutor_id), "fields": {"email": "test@example.com"}},
             pipeline_config={"generation": {"enabled": True}},
             customer_data_fields=customer_data_fields,
             glossary=glossary,
@@ -92,18 +92,18 @@ class TestTurnContext:
         """Test that optional dict fields default to empty dicts."""
         tenant_id = uuid4()
         agent_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         session_id = uuid4()
         now = datetime.now(UTC)
 
         turn_context = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=1,
             session={"session_id": str(session_id)},
-            customer_data={"customer_id": str(customer_id)},
+            customer_data={"interlocutor_id": str(interlocutor_id)},
             pipeline_config={},
             turn_started_at=now,
         )
@@ -116,18 +116,18 @@ class TestTurnContext:
         """Test that TurnContext can be serialized to dict and back."""
         tenant_id = uuid4()
         agent_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         session_id = uuid4()
         now = datetime.now(UTC)
 
         original = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=1,
             session={"session_id": str(session_id)},
-            customer_data={"customer_id": str(customer_id)},
+            customer_data={"interlocutor_id": str(interlocutor_id)},
             pipeline_config={},
             turn_started_at=now,
         )
@@ -140,7 +140,7 @@ class TestTurnContext:
 
         assert restored.tenant_id == original.tenant_id
         assert restored.agent_id == original.agent_id
-        assert restored.customer_id == original.customer_id
+        assert restored.interlocutor_id == original.interlocutor_id
         assert restored.session_id == original.session_id
         assert restored.turn_number == original.turn_number
         assert restored.turn_started_at == original.turn_started_at
@@ -149,14 +149,14 @@ class TestTurnContext:
         """Test that TurnContext provides all routing identifiers."""
         tenant_id = uuid4()
         agent_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         session_id = uuid4()
         now = datetime.now(UTC)
 
         turn_context = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=3,
             session={},
@@ -168,6 +168,6 @@ class TestTurnContext:
         # All routing IDs should be accessible
         assert turn_context.tenant_id == tenant_id
         assert turn_context.agent_id == agent_id
-        assert turn_context.customer_id == customer_id
+        assert turn_context.interlocutor_id == interlocutor_id
         assert turn_context.session_id == session_id
         assert turn_context.turn_number == 3

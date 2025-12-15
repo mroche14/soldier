@@ -1,4 +1,4 @@
-# Turn Pipeline
+# Turn Brain
 
 The complete request lifecycle for processing a single user message.
 
@@ -6,7 +6,7 @@ The complete request lifecycle for processing a single user message.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            TURN PIPELINE                                     │
+│                            TURN BRAIN                                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  1. RECEIVE         Validate request, load session                          │
@@ -69,25 +69,25 @@ The complete request lifecycle for processing a single user message.
 Each step can use different models/providers:
 
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 llm_provider = "anthropic"
 llm_model = "claude-3-haiku"           # Fast, cheap
 # OR embedding-only mode (no LLM)
 mode = "llm"  # "llm" | "embedding_only" | "disabled"
 
-[pipeline.retrieval]
+[brain.retrieval]
 embedding_provider = "openai"
 embedding_model = "text-embedding-3-small"
 top_k = 20
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 rerank_provider = "cohere"
 rerank_model = "rerank-english-v3.0"
 top_k = 10
 
 # Step 5: Rule filtering (which rules apply?)
-[pipeline.rule_filter]
+[brain.rule_filter]
 enabled = true
 llm_provider = "anthropic"
 llm_model = "claude-3-haiku"           # Fast for yes/no
@@ -95,7 +95,7 @@ max_rules = 10
 
 # Step 5b: Scenario filtering (graph navigation)
 # See alignment-engine.md for full algorithm
-[pipeline.scenario_filter]
+[brain.scenario_filter]
 # Transition thresholds
 transition_threshold = 0.65            # Min score to consider transition
 sanity_threshold = 0.35                # If all below, something's wrong
@@ -116,13 +116,13 @@ relocalization_threshold = 0.7
 relocalization_trigger_turns = 3
 max_relocalization_hops = 3
 
-[pipeline.generation]
+[brain.generation]
 llm_provider = "anthropic"
 llm_model = "claude-sonnet-4-5-20250514"  # Best quality
 temperature = 0.7
 max_tokens = 1024
 
-[pipeline.enforcement]
+[brain.enforcement]
 self_critique_enabled = false
 llm_provider = "anthropic"
 llm_model = "claude-3-haiku"
@@ -156,7 +156,7 @@ async def process_turn(request: ChatRequest) -> ChatResponse:
 
     # Load agent config (via ConfigStore)
     agent_config = await config_store.get_agent(tenant_id, request.agent_id)
-    pipeline_config = agent_config.pipeline
+    pipeline_config = agent_config.brain
 
     # Start timing
     start_time = time.monotonic()
@@ -1000,35 +1000,35 @@ async def ingest_to_memory(
 
 ---
 
-## Full Pipeline Orchestration
+## Full Brain Orchestration
 
 ```python
 async def process_turn(request: ChatRequest) -> ChatResponse:
-    """Complete turn processing pipeline."""
+    """Complete turn processing brain."""
 
     # 1. Receive
     session, agent_config, turn_id, start_time = await receive_request(request)
-    pipeline = agent_config.pipeline
+    brain = agent_config.brain
 
     # 2. Extract Context
     context = await extract_context(
         message=request.message,
         session=session,
-        config=pipeline.context_extraction,
+        config=brain.context_extraction,
     )
 
     # 3. Retrieve Candidates
     candidates = await retrieve_candidates(
         context=context,
         session=session,
-        config=pipeline.retrieval,
+        config=brain.retrieval,
     )
 
     # 4. Rerank
     candidates = await rerank_candidates(
         context=context,
         candidates=candidates,
-        config=pipeline.reranking,
+        config=brain.reranking,
     )
 
     # 5. Rule Filter (which rules apply?)
@@ -1036,7 +1036,7 @@ async def process_turn(request: ChatRequest) -> ChatResponse:
         context=context,
         candidates=candidates.candidate_rules,
         session=session,
-        config=pipeline.rule_filter,
+        config=brain.rule_filter,
     )
 
     # 5b. Scenario Filter (graph navigation)
@@ -1049,7 +1049,7 @@ async def process_turn(request: ChatRequest) -> ChatResponse:
     scenario_result = await filter_scenario(
         context=context,
         session=session,
-        config=pipeline.scenario_filter,
+        config=brain.scenario_filter,
     )
 
     # Apply scenario navigation result to session
@@ -1069,7 +1069,7 @@ async def process_turn(request: ChatRequest) -> ChatResponse:
         memory_context=candidates.memory_context,
         tool_results=tool_results,
         session=session,
-        config=pipeline.generation,
+        config=brain.generation,
     )
 
     # 8. Enforce Constraints
@@ -1077,7 +1077,7 @@ async def process_turn(request: ChatRequest) -> ChatResponse:
         response=generation.response,
         matched_rules=rule_filter_result.matched_rules,
         context=context,
-        config=pipeline.enforcement,
+        config=brain.enforcement,
     )
 
     # 9. Persist
@@ -1185,69 +1185,69 @@ Target: < 1600ms end-to-end (with both filters)
 ### Minimal (Fastest)
 
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 mode = "disabled"
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = false
 
-[pipeline.rule_filter]
+[brain.rule_filter]
 enabled = false
 
-[pipeline.scenario_filter]
+[brain.scenario_filter]
 llm_adjudication_enabled = false   # Embedding-only
 relocalization_enabled = false
 
-[pipeline.generation]
+[brain.generation]
 llm_model = "claude-3-haiku"
 ```
 
 ### Balanced (Recommended)
 
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 mode = "llm"
 llm_model = "claude-3-haiku"
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 
-[pipeline.rule_filter]
+[brain.rule_filter]
 enabled = true
 llm_model = "claude-3-haiku"
 
-[pipeline.scenario_filter]
+[brain.scenario_filter]
 llm_adjudication_enabled = true
 llm_model = "claude-3-haiku"
 relocalization_enabled = true
 
-[pipeline.generation]
+[brain.generation]
 llm_model = "claude-sonnet-4-5-20250514"
 ```
 
 ### Maximum Quality
 
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 mode = "llm"
 llm_model = "claude-sonnet-4-5-20250514"
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 
-[pipeline.rule_filter]
+[brain.rule_filter]
 enabled = true
 llm_model = "claude-sonnet-4-5-20250514"
 
-[pipeline.scenario_filter]
+[brain.scenario_filter]
 llm_adjudication_enabled = true
 llm_model = "claude-sonnet-4-5-20250514"
 relocalization_enabled = true
 relocalization_threshold = 0.8   # Higher threshold for better precision
 
-[pipeline.generation]
+[brain.generation]
 llm_model = "claude-sonnet-4-5-20250514"
 
-[pipeline.enforcement]
+[brain.enforcement]
 self_critique_enabled = true
 ```

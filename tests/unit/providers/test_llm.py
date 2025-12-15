@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel
 
-from ruche.providers.llm import (
+from ruche.infrastructure.providers.llm import (
     AuthenticationError,
     ContentFilterError,
     LLMMessage,

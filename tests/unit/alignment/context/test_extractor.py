@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
-from ruche.alignment.context.extractor import ContextExtractor
-from ruche.alignment.context.models import (
+from ruche.brains.focal.phases.context.extractor import ContextExtractor
+from ruche.brains.focal.phases.context.models import (
     Context,
     ExtractedEntity,
     ScenarioSignal,
@@ -15,8 +15,8 @@ from ruche.alignment.context.models import (
     Turn,
     Urgency,
 )
-from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.infrastructure.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

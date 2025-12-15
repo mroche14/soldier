@@ -6,7 +6,7 @@ from typing import Any, Literal
 import httpx
 
 from ruche.observability.logging import get_logger
-from ruche.providers.embedding.base import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.embedding.base import EmbeddingProvider, EmbeddingResponse
 
 logger = get_logger(__name__)
 

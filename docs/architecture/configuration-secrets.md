@@ -129,7 +129,7 @@ TOML files should **never** contain actual secrets:
 # ✅ CORRECT: No API keys in TOML
 
 # Models are configured per step - API keys resolved from environment
-[pipeline.generation]
+[brain.generation]
 model = "openrouter/anthropic/claude-sonnet-4-5-20250514"  # Uses OPENROUTER_API_KEY
 fallback_models = [
     "anthropic/claude-sonnet-4-5-20250514",  # Uses ANTHROPIC_API_KEY

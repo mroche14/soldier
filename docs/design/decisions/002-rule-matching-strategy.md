@@ -16,7 +16,7 @@ Focal's alignment engine must match user messages to relevant Rules quickly and 
 ## Decision Drivers
 
 - **Accuracy**: Semantic understanding, not just keyword overlap
-- **Latency**: Must not be the bottleneck in the turn pipeline
+- **Latency**: Must not be the bottleneck in the turn brain
 - **Scalability**: Handle 100s-1000s of Rules per tenant
 - **Explainability**: Why did this Rule match?
 
@@ -207,10 +207,38 @@ async def match_rules(
     # 6. Filter by business rules
     filtered = apply_filters(scored, session)
 
-    # 7. Return top-N
-    filtered.sort(key=lambda m: m.final_score, reverse=True)
+    # 7. Sort with deterministic tiebreaker and return top-N
+    filtered.sort(
+        key=lambda m: (-m.final_score, -m.rule.priority, str(m.rule.id))
+    )
     return filtered[:MAX_MATCHED_RULES]
 ```
+
+### Deterministic Tiebreaker
+
+When two rules have identical final scores, use a deterministic tiebreaker to ensure consistent ordering:
+
+```python
+def sort_with_tiebreaker(scored_rules: list[ScoredRule]) -> list[ScoredRule]:
+    """
+    Sort rules by score with deterministic tiebreaker.
+
+    Order:
+    1. Final score (descending) - primary sort
+    2. Priority (descending) - higher priority wins ties
+    3. Rule ID (ascending) - stable ordering for equal priority
+    """
+    return sorted(
+        scored_rules,
+        key=lambda r: (-r.final_score, -r.rule.priority, str(r.rule.id)),
+    )
+```
+
+**Why this matters:**
+- Without tiebreaker, equal-scored rules appear in arbitrary order
+- This causes non-deterministic behavior across runs
+- Priority serves as explicit business preference
+- Rule ID ensures stable ordering when all else is equal
 
 ### Tuning Parameters
 

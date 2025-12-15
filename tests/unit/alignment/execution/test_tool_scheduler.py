@@ -3,8 +3,8 @@
 import pytest
 from uuid import uuid4
 
-from ruche.alignment.execution.tool_scheduler import ToolScheduler, FutureToolQueue
-from ruche.alignment.models.tool_binding import ToolBinding
+from ruche.brains.focal.phases.execution.tool_scheduler import ToolScheduler, FutureToolQueue
+from ruche.brains.focal.models.tool_binding import ToolBinding
 
 
 @pytest.fixture

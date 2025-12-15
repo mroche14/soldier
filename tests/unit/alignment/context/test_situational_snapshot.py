@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from ruche.alignment.context.situation_snapshot import (
+from ruche.brains.focal.phases.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )

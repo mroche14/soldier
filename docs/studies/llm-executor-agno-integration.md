@@ -96,15 +96,15 @@ Agno Model Classes (internal, not exposed)
 Config-driven model selection (unchanged):
 
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 model = "openrouter/anthropic/claude-3-haiku-20240307"
 fallback_models = ["anthropic/claude-3-haiku-20240307"]
 
-[pipeline.generation]
+[brain.generation]
 model = "anthropic/claude-3-5-sonnet-20241022"
 fallback_models = ["openrouter/anthropic/claude-3-5-sonnet-20241022"]
 
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 model = "openai/gpt-4o-mini"
 ```
 

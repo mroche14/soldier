@@ -4,12 +4,12 @@ import pytest
 from uuid import uuid4
 from datetime import datetime, UTC
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.models.intent import Intent
-from ruche.alignment.retrieval.intent_retriever import IntentRetriever
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.models.intent import Intent
+from ruche.brains.focal.retrieval.intent_retriever import IntentRetriever
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.selection import SelectionConfig
-from ruche.providers.embedding import EmbeddingProvider
+from ruche.infrastructure.providers.embedding import EmbeddingProvider
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

@@ -10,21 +10,21 @@
 
 | Decision | Status | Checked | Affected Docs |
 |----------|--------|---------|---------------|
-| §1.3 Focal = alignment pipeline | ✅ DONE | ☑ | overview.md, vision.md, CLAUDE.md |
+| §1.3 Focal = alignment brain | ✅ DONE | ☑ | overview.md, vision.md, CLAUDE.md |
 | §3.4 Multimodal envelope | ✅ DONE | ☑ | api-layer.md, ACF_ARCHITECTURE.md |
 | §3.5 Tasks bypass ACF | ✅ DONE | ☑ | ACF_ARCHITECTURE.md |
 | §4.3 ChannelPolicy shared | ✅ DONE | ☑ | ACF_ARCHITECTURE.md, AGENT_RUNTIME_SPEC.md, 10-channel-capabilities.md |
-| §6.6 InterlocutorChannelPresence | ✅ DONE | ☑ | customer-profile.md, data_models.md |
+| §6.6 InterlocutorChannelPresence | ✅ DONE | ☑ | interlocutor-data.md, data_models.md |
 | §7.3 MCP discovery | ✅ DONE | ☑ | TOOLBOX_SPEC.md, api-layer.md |
-| §8.0 Interlocutor terminology | ✅ DONE | ☑ | data_models.md, pipeline.md, domain-model.md |
+| §8.0 Interlocutor terminology | ✅ DONE | ☑ | data_models.md, brain.md, domain-model.md |
 | §12.3 ASA mechanic-agnostic | ✅ DONE | ☑ | 13-asa-validator.md |
 
 ---
 
 ## Detailed Status per Decision
 
-### §1.3 Focal = alignment pipeline only
-- **Decision**: FOCAL is the alignment mechanic/pipeline, not the platform. Platform = "Ruche Runtime" or similar.
+### §1.3 Focal = alignment brain only
+- **Decision**: FOCAL is the alignment mechanic/brain, not the platform. Platform = "Ruche Runtime" or similar.
 - **Files updated**:
   - [x] `docs/architecture/overview.md` - Updated Focal definition, added platform components list
   - [x] `docs/vision.md` - Clarified scope as "runtime platform"
@@ -36,14 +36,14 @@
 - **Decision**: Ingress envelope supports content_type + content object (text, media, location, structured)
 - **Files updated**:
   - [x] `docs/architecture/api-layer.md` - Added multimodal envelope spec with content_type field
-  - [x] `docs/focal_360/architecture/ACF_ARCHITECTURE.md` - Referenced in ingress section
+  - [x] `docs/acf/architecture/ACF_ARCHITECTURE.md` - Referenced in ingress section
 - **Status**: ✅ DONE
 - **Checked**: ☑
 
 ### §3.5 Tasks bypass ACF (Agenda→Hatchet direct)
 - **Decision**: Tasks are NOT conversations. Agenda→Hatchet direct, separate workflow type.
 - **Files updated**:
-  - [x] `docs/focal_360/architecture/ACF_ARCHITECTURE.md` - Added §3.5 "Tasks Bypass ACF Entirely"
+  - [x] `docs/acf/architecture/ACF_ARCHITECTURE.md` - Added §3.5 "Tasks Bypass ACF Entirely"
 - **Status**: ✅ DONE
 - **Checked**: ☑
 - **Note**: 09-agenda-goals.md and 06-hatchet-integration.md updates deferred (lower priority)
@@ -51,24 +51,24 @@
 ### §4.3 ChannelPolicy shared model
 - **Decision**: ChannelPolicy is single source of truth, loaded into AgentContext.
 - **Files updated**:
-  - [x] `docs/focal_360/architecture/ACF_ARCHITECTURE.md` - Added ChannelPolicy model definition
-  - [x] `docs/focal_360/architecture/AGENT_RUNTIME_SPEC.md` - Added channel_policies to AgentContext
-  - [x] `docs/focal_360/architecture/topics/10-channel-capabilities.md` - Replaced old models with ChannelPolicy
+  - [x] `docs/acf/architecture/ACF_ARCHITECTURE.md` - Added ChannelPolicy model definition
+  - [x] `docs/acf/architecture/AGENT_RUNTIME_SPEC.md` - Added channel_policies to AgentContext
+  - [x] `docs/acf/architecture/topics/10-channel-capabilities.md` - Replaced old models with ChannelPolicy
 - **Status**: ✅ DONE
 - **Checked**: ☑
 
 ### §6.6 InterlocutorChannelPresence
 - **Decision**: Cross-channel awareness without session merging via InterlocutorChannelPresence.
 - **Files updated**:
-  - [x] `docs/design/customer-profile.md` - Added InterlocutorChannelPresence model
-  - [x] `docs/focal_turn_pipeline/spec/data_models.md` - Added InterlocutorChannelPresence to architecture
+  - [x] `docs/design/interlocutor-data.md` - Added InterlocutorChannelPresence model
+  - [x] `docs/focal_brain/spec/data_models.md` - Added InterlocutorChannelPresence to architecture
 - **Status**: ✅ DONE
 - **Checked**: ☑
 
 ### §7.3 MCP discovery + tool awareness
 - **Decision**: MCP for discovery, Toolbox for execution. Three-tier tool visibility model.
 - **Files updated**:
-  - [x] `docs/focal_360/architecture/TOOLBOX_SPEC.md` - Added three-tier model, MCP discovery integration
+  - [x] `docs/acf/architecture/TOOLBOX_SPEC.md` - Added three-tier model, MCP discovery integration
   - [x] `docs/architecture/api-layer.md` - Added MCP server section with three-tier visibility
 - **Status**: ✅ DONE
 - **Checked**: ☑
@@ -77,17 +77,17 @@
 - **Decision**: Rename customer → interlocutor with InterlocutorType enum (human/agent/system/bot)
 - **Files updated**:
   - [x] `CLAUDE.md` - Added Interlocutor to Core Terminology
-  - [x] `docs/focal_turn_pipeline/spec/data_models.md` - Renamed Customer* → Interlocutor*, added interlocutor_type
-  - [x] `docs/focal_turn_pipeline/spec/pipeline.md` - Updated to use interlocutor_id terminology
+  - [x] `docs/focal_brain/spec/data_models.md` - Renamed Customer* → Interlocutor*, added interlocutor_type
+  - [x] `docs/focal_brain/spec/brain.md` - Updated to use interlocutor_id terminology
   - [x] `docs/design/domain-model.md` - Updated entity names
 - **Status**: ✅ DONE
 - **Checked**: ☑
 - **Note**: Full codebase rename from customer_id to interlocutor_id is a separate migration task
 
 ### §12.3 ASA mechanic-agnostic
-- **Decision**: ASA can configure ANY CognitivePipeline, not just FOCAL.
+- **Decision**: ASA can configure ANY Brain, not just FOCAL.
 - **Files updated**:
-  - [x] `docs/focal_360/architecture/topics/13-asa-validator.md` - Expanded to mechanic-agnostic meta-agent
+  - [x] `docs/acf/architecture/topics/13-asa-validator.md` - Expanded to mechanic-agnostic meta-agent
 - **Status**: ✅ DONE
 - **Checked**: ☑
 
@@ -101,8 +101,8 @@
 | a152403 | §3.4+§7.3 api-layer | ✅ COMPLETED | api-layer.md (multimodal + MCP) |
 | a9ba542 | §3.5+§4.3 ACF_ARCHITECTURE | ✅ COMPLETED | ACF_ARCHITECTURE.md (tasks + ChannelPolicy) |
 | a81247d | §7.3 TOOLBOX_SPEC | ✅ COMPLETED | TOOLBOX_SPEC.md (three-tier model) |
-| a3d6a84 | §6.6 InterlocutorChannelPresence | ✅ COMPLETED | customer-profile.md, data_models.md |
-| adee38b | §8.0 Interlocutor terminology | ✅ COMPLETED | data_models.md, pipeline.md, domain-model.md |
+| a3d6a84 | §6.6 InterlocutorChannelPresence | ✅ COMPLETED | interlocutor-data.md, data_models.md |
+| adee38b | §8.0 Interlocutor terminology | ✅ COMPLETED | data_models.md, brain.md, domain-model.md |
 | a1aeabc | §12.3 ASA mechanic-agnostic | ✅ COMPLETED | 13-asa-validator.md |
 | a0c5429 | §4.3 AGENT_RUNTIME_SPEC | ✅ COMPLETED | AGENT_RUNTIME_SPEC.md, 10-channel-capabilities.md |
 
@@ -124,7 +124,7 @@ After all updates:
 **All 8 architectural decisions have been propagated to documentation.**
 
 Key changes made:
-1. **FOCAL** is now defined as the alignment CognitivePipeline, not the platform name
+1. **FOCAL** is now defined as the alignment Brain, not the platform name
 2. **Multimodal envelope** added to api-layer.md with content_type + content structure
 3. **Tasks bypass ACF** section added showing Agenda→Hatchet TaskWorkflow path
 4. **ChannelPolicy** is single source of truth, consolidated in three key docs

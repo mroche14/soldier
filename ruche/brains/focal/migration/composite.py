@@ -7,7 +7,7 @@ Computes net effect across plan chain to avoid asking for obsolete data.
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.models import (
     AnchorTransformation,
     InsertedNode,
     MigrationPlan,
@@ -20,8 +20,8 @@ from ruche.alignment.migration.models import (
 from ruche.observability.logging import get_logger
 
 if TYPE_CHECKING:
-    from ruche.alignment.models import Scenario
-    from ruche.alignment.stores.agent_config_store import AgentConfigStore
+    from ruche.brains.focal.models import Scenario
+    from ruche.brains.focal.stores.agent_config_store import AgentConfigStore
     from ruche.conversation.models import Session
 
 logger = get_logger(__name__)

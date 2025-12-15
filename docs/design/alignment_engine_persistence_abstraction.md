@@ -1,9 +1,9 @@
 
 # Persistence Abstraction for the Alignment Engine (SQL / NoSQL Agnostic)
 
-> **Status:** HISTORICAL. This document predates `docs/focal_360/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses stores in `ruche/stores/` (including `MemoryStore`, `SessionStore`, `AuditStore`, plus `InterlocutorDataStoreInterface`) with UUIDs.
+> **Status:** HISTORICAL. This document predates `docs/acf/` and the current store split. It uses an older tri-store model (`ConfigStore`, `StateStore`, `AuditStore`) and string IDs; current Focal uses stores in `ruche/stores/` (including `MemoryStore`, `SessionStore`, `AuditStore`, plus `InterlocutorDataStoreInterface`) with UUIDs.
 >
-> The alignment engine implementation is now `FocalCognitivePipeline` in `ruche/brains/focal/pipeline.py`.
+> The alignment engine implementation is now `FocalBrain` in `ruche/brains/focal/brain.py`.
 >
 > For the current approach, see: `docs/design/decisions/001-storage-choice.md` and `docs/architecture/overview.md`.
 
@@ -108,7 +108,7 @@ Concretely, for v1 we assume:
 
 Both hold:
 
-- **Config & knowledge** (rules, scenarios, steps, glossary, interlocutor data fields, pipeline config).
+- **Config & knowledge** (rules, scenarios, steps, glossary, interlocutor data fields, brain config).
 - **Interlocutor & session state** (InterlocutorDataStore, SessionState).
 - **Audit logs** (TurnRecord).
 
@@ -142,7 +142,7 @@ Engine code never touches SQLAlchemy, Motor, Prisma, etc.; it only calls these i
 - `Scenario`, `ScenarioStep`, `ScenarioTransition`
 - `GlossaryItem`
 - `InterlocutorDataField`
-- Pipeline / LLM task configs
+- Brain / LLM task configs
 
 **Characteristics:**
 
@@ -359,7 +359,7 @@ Cons:
       audit: AuditStore
   ```
 
-  And pass `Stores` into pipeline components.
+  And pass `Stores` into brain components.
 
 ---
 

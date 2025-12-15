@@ -102,7 +102,7 @@ class Agent(TenantScopedModel):
     current_version: int = 0  # Last published version
     draft_version: int = 0    # Current working version
 
-    # Pipeline routing (FOCAL 360 Agent Runtime)
+    # Brain routing (FOCAL 360 Agent Runtime)
     pipeline_type: str = "focal"  # "focal", "langgraph", "agno"
     pipeline_config: Dict[str, Any] = Field(default_factory=dict)
 

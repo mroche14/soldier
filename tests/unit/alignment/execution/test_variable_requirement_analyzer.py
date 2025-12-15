@@ -2,9 +2,9 @@
 
 import pytest
 
-from ruche.alignment.execution.variable_requirement_analyzer import VariableRequirementAnalyzer
-from ruche.alignment.filtering.models import MatchedRule
-from ruche.alignment.models.tool_binding import ToolBinding
+from ruche.brains.focal.phases.execution.variable_requirement_analyzer import VariableRequirementAnalyzer
+from ruche.brains.focal.phases.filtering.models import MatchedRule
+from ruche.brains.focal.models.tool_binding import ToolBinding
 from tests.factories.alignment import RuleFactory
 
 
@@ -50,7 +50,7 @@ def test_extract_from_rule_action_text_placeholders(analyzer: VariableRequiremen
 
 def test_extract_from_step_templates(analyzer: VariableRequirementAnalyzer) -> None:
     """Test extracting variables from step description templates."""
-    from ruche.alignment.models.scenario import ScenarioStep
+    from ruche.brains.focal.models.scenario import ScenarioStep
     from uuid import uuid4
 
     step = ScenarioStep(
@@ -111,7 +111,7 @@ def test_duplicate_variable_names_deduplication(analyzer: VariableRequirementAna
 
 def test_combined_sources(analyzer: VariableRequirementAnalyzer) -> None:
     """Test combining variables from all sources."""
-    from ruche.alignment.models.scenario import ScenarioStep
+    from ruche.brains.focal.models.scenario import ScenarioStep
     from uuid import uuid4
 
     bindings = [

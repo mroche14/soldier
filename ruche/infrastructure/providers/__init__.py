@@ -9,10 +9,14 @@ This module consolidates all AI provider implementations:
 from ruche.infrastructure.providers.embedding.base import EmbeddingProvider
 from ruche.infrastructure.providers.embedding.jina import JinaEmbeddingProvider
 from ruche.infrastructure.providers.embedding.mock import MockEmbeddingProvider
-from ruche.infrastructure.providers.embedding.sentence_transformers import (
-    SentenceTransformerEmbeddingProvider,
-)
-from ruche.infrastructure.providers.llm.base import LLMProvider
+
+# Optional: SentenceTransformer requires sentence_transformers package
+try:
+    from ruche.infrastructure.providers.embedding.sentence_transformers import (
+        SentenceTransformerEmbeddingProvider,
+    )
+except ImportError:
+    SentenceTransformerEmbeddingProvider = None  # type: ignore
 from ruche.infrastructure.providers.llm.executor import LLMExecutor
 from ruche.infrastructure.providers.llm.mock import MockLLMProvider
 from ruche.infrastructure.providers.rerank.base import RerankProvider
@@ -21,7 +25,6 @@ from ruche.infrastructure.providers.rerank.mock import MockRerankProvider
 
 __all__ = [
     # LLM
-    "LLMProvider",
     "LLMExecutor",
     "MockLLMProvider",
     # Embedding

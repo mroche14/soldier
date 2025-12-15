@@ -2,7 +2,7 @@
 
 import pytest
 
-from ruche.alignment.context.customer_schema_mask import (
+from ruche.brains.focal.phases.context.customer_schema_mask import (
     CustomerSchemaMask,
     CustomerSchemaMaskEntry,
 )

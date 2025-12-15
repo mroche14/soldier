@@ -35,7 +35,7 @@ ruche/
         │
         └── models/                  # Pydantic models for each section
             ├── __init__.py
-            ├── pipeline.py          # Pipeline step configurations
+            ├── brain.py          # Brain step configurations
             ├── providers.py         # LLM, Embedding, Rerank provider configs
             ├── storage.py           # Store backend configurations
             ├── selection.py         # Selection strategy configurations
@@ -124,7 +124,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ruche.config.loader import load_config
 from ruche.config.models.api import APIConfig
-from ruche.config.models.pipeline import PipelineConfig
+from ruche.config.models.brain import PipelineConfig
 from ruche.config.models.providers import ProvidersConfig
 from ruche.config.models.storage import StorageConfig
 
@@ -150,7 +150,7 @@ class Settings(BaseSettings):
 
     # Nested configurations
     api: APIConfig = Field(default_factory=APIConfig)
-    pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
+    brain: PipelineConfig = Field(default_factory=PipelineConfig)
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     storage: StorageConfig = Field(default_factory=StorageConfig)
     observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)

@@ -14,13 +14,13 @@ from ruche.jobs.workflows import (
     ExpireFieldsInput,
     ExpireStaleFieldsWorkflow,
 )
-from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.interlocutor_data.stores.inmemory import InMemoryInterlocutorDataStore
 
 
 @pytest.fixture
 def profile_store():
     """Create an in-memory profile store."""
-    return InMemoryCustomerDataStore()
+    return InMemoryInterlocutorDataStore()
 
 
 @pytest.fixture

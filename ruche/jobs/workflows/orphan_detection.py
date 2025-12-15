@@ -10,7 +10,7 @@ from typing import Any
 from uuid import UUID
 
 from ruche.observability.logging import get_logger
-from ruche.customer_data.store import CustomerDataStoreInterface
+from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 
@@ -48,7 +48,7 @@ class DetectOrphanedItemsWorkflow:
     WORKFLOW_NAME = "detect-orphaned-items"
     CRON_SCHEDULE = "0 3 * * *"  # Daily at 3 AM UTC
 
-    def __init__(self, profile_store: CustomerDataStoreInterface) -> None:
+    def __init__(self, profile_store: InterlocutorDataStoreInterface) -> None:
         """Initialize workflow.
 
         Args:
@@ -121,7 +121,7 @@ class DetectOrphanedItemsWorkflow:
             )
 
 
-def register_workflow(hatchet: Any, profile_store: CustomerDataStoreInterface) -> Any:
+def register_workflow(hatchet: Any, profile_store: InterlocutorDataStoreInterface) -> Any:
     """Register the orphan detection workflow with Hatchet.
 
     Args:

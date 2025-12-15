@@ -11,7 +11,7 @@ from ruche.audit.models.turn_record import TurnRecord
 # Rebuild TurnRecord to resolve forward reference to TurnOutcome
 # This is needed because TurnOutcome is imported under TYPE_CHECKING
 # to avoid circular imports with focal.alignment
-from ruche.alignment.models.outcome import TurnOutcome
+from ruche.brains.focal.models.outcome import TurnOutcome
 
 TurnRecord.model_rebuild()
 

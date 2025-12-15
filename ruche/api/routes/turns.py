@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Header
 from sse_starlette.sse import EventSourceResponse
 
-from ruche.alignment.result import AlignmentResult
+from ruche.brains.focal.result import AlignmentResult
 from ruche.api.dependencies import (
     AlignmentEngineDep,
     SessionStoreDep,

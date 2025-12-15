@@ -150,12 +150,12 @@ class SessionMutex:
 def build_session_key(
     tenant_id: str,
     agent_id: str,
-    customer_id: str,
+    interlocutor_id: str,
     channel: str,
 ) -> str:
     """Build composite session key for mutex.
 
-    Format: {tenant_id}:{agent_id}:{customer_id}:{channel}
+    Format: {tenant_id}:{agent_id}:{interlocutor_id}:{channel}
 
     This key is used for:
     - Session mutex (single-writer rule)
@@ -165,10 +165,10 @@ def build_session_key(
     Args:
         tenant_id: Tenant UUID as string
         agent_id: Agent UUID as string
-        customer_id: Customer UUID as string
+        interlocutor_id: Customer UUID as string
         channel: Channel identifier (whatsapp, web, etc.)
 
     Returns:
         Composite session key
     """
-    return f"{tenant_id}:{agent_id}:{customer_id}:{channel}"
+    return f"{tenant_id}:{agent_id}:{interlocutor_id}:{channel}"

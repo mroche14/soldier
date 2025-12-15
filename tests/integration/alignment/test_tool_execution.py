@@ -6,14 +6,14 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.execution import ToolExecutor
-from ruche.alignment.filtering.models import MatchedRule
-from ruche.alignment.models import Scope
-from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.phases.execution import ToolExecutor
+from ruche.brains.focal.phases.filtering.models import MatchedRule
+from ruche.brains.focal.models import Scope
+from ruche.brains.focal.stores import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import PipelineConfig
-from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
-from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.infrastructure.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 from tests.factories.alignment import RuleFactory
 
 

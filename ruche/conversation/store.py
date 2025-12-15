@@ -7,7 +7,7 @@ from uuid import UUID
 from ruche.conversation.models import Channel, Session, SessionStatus
 
 if TYPE_CHECKING:
-    from ruche.alignment.migration.models import ScopeFilter
+    from ruche.brains.focal.migration.models import ScopeFilter
 
 
 class SessionStore(ABC):

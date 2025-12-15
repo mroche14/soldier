@@ -373,7 +373,7 @@ class ScenarioOrchestrationConfig(BaseModel):
     )
 
 
-class CustomerDataUpdateConfig(BaseModel):
+class InterlocutorDataUpdateConfig(BaseModel):
     """Customer data update step configuration (Phase 3)."""
 
     enabled: bool = Field(default=True, description="Enable this step")
@@ -664,8 +664,8 @@ class PipelineConfig(BaseModel):
         default_factory=SituationSensorConfig,
         description="Situational sensor step (Phase 2)",
     )
-    customer_data_update: CustomerDataUpdateConfig = Field(
-        default_factory=CustomerDataUpdateConfig,
+    customer_data_update: InterlocutorDataUpdateConfig = Field(
+        default_factory=InterlocutorDataUpdateConfig,
         description="Customer data update step (Phase 3)",
     )
     retrieval: RetrievalConfig = Field(

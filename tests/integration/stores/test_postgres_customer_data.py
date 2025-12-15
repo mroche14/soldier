@@ -1,4 +1,4 @@
-"""Integration tests for PostgresCustomerDataStore.
+"""Integration tests for PostgresInterlocutorDataStore.
 
 Tests profile CRUD operations, channel identity management,
 and field updates against a real PostgreSQL database.
@@ -11,29 +11,29 @@ import pytest
 import pytest_asyncio
 
 from ruche.conversation.models import Channel
-from ruche.customer_data.enums import VariableSource, VerificationLevel
-from ruche.customer_data.models import (
+from ruche.interlocutor_data.enums import VariableSource, VerificationLevel
+from ruche.interlocutor_data.models import (
     ChannelIdentity,
-    CustomerDataStore,
+    InterlocutorDataStore,
     ProfileAsset,
     VariableEntry,
 )
-from ruche.customer_data.stores.postgres import PostgresCustomerDataStore
+from ruche.interlocutor_data.stores.postgres import PostgresInterlocutorDataStore
 
 
 @pytest_asyncio.fixture
 async def profile_store(postgres_pool):
-    """Create PostgresCustomerDataStore with test pool."""
-    return PostgresCustomerDataStore(postgres_pool)
+    """Create PostgresInterlocutorDataStore with test pool."""
+    return PostgresInterlocutorDataStore(postgres_pool)
 
 
 @pytest.fixture
 def sample_profile(tenant_id):
     """Create a sample customer profile for testing."""
-    return CustomerDataStore(
+    return InterlocutorDataStore(
         id=uuid4(),
         tenant_id=tenant_id,
-        customer_id=uuid4(),
+        interlocutor_id=uuid4(),
         channel_identities=[
             ChannelIdentity(
                 channel=Channel.WEBCHAT,
@@ -83,7 +83,7 @@ def sample_profile_asset():
 
 
 @pytest.mark.integration
-class TestPostgresCustomerDataStoreCRUD:
+class TestPostgresInterlocutorDataStoreCRUD:
     """Test basic CRUD operations."""
 
     async def test_save_and_get_profile(
@@ -95,7 +95,7 @@ class TestPostgresCustomerDataStoreCRUD:
         assert profile_id == sample_profile.id
 
         # Get
-        retrieved = await profile_store.get_by_customer_id(
+        retrieved = await profile_store.get_by_interlocutor_id(
             sample_profile.tenant_id, sample_profile.id
         )
         assert retrieved is not None
@@ -121,7 +121,7 @@ class TestPostgresCustomerDataStoreCRUD:
         self, profile_store, tenant_id, clean_postgres
     ):
         """Test getting a profile that doesn't exist."""
-        retrieved = await profile_store.get_by_customer_id(tenant_id, uuid4())
+        retrieved = await profile_store.get_by_interlocutor_id(tenant_id, uuid4())
         assert retrieved is None
 
     async def test_get_or_create_existing(
@@ -153,7 +153,7 @@ class TestPostgresCustomerDataStoreCRUD:
 
 
 @pytest.mark.integration
-class TestPostgresCustomerDataStoreFields:
+class TestPostgresInterlocutorDataStoreFields:
     """Test profile field operations."""
 
     async def test_update_field(
@@ -171,7 +171,7 @@ class TestPostgresCustomerDataStoreFields:
         assert field_id is not None
 
         # Verify field was added
-        retrieved = await profile_store.get_by_customer_id(
+        retrieved = await profile_store.get_by_interlocutor_id(
             sample_profile.tenant_id, sample_profile.id
         )
         assert retrieved is not None
@@ -217,7 +217,7 @@ class TestPostgresCustomerDataStoreFields:
             )
 
         # Verify all fields
-        retrieved = await profile_store.get_by_customer_id(
+        retrieved = await profile_store.get_by_interlocutor_id(
             sample_profile.tenant_id, sample_profile.id
         )
         assert len(retrieved.fields) == 3
@@ -225,7 +225,7 @@ class TestPostgresCustomerDataStoreFields:
 
 
 @pytest.mark.integration
-class TestPostgresCustomerDataStoreAssets:
+class TestPostgresInterlocutorDataStoreAssets:
     """Test profile asset operations."""
 
     async def test_add_asset(
@@ -243,7 +243,7 @@ class TestPostgresCustomerDataStoreAssets:
         assert asset_id is not None
 
         # Verify asset was added
-        retrieved = await profile_store.get_by_customer_id(
+        retrieved = await profile_store.get_by_interlocutor_id(
             sample_profile.tenant_id, sample_profile.id
         )
         assert retrieved is not None
@@ -288,14 +288,14 @@ class TestPostgresCustomerDataStoreAssets:
             )
 
         # Verify all assets
-        retrieved = await profile_store.get_by_customer_id(
+        retrieved = await profile_store.get_by_interlocutor_id(
             sample_profile.tenant_id, sample_profile.id
         )
         assert len(retrieved.assets) == 2
 
 
 @pytest.mark.integration
-class TestPostgresCustomerDataStoreChannelIdentity:
+class TestPostgresInterlocutorDataStoreChannelIdentity:
     """Test channel identity operations."""
 
     async def test_link_channel(
@@ -320,7 +320,7 @@ class TestPostgresCustomerDataStoreChannelIdentity:
         assert linked is True
 
         # Verify channel was linked
-        retrieved = await profile_store.get_by_customer_id(
+        retrieved = await profile_store.get_by_interlocutor_id(
             sample_profile.tenant_id, sample_profile.id
         )
         assert len(retrieved.channel_identities) == 2
@@ -365,7 +365,7 @@ class TestPostgresCustomerDataStoreChannelIdentity:
 
 
 @pytest.mark.integration
-class TestPostgresCustomerDataStoreMerge:
+class TestPostgresInterlocutorDataStoreMerge:
     """Test profile merge operations."""
 
     async def test_merge_profiles(
@@ -373,10 +373,10 @@ class TestPostgresCustomerDataStoreMerge:
     ):
         """Test merging two profiles."""
         # Create source profile with some data
-        source_profile = CustomerDataStore(
+        source_profile = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=tenant_id,
-            customer_id=uuid4(),
+            interlocutor_id=uuid4(),
             channel_identities=[
                 ChannelIdentity(
                     channel=Channel.SMS,
@@ -390,10 +390,10 @@ class TestPostgresCustomerDataStoreMerge:
         )
 
         # Create target profile
-        target_profile = CustomerDataStore(
+        target_profile = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=tenant_id,
-            customer_id=uuid4(),
+            interlocutor_id=uuid4(),
             channel_identities=[
                 ChannelIdentity(
                     channel=Channel.WEBCHAT,
@@ -430,13 +430,13 @@ class TestPostgresCustomerDataStoreMerge:
         assert merged is True
 
         # Source profile should be marked as merged (no longer accessible)
-        source_retrieved = await profile_store.get_by_customer_id(
+        source_retrieved = await profile_store.get_by_interlocutor_id(
             tenant_id, source_profile.id
         )
         assert source_retrieved is None
 
         # Target profile should have data from source
-        target_retrieved = await profile_store.get_by_customer_id(
+        target_retrieved = await profile_store.get_by_interlocutor_id(
             tenant_id, target_profile.id
         )
         assert target_retrieved is not None
@@ -452,7 +452,7 @@ class TestPostgresCustomerDataStoreMerge:
 
 
 @pytest.mark.integration
-class TestPostgresCustomerDataStoreTenantIsolation:
+class TestPostgresInterlocutorDataStoreTenantIsolation:
     """Test tenant isolation."""
 
     async def test_tenant_isolation_profiles(
@@ -462,7 +462,7 @@ class TestPostgresCustomerDataStoreTenantIsolation:
         tenant1 = uuid4()
         tenant2 = uuid4()
 
-        profile1 = CustomerDataStore(
+        profile1 = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=tenant1,
             channel_identities=[
@@ -474,7 +474,7 @@ class TestPostgresCustomerDataStoreTenantIsolation:
                 )
             ],
         )
-        profile2 = CustomerDataStore(
+        profile2 = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=tenant2,
             channel_identities=[
@@ -511,7 +511,7 @@ class TestPostgresCustomerDataStoreTenantIsolation:
         tenant1 = uuid4()
         tenant2 = uuid4()
 
-        profile = CustomerDataStore(
+        profile = InterlocutorDataStore(
             id=uuid4(),
             tenant_id=tenant1,
             channel_identities=[
@@ -526,7 +526,7 @@ class TestPostgresCustomerDataStoreTenantIsolation:
         await profile_store.save(profile)
 
         # Tenant 2 should not be able to access tenant 1's profile
-        cross_tenant = await profile_store.get_by_customer_id(tenant2, profile.id)
+        cross_tenant = await profile_store.get_by_interlocutor_id(tenant2, profile.id)
         assert cross_tenant is None
 
         # Tenant 2 should not find by channel identity either

@@ -10,17 +10,27 @@ This project provides a **production-grade runtime platform** for conversational
 
 | Term | Definition |
 |------|------------|
-| **FOCAL** | Alignment-focused CognitivePipeline implementation (11-phase spec) focused on rule matching, scenario orchestration, and constraint enforcement |
-| **CognitivePipeline** | Protocol interface that ACF calls (`run(ctx) -> PipelineResult`). Different mechanics (FOCAL, ReAct, planner-executor) implement this protocol |
-| **Mechanic** | Semantic description of how a pipeline thinks (alignment, react, planner-executor, chain-of-thought, etc.) |
-| **ACF** | Agent Conversation Fabric - handles turn boundary detection and LogicalTurn accumulation (sits above the cognitive pipeline) |
-| **AgentRuntime** | Multi-tenant execution environment for conversational agents |
+| **Agent** | The entity ACF interacts with. Agent owns its Brain, Toolbox, and ChannelBindings. ACF calls `agent.process_turn()` |
+| **Brain** | ABC that thinking units implement. Agent owns its Brain. FOCAL, LangGraph, Agno are Brain implementations |
+| **FOCAL** | Alignment-focused Brain implementation with an internal 11-phase pipeline focused on rule matching, scenario orchestration, and constraint enforcement |
+| **Mechanic** | Semantic description of how a brain thinks (alignment, react, planner-executor, chain-of-thought, etc.) |
+| **ACF** | Agent Conversation Fabric - handles turn boundary detection, message accumulation, workflow orchestration. ACF calls Agent, not Brain directly |
+| **FabricTurnContext** | Context ACF passes to Agent. Contains callbacks (has_pending_messages, emit_event). NOT serializable - rebuilt each Hatchet step |
+| **AgentRuntime** | Multi-tenant lifecycle manager for Agent instances (caching, invalidation) |
 | **Ruche** | Default pack of 8 agents per tenant (blueprint pack) |
 | **Interlocutor** | The entity interacting with an agent (replaces "customer" in documentation - can be a person, system, or bot) |
-| **LogicalTurn** | One or more messages accumulated by ACF before being processed by the cognitive pipeline |
-| **Toolbox** | Tool registry and execution orchestration layer |
+| **LogicalTurn** | One or more messages accumulated by ACF before being processed by Agent/Brain |
+| **Toolbox** | Tool registry and execution orchestration layer (enforcement boundary for policy, idempotency, audit) |
+| **InterlocutorDataStore** | Runtime storage for interlocutor variables (identity, business, case, session scoped) |
+| **BrainResult** | What Brain returns to Agent (response segments, artifacts, handoff requests) |
 
-**Important distinction**: FOCAL is ONE cognitive pipeline mechanic focused on alignment. The platform runtime (AgentRuntime, ACF, Stores, Providers, Toolbox) is NOT "Focal" - it's the multi-tenant platform that can host different pipeline mechanics.
+**Key relationships**:
+- ACF calls `agent.process_turn(fabric_ctx)`
+- Agent wraps context and calls `brain.think(agent_turn_ctx)`
+- Brain uses `ctx.toolbox.execute()` for tool calls
+- ACF doesn't know or care what Brain an Agent uses
+
+**Important distinction**: FOCAL is ONE Brain implementation focused on alignment. The platform runtime (AgentRuntime, ACF, Stores, Providers, Toolbox) is NOT "Focal" - it's the multi-tenant platform that can host different Brain implementations.
 
 ---
 
@@ -34,7 +44,7 @@ This plan defines:
 - **20 phases** of implementation in dependency order
 - **Checkboxes** for tracking progress on each task
 - **Document references** for each phase
-- **The correct order** to build components (skeleton → config → observability → models → stores → providers → pipeline → API)
+- **The correct order** to build components (skeleton → config → observability → models → stores → providers → brain → API)
 
 When asked to implement something:
 1. Find the relevant phase in `IMPLEMENTATION_PLAN.md`
@@ -82,17 +92,22 @@ Before modifying existing code:
 | Architecture overview | `docs/architecture/overview.md` |
 | Folder structure | `docs/architecture/folder-structure.md` |
 | Domain models | `docs/design/domain-model.md` |
-| Turn pipeline | `docs/design/turn-pipeline.md` |
+| FOCAL Brain | `docs/focal_brain/spec/brain.md` |
 | Alignment engine | `docs/architecture/alignment-engine.md` |
 | Configuration system | `docs/architecture/configuration-overview.md` |
 | Secrets management | `docs/architecture/configuration-secrets.md` |
 | Storage interfaces | `docs/design/decisions/001-storage-choice.md` |
 | Rule matching | `docs/design/decisions/002-rule-matching-strategy.md` |
+| Database selection | `docs/design/decisions/003-database-selection.md` |
 | Observability | `docs/architecture/observability.md` |
 | Memory layer | `docs/architecture/memory-layer.md` |
 | Selection strategies | `docs/architecture/selection-strategies.md` |
+| Webhook system | `docs/architecture/webhook-system.md` |
+| Channel gateway | `docs/architecture/channel-gateway.md` |
+| Error handling | `docs/architecture/error-handling.md` |
 | Scenario updates | `docs/design/scenario-update-methods.md` |
-| Customer profile | `docs/design/customer-profile.md` |
+| Interlocutor data | `docs/design/interlocutor-data.md` |
+| **Implementation status** | `docs/ARCHITECTURE_READINESS_REPORT_V5.md` |
 | Testing strategy | `docs/development/testing-strategy.md` |
 | Unit testing guide | `docs/development/unit-testing.md` |
 
@@ -148,7 +163,7 @@ All AI capabilities are accessed through abstract interfaces:
 
 **Implications**:
 - Model strings drive routing (e.g., `openrouter/anthropic/claude-3-haiku`)
-- Each pipeline step can use different models
+- Each brain phase can use different models
 - Fallback chains are configured in `LLMExecutor`
 
 ### 5. Configuration Lives in Files, Not Code
@@ -181,7 +196,7 @@ RUCHE_* env vars       → Runtime overrides
 **Secret Resolution Order**:
 1. Secret Manager (production) - AWS Secrets Manager, HashiCorp Vault
 2. Standard env vars - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc.
-3. Focal-prefixed env vars - `RUCHE_PIPELINE__GENERATION__MODELS`
+3. Focal-prefixed env vars - `RUCHE_BRAIN__GENERATION__MODELS`
 4. `.env` file (development only, gitignored)
 
 **Common Provider Env Vars**:
@@ -583,7 +598,7 @@ rules = RuleFactory.create_batch(5, agent_id=my_agent_id)
 |-----------|------------|
 | **Store implementations** | CRUD, queries, tenant isolation, vector search |
 | **Selection strategies** | Score analysis, edge cases, boundary conditions |
-| **Pipeline steps** | Input/output transformation, error handling |
+| **Brain phases** | Input/output transformation, error handling |
 | **Domain models** | Validation, computed properties, state transitions |
 
 ### Contract Tests
@@ -604,35 +619,35 @@ class TestPostgresConfigStore(ConfigStoreContract):
 
 ---
 
-## Pipeline Development
+## Brain Development
 
-**Note**: This section describes the FOCAL alignment pipeline specifically.
+**Note**: This section describes the FOCAL alignment brain specifically.
 
-### FOCAL Pipeline Steps
+### FOCAL Brain Phases
 
-The FOCAL alignment pipeline processes turns through these steps:
+The FOCAL alignment brain processes turns through these phases:
 
 1. **Context Extraction (Phase 1)** - Understand user intent
 2. **Situational Sensor (Phase 2)** - Extract structured metadata and candidate variables
-3. **Customer Data Update (Phase 3)** - Apply variable updates to CustomerDataStore (in-memory)
+3. **Interlocutor Data Update (Phase 3)** - Apply variable updates to InterlocutorDataStore (in-memory)
 4. **Retrieval (Phase 4)** - Find candidate rules/scenarios/memory
 5. **Reranking** - Improve candidate ordering
 6. **LLM Filtering** - Judge which rules apply
 7. **Tool Execution** - Run tools from matched rules
 8. **Response Generation** - Generate response
 9. **Enforcement** - Validate against constraints
-10. **Persistence (Phase 11)** - Save session state, customer data, memory
+10. **Persistence (Phase 11)** - Save session state, interlocutor data, memory
 
-### Adding Pipeline Steps
+### Adding Brain Phases
 
-Each step should be:
+Each phase should be:
 - Independently configurable via TOML
 - Optional (can be disabled)
 - Logged with timing
-- Traceable (span per step)
+- Traceable (span per phase)
 
 ```toml
-[pipeline.new_step]
+[brain.new_phase]
 enabled = true
 provider = "some_provider"
 ```
@@ -648,17 +663,17 @@ provider = "some_provider"
 
 Don't conflate these responsibilities.
 
-### Phase 3: Customer Data Update
+### Phase 3: Interlocutor Data Update
 
-**Purpose**: Map extracted candidate variables from Phase 2 into the CustomerDataStore, validate them, and mark persistent updates for Phase 11.
+**Purpose**: Map extracted candidate variables from Phase 2 into the InterlocutorDataStore, validate them, and mark persistent updates for Phase 11.
 
 **Key Principle**: Updates are **in-memory only** during Phase 3. Persistence happens at Phase 11.
 
 **Architecture**:
-- `CustomerDataField` (schema) - Defines what fields can exist with validation rules
+- `InterlocutorDataField` (schema) - Defines what fields can exist with validation rules
 - `VariableEntry` (runtime) - Actual values with history and confidence
-- `CustomerDataStore` - In-memory snapshot of customer data for this turn
-- `CustomerDataUpdate` - Delta representing one field update
+- `InterlocutorDataStore` - In-memory snapshot of interlocutor data for this turn
+- `InterlocutorDataUpdate` - Delta representing one field update
 
 **Scope-Based Persistence**:
 | Scope | Behavior | Example |
@@ -671,12 +686,12 @@ Don't conflate these responsibilities.
 **Phase 3 Flow**:
 1. **P3.1 Match** - Match candidate variables to field definitions
 2. **P3.2 Validate** - Type coercion and validation (regex, allowed_values)
-3. **P3.3 Apply** - Update CustomerDataStore in-memory with history tracking
+3. **P3.3 Apply** - Update InterlocutorDataStore in-memory with history tracking
 4. **P3.4 Mark** - Filter updates for persistence (skip SESSION scope, persist=False)
 
 **Configuration**:
 ```toml
-[pipeline.customer_data_update]
+[brain.interlocutor_data_update]
 enabled = true
 validation_mode = "strict"  # strict, warn, disabled
 max_history_entries = 10
@@ -685,18 +700,18 @@ max_history_entries = 10
 **Usage Pattern**:
 ```python
 # In AlignmentEngine.process_turn()
-customer_data_store, persistent_updates = await self._customer_data_updater.update(
-    customer_data_store=customer_data_store,
+interlocutor_data_store, persistent_updates = await self._interlocutor_data_updater.update(
+    interlocutor_data_store=interlocutor_data_store,
     candidate_variables=situational_snapshot.candidate_variables,
-    field_definitions=customer_data_fields,
+    field_definitions=interlocutor_data_fields,
 )
 
 # Later at Phase 11
-await self._customer_data_persister.persist(
+await self._interlocutor_data_persister.persist(
     tenant_id=tenant_id,
-    customer_id=customer_id,
+    interlocutor_id=interlocutor_id,
     updates=persistent_updates,
-    customer_data_store=customer_data_store,
+    interlocutor_data_store=interlocutor_data_store,
 )
 ```
 
@@ -769,9 +784,9 @@ except SpecificError as e:
 
 ---
 
-## FOCAL Alignment Pipeline Patterns (Phase 2+)
+## FOCAL Alignment Brain Patterns (Phase 2+)
 
-**Note**: This section describes patterns specific to the FOCAL alignment pipeline implementation.
+**Note**: This section describes patterns specific to the FOCAL alignment brain implementation.
 
 ### Jinja2 Template Pattern for LLM Tasks
 
@@ -793,36 +808,36 @@ prompt = loader.render(
 
 Template location: `ruche/alignment/{module}/prompts/{task}.jinja2`
 
-### CustomerDataStore Pattern
+### InterlocutorDataStore Pattern
 
-**CustomerDataStore** (formerly CustomerProfile) is the runtime variable storage:
+**InterlocutorDataStore** is the runtime variable storage:
 
-- **Where**: `ruche/customer_data/models.py`
+- **Where**: `ruche/interlocutor_data/models.py`
 - **Contains**: `fields: dict[str, VariableEntry]` - current variable values
 - **Scopes**: IDENTITY, BUSINESS, CASE, SESSION
-- **Access**: `ProfileStore.get_by_customer_id()` / `.save()`
+- **Access**: `InterlocutorDataStore.get_by_interlocutor_id()` / `.save()`
 
-**CustomerDataField** is the schema definition:
+**InterlocutorDataField** is the schema definition:
 
 - **Where**: Stored in ConfigStore per agent
 - **Purpose**: Defines what fields exist, their types, scopes, validation
-- **Access**: `ConfigStore.get_customer_data_fields(tenant_id, agent_id)`
+- **Access**: `ConfigStore.get_interlocutor_data_fields(tenant_id, agent_id)`
 
 **Don't confuse**:
-- CustomerDataStore = runtime values for a customer
-- CustomerDataField = schema/metadata for what fields are allowed
+- InterlocutorDataStore = runtime values for an interlocutor
+- InterlocutorDataField = schema/metadata for what fields are allowed
 
 ### Schema Mask Pattern for Privacy
 
-Never expose actual customer data values to LLMs. Use CustomerSchemaMask:
+Never expose actual interlocutor data values to LLMs. Use InterlocutorSchemaMask:
 
 ```python
-from ruche.alignment.context.customer_schema_mask import build_customer_schema_mask
+from ruche.alignment.context.interlocutor_schema_mask import build_interlocutor_schema_mask
 
 # Show LLM what fields exist, not their values
-schema_mask = build_customer_schema_mask(
-    customer_data=customer_data_store,
-    schema=customer_data_fields,
+schema_mask = build_interlocutor_schema_mask(
+    interlocutor_data=interlocutor_data_store,
+    schema=interlocutor_data_fields,
 )
 
 # LLM sees: {"email": {scope: "IDENTITY", type: "string", exists: true}}
@@ -856,8 +871,8 @@ context = await context_extractor.extract(message, history)
 snapshot = await situational_sensor.sense(
     message=message,
     history=history,
-    customer_data_store=customer_data,
-    customer_data_fields=schema,
+    interlocutor_data_store=interlocutor_data,
+    interlocutor_data_fields=schema,
     glossary_items=glossary,
     previous_intent_label=session.last_intent,
 )
@@ -958,9 +973,9 @@ Tests are in `tests/unit/alignment/migration/`:
 
 ---
 
-## FOCAL Alignment Pipeline (Phase 1 Implementation)
+## FOCAL Alignment Brain (Phase 1 Implementation)
 
-The FOCAL alignment pipeline processes a user message through 11 phases. Phase 1 (Identification & Context Loading) is implemented:
+The FOCAL alignment brain processes a user message through 11 phases. Phase 1 (Identification & Context Loading) is implemented:
 
 ### Key Models
 
@@ -969,31 +984,31 @@ The FOCAL alignment pipeline processes a user message through 11 phases. Phase 1
 | `TurnContext` | `ruche/alignment/models/turn_context.py` | Aggregated context for a turn |
 | `TurnInput` | `ruche/alignment/models/turn_input.py` | Inbound event format |
 | `GlossaryItem` | `ruche/alignment/models/glossary.py` | Domain terminology for LLM |
-| `CustomerSchemaMask` | `ruche/alignment/context/customer_schema_mask.py` | Privacy-safe schema view |
+| `InterlocutorSchemaMask` | `ruche/alignment/context/interlocutor_schema_mask.py` | Privacy-safe schema view |
 
-### Customer Data Module
+### Interlocutor Data Module
 
-The `ruche/customer_data/` module (renamed from `profile/`) contains:
+The `ruche/interlocutor_data/` module contains:
 
 | Class | Purpose |
 |-------|---------|
-| `CustomerDataField` | Schema definition for customer fields (has `scope`, `persist`) |
+| `InterlocutorDataField` | Schema definition for interlocutor fields (has `scope`, `persist`) |
 | `VariableEntry` | Runtime variable with value and history |
-| `CustomerDataStore` | Collection of variables for a customer |
+| `InterlocutorDataStore` | Collection of variables for an interlocutor |
 | `VariableSource` | Enum for where variable came from |
 
 ### Loaders
 
 | Loader | Location | Purpose |
 |--------|----------|---------|
-| `CustomerDataLoader` | `ruche/alignment/loaders/customer_data_loader.py` | Loads customer variables |
+| `InterlocutorDataLoader` | `ruche/alignment/loaders/interlocutor_data_loader.py` | Loads interlocutor variables |
 | `StaticConfigLoader` | `ruche/alignment/loaders/static_config_loader.py` | Loads glossary and schema |
 
 ### Usage in AlignmentEngine
 
 ```python
 # Phase 1 is integrated into process_turn:
-# 1. _resolve_customer() - Resolves customer from channel identity
+# 1. _resolve_interlocutor() - Resolves interlocutor from channel identity
 # 2. _build_turn_context() - Builds TurnContext with parallel loading
 
 result = await engine.process_turn(
@@ -1002,7 +1017,7 @@ result = await engine.process_turn(
     agent_id=agent_id,
     session_id=session_id,
     channel="whatsapp",           # Channel identifier
-    channel_user_id="+1234567890", # For customer resolution
+    channel_user_id="+1234567890", # For interlocutor resolution
 )
 ```
 
@@ -1013,8 +1028,8 @@ result = await engine.process_turn(
 - N/A (configuration phase - no database yet) (001-project-foundation)
 - Python 3.11+ (required for built-in `tomllib`) + pydantic, pydantic-settings, structlog, prometheus_client, opentelemetry-sdk, opentelemetry-exporter-otlp (003-core-abstractions)
 - In-memory only (dict-based implementations for testing/development) (003-core-abstractions)
-- Python 3.11+ + pydantic, pydantic-settings, structlog, prometheus-client, opentelemetry-sdk (existing); numpy, scipy, scikit-learn (new for selection strategies) (004-alignment-pipeline)
-- In-memory stores (existing); ConfigStore, MemoryStore, SessionStore, AuditStore interfaces already defined (004-alignment-pipeline)
+- Python 3.11+ + pydantic, pydantic-settings, structlog, prometheus-client, opentelemetry-sdk (existing); numpy, scipy, scikit-learn (new for selection strategies) (004-alignment-brain)
+- In-memory stores (existing); ConfigStore, MemoryStore, SessionStore, AuditStore interfaces already defined (004-alignment-brain)
 - MemoryStore interface (InMemory for dev, PostgreSQL/Neo4j/MongoDB for production) (005-memory-ingestion)
 - Python 3.11+ + FastAPI, uvicorn, python-jose (JWT), sse-starlette (SSE streaming) (006-api-layer-core)
 - In-memory stores (existing), Redis for idempotency cache and rate limiting (006-api-layer-core)

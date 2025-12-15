@@ -12,13 +12,13 @@ from typing import Any
 from uuid import UUID
 
 from ruche.conversation.models import Channel
-from ruche.interlocutor.enums import ItemStatus
-from ruche.interlocutor.models import (
+from ruche.interlocutor_data.enums import ItemStatus
+from ruche.interlocutor_data.models import (
     ChannelIdentity,
-    CustomerDataStore,
+    InterlocutorDataStore,
     ProfileAsset,
     VariableEntry,
-    CustomerDataField,
+    InterlocutorDataField,
     ScenarioFieldRequirement,
 )
 
@@ -38,22 +38,22 @@ class InterlocutorDataStore(ABC):
     # =========================================================================
 
     @abstractmethod
-    async def get_by_customer_id(
+    async def get_by_interlocutor_id(
         self,
         tenant_id: UUID,
-        customer_id: UUID,
+        interlocutor_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by customer ID.
 
         Args:
             tenant_id: Tenant identifier
-            customer_id: Customer identifier
+            interlocutor_id: Customer identifier
             include_history: If True, populate field_history and asset_history
 
         Returns:
-            CustomerDataStore with active fields/assets, or None if not found
+            InterlocutorDataStore with active fields/assets, or None if not found
         """
         pass
 
@@ -64,7 +64,7 @@ class InterlocutorDataStore(ABC):
         profile_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by profile ID."""
         pass
 
@@ -76,7 +76,7 @@ class InterlocutorDataStore(ABC):
         channel_user_id: str,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by channel identity."""
         pass
 
@@ -86,12 +86,12 @@ class InterlocutorDataStore(ABC):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerDataStore:
+    ) -> InterlocutorDataStore:
         """Get existing profile or create new one for channel identity."""
         pass
 
     @abstractmethod
-    async def save(self, profile: CustomerDataStore) -> UUID:
+    async def save(self, profile: InterlocutorDataStore) -> UUID:
         """Save a profile (create or update)."""
         pass
 
@@ -347,7 +347,7 @@ class InterlocutorDataStore(ABC):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[CustomerDataField]:
+    ) -> list[InterlocutorDataField]:
         """Get all field definitions for an agent."""
         pass
 
@@ -357,14 +357,14 @@ class InterlocutorDataStore(ABC):
         tenant_id: UUID,
         agent_id: UUID,
         field_name: str,
-    ) -> CustomerDataField | None:
+    ) -> InterlocutorDataField | None:
         """Get a specific field definition by name."""
         pass
 
     @abstractmethod
     async def save_field_definition(
         self,
-        definition: CustomerDataField,
+        definition: InterlocutorDataField,
     ) -> UUID:
         """Save a field definition."""
         pass
@@ -430,7 +430,7 @@ class InterlocutorDataStore(ABC):
     async def get_missing_fields(
         self,
         tenant_id: UUID,
-        profile: CustomerDataStore,
+        profile: InterlocutorDataStore,
         scenario_id: UUID,
         *,
         step_id: UUID | None = None,

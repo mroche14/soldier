@@ -9,8 +9,8 @@ from typing import Any
 from uuid import UUID
 
 from ruche.observability.logging import get_logger
-from ruche.customer_data.extraction import CustomerDataSchemaExtractor
-from ruche.customer_data.store import CustomerDataStoreInterface
+from ruche.interlocutor_data.extraction import InterlocutorDataSchemaExtractor
+from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 
@@ -44,7 +44,7 @@ class ExtractSchemaRequirementsWorkflow:
     1. Analyzes scenario or rule text with LLM
     2. Extracts required profile fields
     3. Creates ScenarioFieldRequirement entries
-    4. Optionally creates CustomerDataField suggestions
+    4. Optionally creates InterlocutorDataField suggestions
 
     Non-blocking: Failures don't prevent the scenario/rule from being created.
     Idempotent: Re-running updates existing requirements.
@@ -54,8 +54,8 @@ class ExtractSchemaRequirementsWorkflow:
 
     def __init__(
         self,
-        extractor: CustomerDataSchemaExtractor,
-        profile_store: CustomerDataStoreInterface,
+        extractor: InterlocutorDataSchemaExtractor,
+        profile_store: InterlocutorDataStoreInterface,
     ) -> None:
         """Initialize workflow.
 
@@ -181,8 +181,8 @@ class ExtractSchemaRequirementsWorkflow:
 
 def register_workflow(
     hatchet: Any,
-    extractor: CustomerDataSchemaExtractor,
-    profile_store: CustomerDataStoreInterface,
+    extractor: InterlocutorDataSchemaExtractor,
+    profile_store: InterlocutorDataStoreInterface,
 ) -> Any:
     """Register the schema extraction workflow with Hatchet.
 

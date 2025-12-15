@@ -8,11 +8,11 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ruche.alignment.migration.diff import (
+from ruche.brains.focal.migration.diff import (
     compute_scenario_checksum,
     compute_transformation_map,
 )
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.models import (
     AnchorMigrationPolicy,
     FieldCollectionInfo,
     MigrationPlan,
@@ -28,8 +28,8 @@ from ruche.conversation.models import PendingMigration
 from ruche.observability.logging import get_logger
 
 if TYPE_CHECKING:
-    from ruche.alignment.models import Scenario
-    from ruche.alignment.stores.agent_config_store import AgentConfigStore
+    from ruche.brains.focal.models import Scenario
+    from ruche.brains.focal.stores.agent_config_store import AgentConfigStore
     from ruche.conversation.store import SessionStore
 
 logger = get_logger(__name__)

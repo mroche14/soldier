@@ -119,19 +119,19 @@ def decide_canonical_intent(
 ### Intent Catalog Config
 
 ```toml
-[pipeline.retrieval.intent_selection]
+[brain.retrieval.intent_selection]
 strategy = "top_k"
 max_k = 5
 min_k = 1
 min_score = 0.0
 
-[pipeline.retrieval.intent_hybrid]
+[brain.retrieval.intent_hybrid]
 enabled = true
 vector_weight = 0.5
 bm25_weight = 0.5
 normalization = "softmax"
 
-[pipeline.retrieval.intent_reranking]
+[brain.retrieval.intent_reranking]
 enabled = false  # Simple matching usually sufficient
 ```
 
@@ -353,7 +353,7 @@ example_phrases=[
 
 ---
 
-## Integration with Pipeline
+## Integration with Brain
 
 ### Phase 2: Situational Sensor
 

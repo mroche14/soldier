@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.models import Rule, Scenario, Scope, Template, Variable
-from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.brains.focal.models import Rule, Scenario, Scope, Template, Variable
+from ruche.brains.focal.stores import InMemoryAgentConfigStore
 
 
 @pytest.fixture
@@ -336,7 +336,7 @@ class TestGlossaryOperations:
     @pytest.mark.asyncio
     async def test_save_and_get_glossary_items(self, store, tenant_id, agent_id):
         """Should save and retrieve glossary items."""
-        from ruche.alignment.models.glossary import GlossaryItem
+        from ruche.brains.focal.models.glossary import GlossaryItem
 
         item1 = GlossaryItem(
             tenant_id=tenant_id,
@@ -365,7 +365,7 @@ class TestGlossaryOperations:
     @pytest.mark.asyncio
     async def test_get_glossary_items_tenant_isolation(self, store, tenant_id, agent_id):
         """Should not return glossary items from other tenants."""
-        from ruche.alignment.models.glossary import GlossaryItem
+        from ruche.brains.focal.models.glossary import GlossaryItem
 
         item = GlossaryItem(
             tenant_id=tenant_id,
@@ -383,7 +383,7 @@ class TestGlossaryOperations:
     @pytest.mark.asyncio
     async def test_get_glossary_items_enabled_only(self, store, tenant_id, agent_id):
         """Should filter by enabled flag."""
-        from ruche.alignment.models.glossary import GlossaryItem
+        from ruche.brains.focal.models.glossary import GlossaryItem
 
         enabled_item = GlossaryItem(
             tenant_id=tenant_id,
@@ -411,15 +411,15 @@ class TestGlossaryOperations:
         assert len(all_items) == 2
 
 
-class TestCustomerDataFieldOperations:
+class TestInterlocutorDataFieldOperations:
     """Tests for customer data field CRUD operations (Phase 2)."""
 
     @pytest.mark.asyncio
     async def test_save_and_get_customer_data_fields(self, store, tenant_id, agent_id):
         """Should save and retrieve customer data field definitions."""
-        from ruche.customer_data.models import CustomerDataField
+        from ruche.interlocutor_data.models import InterlocutorDataField
 
-        field1 = CustomerDataField(
+        field1 = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="customer_name",
@@ -428,7 +428,7 @@ class TestCustomerDataFieldOperations:
             value_type="string",
             enabled=True,
         )
-        field2 = CustomerDataField(
+        field2 = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="order_number",
@@ -450,9 +450,9 @@ class TestCustomerDataFieldOperations:
     @pytest.mark.asyncio
     async def test_get_customer_data_fields_tenant_isolation(self, store, tenant_id, agent_id):
         """Should not return fields from other tenants."""
-        from ruche.customer_data.models import CustomerDataField
+        from ruche.interlocutor_data.models import InterlocutorDataField
 
-        field = CustomerDataField(
+        field = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -470,9 +470,9 @@ class TestCustomerDataFieldOperations:
     @pytest.mark.asyncio
     async def test_get_customer_data_fields_enabled_only(self, store, tenant_id, agent_id):
         """Should filter by enabled flag."""
-        from ruche.customer_data.models import CustomerDataField
+        from ruche.interlocutor_data.models import InterlocutorDataField
 
-        enabled_field = CustomerDataField(
+        enabled_field = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="active_field",
@@ -481,7 +481,7 @@ class TestCustomerDataFieldOperations:
             value_type="string",
             enabled=True,
         )
-        disabled_field = CustomerDataField(
+        disabled_field = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="inactive_field",

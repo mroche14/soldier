@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from ruche.providers.llm.base import LLMMessage, LLMResponse, TokenUsage
+from ruche.infrastructure.providers.llm.base import LLMMessage, LLMResponse, TokenUsage
 
 T = TypeVar("T", bound=BaseModel)
 

@@ -62,7 +62,7 @@ Focal is the **Cognitive Layer** in a multi-plane architecture:
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                         Turn Pipeline                                 │   │
+│  │                       FOCAL Brain                                  │   │
 │  │                                                                       │   │
 │  │  1. Load session state (Redis)                                       │   │
 │  │  2. Parallel evaluation:                                             │   │

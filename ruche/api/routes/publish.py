@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks
 
-from ruche.alignment.models import PublishJob
+from ruche.brains.focal.models import PublishJob
 from ruche.api.dependencies import AgentConfigStoreDep
 from ruche.api.exceptions import (
     AgentNotFoundError,

@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.migration.composite import CompositeMapper
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.composite import CompositeMapper
+from ruche.brains.focal.migration.models import (
     AnchorTransformation,
     InsertedNode,
     MigrationPlan,
@@ -15,8 +15,8 @@ from ruche.alignment.migration.models import (
     TransformationMap,
     UpstreamChanges,
 )
-from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.models import Scenario, ScenarioStep, StepTransition
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.conversation.models import Channel, Session
 
 

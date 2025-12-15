@@ -18,7 +18,7 @@ Resources exposed:
 from typing import Any
 from uuid import UUID
 
-from ruche.alignment.stores.agent_config_store import AgentConfigStore
+from ruche.brains.focal.stores.agent_config_store import AgentConfigStore
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

@@ -4,10 +4,10 @@ import asyncio
 
 import pytest
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.execution.tool_executor import ToolExecutor
-from ruche.alignment.filtering.models import MatchedRule
-from ruche.alignment.models import Rule
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.execution.tool_executor import ToolExecutor
+from ruche.brains.focal.phases.filtering.models import MatchedRule
+from ruche.brains.focal.models import Rule
 from tests.factories.alignment import RuleFactory
 
 

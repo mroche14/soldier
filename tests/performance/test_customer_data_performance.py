@@ -20,15 +20,15 @@ from uuid import uuid4
 import pytest
 
 from ruche.conversation.models.enums import Channel
-from ruche.customer_data.enums import VariableSource, SourceType, ValidationMode
-from ruche.customer_data.models import (
+from ruche.interlocutor_data.enums import VariableSource, SourceType, ValidationMode
+from ruche.interlocutor_data.models import (
     ChannelIdentity,
-    CustomerDataStore,
+    InterlocutorDataStore,
     VariableEntry,
-    CustomerDataField,
+    InterlocutorDataField,
 )
-from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
-from ruche.customer_data.validation import CustomerDataFieldValidator
+from ruche.interlocutor_data.stores.inmemory import InMemoryInterlocutorDataStore
+from ruche.interlocutor_data.validation import InterlocutorDataFieldValidator
 
 
 def percentile(data: list[float], p: float) -> float:
@@ -45,21 +45,21 @@ def percentile(data: list[float], p: float) -> float:
 @pytest.fixture
 def profile_store():
     """Create an in-memory profile store."""
-    return InMemoryCustomerDataStore()
+    return InMemoryInterlocutorDataStore()
 
 
 @pytest.fixture
 def field_validator():
     """Create a schema validation service."""
-    return CustomerDataFieldValidator()
+    return InterlocutorDataFieldValidator()
 
 
 @pytest.fixture
 def sample_profile():
     """Create a sample profile with fields."""
-    return CustomerDataStore(
+    return InterlocutorDataStore(
         tenant_id=uuid4(),
-        customer_id=uuid4(),
+        interlocutor_id=uuid4(),
         channel_identities=[
             ChannelIdentity(
                 channel=Channel.WEBCHAT,
@@ -86,7 +86,7 @@ def sample_profile():
 @pytest.fixture
 def email_definition():
     """Create an email field definition."""
-    return CustomerDataField(
+    return InterlocutorDataField(
         tenant_id=uuid4(),
         agent_id=uuid4(),
         name="email",
@@ -102,11 +102,11 @@ class TestProfileLoadPerformance:
     @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_nfr001_profile_load_warm_cache(
-        self, profile_store: InMemoryCustomerDataStore, sample_profile: CustomerDataStore
+        self, profile_store: InMemoryInterlocutorDataStore, sample_profile: InterlocutorDataStore
     ):
         """NFR-001: 1000 profile loads with warm cache < 10ms p99.
 
-        Note: InMemoryCustomerDataStore acts as "warm cache" since it's all in memory.
+        Note: InMemoryInterlocutorDataStore acts as "warm cache" since it's all in memory.
         """
         # Save profile
         await profile_store.save(sample_profile)
@@ -135,7 +135,7 @@ class TestProfileLoadPerformance:
     @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_nfr002_profile_load_cold(
-        self, profile_store: InMemoryCustomerDataStore, sample_profile: CustomerDataStore
+        self, profile_store: InMemoryInterlocutorDataStore, sample_profile: InterlocutorDataStore
     ):
         """NFR-002: 1000 profile loads bypassing cache < 50ms p99.
 
@@ -146,9 +146,9 @@ class TestProfileLoadPerformance:
 
         for i in range(1000):
             # Create unique profile for each iteration
-            profile = CustomerDataStore(
+            profile = InterlocutorDataStore(
                 tenant_id=sample_profile.tenant_id,
-                customer_id=uuid4(),
+                interlocutor_id=uuid4(),
                 channel_identities=[
                     ChannelIdentity(
                         channel=Channel.WEBCHAT,
@@ -178,8 +178,8 @@ class TestFieldValidationPerformance:
     @pytest.mark.performance
     def test_nfr003_field_validation(
         self,
-        field_validator: CustomerDataFieldValidator,
-        email_definition: CustomerDataField,
+        field_validator: InterlocutorDataFieldValidator,
+        email_definition: InterlocutorDataField,
     ):
         """NFR-003: 10000 field validations < 5ms p99."""
         latencies = []
@@ -209,15 +209,15 @@ class TestDerivationChainPerformance:
     @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_nfr004_derivation_chain_traversal(
-        self, profile_store: InMemoryCustomerDataStore
+        self, profile_store: InMemoryInterlocutorDataStore
     ):
         """NFR-004: 100 derivation chain traversals (depth 10) < 100ms p99."""
         tenant_id = uuid4()
 
         # Create a profile with a chain of 10 derived fields
-        profile = CustomerDataStore(
+        profile = InterlocutorDataStore(
             tenant_id=tenant_id,
-            customer_id=uuid4(),
+            interlocutor_id=uuid4(),
             channel_identities=[
                 ChannelIdentity(
                     channel=Channel.WEBCHAT,
@@ -273,7 +273,7 @@ class TestSchemaExtractionPerformance:
         Note: This test uses a mock LLM to measure extraction overhead.
         Real LLM performance depends on provider latency.
         """
-        from ruche.customer_data.extraction import CustomerDataSchemaExtractor
+        from ruche.interlocutor_data.extraction import InterlocutorDataSchemaExtractor
 
         # Create mock LLM that returns realistic response
         mock_llm = AsyncMock()
@@ -286,7 +286,7 @@ class TestSchemaExtractionPerformance:
         }
         '''
 
-        extractor = CustomerDataSchemaExtractor(llm_executor=mock_llm)
+        extractor = InterlocutorDataSchemaExtractor(llm_executor=mock_llm)
 
         content = """
         If the customer is over 18 years old and has verified their email,
@@ -316,15 +316,15 @@ class TestBulkOperationsPerformance:
 
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_bulk_profile_saves(self, profile_store: InMemoryCustomerDataStore):
+    async def test_bulk_profile_saves(self, profile_store: InMemoryInterlocutorDataStore):
         """Test bulk profile save performance."""
         tenant_id = uuid4()
         latencies = []
 
         for i in range(100):
-            profile = CustomerDataStore(
+            profile = InterlocutorDataStore(
                 tenant_id=tenant_id,
-                customer_id=uuid4(),
+                interlocutor_id=uuid4(),
                 channel_identities=[
                     ChannelIdentity(
                         channel=Channel.WEBCHAT,
@@ -355,11 +355,11 @@ class TestBulkOperationsPerformance:
     @pytest.mark.performance
     def test_bulk_validation(
         self,
-        field_validator: CustomerDataFieldValidator,
+        field_validator: InterlocutorDataFieldValidator,
     ):
         """Test bulk validation with multiple field types."""
         definitions = [
-            CustomerDataField(
+            InterlocutorDataField(
                 tenant_id=uuid4(),
                 agent_id=uuid4(),
                 name="email",
@@ -367,7 +367,7 @@ class TestBulkOperationsPerformance:
                 value_type="email",
                 validation_mode=ValidationMode.STRICT,
             ),
-            CustomerDataField(
+            InterlocutorDataField(
                 tenant_id=uuid4(),
                 agent_id=uuid4(),
                 name="phone",
@@ -375,7 +375,7 @@ class TestBulkOperationsPerformance:
                 value_type="phone",
                 validation_mode=ValidationMode.STRICT,
             ),
-            CustomerDataField(
+            InterlocutorDataField(
                 tenant_id=uuid4(),
                 agent_id=uuid4(),
                 name="age",

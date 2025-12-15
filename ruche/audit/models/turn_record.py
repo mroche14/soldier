@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ruche.conversation.models.turn import ToolCall
 
 if TYPE_CHECKING:
-    from ruche.alignment.models.outcome import TurnOutcome
+    from ruche.brains.focal.models.outcome import TurnOutcome
 
 
 class TurnRecord(BaseModel):

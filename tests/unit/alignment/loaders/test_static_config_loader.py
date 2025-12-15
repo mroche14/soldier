@@ -4,10 +4,10 @@ import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from ruche.alignment.loaders.static_config_loader import StaticConfigLoader
-from ruche.alignment.models import GlossaryItem
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
-from ruche.customer_data import CustomerDataField
+from ruche.brains.focal.phases.loaders.static_config_loader import StaticConfigLoader
+from ruche.brains.focal.models import GlossaryItem
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
+from ruche.interlocutor_data import InterlocutorDataField
 
 
 @pytest.fixture
@@ -156,7 +156,7 @@ class TestStaticConfigLoader:
         now = datetime.now(UTC)
 
         # Add customer data fields
-        field1 = CustomerDataField(
+        field1 = InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -171,7 +171,7 @@ class TestStaticConfigLoader:
             updated_at=now,
         )
 
-        field2 = CustomerDataField(
+        field2 = InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -208,7 +208,7 @@ class TestStaticConfigLoader:
         now = datetime.now(UTC)
 
         # Add enabled field
-        enabled_field = CustomerDataField(
+        enabled_field = InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,
@@ -225,7 +225,7 @@ class TestStaticConfigLoader:
         )
 
         # Add disabled field
-        disabled_field = CustomerDataField(
+        disabled_field = InterlocutorDataField(
             id=uuid4(),
             tenant_id=tenant_id,
             agent_id=agent_id,

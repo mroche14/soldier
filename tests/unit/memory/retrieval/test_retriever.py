@@ -5,12 +5,12 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
 from ruche.config.models.selection import SelectionConfig
 from ruche.memory.models.episode import Episode
 from ruche.memory.retrieval.retriever import MemoryRetriever
 from ruche.memory.stores.inmemory import InMemoryMemoryStore
-from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):

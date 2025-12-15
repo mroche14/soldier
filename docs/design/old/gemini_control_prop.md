@@ -53,9 +53,9 @@ This document serves as the decision matrix for the Focal system architecture, r
 
 ---
 
-## 2. The Gemini Pipeline (Optimized Flow)
+## 2. The Gemini Brain (Optimized Flow)
 
-This pipeline is designed to be **linear** (predictable) and **fail-fast** (safe).
+This brain is designed to be **linear** (predictable) and **fail-fast** (safe).
 
 ```mermaid
 graph TD

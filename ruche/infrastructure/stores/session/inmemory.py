@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from ruche.alignment.migration.models import ScopeFilter
+from ruche.brains.focal.migration.models import ScopeFilter
 from ruche.conversation.models import Channel, Session, SessionStatus
 from ruche.conversation.store import SessionStore
 

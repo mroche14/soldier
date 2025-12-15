@@ -7,8 +7,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.result import AlignmentResult
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.result import AlignmentResult
 from ruche.api.dependencies import (
     get_alignment_engine,
     get_session_store,
@@ -194,7 +194,7 @@ class TestChatEndpoint:
         mock_engine: AsyncMock,
     ) -> None:
         """Chat response includes matched rules."""
-        from ruche.alignment.filtering.models import MatchedRule
+        from ruche.brains.focal.phases.filtering.models import MatchedRule
         from tests.factories.alignment import RuleFactory
 
         # Add matched rules to the result

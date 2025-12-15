@@ -11,10 +11,10 @@ from typing import Annotated
 import redis.asyncio as redis
 from fastapi import Depends
 
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.stores import AgentConfigStore
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
-from ruche.alignment.stores.postgres import PostgresAgentConfigStore
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.stores import AgentConfigStore
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.stores.postgres import PostgresAgentConfigStore
 from ruche.audit.store import AuditStore
 from ruche.audit.stores.inmemory import InMemoryAuditStore
 from ruche.audit.stores.postgres import PostgresAuditStore
@@ -25,7 +25,7 @@ from ruche.conversation.stores.inmemory import InMemorySessionStore
 from ruche.conversation.stores.redis import RedisSessionStore
 from ruche.db.pool import PostgresPool
 from ruche.observability.logging import get_logger
-from ruche.providers.embedding import EmbeddingProvider
+from ruche.infrastructure.providers.embedding import EmbeddingProvider
 from ruche.vector import VectorStore, EmbeddingManager, create_vector_store
 
 logger = get_logger(__name__)
@@ -217,7 +217,7 @@ def get_embedding_provider(
         provider_config = settings.providers.embedding.get("default")
 
         if provider_config and provider_config.provider == "jina":
-            from ruche.providers.embedding.jina import JinaEmbeddingProvider
+            from ruche.infrastructure.providers.embedding.jina import JinaEmbeddingProvider
 
             _embedding_provider = JinaEmbeddingProvider(
                 dimensions=provider_config.dimensions,
@@ -231,7 +231,7 @@ def get_embedding_provider(
             )
         else:
             # Fallback to mock for testing
-            from ruche.providers.embedding.mock import MockEmbeddingProvider
+            from ruche.infrastructure.providers.embedding.mock import MockEmbeddingProvider
 
             _embedding_provider = MockEmbeddingProvider(
                 dimensions=settings.storage.vector.dimensions

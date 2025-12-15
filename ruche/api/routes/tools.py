@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from ruche.alignment.models import ToolActivation
+from ruche.brains.focal.models import ToolActivation
 from ruche.api.dependencies import AgentConfigStoreDep
 from ruche.api.exceptions import AgentNotFoundError, ToolActivationNotFoundError
 from ruche.api.middleware.auth import TenantContextDep

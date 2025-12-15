@@ -27,32 +27,32 @@ import time
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from ruche.alignment.context import SituationSensor, Turn
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.customer import CustomerDataUpdater
-from ruche.alignment.enforcement import EnforcementValidator, FallbackHandler
-from ruche.alignment.enforcement.models import EnforcementResult
-from ruche.alignment.execution import ToolExecutor
-from ruche.alignment.execution.models import ToolResult
-from ruche.alignment.filtering import RuleFilter, ScenarioFilter
-from ruche.alignment.filtering.models import MatchedRule, ScenarioFilterResult
-from ruche.alignment.generation import PromptBuilder, ResponseGenerator
-from ruche.alignment.generation.models import GenerationResult
-from ruche.alignment.loaders.customer_data_loader import CustomerDataLoader
-from ruche.alignment.loaders.static_config_loader import StaticConfigLoader
-from ruche.alignment.migration.executor import MigrationExecutor
-from ruche.alignment.migration.field_resolver import MissingFieldResolver
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.phases.context import SituationSensor, Turn
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.interlocutor import InterlocutorDataUpdater
+from ruche.brains.focal.phases.enforcement import EnforcementValidator, FallbackHandler
+from ruche.brains.focal.phases.enforcement.models import EnforcementResult
+from ruche.brains.focal.phases.execution import ToolExecutor
+from ruche.brains.focal.phases.execution.models import ToolResult
+from ruche.brains.focal.phases.filtering import RuleFilter, ScenarioFilter
+from ruche.brains.focal.phases.filtering.models import MatchedRule, ScenarioFilterResult
+from ruche.brains.focal.phases.generation import PromptBuilder, ResponseGenerator
+from ruche.brains.focal.phases.generation.models import GenerationResult
+from ruche.brains.focal.phases.loaders.interlocutor_data_loader import InterlocutorDataLoader
+from ruche.brains.focal.phases.loaders.static_config_loader import StaticConfigLoader
+from ruche.brains.focal.migration.executor import MigrationExecutor
+from ruche.brains.focal.migration.field_resolver import MissingFieldResolver
+from ruche.brains.focal.migration.models import (
     FieldResolutionResult,
     ReconciliationAction,
     ReconciliationResult,
 )
-from ruche.alignment.models import Rule, Template, TurnContext
-from ruche.alignment.models.outcome import TurnOutcome
-from ruche.alignment.planning import ResponsePlanner
-from ruche.alignment.planning.models import ResponsePlan, ScenarioContributionPlan
-from ruche.alignment.result import AlignmentResult, PipelineStepTiming
-from ruche.alignment.retrieval import (
+from ruche.brains.focal.models import Rule, Template, TurnContext
+from ruche.brains.focal.models.outcome import TurnOutcome
+from ruche.brains.focal.phases.planning import ResponsePlanner
+from ruche.brains.focal.phases.planning.models import ResponsePlan, ScenarioContributionPlan
+from ruche.brains.focal.result import AlignmentResult, PipelineStepTiming
+from ruche.brains.focal.retrieval import (
     IntentRetriever,
     RuleReranker,
     RuleRetriever,
@@ -60,9 +60,9 @@ from ruche.alignment.retrieval import (
     ScenarioRetriever,
     decide_canonical_intent,
 )
-from ruche.alignment.retrieval.models import RetrievalResult, ScoredEpisode, ScoredScenario
-from ruche.alignment.stores import AgentConfigStore
-from ruche.alignment.templates_loader import load_templates_for_rules
+from ruche.brains.focal.retrieval.models import RetrievalResult, ScoredEpisode, ScoredScenario
+from ruche.brains.focal.stores import AgentConfigStore
+from ruche.brains.focal.templates_loader import load_templates_for_rules
 from ruche.audit.models import TurnRecord
 from ruche.audit.store import AuditStore
 from ruche.config.models.migration import ScenarioMigrationConfig
@@ -70,15 +70,15 @@ from ruche.config.models.pipeline import PipelineConfig
 from ruche.conversation.models import Session, StepVisit
 from ruche.conversation.models.turn import ToolCall
 from ruche.conversation.store import SessionStore
-from ruche.customer_data.models import VariableEntry
-from ruche.customer_data.store import CustomerDataStoreInterface
-from ruche.customer_data.validation import CustomerDataFieldValidator
+from ruche.interlocutor_data.models import VariableEntry
+from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+from ruche.interlocutor_data.validation import InterlocutorDataFieldValidator
 from ruche.memory.retrieval import MemoryRetriever
 from ruche.memory.retrieval.reranker import MemoryReranker
 from ruche.memory.store import MemoryStore
 from ruche.observability.logging import get_logger
-from ruche.providers.embedding import EmbeddingProvider
-from ruche.providers.llm import (
+from ruche.infrastructure.providers.embedding import EmbeddingProvider
+from ruche.infrastructure.providers.llm import (
     ExecutionContext,
     LLMExecutor,
     clear_execution_context,
@@ -86,7 +86,7 @@ from ruche.providers.llm import (
     create_executors_from_pipeline_config,
     set_execution_context,
 )
-from ruche.providers.rerank import RerankProvider
+from ruche.infrastructure.providers.rerank import RerankProvider
 
 logger = get_logger(__name__)
 
@@ -127,7 +127,7 @@ class FocalCognitivePipeline:
         memory_store: MemoryStore | None = None,
         migration_config: ScenarioMigrationConfig | None = None,
         executors: dict[str, LLMExecutor] | None = None,
-        profile_store: CustomerDataStoreInterface | None = None,
+        profile_store: InterlocutorDataStoreInterface | None = None,
         enable_requirement_checking: bool = True,
     ) -> None:
         """Initialize the alignment engine.
@@ -259,15 +259,15 @@ class FocalCognitivePipeline:
                     "situation_sensor",  # Reuse situation sensor model for field extraction
                     create_executor("mock/default", step_name="situation_sensor"),
                 ),
-                field_validator=CustomerDataFieldValidator(),
+                field_validator=InterlocutorDataFieldValidator(),
             )
             if profile_store and enable_requirement_checking
             else None
         )
 
         # Phase 1 loaders
-        self._customer_data_loader = (
-            CustomerDataLoader(profile_store=profile_store)
+        self._interlocutor_data_loader = (
+            InterlocutorDataLoader(profile_store=profile_store)
             if profile_store
             else None
         )
@@ -275,7 +275,7 @@ class FocalCognitivePipeline:
 
         # Phase 3 customer data updater
         self._customer_data_updater = (
-            CustomerDataUpdater(validator=CustomerDataFieldValidator())
+            InterlocutorDataUpdater(validator=InterlocutorDataFieldValidator())
             if profile_store
             else None
         )
@@ -291,7 +291,7 @@ class FocalCognitivePipeline:
         persist: bool = True,
         channel: str = "api",
         channel_user_id: str | None = None,
-        customer_id: UUID | None = None,
+        interlocutor_id: UUID | None = None,
     ) -> AlignmentResult:
         """Process a user message through the alignment pipeline.
 
@@ -314,7 +314,7 @@ class FocalCognitivePipeline:
             persist: Whether to persist session and turn record (default True)
             channel: Channel identifier (default "api")
             channel_user_id: Channel-specific user ID (for customer resolution)
-            customer_id: Optional explicit customer ID (skips resolution)
+            interlocutor_id: Optional explicit customer ID (skips resolution)
 
         Returns:
             AlignmentResult with response and all intermediate results
@@ -347,7 +347,7 @@ class FocalCognitivePipeline:
                 start_time=start_time,
                 channel=channel,
                 channel_user_id=channel_user_id,
-                customer_id=customer_id,
+                interlocutor_id=interlocutor_id,
             )
         finally:
             clear_execution_context()
@@ -366,7 +366,7 @@ class FocalCognitivePipeline:
         start_time: float,
         channel: str,
         channel_user_id: str | None,
-        customer_id: UUID | None,
+        interlocutor_id: UUID | None,
     ) -> AlignmentResult:
         """Internal implementation of process_turn."""
         logger.info(
@@ -384,12 +384,12 @@ class FocalCognitivePipeline:
         # Use channel_user_id or fallback to session_id as identifier
         effective_channel_user_id = channel_user_id or str(session_id)
 
-        resolved_customer_id, is_new_customer = await self._resolve_customer(
+        resolved_interlocutor_id, is_new_customer = await self._resolve_customer(
             tenant_id=tenant_id,
             agent_id=agent_id,
             channel=channel,
             channel_user_id=effective_channel_user_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
         )
 
         elapsed_ms = (time.perf_counter() - phase1_start) * 1000
@@ -460,7 +460,7 @@ class FocalCognitivePipeline:
             turn_context = await self._build_turn_context(
                 tenant_id=tenant_id,
                 agent_id=agent_id,
-                customer_id=resolved_customer_id,
+                interlocutor_id=resolved_interlocutor_id,
                 session=session,
                 reconciliation_result=reconciliation_result,
             )
@@ -470,7 +470,7 @@ class FocalCognitivePipeline:
                 tenant_id=str(tenant_id),
                 agent_id=str(agent_id),
                 session_id=str(session_id),
-                customer_id=str(resolved_customer_id),
+                interlocutor_id=str(resolved_interlocutor_id),
                 turn_number=turn_context.turn_number,
                 is_new_customer=is_new_customer,
                 has_reconciliation=reconciliation_result is not None,
@@ -492,7 +492,7 @@ class FocalCognitivePipeline:
             timings=timings,
             tenant_id=tenant_id,
             agent_id=agent_id,
-            customer_id=resolved_customer_id,
+            interlocutor_id=resolved_interlocutor_id,
             previous_intent_label=None,  # TODO: Track from session
         )
 
@@ -695,7 +695,7 @@ class FocalCognitivePipeline:
                     )
                 )
 
-            # Task 2: CustomerData persistence (if updates exist)
+            # Task 2: InterlocutorData persistence (if updates exist)
             if persistent_customer_updates and self._profile_store:
                 persistence_tasks.append(
                     self._persist_customer_data(
@@ -1023,7 +1023,7 @@ class FocalCognitivePipeline:
         timings: list[PipelineStepTiming],
         tenant_id: UUID | None = None,
         agent_id: UUID | None = None,
-        customer_id: UUID | None = None,
+        interlocutor_id: UUID | None = None,
         previous_intent_label: str | None = None,
     ) -> SituationSnapshot:
         """Extract situation snapshot from user message.
@@ -1032,7 +1032,7 @@ class FocalCognitivePipeline:
         If sensor is disabled or fails, returns minimal snapshot with just message.
         """
         # If sensor disabled or missing IDs, return minimal snapshot
-        if not self._config.situation_sensor.enabled or not tenant_id or not agent_id or not customer_id:
+        if not self._config.situation_sensor.enabled or not tenant_id or not agent_id or not interlocutor_id:
             return SituationSnapshot(
                 message=message,
                 intent_changed=False,
@@ -1046,18 +1046,18 @@ class FocalCognitivePipeline:
         try:
             # Load customer data and schema
             customer_data_store = None
-            if self._customer_data_loader:
-                customer_data_store = await self._customer_data_loader.load(
-                    customer_id=customer_id,
+            if self._interlocutor_data_loader:
+                customer_data_store = await self._interlocutor_data_loader.load(
+                    interlocutor_id=interlocutor_id,
                     tenant_id=tenant_id,
                     schema={},  # Schema will be loaded separately
                 )
             else:
-                from ruche.customer_data import CustomerDataStore
-                customer_data_store = CustomerDataStore(
-                    id=customer_id,
+                from ruche.interlocutor_data import InterlocutorDataStore
+                customer_data_store = InterlocutorDataStore(
+                    id=interlocutor_id,
                     tenant_id=tenant_id,
-                    customer_id=customer_id,
+                    interlocutor_id=interlocutor_id,
                     channel_identities=[],
                     fields={},
                     assets=[],
@@ -1416,7 +1416,7 @@ class FocalCognitivePipeline:
         start_time = time.perf_counter()
 
         if not self._config.generation.enabled:
-            from ruche.alignment.generation.models import GenerationResult
+            from ruche.brains.focal.phases.generation.models import GenerationResult
 
             timings.append(
                 PipelineStepTiming(
@@ -1524,13 +1524,13 @@ class FocalCognitivePipeline:
 
         Only persists fields with:
         - scope != SESSION (SESSION scope is ephemeral)
-        - persist = True in CustomerDataField
+        - persist = True in InterlocutorDataField
 
         Args:
             session: Current session
             updates: List of customer data updates from Phase 3
         """
-        from ruche.customer_data.enums import VariableSource
+        from ruche.interlocutor_data.enums import VariableSource
         from ruche.observability.metrics import PERSISTENCE_OPERATIONS
 
         if not self._profile_store:
@@ -1552,16 +1552,16 @@ class FocalCognitivePipeline:
             return
 
         # Get or create customer profile
-        profile = await self._profile_store.get_by_customer_id(
+        profile = await self._profile_store.get_by_interlocutor_id(
             tenant_id=session.tenant_id,
-            customer_id=session.customer_id,
+            interlocutor_id=session.interlocutor_id,
         )
 
         if not profile:
             logger.warning(
                 "profile_not_found_for_persistence",
                 session_id=str(session.session_id),
-                customer_id=str(session.customer_id),
+                interlocutor_id=str(session.interlocutor_id),
             )
             PERSISTENCE_OPERATIONS.labels(operation="customer_data", status="failure").inc()
             return
@@ -1618,7 +1618,7 @@ class FocalCognitivePipeline:
         Returns:
             TurnOutcome with resolution and categories
         """
-        from ruche.alignment.models.outcome import OutcomeCategory, TurnOutcome
+        from ruche.brains.focal.models.outcome import OutcomeCategory, TurnOutcome
 
         categories = []
 
@@ -1922,16 +1922,16 @@ class FocalCognitivePipeline:
         agent_id: UUID,
         channel: str,
         channel_user_id: str,
-        customer_id: UUID | None = None,
+        interlocutor_id: UUID | None = None,
     ) -> tuple[UUID, bool]:
         """Resolve customer from channel identity or create new.
 
         Returns:
-            (customer_id, is_new_customer)
+            (interlocutor_id, is_new_customer)
         """
-        if customer_id:
+        if interlocutor_id:
             # Customer ID explicitly provided
-            return customer_id, False
+            return interlocutor_id, False
 
         if not self._profile_store:
             # No profile store, generate ephemeral customer ID
@@ -1940,7 +1940,7 @@ class FocalCognitivePipeline:
                 "customer_resolution_ephemeral",
                 tenant_id=str(tenant_id),
                 channel=channel,
-                customer_id=str(ephemeral_id),
+                interlocutor_id=str(ephemeral_id),
             )
             return ephemeral_id, True
 
@@ -1962,10 +1962,10 @@ class FocalCognitivePipeline:
             logger.info(
                 "customer_resolved",
                 tenant_id=str(tenant_id),
-                customer_id=str(profile.customer_id),
+                interlocutor_id=str(profile.interlocutor_id),
                 channel=channel,
             )
-            return profile.customer_id, False
+            return profile.interlocutor_id, False
 
         # Create new profile
         profile = await self._profile_store.get_or_create(
@@ -1977,17 +1977,17 @@ class FocalCognitivePipeline:
         logger.info(
             "customer_created",
             tenant_id=str(tenant_id),
-            customer_id=str(profile.customer_id),
+            interlocutor_id=str(profile.interlocutor_id),
             channel=channel,
         )
 
-        return profile.customer_id, True
+        return profile.interlocutor_id, True
 
     async def _build_turn_context(
         self,
         tenant_id: UUID,
         agent_id: UUID,
-        customer_id: UUID,
+        interlocutor_id: UUID,
         session: Session,
         reconciliation_result: ReconciliationResult | None,
     ) -> TurnContext:
@@ -1998,14 +1998,14 @@ class FocalCognitivePipeline:
         Args:
             tenant_id: Tenant ID
             agent_id: Agent ID
-            customer_id: Customer ID
+            interlocutor_id: Customer ID
             session: Session state
             reconciliation_result: Result of scenario migration if applicable
 
         Returns:
             TurnContext with all turn-scoped data
         """
-        from ruche.customer_data import CustomerDataStore
+        from ruche.interlocutor_data import InterlocutorDataStore
 
         # Load static config if enabled
         glossary = {}
@@ -2041,10 +2041,10 @@ class FocalCognitivePipeline:
 
         # Load customer data
         customer_data = None
-        if self._customer_data_loader:
+        if self._interlocutor_data_loader:
             try:
-                customer_data = await self._customer_data_loader.load(
-                    customer_id=customer_id,
+                customer_data = await self._interlocutor_data_loader.load(
+                    interlocutor_id=interlocutor_id,
                     tenant_id=tenant_id,
                     schema=customer_data_fields,
                 )
@@ -2052,24 +2052,24 @@ class FocalCognitivePipeline:
                 logger.warning(
                     "customer_data_load_failed",
                     tenant_id=str(tenant_id),
-                    customer_id=str(customer_id),
+                    interlocutor_id=str(interlocutor_id),
                     error=str(e),
                 )
                 # Create empty store on failure
-                customer_data = CustomerDataStore(
-                    id=customer_id,
+                customer_data = InterlocutorDataStore(
+                    id=interlocutor_id,
                     tenant_id=tenant_id,
-                    customer_id=customer_id,
+                    interlocutor_id=interlocutor_id,
                     channel_identities=[],
                     fields={},
                     assets=[],
                 )
         else:
             # No loader, create empty store
-            customer_data = CustomerDataStore(
-                id=customer_id,
+            customer_data = InterlocutorDataStore(
+                id=interlocutor_id,
                 tenant_id=tenant_id,
-                customer_id=customer_id,
+                interlocutor_id=interlocutor_id,
                 channel_identities=[],
                 fields={},
                 assets=[],
@@ -2078,7 +2078,7 @@ class FocalCognitivePipeline:
         return TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             session_id=session.session_id,
             turn_number=session.turn_count + 1,
             session=session.model_dump(),  # Convert to dict for now

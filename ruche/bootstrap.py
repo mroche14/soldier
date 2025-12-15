@@ -26,16 +26,16 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
 from ruche.conversation.models import Channel, Session, SessionStatus
 from ruche.conversation.stores.inmemory import InMemorySessionStore
-from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.interlocutor_data.stores.inmemory import InMemoryInterlocutorDataStore
 from ruche.observability.logging import get_logger, setup_logging
-from ruche.providers.embedding.jina import JinaEmbeddingProvider
-from ruche.providers.llm import create_executor, create_executors_from_pipeline_config
-from ruche.providers.rerank.jina import JinaRerankProvider
+from ruche.infrastructure.providers.embedding.jina import JinaEmbeddingProvider
+from ruche.infrastructure.providers.llm import create_executor, create_executors_from_pipeline_config
+from ruche.infrastructure.providers.rerank.jina import JinaRerankProvider
 
 logger = get_logger(__name__)
 
@@ -50,10 +50,10 @@ class BootstrapContext:
     tenant_id: UUID
     agent_id: UUID
     session_id: UUID
-    customer_id: UUID
+    interlocutor_id: UUID
     config_store: InMemoryAgentConfigStore
     session_store: InMemorySessionStore
-    profile_store: InMemoryCustomerDataStore
+    profile_store: InMemoryInterlocutorDataStore
     embedding_provider: JinaEmbeddingProvider | None
     rerank_provider: JinaRerankProvider | None
     pipeline_config: PipelineConfig
@@ -63,7 +63,7 @@ def bootstrap(
     tenant_id: UUID | None = None,
     agent_id: UUID | None = None,
     session_id: UUID | None = None,
-    customer_id: UUID | None = None,
+    interlocutor_id: UUID | None = None,
     log_level: str = "INFO",
     model: str | None = None,
     provider_order: list[str] | None = None,
@@ -78,7 +78,7 @@ def bootstrap(
         tenant_id: Override tenant ID (default: random UUID)
         agent_id: Override agent ID (default: random UUID)
         session_id: Override session ID (default: random UUID)
-        customer_id: Override customer ID (default: random UUID)
+        interlocutor_id: Override customer ID (default: random UUID)
         log_level: Logging level (default: INFO)
         model: LLM model to use (default: from env or openrouter/openai/gpt-oss-120b)
         provider_order: OpenRouter provider order (default: ["Cerebras", "Groq", "SambaNova"])
@@ -109,12 +109,12 @@ def bootstrap(
     _tenant_id = tenant_id or uuid4()
     _agent_id = agent_id or uuid4()
     _session_id = session_id or uuid4()
-    _customer_id = customer_id or uuid4()
+    _interlocutor_id = interlocutor_id or uuid4()
 
     # Create in-memory stores
     config_store = InMemoryAgentConfigStore()
     session_store = InMemorySessionStore()
-    profile_store = InMemoryCustomerDataStore()
+    profile_store = InMemoryInterlocutorDataStore()
 
     # Create Jina providers (optional - depends on API key)
     embedding_provider = None
@@ -184,7 +184,7 @@ def bootstrap(
         tenant_id=_tenant_id,
         agent_id=_agent_id,
         session_id=_session_id,
-        customer_id=_customer_id,
+        interlocutor_id=_interlocutor_id,
         config_store=config_store,
         session_store=session_store,
         profile_store=profile_store,
@@ -201,7 +201,7 @@ def bootstrap(
             session_id=_session_id,
             tenant_id=_tenant_id,
             agent_id=_agent_id,
-            customer_id=_customer_id,
+            interlocutor_id=_interlocutor_id,
             channel=Channel.API,
             user_channel_id="bootstrap-user",
             config_version=1,
@@ -252,7 +252,7 @@ async def create_sample_rule(
     Returns:
         Created Rule
     """
-    from ruche.alignment.models import Rule, Scope
+    from ruche.brains.focal.models import Rule, Scope
 
     embedding = None
     if ctx.embedding_provider:
@@ -297,7 +297,7 @@ async def create_sample_scenario(
     Returns:
         Created Scenario
     """
-    from ruche.alignment.models import Scenario, ScenarioStep
+    from ruche.brains.focal.models import Scenario, ScenarioStep
 
     scenario_id = uuid4()
     entry_step_id = uuid4()

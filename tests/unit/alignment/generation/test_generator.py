@@ -5,17 +5,17 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.context.models import Sentiment, Turn, Urgency
-from ruche.alignment.execution.models import ToolResult
-from ruche.alignment.filtering.models import MatchedRule
-from ruche.alignment.generation.generator import ResponseGenerator
-from ruche.alignment.generation.models import GenerationResult
-from ruche.alignment.models.enums import TemplateResponseMode
-from ruche.alignment.generation.prompt_builder import PromptBuilder
-from ruche.alignment.models import Rule
-from ruche.alignment.models.template import Template
-from ruche.providers.llm import LLMExecutor, LLMMessage, LLMResponse
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.phases.context.models import Sentiment, Turn, Urgency
+from ruche.brains.focal.phases.execution.models import ToolResult
+from ruche.brains.focal.phases.filtering.models import MatchedRule
+from ruche.brains.focal.phases.generation.generator import ResponseGenerator
+from ruche.brains.focal.phases.generation.models import GenerationResult
+from ruche.brains.focal.models.enums import TemplateResponseMode
+from ruche.brains.focal.phases.generation.prompt_builder import PromptBuilder
+from ruche.brains.focal.models import Rule
+from ruche.brains.focal.models.template import Template
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage, LLMResponse
 
 
 class MockLLMExecutor(LLMExecutor):

@@ -43,7 +43,7 @@ To reason clearly about data, we distinguish three layers:
 2. **Operational State / Cache**  
    What the **brain** uses to think and act efficiently.
    
-   - `CustomerDataStore` & `SessionState` (logical view of customer + session variables).
+   - `InterlocutorDataStore` & `SessionState` (logical view of customer + session variables).
    - May be backed by:
      - internal DB (Postgres),
      - in-memory cache (Redis, etc.),
@@ -145,7 +145,7 @@ class VariableDefinition(BaseModel):
 When the engine needs a variable (e.g. a rule or scenario step requires `last_order_id`), it uses the `storage_mode`:
 
 - `INTERNAL_ONLY`  
-  → read it directly from `CustomerDataStore` (our DB).
+  → read it directly from `InterlocutorDataStore` (our DB).
 
 - `EXTERNAL_ONLY`  
   → call the configured resolver tool (e.g. `shopify.get_last_order_id`),  
@@ -169,7 +169,7 @@ From a **rules/scenarios** perspective, nothing changes: they just ask for `var(
 When the LLM sensor or tools produce updated values:
 
 - `INTERNAL_ONLY`  
-  → write into our DB (`CustomerDataStore`) as the source of truth.
+  → write into our DB (`InterlocutorDataStore`) as the source of truth.
 
 - `EXTERNAL_ONLY`  
   → write to the external system via tool (`external_resolver_id`),  

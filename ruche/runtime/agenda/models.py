@@ -69,7 +69,7 @@ class Task(BaseModel):
     priority: TaskPriority = Field(default=TaskPriority.NORMAL)
 
     # Target (optional - depends on task type)
-    customer_id: UUID | None = Field(default=None, description="Target customer")
+    interlocutor_id: UUID | None = Field(default=None, description="Target customer")
     session_id: UUID | None = Field(default=None, description="Related session")
 
     # Execution

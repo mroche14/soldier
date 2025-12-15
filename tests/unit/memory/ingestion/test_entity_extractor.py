@@ -11,7 +11,7 @@ from ruche.memory.ingestion.models import EntityExtractionResult
 from ruche.memory.models.entity import Entity
 from ruche.memory.models.episode import Episode
 from ruche.memory.stores.inmemory import InMemoryMemoryStore
-from ruche.providers.llm.mock import MockLLMProvider
+from ruche.infrastructure.providers.llm.mock import MockLLMProvider
 
 
 @pytest.fixture

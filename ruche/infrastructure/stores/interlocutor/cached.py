@@ -18,21 +18,21 @@ from ruche.observability.metrics import (
     PROFILE_CACHE_INVALIDATIONS,
     PROFILE_CACHE_MISSES,
 )
-from ruche.customer_data.enums import ItemStatus
-from ruche.customer_data.models import (
+from ruche.interlocutor_data.enums import ItemStatus
+from ruche.interlocutor_data.models import (
     ChannelIdentity,
-    CustomerDataStore,
+    InterlocutorDataStore,
     ProfileAsset,
     VariableEntry,
-    CustomerDataField,
+    InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.customer_data.store import InterlocutorDataStore
+from ruche.interlocutor_data.store import InterlocutorDataStore
 
 logger = get_logger(__name__)
 
 
-class CustomerDataStoreCacheLayer(InterlocutorDataStore):
+class InterlocutorDataStoreCacheLayer(InterlocutorDataStore):
     """InterlocutorDataStore wrapper with Redis caching.
 
     Caches read operations with configurable TTL.
@@ -41,7 +41,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
 
     Cache key patterns:
     - profile:{tenant_id}:{profile_id} - Full profile
-    - profile:{tenant_id}:customer:{customer_id} - Profile by customer ID
+    - profile:{tenant_id}:customer:{interlocutor_id} - Profile by customer ID
     - profile:{tenant_id}:channel:{channel}:{user_id} - Profile by channel
     - profile:field_def:{tenant_id}:{agent_id} - Field definitions
     - profile:scenario_req:{tenant_id}:{scenario_id} - Scenario requirements
@@ -73,9 +73,9 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         """Get cache key for profile by ID."""
         return f"{self._prefix}:{tenant_id}:{profile_id}"
 
-    def _customer_key(self, tenant_id: UUID, customer_id: UUID) -> str:
+    def _customer_key(self, tenant_id: UUID, interlocutor_id: UUID) -> str:
         """Get cache key for profile by customer ID."""
-        return f"{self._prefix}:{tenant_id}:customer:{customer_id}"
+        return f"{self._prefix}:{tenant_id}:customer:{interlocutor_id}"
 
     def _channel_key(
         self, tenant_id: UUID, channel: Channel, user_id: str
@@ -192,12 +192,12 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
                 raise
 
     async def _invalidate_profile(
-        self, tenant_id: UUID, profile: CustomerDataStore, operation: str
+        self, tenant_id: UUID, profile: InterlocutorDataStore, operation: str
     ) -> None:
         """Invalidate all cache keys for a profile."""
         keys = [
             self._profile_key(tenant_id, profile.id),
-            self._customer_key(tenant_id, profile.customer_id),
+            self._customer_key(tenant_id, profile.interlocutor_id),
         ]
         # Add channel keys
         for identity in profile.channel_identities:
@@ -210,28 +210,28 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
     # PROFILE CRUD (Cached)
     # =========================================================================
 
-    async def get_by_customer_id(
+    async def get_by_interlocutor_id(
         self,
         tenant_id: UUID,
-        customer_id: UUID,
+        interlocutor_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by customer ID with caching."""
         # Skip cache if history requested (too complex to cache)
         if include_history:
-            return await self._backend.get_by_customer_id(
-                tenant_id, customer_id, include_history=True
+            return await self._backend.get_by_interlocutor_id(
+                tenant_id, interlocutor_id, include_history=True
             )
 
-        key = self._customer_key(tenant_id, customer_id)
+        key = self._customer_key(tenant_id, interlocutor_id)
         cached = await self._get_cached(key, tenant_id, "customer")
 
         if cached:
-            return CustomerDataStore.model_validate_json(cached)
+            return InterlocutorDataStore.model_validate_json(cached)
 
-        profile = await self._backend.get_by_customer_id(
-            tenant_id, customer_id, include_history=False
+        profile = await self._backend.get_by_interlocutor_id(
+            tenant_id, interlocutor_id, include_history=False
         )
 
         if profile:
@@ -248,7 +248,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         profile_id: UUID,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by ID with caching."""
         if include_history:
             return await self._backend.get_by_id(
@@ -259,7 +259,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         cached = await self._get_cached(key, tenant_id, "profile")
 
         if cached:
-            return CustomerDataStore.model_validate_json(cached)
+            return InterlocutorDataStore.model_validate_json(cached)
 
         profile = await self._backend.get_by_id(
             tenant_id, profile_id, include_history=False
@@ -277,7 +277,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         channel_user_id: str,
         *,
         include_history: bool = False,
-    ) -> CustomerDataStore | None:
+    ) -> InterlocutorDataStore | None:
         """Get profile by channel identity with caching."""
         if include_history:
             return await self._backend.get_by_channel_identity(
@@ -288,7 +288,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         cached = await self._get_cached(key, tenant_id, "channel")
 
         if cached:
-            return CustomerDataStore.model_validate_json(cached)
+            return InterlocutorDataStore.model_validate_json(cached)
 
         profile = await self._backend.get_by_channel_identity(
             tenant_id, channel, channel_user_id, include_history=False
@@ -307,7 +307,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         tenant_id: UUID,
         channel: Channel,
         channel_user_id: str,
-    ) -> CustomerDataStore:
+    ) -> InterlocutorDataStore:
         """Get or create profile (invalidates cache on create)."""
         # Try cached get first
         profile = await self.get_by_channel_identity(
@@ -330,7 +330,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
 
         return profile
 
-    async def save(self, profile: CustomerDataStore) -> UUID:
+    async def save(self, profile: InterlocutorDataStore) -> UUID:
         """Save profile and invalidate cache."""
         result = await self._backend.save(profile)
         await self._invalidate_profile(profile.tenant_id, profile, "save")
@@ -537,7 +537,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         agent_id: UUID,
         *,
         enabled_only: bool = True,
-    ) -> list[CustomerDataField]:
+    ) -> list[InterlocutorDataField]:
         """Get field definitions with caching."""
         # Only cache when getting all enabled
         if not enabled_only:
@@ -551,7 +551,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         if cached:
             import json
             data = json.loads(cached)
-            return [CustomerDataField.model_validate(d) for d in data]
+            return [InterlocutorDataField.model_validate(d) for d in data]
 
         definitions = await self._backend.get_field_definitions(
             tenant_id, agent_id, enabled_only=True
@@ -569,7 +569,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
         tenant_id: UUID,
         agent_id: UUID,
         field_name: str,
-    ) -> CustomerDataField | None:
+    ) -> InterlocutorDataField | None:
         """Get specific field definition (uses cached list)."""
         definitions = await self.get_field_definitions(tenant_id, agent_id)
         for d in definitions:
@@ -579,7 +579,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
 
     async def save_field_definition(
         self,
-        definition: CustomerDataField,
+        definition: InterlocutorDataField,
     ) -> UUID:
         """Save field definition and invalidate cache."""
         result = await self._backend.save_field_definition(definition)
@@ -667,7 +667,7 @@ class CustomerDataStoreCacheLayer(InterlocutorDataStore):
     async def get_missing_fields(
         self,
         tenant_id: UUID,
-        profile: CustomerDataStore,
+        profile: InterlocutorDataStore,
         scenario_id: UUID,
         *,
         step_id: UUID | None = None,

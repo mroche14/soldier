@@ -1,8 +1,8 @@
 # Alignment Engine
 
-> **Note**: The alignment engine is the conceptual core of Focal's turn processing. The implementation class is `FocalCognitivePipeline` located in `ruche/brains/focal/pipeline.py`.
+> **Note**: The alignment engine is the conceptual core of Focal's turn processing. The implementation class is `FocalBrain` located in `ruche/brains/focal/brain.py`.
 
-The alignment engine ensures Focal agents behave according to defined policies. It processes each turn through a multi-step pipeline, matching **Rules** for behavioral control and **Scenarios** for multi-step flows.
+The alignment engine ensures Focal agents behave according to defined policies. It processes each turn through a multi-step brain, matching **Rules** for behavioral control and **Scenarios** for multi-step flows.
 
 ## Core Principle
 
@@ -18,20 +18,20 @@ The engine doesn't just inject rules into a prompt—it takes control when neede
 
 ---
 
-## Full Turn Pipeline
+## Full FOCAL Brain
 
 The alignment engine is the **core** of Focal's turn processing, but operates on text. Multimodal input/output is handled by pre- and post-processing stages:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              FULL TURN PIPELINE                              │
+│                            FULL FOCAL BRAIN                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │   Multimodal Input (Audio / Image / Document / Text)                        │
 │      │                                                                       │
 │      ▼                                                                       │
 │  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │  INPUT PROCESSING (Pre-Pipeline)                                       │ │
+│  │  INPUT PROCESSING (Pre-Brain)                                       │ │
 │  │                                                                         │ │
 │  │  Audio ──► STT (Whisper/Deepgram) ──┐                                  │ │
 │  │  Image ──► Vision LLM (Claude/GPT-4o) ──┼──► Unified Text Input        │ │
@@ -50,7 +50,7 @@ The alignment engine is the **core** of Focal's turn processing, but operates on
 │      │                                                                       │
 │      ▼                                                                       │
 │  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │  OUTPUT PROCESSING (Post-Pipeline)                                     │ │
+│  │  OUTPUT PROCESSING (Post-Brain)                                     │ │
 │  │                                                                         │ │
 │  │  Text Response ──► Text (default)                                      │ │
 │  │  Text Response ──► TTS (ElevenLabs/OpenAI) ──► Audio                   │ │
@@ -67,11 +67,11 @@ The alignment engine is the **core** of Focal's turn processing, but operates on
 
 ---
 
-## Alignment Engine Pipeline (Detail)
+## Alignment Engine (Detail)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        ALIGNMENT ENGINE PIPELINE                             │
+│                        ALIGNMENT ENGINE BRAIN                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │   Text Input (from Input Processing)                                        │
@@ -559,7 +559,7 @@ The primary navigation algorithm only considers **outgoing edges from the curren
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    SCENARIO FILTER PIPELINE                                  │
+│                    SCENARIO FILTER BRAIN                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Input: context, scenario, current_step, session                            │
@@ -940,7 +940,7 @@ def should_relocalize(session: Session, config: ScenarioFilterConfig) -> bool:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        RE-LOCALIZATION PIPELINE                              │
+│                        RE-LOCALIZATION BRAIN                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Trigger: Consistency check failed OR prolonged low-confidence              │
@@ -1259,7 +1259,7 @@ MAX_STEP_HISTORY = 50
 ## Configuration
 
 ```toml
-[pipeline.scenario_filtering]
+[brain.scenario_filtering]
 # Thresholds
 transition_threshold = 0.65      # Min score to consider a transition
 sanity_threshold = 0.35          # If all below this, something's wrong
@@ -1443,7 +1443,7 @@ When a scenario is updated, active sessions are **reconciled** at the start of e
 
 The reconciliation uses:
 - **Anchors**: Steps that exist in both old and new versions
-- **Gap fill**: Pull missing data from CustomerDataStore or extract from conversation
+- **Gap fill**: Pull missing data from InterlocutorDataStore or extract from conversation
 - **Checkpoints**: Steps marking irreversible actions (order placed, payment processed) that block teleportation
 - **Topological ordering**: Evaluate upstream forks from entry toward current position
 
@@ -1451,14 +1451,14 @@ The reconciliation uses:
 
 ### Customer Data Store Integration
 
-The **CustomerDataStore** is a persistent, cross-session store of verified facts about a customer:
+The **InterlocutorDataStore** is a persistent, cross-session store of verified facts about a customer:
 
 ```python
 # Customer provides email in Session 1 (returns scenario)
 # Session 2 (support scenario) can access it without re-asking
 
-customer_data = await customer_data_store.get_by_customer_id(tenant_id, customer_id)
-email = customer_data.fields.get("email")
+interlocutor_data = await interlocutor_data_store.get_by_customer_id(tenant_id, customer_id)
+email = interlocutor_data.fields.get("email")
 
 if email and email.verified:
     # Use existing verified email
@@ -1473,7 +1473,7 @@ This enables:
 - **Cross-scenario continuity**: Data collected once is available everywhere
 - **Verification persistence**: KYC status, verified phone/email survive across sessions
 
-**See**: [Interlocutor Data](../design/customer-profile.md) for the full model.
+**See**: [Interlocutor Data](../design/interlocutor-data.md) for the full model.
 
 ---
 
@@ -1521,7 +1521,7 @@ Templates eliminate hallucination at critical points (legal disclaimers, exact p
 
 ## Context Extraction
 
-The first step in the alignment pipeline extracts structured context from the user message.
+The first step in the alignment brain extracts structured context from the user message.
 
 ### Why Context Extraction?
 
@@ -1550,7 +1550,7 @@ class Context(BaseModel):
     # Topic classification
     topic: str | None             # "refund", "shipping", "product_info"
 
-    # Hints for pipeline
+    # Hints for brain
     requires_tool: bool = False   # Likely needs external data
 
     # Scenario signals
@@ -1612,7 +1612,7 @@ class RuleFilterResult(BaseModel):
 ### Enabling/Disabling
 
 ```toml
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 enabled = true               # Set to false to skip
 model = "openrouter/anthropic/claude-3-haiku-20240307" # Fast model for yes/no
 fallback_models = ["anthropic/claude-3-haiku-20240307"]
@@ -1717,40 +1717,40 @@ if config.self_critique_enabled:
 
 ```toml
 # Context Extraction
-[pipeline.context_extraction]
+[brain.context_extraction]
 mode = "llm"                           # "llm" | "embedding_only" | "disabled"
 model = "openrouter/anthropic/claude-3-haiku-20240307"
 fallback_models = ["anthropic/claude-3-haiku-20240307"]
 history_turns = 5                      # How much history to include
 
 # Retrieval
-[pipeline.retrieval]
+[brain.retrieval]
 embedding_provider = "default"
 top_k_per_scope = 10                   # Candidates per scope level
 include_memory = true
 
 # Reranking
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 rerank_provider = "default"
 top_k = 10                             # Final candidates after rerank
 
 # Rule Filtering
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 enabled = true
 model = "openrouter/anthropic/claude-3-haiku-20240307"
 fallback_models = ["anthropic/claude-3-haiku-20240307"]
 batch_size = 5
 
 # Response Generation
-[pipeline.generation]
+[brain.generation]
 model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 fallback_models = ["anthropic/claude-sonnet-4-5-20250514", "openai/gpt-4o"]
 temperature = 0.7
 max_tokens = 1024
 
 # Enforcement
-[pipeline.enforcement]
+[brain.enforcement]
 enabled = true
 self_critique_enabled = false
 llm_judge_models = ["openrouter/anthropic/claude-3-haiku-20240307"]
@@ -1761,55 +1761,55 @@ max_retries = 1
 
 **Minimal (Fastest)**
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 mode = "disabled"
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = false
 
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 enabled = false
 
-[pipeline.generation]
+[brain.generation]
 model = "openrouter/anthropic/claude-3-haiku-20240307"
 
-[pipeline.enforcement]
+[brain.enforcement]
 self_critique_enabled = false
 ```
 
 **Balanced (Recommended)**
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 mode = "llm"
 model = "openrouter/anthropic/claude-3-haiku-20240307"
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 enabled = true
 
-[pipeline.generation]
+[brain.generation]
 model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 ```
 
 **Maximum Quality**
 ```toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 mode = "llm"
 model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 enabled = true
 model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 
-[pipeline.generation]
+[brain.generation]
 model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 
-[pipeline.enforcement]
+[brain.enforcement]
 self_critique_enabled = true
 ```
 

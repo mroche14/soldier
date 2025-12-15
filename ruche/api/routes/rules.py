@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Query
 
-from ruche.alignment.models import Rule, Scope
+from ruche.brains.focal.models import Rule, Scope
 from ruche.api.dependencies import AgentConfigStoreDep
 from ruche.api.exceptions import AgentNotFoundError, RuleNotFoundError
 from ruche.api.middleware.auth import TenantContextDep

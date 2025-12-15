@@ -12,7 +12,7 @@ This layer provides the foundation for the alignment engine and API layer.
 # Stores
 from ruche.infrastructure.stores import (
     AuditStore,
-    CachedInterlocutorDataStore,
+    InterlocutorDataStoreCacheLayer,
     ConfigStore,
     EntityType,
     InMemoryAuditStore,
@@ -43,13 +43,17 @@ from ruche.infrastructure.providers import (
     JinaEmbeddingProvider,
     JinaRerankProvider,
     LLMExecutor,
-    LLMProvider,
     MockEmbeddingProvider,
     MockLLMProvider,
     MockRerankProvider,
     RerankProvider,
-    SentenceTransformerEmbeddingProvider,
 )
+
+# Optional provider (requires sentence_transformers package)
+try:
+    from ruche.infrastructure.providers import SentenceTransformerEmbeddingProvider
+except (ImportError, TypeError):
+    SentenceTransformerEmbeddingProvider = None  # type: ignore
 
 # Toolbox
 from ruche.infrastructure.toolbox import (
@@ -92,7 +96,7 @@ __all__ = [
     "InterlocutorDataStore",
     "InMemoryInterlocutorDataStore",
     "PostgresInterlocutorDataStore",
-    "CachedInterlocutorDataStore",
+    "InterlocutorDataStoreCacheLayer",
     # Stores - Memory
     "MemoryStore",
     "InMemoryMemoryStore",
@@ -111,7 +115,7 @@ __all__ = [
     "PgVectorStore",
     "QdrantVectorStore",
     # Providers - LLM
-    "LLMProvider",
+    
     "LLMExecutor",
     "MockLLMProvider",
     # Providers - Embedding

@@ -14,17 +14,17 @@ from dotenv import load_dotenv
 # Load .env file
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.models import Rule, Scenario, ScenarioStep, Template, Scope
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
 from ruche.conversation.models import Session, SessionStatus, Channel
 from ruche.conversation.stores.inmemory import InMemorySessionStore
-from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.interlocutor_data.stores.inmemory import InMemoryInterlocutorDataStore
 from ruche.observability.logging import setup_logging, get_logger
-from ruche.providers.embedding.jina import JinaEmbeddingProvider
-from ruche.providers.rerank.jina import JinaRerankProvider
-from ruche.providers.llm import create_executor
+from ruche.infrastructure.providers.embedding.jina import JinaEmbeddingProvider
+from ruche.infrastructure.providers.rerank.jina import JinaRerankProvider
+from ruche.infrastructure.providers.llm import create_executor
 
 # Configure logging
 setup_logging(level="INFO")
@@ -49,7 +49,7 @@ def agent_id():
 
 
 @pytest.fixture
-def customer_id():
+def interlocutor_id():
     return uuid4()
 
 
@@ -70,7 +70,7 @@ def session_store():
 
 @pytest.fixture
 def profile_store():
-    return InMemoryCustomerDataStore()
+    return InMemoryInterlocutorDataStore()
 
 
 @pytest.fixture
@@ -186,13 +186,13 @@ async def sample_scenario(config_store, tenant_id, agent_id, embedding_provider)
 
 
 @pytest.fixture
-async def sample_session(session_store, tenant_id, agent_id, customer_id, session_id):
+async def sample_session(session_store, tenant_id, agent_id, interlocutor_id, session_id):
     """Create sample session."""
     session = Session(
         session_id=session_id,
         tenant_id=tenant_id,
         agent_id=agent_id,
-        customer_id=customer_id,
+        interlocutor_id=interlocutor_id,
         channel=Channel.API,
         user_channel_id="test-user-real",
         config_version=1,

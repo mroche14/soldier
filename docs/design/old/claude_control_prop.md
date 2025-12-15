@@ -26,7 +26,7 @@ This document identifies **8 key design decisions**, presents options for each, 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         CURRENT TURN PIPELINE                               │
+│                         CURRENT TURN BRAIN                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  1. Context Extraction   ← Embed message, optional LLM intent extraction    │
@@ -184,7 +184,7 @@ class Context(BaseModel):
 |--------|-------------|------|------|
 | **A: Keep Linear** | Tools execute once after rule matching | Simple, predictable latency | Can't auto-resolve missing data |
 | **B: Pre-Generation Loop** | Loop before generation to fill variables | Better UX (fewer user questions) | Complex, unbounded latency |
-| **C: Gap-Fill Service** | Dedicated service tries profile/session/tools before asking | Controlled, already exists for migrations | Needs integration into main pipeline |
+| **C: Gap-Fill Service** | Dedicated service tries profile/session/tools before asking | Controlled, already exists for migrations | Needs integration into main brain |
 
 #### Recommendation: **Option C (Extend Gap-Fill Service)**
 
@@ -221,13 +221,13 @@ class VariableResolver:
                         resolved[var] = value
 
         # 3. Check if tools can provide (without calling yet)
-        # Tool execution happens in the main pipeline
+        # Tool execution happens in the main brain
 
         still_missing = [v for v in required_variables if v not in resolved]
         return resolved, still_missing
 ```
 
-**Rationale**: Reuses existing infrastructure. The main pipeline remains linear, but enforcement can request variable resolution before evaluating expressions.
+**Rationale**: Reuses existing infrastructure. The main brain remains linear, but enforcement can request variable resolution before evaluating expressions.
 
 #### Alignment Impact
 
@@ -268,7 +268,7 @@ class Context(BaseModel):
     confidence: float = 1.0  # 0.0-1.0
 ```
 
-**Pipeline integration:**
+**Brain integration:**
 ```python
 # In AlignmentEngine.process_turn()
 
@@ -578,11 +578,11 @@ async def get_rules_to_enforce(
 
 ---
 
-## Unified Pipeline (Proposed)
+## Unified Brain (Proposed)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         PROPOSED TURN PIPELINE                              │
+│                         PROPOSED TURN BRAIN                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  [User Message]                                                             │
@@ -688,7 +688,7 @@ async def get_rules_to_enforce(
 |----------|----------------|-----------|
 | **1. Intent vs Context** | Keep combined with enhanced output | One LLM call, clear separation in output fields |
 | **2. Rule Relationships** | Keep flat for now | Scope hierarchy sufficient, avoids schema complexity |
-| **3. Iterative Tool Loop** | Extend Gap-Fill Service | Reuse existing infrastructure, keep pipeline linear |
+| **3. Iterative Tool Loop** | Extend Gap-Fill Service | Reuse existing infrastructure, keep brain linear |
 | **4. Ambiguity Detection** | Add explicit flag to Context | Better than confidence threshold |
 | **5. Scenario Stickiness** | Score boost + exit threshold | Prevents ping-pong without trapping users |
 | **6. Intent Registry** | Add entry_examples to Scenario | Enables few-shot without new entity |
@@ -713,7 +713,7 @@ async def get_rules_to_enforce(
 1. **Phase 1: Context Enhancement**
    - Add `is_ambiguous`, `ambiguity_reason`, `confidence` to Context
    - Update ContextExtractor prompt to output these
-   - Add early exit in pipeline
+   - Add early exit in brain
 
 2. **Phase 2: Scenario Navigation**
    - Add `entry_examples`, `intent_label` to Scenario

@@ -7,8 +7,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from ruche.alignment.models import Agent
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.models import Agent
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.api.dependencies import get_config_store
 from ruche.api.exceptions import FocalAPIError
 from ruche.api.middleware.auth import get_tenant_context

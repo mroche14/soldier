@@ -1,32 +1,32 @@
-"""Tests for CustomerDataLoader."""
+"""Tests for InterlocutorDataLoader."""
 
 import pytest
 from datetime import datetime, UTC
 from uuid import uuid4
 
-from ruche.alignment.loaders.customer_data_loader import CustomerDataLoader
-from ruche.customer_data import CustomerDataStore, CustomerDataField, VariableEntry
-from ruche.customer_data.enums import ItemStatus, VariableSource
-from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.brains.focal.phases.loaders.interlocutor_data_loader import InterlocutorDataLoader
+from ruche.interlocutor_data import InterlocutorDataStore, InterlocutorDataField, VariableEntry
+from ruche.interlocutor_data.enums import ItemStatus, VariableSource
+from ruche.interlocutor_data.stores.inmemory import InMemoryInterlocutorDataStore
 
 
 @pytest.fixture
 def profile_store():
     """Create in-memory profile store."""
-    return InMemoryCustomerDataStore()
+    return InMemoryInterlocutorDataStore()
 
 
 @pytest.fixture
 def loader(profile_store):
     """Create customer data loader."""
-    return CustomerDataLoader(profile_store)
+    return InterlocutorDataLoader(profile_store)
 
 
 @pytest.fixture
 def sample_schema():
     """Create sample customer data schema."""
     return {
-        "email": CustomerDataField(
+        "email": InterlocutorDataField(
             id=uuid4(),
             tenant_id=uuid4(),
             agent_id=uuid4(),
@@ -40,7 +40,7 @@ def sample_schema():
             created_at=datetime.now(UTC),
             updated_at=datetime.now(UTC),
         ),
-        "order_id": CustomerDataField(
+        "order_id": InterlocutorDataField(
             id=uuid4(),
             tenant_id=uuid4(),
             agent_id=uuid4(),
@@ -57,8 +57,8 @@ def sample_schema():
     }
 
 
-class TestCustomerDataLoader:
-    """Test suite for CustomerDataLoader."""
+class TestInterlocutorDataLoader:
+    """Test suite for InterlocutorDataLoader."""
 
     @pytest.mark.asyncio
     async def test_load_for_new_customer_returns_empty_store(
@@ -66,15 +66,15 @@ class TestCustomerDataLoader:
     ):
         """Test loading for a new customer returns empty store."""
         tenant_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
 
         result = await loader.load(
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             tenant_id=tenant_id,
             schema=sample_schema,
         )
 
-        assert result.customer_id == customer_id
+        assert result.interlocutor_id == interlocutor_id
         assert result.tenant_id == tenant_id
         assert len(result.fields) == 0
 
@@ -84,14 +84,14 @@ class TestCustomerDataLoader:
     ):
         """Test that ProfileFields are correctly loaded."""
         tenant_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         now = datetime.now(UTC)
 
         # Create a profile with fields
-        profile = CustomerDataStore(
-            id=customer_id,
+        profile = InterlocutorDataStore(
+            id=interlocutor_id,
             tenant_id=tenant_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             channel_identities=[],
             fields={
                 "email": VariableEntry(
@@ -114,7 +114,7 @@ class TestCustomerDataLoader:
 
         # Load the profile
         result = await loader.load(
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             tenant_id=tenant_id,
             schema=sample_schema,
         )
@@ -129,14 +129,14 @@ class TestCustomerDataLoader:
     ):
         """Test that inactive fields are filtered out."""
         tenant_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         now = datetime.now(UTC)
 
         # Create profile with active and superseded fields
-        profile = CustomerDataStore(
-            id=customer_id,
+        profile = InterlocutorDataStore(
+            id=interlocutor_id,
             tenant_id=tenant_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             channel_identities=[],
             fields={
                 "email": VariableEntry(
@@ -170,7 +170,7 @@ class TestCustomerDataLoader:
         await profile_store.save(profile)
 
         result = await loader.load(
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             tenant_id=tenant_id,
             schema=sample_schema,
         )
@@ -185,14 +185,14 @@ class TestCustomerDataLoader:
     ):
         """Test that fields not in schema generate warnings."""
         tenant_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         now = datetime.now(UTC)
 
         # Create profile with field not in schema
-        profile = CustomerDataStore(
-            id=customer_id,
+        profile = InterlocutorDataStore(
+            id=interlocutor_id,
             tenant_id=tenant_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             channel_identities=[],
             fields={
                 "unknown_field": VariableEntry(
@@ -215,7 +215,7 @@ class TestCustomerDataLoader:
 
         # Load with empty schema
         result = await loader.load(
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             tenant_id=tenant_id,
             schema={},  # Empty schema
         )
@@ -230,13 +230,13 @@ class TestCustomerDataLoader:
     ):
         """Test that only fields matching schema are processed."""
         tenant_id = uuid4()
-        customer_id = uuid4()
+        interlocutor_id = uuid4()
         now = datetime.now(UTC)
 
-        profile = CustomerDataStore(
-            id=customer_id,
+        profile = InterlocutorDataStore(
+            id=interlocutor_id,
             tenant_id=tenant_id,
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             channel_identities=[],
             fields={
                 "email": VariableEntry(
@@ -258,7 +258,7 @@ class TestCustomerDataLoader:
         await profile_store.save(profile)
 
         result = await loader.load(
-            customer_id=customer_id,
+            interlocutor_id=interlocutor_id,
             tenant_id=tenant_id,
             schema=sample_schema,
         )

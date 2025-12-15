@@ -15,7 +15,7 @@ Model string formats:
 """
 
 # Data models
-from ruche.providers.llm.base import (
+from ruche.infrastructure.providers.llm.base import (
     AuthenticationError,
     ContentFilterError,
     LLMMessage,
@@ -27,7 +27,7 @@ from ruche.providers.llm.base import (
 )
 
 # Executor (primary interface)
-from ruche.providers.llm.executor import (
+from ruche.infrastructure.providers.llm.executor import (
     ExecutionContext,
     LLMExecutor,
     clear_execution_context,
@@ -39,7 +39,7 @@ from ruche.providers.llm.executor import (
 )
 
 # Mock provider for tests (kept for backwards compatibility)
-from ruche.providers.llm.mock import MockLLMProvider
+from ruche.infrastructure.providers.llm.mock import MockLLMProvider
 
 __all__ = [
     # Data models

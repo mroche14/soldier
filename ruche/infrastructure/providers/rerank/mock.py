@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ruche.providers.rerank.base import RerankProvider, RerankResponse, RerankResult
+from ruche.infrastructure.providers.rerank.base import RerankProvider, RerankResponse, RerankResult
 
 
 class MockRerankProvider(RerankProvider):

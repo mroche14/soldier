@@ -4,12 +4,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.models.scenario import Scenario, ScenarioStep
-from ruche.alignment.retrieval.scenario_retriever import ScenarioRetriever
-from ruche.alignment.stores import InMemoryAgentConfigStore
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.models.scenario import Scenario, ScenarioStep
+from ruche.brains.focal.retrieval.scenario_retriever import ScenarioRetriever
+from ruche.brains.focal.stores import InMemoryAgentConfigStore
 from ruche.config.models.selection import SelectionConfig
-from ruche.providers.embedding import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.embedding import EmbeddingProvider, EmbeddingResponse
 
 
 class StaticEmbeddingProvider(EmbeddingProvider):

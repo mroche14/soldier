@@ -27,7 +27,7 @@ from ruche.infrastructure.stores.session import (
 
 # Interlocutor Data Store
 from ruche.infrastructure.stores.interlocutor import (
-    CachedInterlocutorDataStore,
+    InterlocutorDataStoreCacheLayer,
     InMemoryInterlocutorDataStore,
     InterlocutorDataStore,
     PostgresInterlocutorDataStore,
@@ -72,7 +72,7 @@ __all__ = [
     "InterlocutorDataStore",
     "InMemoryInterlocutorDataStore",
     "PostgresInterlocutorDataStore",
-    "CachedInterlocutorDataStore",
+    "InterlocutorDataStoreCacheLayer",
     # Memory Store
     "MemoryStore",
     "InMemoryMemoryStore",

@@ -26,7 +26,7 @@ This document defines Focal's logging, tracing, and metrics strategy. Focal is d
 │                     │                     │                                 │
 │  Structured JSON    │  OpenTelemetry      │  Prometheus                     │
 │  via structlog      │  spans per          │  counters/histograms            │
-│                     │  pipeline step      │                                 │
+│                     │  brain step      │                                 │
 │  → stdout           │  → OTLP Collector   │  → /metrics endpoint            │
 │  → Promtail/Fluent  │  → Jaeger/Tempo     │  → Prometheus scrape            │
 │  → Loki/ELK         │                     │  → Grafana                      │
@@ -55,7 +55,7 @@ Every log entry includes these fields:
   "timestamp": "2024-01-15T10:30:45.123456Z",
   "level": "info",
   "event": "turn_processed",
-  "logger": "ruche.alignment.pipeline",
+  "logger": "ruche.alignment.brain",
 
   "tenant_id": "tenant_abc123",
   "agent_id": "agent_xyz789",
@@ -75,7 +75,7 @@ Every log entry includes these fields:
 | Level | Use Case | Production Visibility |
 |-------|----------|----------------------|
 | **DEBUG** | Verbose internals, LLM prompts/responses, full payloads | Off (only enable for troubleshooting) |
-| **INFO** | Request lifecycle, pipeline steps, provider calls | On |
+| **INFO** | Request lifecycle, brain steps, provider calls | On |
 | **WARNING** | Fallbacks triggered, retries, degraded operations | On |
 | **ERROR** | Failures, exceptions, constraint violations | On |
 
@@ -299,7 +299,7 @@ except ImportError:
 
 ### Span Structure
 
-Each turn creates a trace with spans for each pipeline step:
+Each turn creates a trace with spans for each FOCAL brain step:
 
 ```
 turn_process (root span)
@@ -330,7 +330,7 @@ span.set_attribute("tenant_id", tenant_id)
 span.set_attribute("agent_id", agent_id)
 span.set_attribute("session_id", session_id)
 span.set_attribute("logical_turn_id", logical_turn_id)
-span.set_attribute("pipeline.step", "generation")
+span.set_attribute("focal.step", "generation")
 span.set_attribute("llm.provider", "anthropic")
 span.set_attribute("llm.model", "claude-sonnet-4-5-20250514")
 span.set_attribute("llm.tokens.input", 1500)
@@ -380,10 +380,10 @@ REQUEST_LATENCY = Histogram(
     buckets=[0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
 )
 
-# Pipeline metrics
+# FOCAL brain metrics
 PIPELINE_STEP_LATENCY = Histogram(
     "focal_pipeline_step_duration_seconds",
-    "Pipeline step latency in seconds",
+    "FOCAL brain step latency in seconds",
     ["step", "tenant_id"],
     buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0],
 )
@@ -659,5 +659,5 @@ export LOG_LEVEL=INFO
 - [Configuration Overview](./configuration-overview.md) - Configuration system
 - [Configuration Secrets](./configuration-secrets.md) - Secrets management
 - [API Layer](./api-layer.md) - Request handling and middleware
-- [Turn Pipeline](../design/turn-pipeline.md) - Pipeline steps to instrument
+- [FOCAL Brain](../focal_brain/spec/brain.md) - FOCAL brain steps to instrument
 - [ADR-001: Storage](../design/decisions/001-storage-choice.md) - AuditStore interface

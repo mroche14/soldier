@@ -2,7 +2,7 @@
 
 This document describes the runtime platform architecture that hosts conversational agents. The platform includes:
 
-- **FOCAL**: An alignment-focused cognitive pipeline (11-phase spec) that implements the CognitivePipeline protocol
+- **FOCAL**: An alignment-focused cognitive pipeline (11-phase spec) that implements the Brain protocol
 - **Agent Conversation Fabric (ACF)**: Turn boundary detection and LogicalTurn accumulation
 - **AgentRuntime**: Multi-tenant agent execution environment
 - **Stores**: ConfigStore, MemoryStore, SessionStore, AuditStore interfaces
@@ -19,7 +19,7 @@ The platform is **API-first, multi-tenant**, with pluggable storage and AI provi
 | **Zero in-memory state** | All state in external stores via interfaces |
 | **Pluggable everything** | Storage backends, LLM providers, embedding models |
 | **Multi-tenant native** | `tenant_id` on every record and operation |
-| **Per-step configuration** | Each pipeline step can use different providers |
+| **Per-step configuration** | Each brain step can use different providers |
 | **Stateless pods** | Any pod can serve any request |
 
 ---
@@ -110,7 +110,7 @@ See [configuration.md](./configuration.md) for full deployment configuration opt
                                        │
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           INPUT PROCESSING (Pre-Pipeline)                        │
+│                           INPUT PROCESSING (Pre-Brain)                        │
 │                                                                                  │
 │   Audio ──▶ STT ──┐                                                             │
 │   Image ──▶ Vision LLM ──┼──▶ Text                                              │
@@ -136,7 +136,7 @@ See [configuration.md](./configuration.md) for full deployment configuration opt
                                        │
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          OUTPUT PROCESSING (Post-Pipeline)                       │
+│                          OUTPUT PROCESSING (Post-Brain)                       │
 │                                                                                  │
 │   Text ──────────────────────▶ Text                                             │
 │   Text ──▶ TTS ──────────────▶ Audio (if voice output enabled)                  │
@@ -186,9 +186,9 @@ Handles all external communication.
 **Authentication**: JWT with `tenant_id` and `agent_id` claims.
 **Rate Limiting**: Per-tenant token bucket.
 
-### 2. FOCAL Alignment Pipeline
+### 2. FOCAL Alignment Brain
 
-**FOCAL** is an alignment-focused implementation of the CognitivePipeline protocol. It processes LogicalTurns through an 11-phase pipeline focused on rule matching, scenario orchestration, and constraint enforcement.
+**FOCAL** is an alignment-focused implementation of the Brain protocol. It processes LogicalTurns through an 11-phase brain focused on rule matching, scenario orchestration, and constraint enforcement.
 
 See [alignment-engine.md](./alignment-engine.md) for details.
 
@@ -196,22 +196,22 @@ See [alignment-engine.md](./alignment-engine.md) for details.
 LogicalTurn (1+ messages) → Context Extraction → Retrieval → Rerank → LLM Filter → Tools → Generate → Enforce → Response
 ```
 
-**Note**: Turn boundaries (message accumulation, supersede signals) are handled by the **Agent Conversation Fabric (ACF)**, which is a platform component that sits above the cognitive pipeline. ACF calls `pipeline.run(ctx) -> PipelineResult`. See `docs/focal_360/architecture/ACF_ARCHITECTURE.md`.
+**Note**: Turn boundaries (message accumulation, supersede signals) are handled by the **Agent Conversation Fabric (ACF)**, which is a platform component that sits above the Agent. ACF calls `agent.process_turn(fabric_ctx)`, which delegates to `brain.think(ctx) -> BrainResult`. See `docs/acf/architecture/ACF_ARCHITECTURE.md`.
 
-**Other pipeline mechanics** (e.g., ReAct, planner-executor) can be implemented alongside FOCAL by implementing the same CognitivePipeline protocol.
+**Other brain mechanics** (e.g., ReAct, planner-executor) can be implemented alongside FOCAL by implementing the same Brain protocol.
 
 Each step is independently configurable via TOML:
 
 ```toml
 # config/default.toml
-[pipeline.context_extraction]
+[brain.context_extraction]
 model = "openrouter/anthropic/claude-3-haiku-20240307"
 fallback_models = ["anthropic/claude-3-haiku-20240307"]
 
-[pipeline.retrieval]
+[brain.retrieval]
 embedding_provider = "default"
 
-[pipeline.generation]
+[brain.generation]
 model = "openrouter/anthropic/claude-sonnet-4-5-20250514"
 fallback_models = ["anthropic/claude-sonnet-4-5-20250514", "openai/gpt-4o"]
 ```
@@ -275,13 +275,13 @@ See [ADR-001](../design/decisions/001-storage-choice.md) for full interface defi
 3. ACF TURN GATEWAY (LogicalTurn)
    - Acquire session mutex
    - Accumulate one or more messages into a LogicalTurn
-   - Provide supersede signal to the pipeline
+   - Provide supersede signal to the brain
    │
    ▼
 4. PHASE 1: IDENTIFICATION & CONTEXT LOADING
    - Resolve / create Customer (customer_id)
    - Resolve / create session (SessionStore)
-   - Load SessionState + CustomerDataStore + config + glossary
+   - Load SessionState + InterlocutorDataStore + config + glossary
    │
    ▼
 5. PHASE 2: SITUATIONAL SENSOR (LLMExecutor)
@@ -367,14 +367,14 @@ config/
 └── test.toml           # Test environment
 ```
 
-### Per-Agent Pipeline Configuration
+### Per-Agent Brain Configuration
 
-Each agent can have different pipeline settings:
+Each agent can have different brain settings:
 
 ```toml
 # config/default.toml
 
-[pipeline.situational_sensor]
+[brain.situational_sensor]
 enabled = true
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
@@ -387,33 +387,33 @@ provider_sort = "latency"
 allow_fallbacks = true
 ignore_providers = []
 
-[pipeline.retrieval]
+[brain.retrieval]
 embedding_provider = "default"
 max_k = 30
 
 # Selection strategies per retrieval type
-[pipeline.retrieval.rule_selection]
+[brain.retrieval.rule_selection]
 strategy = "adaptive_k"
 alpha = 1.5
 min_score = 0.5
 
-[pipeline.retrieval.scenario_selection]
+[brain.retrieval.scenario_selection]
 strategy = "entropy"
 low_entropy_k = 1
 medium_entropy_k = 2
 high_entropy_k = 3
 
-[pipeline.retrieval.memory_selection]
+[brain.retrieval.memory_selection]
 strategy = "clustering"
 eps = 0.1
 top_per_cluster = 3
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 rerank_provider = "default"
 top_k = 10
 
-[pipeline.generation]
+[brain.generation]
 enabled = true
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
@@ -473,7 +473,7 @@ export RUCHE_STORAGE__CONFIG__POSTGRES__PASSWORD=secret
 - [Configuration](./configuration.md) - TOML + Pydantic configuration system
 - [Selection Strategies](./selection-strategies.md) - Dynamic k-selection algorithms
 - [Folder Structure](./folder-structure.md) - Code organization
-- [Alignment Engine](./alignment-engine.md) - Pipeline details
+- [Alignment Engine](./alignment-engine.md) - Brain details
 - [Memory Layer](./memory-layer.md) - Knowledge graph
-- [Turn Pipeline](../focal_turn_pipeline/spec/pipeline.md) - Step-by-step flow
+- [FOCAL Brain](../focal_brain/spec/brain.md) - Step-by-step flow
 - [ADR-001: Storage](../design/decisions/001-storage-choice.md) - Interface definitions

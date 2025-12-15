@@ -3,7 +3,7 @@
 import hashlib
 from typing import Any
 
-from ruche.providers.embedding.base import EmbeddingProvider, EmbeddingResponse
+from ruche.infrastructure.providers.embedding.base import EmbeddingProvider, EmbeddingResponse
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

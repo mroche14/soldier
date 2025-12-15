@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from ruche.alignment.models import Variable
+from ruche.brains.focal.models import Variable
 from ruche.api.dependencies import AgentConfigStoreDep
 from ruche.api.exceptions import AgentNotFoundError, VariableNotFoundError
 from ruche.api.middleware.auth import TenantContextDep

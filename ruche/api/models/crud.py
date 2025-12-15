@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from ruche.alignment.models import AgentSettings, Scope, TemplateResponseMode, VariableUpdatePolicy
+from ruche.brains.focal.models import AgentSettings, Scope, TemplateResponseMode, VariableUpdatePolicy
 
 
 # Agent models

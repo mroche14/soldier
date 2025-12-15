@@ -3,13 +3,13 @@
 import pytest
 from uuid import uuid4
 
-from ruche.alignment.context.situation_snapshot import SituationSnapshot
-from ruche.alignment.models import Rule, Scope
-from ruche.alignment.retrieval.rule_retriever import RuleRetriever
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
+from ruche.brains.focal.models import Rule, Scope
+from ruche.brains.focal.retrieval.rule_retriever import RuleRetriever
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import HybridRetrievalConfig
 from ruche.config.models.selection import SelectionConfig
-from ruche.providers.embedding import EmbeddingProvider
+from ruche.infrastructure.providers.embedding import EmbeddingProvider
 
 
 class MockEmbeddingProvider(EmbeddingProvider):

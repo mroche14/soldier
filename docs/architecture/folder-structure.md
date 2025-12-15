@@ -24,7 +24,7 @@ ruche/
 │
 ├── ruche/                 # Main Python package
 │   ├── runtime/            # Conversation runtime infrastructure
-│   ├── mechanics/          # CognitivePipeline implementations
+│   ├── mechanics/          # Brain implementations
 │   ├── infrastructure/     # Consolidated infrastructure layer
 │   ├── domain/             # Pure domain models
 │   ├── asa/                # Agent Setter Agent (meta-agent)
@@ -87,24 +87,24 @@ class AgentRuntime:
 
 ---
 
-### `ruche/brains/` — CognitivePipeline Implementations
+### `ruche/brains/` — Brain Implementations
 
 **Purpose**: Different cognitive mechanics (FOCAL alignment, future alternatives).
 
 ```
 mechanics/
 ├── __init__.py
-├── protocol.py             # CognitivePipeline abstract interface
+├── protocol.py             # Brain abstract interface
 │
 └── ruche/                  # FOCAL alignment mechanic
     ├── __init__.py
-    ├── pipeline.py         # FocalCognitivePipeline (main orchestrator)
+    ├── brain.py         # FocalBrain (main orchestrator)
     │
-    ├── phases/             # 12-phase pipeline
+    ├── phases/             # 12-phase brain
     │   ├── __init__.py
     │   ├── p01_identification.py      # Context loading
     │   ├── p02_situational_sensor.py  # Intent + variable extraction
-    │   ├── p03_customer_data_update.py # Variable validation/update
+    │   ├── p03_interlocutor_data_update.py # Variable validation/update
     │   ├── p04_retrieval.py           # Candidate retrieval
     │   ├── p05_reranking.py           # Reranking
     │   ├── p06_scenario_orchestration.py # Scenario state management
@@ -165,7 +165,7 @@ infrastructure/
 │   │   ├── mongodb.py      # MongoDBSessionStore
 │   │   └── inmemory.py     # InMemorySessionStore (testing)
 │   │
-│   ├── interlocutor/       # InterlocutorDataStore (was: customer_data)
+│   ├── interlocutor/       # InterlocutorDataStore (was: interlocutor_data)
 │   │   ├── __init__.py
 │   │   ├── base.py         # InterlocutorDataStore interface
 │   │   ├── postgres.py     # PostgresInterlocutorDataStore
@@ -236,7 +236,7 @@ infrastructure/
 domain/
 ├── __init__.py
 │
-├── interlocutor/           # Interlocutor data models (was: customer_data)
+├── interlocutor/           # Interlocutor data models (was: interlocutor_data)
 │   ├── __init__.py
 │   ├── field.py            # InterlocutorDataField (schema definition)
 │   ├── entry.py            # VariableEntry (runtime value + history)
@@ -274,7 +274,7 @@ asa/
 │   ├── __init__.py
 │   ├── tool_validator.py   # Tool schema validation
 │   ├── scenario_validator.py # Scenario state machine validation
-│   └── pipeline_validator.py # Pipeline config validation
+│   └── pipeline_validator.py # Brain config validation
 │
 ├── suggester/              # Policy suggestions
 │   ├── __init__.py
@@ -338,7 +338,7 @@ config/
 └── models/                 # Pydantic models for each config section
     ├── __init__.py
     ├── api.py              # APIConfig (host, port, CORS, rate limits)
-    ├── pipeline.py         # PipelineConfig (each step's settings)
+    ├── brain.py         # PipelineConfig (each step's settings)
     ├── providers.py        # LLM, Embedding, Rerank provider configs
     ├── selection.py        # Selection strategy configs (elbow, adaptive_k, etc.)
     ├── storage.py          # Store backend configs (Postgres, Redis, etc.)
@@ -358,8 +358,8 @@ from ruche.config.settings import get_settings
 
 settings = get_settings()
 port = settings.api.port
-generation_model = settings.pipeline.generation.model
-rule_strategy = settings.pipeline.retrieval.rule_selection.strategy
+generation_model = settings.brain.generation.model
+rule_strategy = settings.brain.retrieval.rule_selection.strategy
 ```
 
 ---
@@ -399,13 +399,13 @@ api/
 
 ---
 
-## Configuration: Pipeline Steps
+## Configuration: Brain Steps
 
-Each step in the alignment pipeline can be configured via TOML files with Pydantic validation. See [configuration.md](./configuration.md) for full details.
+Each step in the alignment brain can be configured via TOML files with Pydantic validation. See [configuration.md](./configuration.md) for full details.
 
 ```toml
 # config/default.toml
-[pipeline.situational_sensor]
+[brain.situational_sensor]
 enabled = true
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
@@ -413,38 +413,38 @@ history_turns = 5
 temperature = 0.0
 max_tokens = 800
 
-[pipeline.retrieval]
+[brain.retrieval]
 embedding_provider = "default"
 max_k = 30
 
 # Selection strategies are configurable per retrieval type
-[pipeline.retrieval.rule_selection]
+[brain.retrieval.rule_selection]
 strategy = "adaptive_k"          # elbow | adaptive_k | entropy | clustering | fixed_k
 alpha = 1.5
 min_score = 0.5
 
-[pipeline.retrieval.scenario_selection]
+[brain.retrieval.scenario_selection]
 strategy = "entropy"
 low_entropy_k = 1
 medium_entropy_k = 2
 high_entropy_k = 3
 
-[pipeline.retrieval.memory_selection]
+[brain.retrieval.memory_selection]
 strategy = "clustering"
 eps = 0.1
 top_per_cluster = 3
 
-[pipeline.reranking]
+[brain.reranking]
 enabled = true
 rerank_provider = "default"
 top_k = 10
 
-[pipeline.rule_filtering]
+[brain.rule_filtering]
 enabled = true
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
 
-[pipeline.generation]
+[brain.generation]
 enabled = true
 model = "openrouter/openai/gpt-oss-120b"
 fallback_models = ["anthropic/claude-3-5-haiku-20241022"]
@@ -487,7 +487,7 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │              AgentRuntime (lifecycle, caching, routing)                 │ │
 │  │  ┌────────────────────────────────────────────────────────────────┐     │ │
-│  │  │                  FocalCognitivePipeline                        │     │ │
+│  │  │                  FocalBrain                        │     │ │
 │  │  │                                                                │     │ │
 │  │  │  P01→P02→P03→P04→P05→P06→P07→P08→P09→P10→P11→P12             │     │ │
 │  │  │  Identify | Sense | Update | Retrieve | Rerank | Orchestrate  │     │ │
@@ -523,8 +523,8 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 | Looking for... | Location |
 |----------------|----------|
 | Turn processing orchestration | `ruche/runtime/agent/runtime.py` |
-| Main pipeline logic | `ruche/brains/focal/pipeline.py` |
-| Pipeline phases | `ruche/brains/focal/phases/` |
+| Main brain logic | `ruche/brains/focal/brain.py` |
+| Brain phases | `ruche/brains/focal/phases/` |
 | Scenario migration | `ruche/brains/focal/migration/` |
 | Rule domain models | `ruche/domain/rules/rule.py` |
 | Scenario domain models | `ruche/domain/scenarios/scenario.py` |
@@ -541,7 +541,7 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 | Channel adapters | `ruche/infrastructure/channels/` |
 | API endpoints | `ruche/api/routes/` |
 | MCP server | `ruche/api/mcp/` |
-| Pipeline configuration | `ruche/config/models/pipeline.py` |
+| Brain configuration | `ruche/config/models/brain.py` |
 | Logging setup | `ruche/observability/logging.py` |
 | Tracing setup | `ruche/observability/tracing.py` |
 | Metrics definitions | `ruche/observability/metrics.py` |
@@ -586,7 +586,7 @@ tests/
 │       ├── test_anthropic_llm.py
 │       └── test_openai_embeddings.py
 │
-└── e2e/                    # Full pipeline tests
+└── e2e/                    # Full brain tests
     ├── test_chat_flow.py
     └── test_scenario_flow.py
 ```
@@ -601,8 +601,8 @@ tests/
 - **Agenda** — Proactive task scheduling
 
 **Mechanics Layer** (`ruche/brains/`):
-- **CognitivePipeline** — Abstract interface for cognitive mechanics
-- **FocalCognitivePipeline** — 12-phase FOCAL alignment implementation
+- **Brain** — Abstract interface for cognitive mechanics
+- **FocalBrain** — 12-phase FOCAL alignment implementation
 - **Migration** — Scenario version migration (JIT reconciliation)
 
 **Infrastructure Layer** (`ruche/infrastructure/`):
@@ -615,8 +615,8 @@ tests/
 - **Pure domain models** — Rules, Scenarios, Interlocutor data, Memory (no infrastructure dependencies)
 
 **ASA (Agent Setter Agent)** (`ruche/asa/`):
-- **Validators** — Tool, scenario, pipeline conformance validation
+- **Validators** — Tool, scenario, brain conformance validation
 - **Suggester** — Policy suggestions, edge case generation
 - **CI** — Pre-deployment validation checks
 
-Each pipeline phase can use different models/providers, configured per-agent in TOML.
+Each brain phase can use different models/providers, configured per-agent in TOML.

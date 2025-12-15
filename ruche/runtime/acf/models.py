@@ -226,7 +226,7 @@ class FabricTurnContext(BaseModel):
     # Routing
     tenant_id: UUID
     agent_id: UUID
-    customer_id: UUID
+    interlocutor_id: UUID
     session_id: UUID
     channel: str
 

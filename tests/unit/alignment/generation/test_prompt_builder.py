@@ -4,15 +4,15 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.context.models import Turn
-from ruche.alignment.context.situation_snapshot import (
+from ruche.brains.focal.phases.context.models import Turn
+from ruche.brains.focal.phases.context.situation_snapshot import (
     CandidateVariableInfo,
     SituationSnapshot,
 )
-from ruche.alignment.execution.models import ToolResult
-from ruche.alignment.filtering.models import MatchedRule
-from ruche.alignment.generation.prompt_builder import PromptBuilder
-from ruche.alignment.models import Rule
+from ruche.brains.focal.phases.execution.models import ToolResult
+from ruche.brains.focal.phases.filtering.models import MatchedRule
+from ruche.brains.focal.phases.generation.prompt_builder import PromptBuilder
+from ruche.brains.focal.models import Rule
 
 
 def create_rule(

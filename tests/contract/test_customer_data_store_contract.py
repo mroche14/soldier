@@ -1,6 +1,6 @@
-"""Contract tests for CustomerDataStoreInterface implementations.
+"""Contract tests for InterlocutorDataStoreInterface implementations.
 
-These tests define the contract that ALL CustomerDataStoreInterface implementations must satisfy.
+These tests define the contract that ALL InterlocutorDataStoreInterface implementations must satisfy.
 Each implementation (InMemory, PostgreSQL, etc.) should pass these tests.
 """
 
@@ -11,7 +11,7 @@ from uuid import uuid4
 import pytest
 
 from ruche.conversation.models import Channel
-from ruche.customer_data.enums import (
+from ruche.interlocutor_data.enums import (
     FallbackAction,
     ItemStatus,
     VariableSource,
@@ -19,27 +19,27 @@ from ruche.customer_data.enums import (
     SourceType,
     ValidationMode,
 )
-from ruche.customer_data.models import (
+from ruche.interlocutor_data.models import (
     ChannelIdentity,
-    CustomerDataStore,
+    InterlocutorDataStore,
     ProfileAsset,
     VariableEntry,
-    CustomerDataField,
+    InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.customer_data.stores import InMemoryCustomerDataStore
+from ruche.interlocutor_data.stores import InMemoryInterlocutorDataStore
 
 
-class CustomerDataStoreInterfaceContract(ABC):
-    """Contract tests for CustomerDataStoreInterface methods.
+class InterlocutorDataStoreInterfaceContract(ABC):
+    """Contract tests for InterlocutorDataStoreInterface methods.
 
-    All CustomerDataStoreInterface implementations must pass these tests.
+    All InterlocutorDataStoreInterface implementations must pass these tests.
     """
 
     @abstractmethod
     @pytest.fixture
     def store(self):
-        """Return a CustomerDataStoreInterface implementation to test."""
+        """Return a InterlocutorDataStoreInterface implementation to test."""
         pass
 
     @pytest.fixture
@@ -55,14 +55,14 @@ class CustomerDataStoreInterfaceContract(ABC):
         return uuid4()
 
     @pytest.fixture
-    def sample_profile(self, tenant_id) -> CustomerDataStore:
+    def sample_profile(self, tenant_id) -> InterlocutorDataStore:
         """Create a sample customer profile."""
         identity = ChannelIdentity(
             channel=Channel.WEBCHAT,
             channel_user_id="user123",
             primary=True,
         )
-        return CustomerDataStore(
+        return InterlocutorDataStore(
             tenant_id=tenant_id,
             channel_identities=[identity],
         )
@@ -73,7 +73,7 @@ class CustomerDataStoreInterfaceContract(ABC):
 # =============================================================================
 
 
-class LineageTrackingContract(CustomerDataStoreInterfaceContract):
+class LineageTrackingContract(InterlocutorDataStoreInterfaceContract):
     """Contract tests for US1: Lineage Tracking."""
 
     @pytest.mark.asyncio
@@ -322,7 +322,7 @@ class LineageTrackingContract(CustomerDataStoreInterfaceContract):
 # =============================================================================
 
 
-class StatusManagementContract(CustomerDataStoreInterfaceContract):
+class StatusManagementContract(InterlocutorDataStoreInterfaceContract):
     """Contract tests for US2: Status Management."""
 
     @pytest.mark.asyncio
@@ -526,13 +526,13 @@ class StatusManagementContract(CustomerDataStoreInterfaceContract):
 # =============================================================================
 
 
-class SchemaDefinitionsContract(CustomerDataStoreInterfaceContract):
+class SchemaDefinitionsContract(InterlocutorDataStoreInterfaceContract):
     """Contract tests for US3: Schema-Driven Field Definitions."""
 
     @pytest.mark.asyncio
     async def test_save_field_definition(self, store, tenant_id, agent_id):
         """Should save and return field definition ID."""
-        definition = CustomerDataField(
+        definition = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -545,7 +545,7 @@ class SchemaDefinitionsContract(CustomerDataStoreInterfaceContract):
     @pytest.mark.asyncio
     async def test_get_field_definition_by_name(self, store, tenant_id, agent_id):
         """Should retrieve field definition by name."""
-        definition = CustomerDataField(
+        definition = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="email",
@@ -563,7 +563,7 @@ class SchemaDefinitionsContract(CustomerDataStoreInterfaceContract):
     async def test_get_field_definitions_for_agent(self, store, tenant_id, agent_id):
         """Should return all field definitions for an agent."""
         for name in ["email", "phone", "name"]:
-            definition = CustomerDataField(
+            definition = InterlocutorDataField(
                 tenant_id=tenant_id,
                 agent_id=agent_id,
                 name=name,
@@ -582,7 +582,7 @@ class SchemaDefinitionsContract(CustomerDataStoreInterfaceContract):
         self, store, tenant_id, agent_id
     ):
         """Should filter disabled definitions by default."""
-        enabled_def = CustomerDataField(
+        enabled_def = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="enabled",
@@ -590,7 +590,7 @@ class SchemaDefinitionsContract(CustomerDataStoreInterfaceContract):
             value_type="string",
             enabled=True,
         )
-        disabled_def = CustomerDataField(
+        disabled_def = InterlocutorDataField(
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="disabled",
@@ -749,29 +749,29 @@ class SchemaDefinitionsContract(CustomerDataStoreInterfaceContract):
 
 
 # =============================================================================
-# Concrete Test Classes for InMemoryCustomerDataStore
+# Concrete Test Classes for InMemoryInterlocutorDataStore
 # =============================================================================
 
 
 class TestInMemoryLineageTracking(LineageTrackingContract):
-    """Run lineage tracking contract tests against InMemoryCustomerDataStore."""
+    """Run lineage tracking contract tests against InMemoryInterlocutorDataStore."""
 
     @pytest.fixture
     def store(self):
-        return InMemoryCustomerDataStore()
+        return InMemoryInterlocutorDataStore()
 
 
 class TestInMemoryStatusManagement(StatusManagementContract):
-    """Run status management contract tests against InMemoryCustomerDataStore."""
+    """Run status management contract tests against InMemoryInterlocutorDataStore."""
 
     @pytest.fixture
     def store(self):
-        return InMemoryCustomerDataStore()
+        return InMemoryInterlocutorDataStore()
 
 
 class TestInMemorySchemaDefinitions(SchemaDefinitionsContract):
-    """Run schema definitions contract tests against InMemoryCustomerDataStore."""
+    """Run schema definitions contract tests against InMemoryInterlocutorDataStore."""
 
     @pytest.fixture
     def store(self):
-        return InMemoryCustomerDataStore()
+        return InMemoryInterlocutorDataStore()

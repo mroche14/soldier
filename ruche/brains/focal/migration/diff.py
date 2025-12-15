@@ -9,7 +9,7 @@ import json
 from collections import defaultdict
 from uuid import UUID
 
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.models import (
     AnchorTransformation,
     DeletedNode,
     DownstreamChanges,
@@ -20,7 +20,7 @@ from ruche.alignment.migration.models import (
     TransformationMap,
     UpstreamChanges,
 )
-from ruche.alignment.models import Scenario, ScenarioStep
+from ruche.brains.focal.models import Scenario, ScenarioStep
 
 
 def compute_node_content_hash(step: ScenarioStep) -> str:

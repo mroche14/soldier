@@ -26,21 +26,21 @@ class TurnContext(BaseModel):
     # Routing
     tenant_id: UUID = Field(..., description="Tenant ID")
     agent_id: UUID = Field(..., description="Agent ID")
-    customer_id: UUID = Field(..., description="Customer ID")
+    interlocutor_id: UUID = Field(..., description="Customer ID")
     session_id: UUID = Field(..., description="Session ID")
     turn_number: int = Field(..., description="Turn number in session")
 
     # Session state - forward reference until we have a proper SessionState model
     session: dict = Field(..., description="Session state")
 
-    # Customer data - will be CustomerDataStore after rename
+    # Customer data - will be InterlocutorDataStore after rename
     customer_data: dict = Field(..., description="Customer data snapshot")
 
     # Static config
     pipeline_config: dict = Field(..., description="Pipeline configuration")
     customer_data_fields: dict[str, dict] = Field(
         default_factory=dict,
-        description="Field name -> CustomerDataField definition",
+        description="Field name -> InterlocutorDataField definition",
     )
     glossary: dict[str, dict] = Field(
         default_factory=dict, description="Term -> GlossaryItem"

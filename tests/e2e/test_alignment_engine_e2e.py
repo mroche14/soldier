@@ -17,16 +17,16 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 import pytest
 
-from ruche.alignment.engine import AlignmentEngine
-from ruche.alignment.models import Rule, Scenario, ScenarioStep, Template, Scope
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.models import Rule, Scenario, ScenarioStep, Template, Scope
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import PipelineConfig
 from ruche.conversation.models import Session, SessionStatus, Channel
 from ruche.conversation.stores.inmemory import InMemorySessionStore
-from ruche.customer_data.stores.inmemory import InMemoryCustomerDataStore
+from ruche.interlocutor_data.stores.inmemory import InMemoryInterlocutorDataStore
 from ruche.observability.logging import setup_logging, get_logger
-from ruche.providers.embedding.mock import MockEmbeddingProvider
-from ruche.providers.llm import create_executor
+from ruche.infrastructure.providers.embedding.mock import MockEmbeddingProvider
+from ruche.infrastructure.providers.llm import create_executor
 
 # Configure logging for test visibility
 setup_logging(level="DEBUG")
@@ -46,7 +46,7 @@ def agent_id():
 
 
 @pytest.fixture
-def customer_id():
+def interlocutor_id():
     """Test customer ID."""
     return uuid4()
 
@@ -72,7 +72,7 @@ def session_store():
 @pytest.fixture
 def profile_store():
     """Create in-memory profile store."""
-    return InMemoryCustomerDataStore()
+    return InMemoryInterlocutorDataStore()
 
 
 @pytest.fixture
@@ -211,13 +211,13 @@ async def sample_templates(config_store, tenant_id, agent_id):
 
 
 @pytest.fixture
-async def sample_session(session_store, tenant_id, agent_id, customer_id, session_id):
+async def sample_session(session_store, tenant_id, agent_id, interlocutor_id, session_id):
     """Create a sample session."""
     session = Session(
         session_id=session_id,
         tenant_id=tenant_id,
         agent_id=agent_id,
-        customer_id=customer_id,
+        interlocutor_id=interlocutor_id,
         channel=Channel.API,
         user_channel_id="test-user-123",
         config_version=1,
@@ -488,7 +488,7 @@ class TestAlignmentEngineWithRealLLM:
             },
         })
 
-        from ruche.providers.llm import create_executors_from_pipeline_config
+        from ruche.infrastructure.providers.llm import create_executors_from_pipeline_config
         executors = create_executors_from_pipeline_config(pipeline_config)
 
         engine = AlignmentEngine(

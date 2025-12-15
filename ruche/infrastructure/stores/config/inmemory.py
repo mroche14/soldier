@@ -3,8 +3,8 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from ruche.alignment.migration.models import MigrationPlan, MigrationPlanStatus
-from ruche.alignment.models import (
+from ruche.brains.focal.migration.models import MigrationPlan, MigrationPlanStatus
+from ruche.brains.focal.models import (
     Agent,
     GlossaryItem,
     Intent,
@@ -17,7 +17,7 @@ from ruche.alignment.models import (
     Variable,
 )
 from ruche.infrastructure.stores.config.interface import ConfigStore
-from ruche.customer_data import CustomerDataField
+from ruche.interlocutor_data import InterlocutorDataField
 from ruche.utils.vector import cosine_similarity
 
 
@@ -40,7 +40,7 @@ class InMemoryConfigStore(ConfigStore):
         self._migration_plans: dict[UUID, MigrationPlan] = {}
         self._archived_scenarios: dict[tuple[UUID, UUID, int], Scenario] = {}
         self._glossary_items: dict[UUID, GlossaryItem] = {}
-        self._customer_data_fields: dict[UUID, CustomerDataField] = {}
+        self._customer_data_fields: dict[UUID, InterlocutorDataField] = {}
         self._intents: dict[UUID, Intent] = {}
 
     # Rule operations
@@ -500,7 +500,7 @@ class InMemoryConfigStore(ConfigStore):
         tenant_id: UUID,
         agent_id: UUID,
         enabled_only: bool = True,
-    ) -> list[CustomerDataField]:
+    ) -> list[InterlocutorDataField]:
         """Get all customer data field definitions for an agent."""
         results = []
         for field in self._customer_data_fields.values():
@@ -511,7 +511,7 @@ class InMemoryConfigStore(ConfigStore):
             results.append(field)
         return results
 
-    async def save_customer_data_field(self, field: CustomerDataField) -> None:
+    async def save_customer_data_field(self, field: InterlocutorDataField) -> None:
         """Save a customer data field definition."""
         self._customer_data_fields[field.id] = field
 

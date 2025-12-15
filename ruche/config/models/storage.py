@@ -85,7 +85,7 @@ class RedisSessionConfig(StoreBackendConfig):
 class RedisProfileCacheConfig(StoreBackendConfig):
     """Redis profile cache configuration.
 
-    Wraps PostgresCustomerDataStoreInterface with Redis caching for read-heavy workloads.
+    Wraps PostgresInterlocutorDataStoreInterface with Redis caching for read-heavy workloads.
     Uses write-through invalidation strategy.
     """
 

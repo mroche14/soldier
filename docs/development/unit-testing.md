@@ -683,7 +683,7 @@ class TestElbowSelectionStrategy:
         assert len(result.selected) == 5
 ```
 
-### Testing Pipeline Steps
+### Testing Brain Steps
 
 ```python
 class TestIdentificationSensor:

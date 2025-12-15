@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.alignment.migration.diff import compute_node_content_hash
-from ruche.alignment.migration.executor import MigrationExecutor
-from ruche.alignment.migration.models import (
+from ruche.brains.focal.migration.diff import compute_node_content_hash
+from ruche.brains.focal.migration.executor import MigrationExecutor
+from ruche.brains.focal.migration.models import (
     AnchorTransformation,
     DownstreamChanges,
     ForkBranch,
@@ -20,8 +20,8 @@ from ruche.alignment.migration.models import (
     TransformationMap,
     UpstreamChanges,
 )
-from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
-from ruche.alignment.stores.inmemory import InMemoryAgentConfigStore
+from ruche.brains.focal.models import Scenario, ScenarioStep, StepTransition
+from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.migration import ScenarioMigrationConfig
 from ruche.conversation.models import Channel, PendingMigration, Session, StepVisit
 from ruche.conversation.stores.inmemory import InMemorySessionStore

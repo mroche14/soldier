@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Query
 
-from ruche.alignment.models import Scenario, ScenarioStep, StepTransition
+from ruche.brains.focal.models import Scenario, ScenarioStep, StepTransition
 from ruche.api.dependencies import AgentConfigStoreDep
 from ruche.api.exceptions import (
     AgentNotFoundError,

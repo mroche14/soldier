@@ -71,7 +71,7 @@ A directed graph representing the ideal path.
 ## 3. Phase 2: The Runtime Engine (The "Brain")
 This is where we solve your specific problem: **Intent vs. Context vs. Scenario State.**
 
-### The Pipeline
+### The Brain
 ```text
 [User Message] -> [1. Extractor] -> [2. Router] -> [3. Scenario Engine] -> [4. Action/Gen] -> [5. Output Check]
 ```

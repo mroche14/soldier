@@ -2,11 +2,11 @@
 
 This document provides a summary of all the documentation files in the `docs` directory.
 
-> **Status:** This file is an auto-generated snapshot and may be stale (paths, names, and summaries). Treat `docs/focal_360/` as the canonical architecture, and validate details against the actual docs and `config/*.toml`.
+> **Status:** This file is an auto-generated snapshot and may be stale (paths, names, and summaries). Treat `docs/acf/` as the canonical architecture, and validate details against the actual docs and `config/*.toml`.
 
 ---
 
-### `/home/marvin/Projects/ruche/docs/design/scenario-update-methods.md`
+### `docs/design/scenario-update-methods.md`
 
 This document tackles the problem of updating scenarios (conversation flows) while users are in the middle of them. The key solution is to pre-compute a "Migration Plan" whenever a scenario is updated. This plan defines exactly how to handle users at each step of the old scenario, specifying actions like continuing, collecting new data, or "teleporting" them to a different part of the flow. This approach is performant, reviewable by operators, and auditable. The document details the data models for migration plans, the workflow for generating and applying them, and how the system handles "gap fills" by trying to find required information from conversation history before asking the user. It also covers edge cases like very old sessions and provides a "Composite Migration" strategy to prevent a bad user experience when multiple updates happen in a row.
 
@@ -24,29 +24,30 @@ The document also defines various enums for state management, base models for te
 
 ---
 
-### `docs/design/turn-pipeline.md`
+### `docs/focal_brain/spec/brain.md`
 
-This document describes the "Turn Pipeline", a 10-step process that handles a user's message from receipt to response. The pipeline is designed to be modular and configurable, allowing for different trade-offs between speed and quality.
+This document describes the "FOCAL Brain", the alignment-focused cognitive pipeline that processes user messages through an 11-phase specification. The brain is designed to be modular and configurable, allowing for different trade-offs between speed and quality.
 
-The key steps are:
-1.  **Receive & Reconcile:** Load the session and handle any scenario updates.
-2.  **Extract Context:** Understand the user's intent using an LLM or embeddings.
-3.  **Retrieve Candidates:** Find relevant rules, scenarios, and memories using vector search.
-4.  **Rerank:** Improve the order of candidates using a reranking model.
-5.  **Filter (Rules & Scenarios):** Use separate, dedicated filters to decide which rules apply (`RuleFilter`) and how to navigate within a scenario (`ScenarioFilter`).
-6.  **Execute Tools:** Run any tools attached to the matched rules.
-7.  **Generate Response:** Create the agent's response, potentially using an LLM.
-8.  **Enforce Constraints:** Check the response against any hard rules.
-9.  **Persist State:** Save the updated session, log the turn, and update memory.
-10. **Respond:** Send the final response to the user.
+The key phases are:
+1.  **Identification & Context Loading:** Load session, customer data, config, glossary
+2.  **Situational Sensor:** Schema-aware context extraction with candidate variables
+3.  **Customer Data Update:** Updates customer profile with new facts
+4.  **Retrieval & Selection:** Vector search for rules, scenarios, memory
+5.  **Rule Selection & Filtering:** Pre-filter and LLM filter for applicable rules
+6.  **Scenario Orchestration:** Lifecycle decisions and step transitions
+7.  **Tool Execution:** Execute tools with proper scheduling
+8.  **Response Planning:** Plan multi-tool/multi-turn responses
+9.  **Generation:** Generate final response text
+10. **Enforcement & Guardrails:** Validate against constraints
+11. **Persistence, Audit & Output:** Save session, audit records, emit metrics
 
-The document also provides details on the configuration of each step, including which AI models to use, and gives examples of different pipeline configurations (e.g., "fastest", "balanced", "maximum quality").
+The document also provides details on the configuration of each phase, including which AI models to use, and gives examples of different brain configurations (e.g., "speed-optimized", "balanced", "quality-optimized").
 
 ---
 
 ### `docs/design/enhanced-enforcement.md`
 
-This document describes enhancements to Focal's enforcement pipeline, extending the existing rule-based system with deterministic expression evaluation, LLM-as-Judge for subjective rules, and optional grounding/relevance verification. It is grounded in and reconciled with the existing Rule model and EnforcementValidator.
+This document describes enhancements to Focal's enforcement brain, extending the existing rule-based system with deterministic expression evaluation, LLM-as-Judge for subjective rules, and optional grounding/relevance verification. It is grounded in and reconciled with the existing Rule model and EnforcementValidator.
 
 Key concepts and enhancements:
 
@@ -72,11 +73,11 @@ The configuration uses TOML with boolean flags to enable/disable each capability
 
 ### `docs/architecture/alignment-engine.md`
 
-This document describes the "Alignment Engine," the core component of Focal that ensures agent behavior follows predefined policies. It's a text-based pipeline that processes user messages through a series of steps to ensure predictable and controlled responses.
+This document describes the "Alignment Engine," the core component of Focal that ensures agent behavior follows predefined policies. It's a text-based brain that processes user messages through a series of steps to ensure predictable and controlled responses.
 
-The pipeline includes:
+The brain includes:
 *   **Input/Output Processing:** Handles multimodal data (audio, images) by converting it to text for the engine and back again for the response.
-*   **Alignment Engine Pipeline:** A detailed, multi-stage process for text-based messages:
+*   **Alignment Engine Brain:** A detailed, multi-stage process for text-based messages:
     1.  **Context Extraction:** Determines the user's true intent.
     2.  **Retrieval:** Fetches relevant rules, scenarios, and memories.
     3.  **Reranking:** Improves the order of the retrieved candidates.
@@ -89,15 +90,15 @@ A key design principle is the separation of the **RuleFilter** (which rules appl
 
 ---
 
-### `docs/design/customer-profile.md`
+### `docs/design/interlocutor-data.md`
 
-This document introduces the Customer Data Store, a persistent, cross-session data store for verified facts about a customer. It addresses the need for a storage layer that sits between temporary session variables and unstructured conversation memory.
+This document introduces the Interlocutor Data Store, a persistent, cross-session data store for verified facts about an interlocutor. It addresses the need for a storage layer that sits between temporary session variables and unstructured conversation memory.
 
 Key aspects of the Customer Data Store include:
 
 *   **Persistence:** It stores verified customer data (like email, KYC status, or preferences) that persists across multiple conversations and scenarios.
-*   **Data Models:** It defines Pydantic models for `CustomerDataStore`, `VariableEntry` (a single fact), `ProfileAsset` (like an uploaded ID), and `Consent`. Each field tracks its value, source, verification status, and confidence.
-*   **Schema Definition:** Customer data field definitions (e.g., `CustomerDataField`) allow developers to define the schema of expected customer data, including validation rules, privacy settings, and extraction hints for LLMs.
+*   **Data Models:** It defines Pydantic models for `InterlocutorDataStore`, `VariableEntry` (a single fact), `ProfileAsset` (like an uploaded ID), and `Consent`. Each field tracks its value, source, verification status, and confidence.
+*   **Schema Definition:** Customer data field definitions (e.g., `InterlocutorDataField`) allow developers to define the schema of expected customer data, including validation rules, privacy settings, and extraction hints for LLMs.
 *   **Integration:** The profile is tightly integrated with sessions and scenarios. Scenarios can declare required fields, and the `ScenarioFilter` can check the profile before allowing a user to enter a scenario or transition to a new step.
 *   **Scenario Migration:** The profile simplifies scenario migrations by providing a reliable source for "gap filling" when new data is required by an updated scenario flow.
 *   **Privacy:** The design includes considerations for privacy and compliance (GDPR/CCPA), with features for data export, deletion, and a detailed audit trail.
@@ -113,7 +114,7 @@ Key architectural points include:
 *   **Deployment Modes:** It supports two modes: **Standalone**, where Focal is the source of truth for configuration, and **External Platform Integration**, where it consumes configuration from an external control plane.
 *   **Core Components:**
     *   **API Layer:** Handles external communication, authentication, and validation.
-    *   **Alignment Engine:** The central processing pipeline that ensures agent behavior follows defined rules and scenarios.
+    *   **Alignment Engine:** The central processing brain that ensures agent behavior follows defined rules and scenarios.
     *   **Providers:** Abstract interfaces for external AI services (LLMs, Embeddings, Rerankers, etc.).
     *   **Stores:** Abstract interfaces for data persistence, categorized into `ConfigStore`, `MemoryStore`, `SessionStore`, and `AuditStore`.
 *   **Request Flow:** The document outlines the detailed, step-by-step process of a conversation turn, from receiving the request to persisting the state and sending a response.
@@ -142,10 +143,10 @@ Key features of the API include:
 
 This document provides a set of example TOML configuration files that demonstrate how the Focal application is configured for different environments. It showcases the hierarchical and override-based nature of the configuration system.
 
-*   **`default.toml`:** This file contains the base configuration with sensible defaults for all settings, including API settings, provider configurations, and the full turn pipeline (from input processing to output processing). It defines fallback chains for AI models for each step of the pipeline.
+*   **`default.toml`:** This file contains the base configuration with sensible defaults for all settings, including API settings, provider configurations, and the full turn brain (from input processing to output processing). It defines fallback chains for AI models for each step of the brain.
 *   **`development.toml`:** This file overrides the default settings for a local development environment. It enables debug mode, disables rate limiting, uses in-memory storage for speed, and selects cheaper, faster AI models for generation.
 *   **`production.toml`:** This file configures the system for a production environment. It uses more workers, enables rate limiting, selects the highest quality models, and points to robust, external storage backends like PostgreSQL and Neo4j, with credentials typically loaded from environment variables.
-*   **`test.toml`:** This file sets up the configuration for running automated tests. It uses in-memory storage and points all pipeline steps to mock models to ensure fast, isolated, and predictable test execution.
+*   **`test.toml`:** This file sets up the configuration for running automated tests. It uses in-memory storage and points all brain steps to mock models to ensure fast, isolated, and predictable test execution.
 
 ---
 
@@ -178,8 +179,8 @@ The key configuration models defined are:
 
 *   **`DeploymentConfig`:** Specifies the deployment mode (`standalone` or `external`) and its associated settings.
 *   **`APIConfig`:** Configures the API server, including host, port, workers, CORS, and rate limiting.
-*   **Provider Configurations:** A comprehensive set of models for all AI providers, categorized by modality (LLM, Vision, Embedding, STT, TTS, etc.). A key feature is the use of **fallback chains**, where each pipeline step can specify a list of models to try in order. This provides resilience against provider outages or performance issues. The configuration leverages **LLMExecutor (Agno-backed)** for LLM execution.
-*   **`PipelineConfig`:** This is the master model for the turn pipeline. It composes configurations for each step (`InputProcessing`, `ContextExtraction`, `Retrieval`, `Generation`, etc.), allowing for fine-grained control over which models and settings are used at each stage of processing.
+*   **Provider Configurations:** A comprehensive set of models for all AI providers, categorized by modality (LLM, Vision, Embedding, STT, TTS, etc.). A key feature is the use of **fallback chains**, where each brain step can specify a list of models to try in order. This provides resilience against provider outages or performance issues. The configuration leverages **LLMExecutor (Agno-backed)** for LLM execution.
+*   **`PipelineConfig`:** This is the master model for the turn brain. It composes configurations for each step (`InputProcessing`, `ContextExtraction`, `Retrieval`, `Generation`, etc.), allowing for fine-grained control over which models and settings are used at each stage of processing.
 *   **`StorageConfig`:** Defines the configuration for all storage backends. It includes separate configurations for `ConfigStore`, `MemoryStore`, `SessionStore`, and `AuditStore`, each allowing a different backend to be selected (e.g., `postgres`, `redis`, `neo4j`, `inmemory`).
 *   **Selection Strategy Configurations:** Defines models for various strategies (`Elbow`, `AdaptiveK`, `Entropy`, `Clustering`) used in the retrieval step to dynamically select the best number of results.
 
@@ -191,7 +192,7 @@ This document outlines the folder structure of the Focal codebase, which is orga
 
 The main directories within the `ruche/` package are:
 
-*   **`alignment/`**: The "brain" of the agent, containing the logic for the entire turn pipeline, from context extraction to response generation and enforcement. It's further subdivided by pipeline stage.
+*   **`alignment/`**: The "brain" of the agent, containing the logic for the entire turn brain, from context extraction to response generation and enforcement. It's further subdivided by brain stage.
 *   **`memory/`**: Manages the agent's long-term memory, including the `MemoryStore` interface and its various database implementations (e.g., Neo4j, PostgreSQL).
 *   **`conversation/`**: Handles the live state of conversations, primarily through the `SessionStore` interface and its implementations (e.g., Redis).
 *   **`audit/`**: Manages the immutable audit trail of all interactions, using the `AuditStore` interface.
@@ -222,7 +223,7 @@ Key aspects of the architecture are:
 
 *   **Folder Structure:** Configuration is split between `config/` for TOML files and `ruche/config/` for the Python code that loads and models the configuration. Secrets are handled separately in a `.env` file at the project root.
 *   **Loading Mechanism:** The system uses a hierarchical loading mechanism. It starts with `default.toml`, overrides it with an environment-specific file (e.g., `development.toml`), and finally applies any environment variables (prefixed with `RUCHE_`). This provides a clear and flexible way to manage settings across different environments.
-*   **`Settings` Class:** A central Pydantic `Settings` class serves as the root of the configuration structure. It composes other Pydantic models for different parts of the system (API, pipeline, storage, etc.) and provides a single, type-safe entry point for accessing all configuration values.
+*   **`Settings` Class:** A central Pydantic `Settings` class serves as the root of the configuration structure. It composes other Pydantic models for different parts of the system (API, brain, storage, etc.) and provides a single, type-safe entry point for accessing all configuration values.
 *   **Best Practice:** The document reinforces the principle of separating configuration from code and managing secrets securely outside of version control.
 
 ---
@@ -296,7 +297,7 @@ This document explains how Focal integrates into the broader External Platform a
 
 Key points of the integration are:
 
-*   **Role in Architecture:** Focal acts as the "brain," receiving messages from the `Message-Router` and processing them through its turn pipeline. It sits between the channel/routing layers and the tool execution layer.
+*   **Role in Architecture:** Focal acts as the "brain," receiving messages from the `Message-Router` and processing them through its turn brain. It sits between the channel/routing layers and the tool execution layer.
 *   **Configuration Source:** In this integration mode, Focal is not the source of truth for configuration. Instead, it consumes configuration "bundles" (for agents, rules, scenarios, etc.) that are compiled by a `Publisher` service and stored in Redis.
 *   **Hot-Reloading:** Focal's `Config Watcher` subscribes to a Redis pub/sub channel (`cfg-updated`). When a new configuration is published, the watcher loads the new bundle from Redis into its cache, allowing for configuration updates without a service restart.
 *   **Data Flow:** The document details the flow of inbound messages from the `Channel-Gateway` to Focal and the flow of configuration updates from the `Control Plane` to Focal via the Publisher and Redis.
@@ -318,7 +319,7 @@ The implemented strategies are:
 *   **Clustering-Based Selection:** Groups results into clusters based on their scores (using DBSCAN) and selects the top items from each cluster. This is useful for broad queries that may match multiple distinct topics.
 *   **Fixed-K Selection:** The baseline strategy that returns a fixed number of items, used for comparison and as a fallback.
 
-The document also details how these strategies are configured in the TOML files for different retrieval types (rules, scenarios, memory), how they are implemented using Pydantic models, and how they are used within the retrieval pipeline.
+The document also details how these strategies are configured in the TOML files for different retrieval types (rules, scenarios, memory), how they are implemented using Pydantic models, and how they are used within the retrieval brain.
 
 ---
 
@@ -335,7 +336,7 @@ Key concepts include:
     1.  **Semantic Vector Search:** For finding conceptually similar information.
     2.  **Keyword/BM25 Search:** For precise matching of exact terms.
     3.  **Graph Traversal:** For expanding context by following relationships from known-relevant entities.
-*   **Ingestion Pipeline:** A pipeline processes new information by extracting entities and relationships, generating embeddings, updating the graph, and asynchronously creating summaries of long conversations.
+*   **Ingestion Brain:** A brain processes new information by extracting entities and relationships, generating embeddings, updating the graph, and asynchronously creating summaries of long conversations.
 *   **Multi-Tenancy:** Memory is strictly isolated between tenants using a `group_id` (a combination of `tenant_id` and `session_id`) on all data.
 
 ---
@@ -373,6 +374,28 @@ This approach provides a balance of semantic relevance and keyword precision, wh
 
 ---
 
+### `docs/design/decisions/003-database-selection.md`
+
+This Architectural Decision Record (ADR) documents the database technology selection for Ruche's four storage domains (ConfigStore, MemoryStore, SessionStore, AuditStore).
+
+The key decisions are:
+
+*   **Primary Database: PostgreSQL:** PostgreSQL is chosen as the primary database for all four stores due to its unified operations, ACID guarantees, mature ecosystem, and Row Level Security (RLS) for multi-tenant isolation.
+
+*   **Vector Search: pgvector:** The pgvector extension provides vector similarity search for rule matching and memory retrieval, with benchmarks showing competitive performance (28× lower p95 latency on 50M vectors) compared to some dedicated vector databases.
+
+*   **Session Caching: Redis:** Redis provides sub-millisecond session reads with native TTL support, operating alongside PostgreSQL for durable persistence. The write-through architecture ensures sessions survive Redis restarts.
+
+*   **Time-Series (Future): TimescaleDB:** For the AuditStore, PostgreSQL with BRIN indexes handles initial load, with TimescaleDB extension recommended when audit volume exceeds 100M rows (90-95% compression, automatic partitioning).
+
+*   **Multi-Tenancy: Row Level Security (RLS):** Single schema with RLS policies provides defense-in-depth tenant isolation at the database level, avoiding the operational complexity of schema-per-tenant or database-per-tenant approaches.
+
+*   **Scaling Path:** The ADR defines clear evolution triggers: add TimescaleDB when audit queries exceed 500ms, add Neo4j when graph traversals exceed 200ms at depth > 3, add ClickHouse only at 1B+ events/day.
+
+The document includes performance targets, index strategies, benchmark reference data, and justifications for why MongoDB, dedicated vector databases, and NoSQL alternatives were not selected.
+
+---
+
 ### `docs/architecture/observability.md`
 
 This document defines Focal's logging, tracing, and metrics strategy, designed to integrate seamlessly into the External Platform (kernel_agent) observability stack.
@@ -381,8 +404,8 @@ Key aspects include:
 
 *   **Three Pillars:** The observability architecture is built on three pillars:
     *   **Logs:** Structured JSON logs via `structlog` to stdout, with automatic context binding (`tenant_id`, `agent_id`, `session_id`, `logical_turn_id`, `trace_id`).
-    *   **Traces:** OpenTelemetry spans for each pipeline step, exported via OTLP to a collector (Jaeger/Tempo).
-    *   **Metrics:** Prometheus-compatible `/metrics` endpoint with counters, histograms, and gauges for requests, pipeline latency, LLM calls, rule matches, and errors.
+    *   **Traces:** OpenTelemetry spans for each brain step, exported via OTLP to a collector (Jaeger/Tempo).
+    *   **Metrics:** Prometheus-compatible `/metrics` endpoint with counters, histograms, and gauges for requests, brain latency, LLM calls, rule matches, and errors.
 
 *   **Audit vs. Operational Separation:** Domain events (turn records, rule fires, scenario transitions) are persisted in the `AuditStore` for compliance and long-term analysis. Operational debugging data (provider errors, latency, fallbacks) goes to ephemeral logs.
 
@@ -394,13 +417,86 @@ Key aspects include:
 
 ---
 
-### `docs/focal_turn_pipeline/README.md`
+### `docs/architecture/webhook-system.md`
 
-This document specifies the **Focal Turn Pipeline**, the redesigned 11-phase turn processing pipeline for Focal. It consolidates earlier fragmented designs into a single, cohesive specification.
+This document specifies the Webhook System for delivering platform events to tenant-owned HTTP endpoints. It extends the internal `AgentEvent` / `ACFEvent` model to external subscribers.
 
 Key aspects include:
 
-*   **11 Phases:** The pipeline consists of 11 sequential phases that transform a user message into an agent response:
+*   **Push-Based Delivery:** Events are delivered to tenant endpoints as they happen, with at-least-once semantics and intelligent retry logic (exponential backoff with jitter).
+
+*   **Data Models:** Defines `WebhookSubscription` (tenant webhook configuration with URL, secret, event patterns), `WebhookDelivery` (individual delivery attempt record), and `WebhookPayload` (the actual payload sent to tenants).
+
+*   **Security:** All payloads are signed using HMAC-SHA256 with a tenant-specific secret. Includes timestamp-based replay protection (5-minute tolerance window) and signature verification examples for tenant implementation.
+
+*   **Subscription Management:** REST API for creating, updating, and managing webhook subscriptions. Includes verification flow to confirm endpoint ownership before activation.
+
+*   **Event Filtering:** Tenants can subscribe to specific event patterns (e.g., `scenario.*`, `tool.execution.completed`) and filter by agent IDs.
+
+*   **Health Monitoring:** Automatic disabling of unhealthy subscriptions after consecutive failures, with metrics for delivery success/failure rates and latency tracking.
+
+*   **Configuration:** TOML settings for retry delays, failure thresholds, rate limits, and security requirements (HTTPS enforcement in production).
+
+---
+
+### `docs/architecture/channel-gateway.md`
+
+This document specifies the ChannelGateway interface, the abstraction layer between external messaging channels (WhatsApp, SMS, Email, Web, Voice) and the Ruche platform. Note: The implementation code may live in a separate service/repository.
+
+Key aspects include:
+
+*   **ChannelAdapter Protocol:** Abstract interface that each channel (WhatsApp, SMS, Email, Webchat, Voice) must implement. Defines methods for receiving webhooks, sending messages, typing indicators, read receipts, and media retrieval.
+
+*   **InboundMessage Model:** Normalized message format produced by all channel adapters. Contains content (text, media, location), routing information (tenant_id, agent_id, channel_user_id), and metadata.
+
+*   **OutboundMessage Model:** Normalized outbound format that Ruche produces, containing response segments that adapters format for channel-specific delivery.
+
+*   **ChannelFormatter:** Applies ChannelPolicy rules (from ConfigStore) for response formatting—markdown stripping for SMS, message splitting for length limits, rich media conversion.
+
+*   **Identity Resolution:** `IdentityResolver` maps channel-specific user IDs (phone numbers, emails) to platform interlocutor IDs, with cross-channel linking (same phone on WhatsApp and SMS → same interlocutor).
+
+*   **Adapter Implementations:** Examples for WhatsApp Business API (webhook signature verification, message type parsing), Twilio SMS, Email (SendGrid/SES), and Webchat (WebSocket-based).
+
+*   **Error Handling:** Patterns for inbound errors (signature validation, malformed payloads) and outbound errors (rate limits, delivery failures) with appropriate retry strategies.
+
+---
+
+### `docs/architecture/error-handling.md`
+
+This document specifies the unified error handling model across all Ruche platform layers, covering error taxonomy, propagation, recovery strategies, and observability.
+
+Key aspects include:
+
+*   **Error Model:** `RucheError` base class with structured metadata (code, message, category, severity, retryable flag, retry_after_seconds). All errors carry an `error_id` for tracing.
+
+*   **Error Code Taxonomy:** Comprehensive categorization by domain:
+    *   Validation (400): `VALIDATION_ERROR`, `INVALID_JSON`, `MISSING_FIELD`
+    *   Authentication (401/403): `AUTHENTICATION_REQUIRED`, `INVALID_TOKEN`, `INSUFFICIENT_PERMISSIONS`
+    *   Resource (404/409): `*_NOT_FOUND`, `RESOURCE_CONFLICT`, `VERSION_CONFLICT`
+    *   Rate Limit (429): `RATE_LIMIT_EXCEEDED`, `QUOTA_EXCEEDED`
+    *   Provider (502/503): `LLM_ERROR`, `LLM_TIMEOUT`, `TOOL_PROVIDER_ERROR`
+    *   Policy (422): `RULE_VIOLATION`, `SAFETY_VIOLATION`, `TOOL_POLICY_DENIED`
+    *   Internal (500): `INTERNAL_ERROR`, `DATABASE_ERROR`
+
+*   **Domain-Specific Errors:** Typed error classes for API layer (ValidationError, ResourceNotFoundError), Brain/Pipeline (BrainError, RuleViolationError), Providers (LLMError, ToolError), and ACF (MutexAcquisitionError, SupersedeError).
+
+*   **Error Propagation:** Layer responsibilities for handling vs. propagating errors. Patterns for transform-and-propagate, retry-with-fallback, and graceful degradation.
+
+*   **FabricErrorPolicy:** Configurable error handling policy per tenant/agent with actions (RETRY, FAIL, ESCALATE, FALLBACK) for different error types, retry settings, and escalation targets.
+
+*   **API Error Responses:** Standard JSON format with code, message, error_id, details, and retryable flag. HTTP status code mapping for all error categories.
+
+*   **Observability:** Error metrics (counts by code/category, retry counts, escalation counts), structured logging patterns, and alerting rules for error rate spikes.
+
+---
+
+### `docs/focal_brain/README.md`
+
+This document specifies **FocalBrain**, the 11-phase Brain implementation for Focal. It consolidates earlier fragmented designs into a single, cohesive specification.
+
+Key aspects include:
+
+*   **11 Phases:** The brain consists of 11 sequential phases that transform a user message into an agent response:
     1. Context Loading - Loads customer data, session, glossary
     2. Situational Sensor - Schema-aware context extraction with candidate variables
     3. Customer Data Update - Updates customer profile with new facts
@@ -415,7 +511,7 @@ Key aspects include:
 
 *   **Schema-Aware Processing:** Phase 2 (Situational Sensor) shows LLM a privacy-safe view of customer data schema (field names/types, not values) and extracts candidate variables with proper scoping.
 
-*   **Customer Data Lifecycle:** Phase 3 validates and persists candidate variables from Phase 2 into the CustomerDataStore, with LLM-based confidence scoring and conflict resolution.
+*   **Customer Data Lifecycle:** Phase 3 validates and persists candidate variables from Phase 2 into the InterlocutorDataStore, with LLM-based confidence scoring and conflict resolution.
 
 *   **Response Planning:** Phase 7 introduces explicit planning for multi-tool workflows and multi-turn interactions, replacing implicit sequencing.
 
@@ -427,39 +523,39 @@ Key aspects include:
 
 ---
 
-### `docs/focal_turn_pipeline/spec/pipeline.md`
+### `docs/focal_brain/spec/brain.md`
 
-Detailed specifications for each of the 11 phases in the Focal Turn Pipeline, including substeps, inputs/outputs, and implementation notes.
-
----
-
-### `docs/focal_turn_pipeline/spec/data_models.md`
-
-Complete data model definitions for all pipeline phases, including field-by-field specifications for TurnContext, SituationalSnapshot, CandidateVariableInfo, CustomerSchemaMask, ResponsePlan, and TurnOutcome.
+Detailed specifications for each of the 11 phases in FocalBrain, including substeps, inputs/outputs, and implementation notes.
 
 ---
 
-### `docs/focal_turn_pipeline/spec/configuration.md`
+### `docs/focal_brain/spec/data_models.md`
 
-Configuration patterns and TOML structure for the Focal Turn Pipeline, including examples of different configuration profiles (speed-optimized, balanced, quality-optimized).
+Complete data model definitions for all brain phases, including field-by-field specifications for TurnContext, SituationalSnapshot, CandidateVariableInfo, CustomerSchemaMask, ResponsePlan, and TurnOutcome.
 
 ---
 
-### `docs/focal_turn_pipeline/spec/llm_task_configuration.md`
+### `docs/focal_brain/spec/configuration.md`
 
-Pattern for configuring LLM tasks in the pipeline, including Jinja2 template usage, prompt configuration sections, and model selection strategies.
+Configuration patterns and TOML structure for FocalBrain, including examples of different configuration profiles (speed-optimized, balanced, quality-optimized).
+
+---
+
+### `docs/focal_brain/spec/llm_task_configuration.md`
+
+Pattern for configuring LLM tasks in the brain, including Jinja2 template usage, prompt configuration sections, and model selection strategies.
 
 ---
 
 ### `docs/development/testing-strategy.md`
 
-This document defines Focal's overall testing approach, covering the test pyramid, CI/CD pipeline, coverage requirements, and environment configurations.
+This document defines Focal's overall testing approach, covering the test pyramid, CI/CD brain, coverage requirements, and environment configurations.
 
 Key aspects include:
 
 *   **Test Pyramid:** Defines three layers of tests - Unit (80%, fast, isolated), Integration (15%, with real backends), and E2E (5%, full system validation).
 *   **Coverage Requirements:** Sets minimum coverage targets per module (85% line coverage overall, with specific targets for alignment, memory, providers, etc.).
-*   **CI/CD Pipeline:** Defines what tests run at each stage - lint/unit on every PR, integration on merge, E2E on release. Includes GitHub Actions workflow configuration.
+*   **CI/CD Brain:** Defines what tests run at each stage - lint/unit on every PR, integration on merge, E2E on release. Includes GitHub Actions workflow configuration.
 *   **Integration Test Environment:** Docker Compose setup for PostgreSQL (pgvector), Redis, and Neo4j. Covers database isolation strategies (transaction rollback, truncation, separate databases).
 *   **Performance Testing:** Codifies latency targets from architecture docs (e.g., full turn < 1000ms P50) with benchmark test structure.
 *   **Contract Testing:** Pattern for verifying that all Store and Provider implementations fulfill their interface contracts.
@@ -480,7 +576,42 @@ Key aspects include:
 *   **Fixture Composition:** Building complex test objects through fixture dependencies (tenant → agent → scenario → session → context).
 *   **Factory Pattern:** `RuleFactory`, `SessionFactory`, etc. for creating test objects with sensible defaults and overrides.
 *   **Mocking Guidelines:** When to mock (external APIs, time) vs. when to use real implementations (stores via in-memory).
-*   **Component-Specific Templates:** Detailed examples for testing Stores, Selection Strategies, Pipeline Steps, and Domain Models.
+*   **Component-Specific Templates:** Detailed examples for testing Stores, Selection Strategies, Brain Steps, and Domain Models.
 *   **Parametrized Tests:** Using `@pytest.mark.parametrize` for testing multiple input combinations.
 *   **Error Testing:** Patterns for testing expected exceptions and error messages.
 *   **Coverage:** What to cover, what to skip, and how to use coverage exclusions.
+
+---
+
+### `docs/ARCHITECTURE_READINESS_REPORT_V6.md`
+
+**Status: ARCHITECTURE COMPLETE - READY TO CODE**
+
+This document confirms the architecture documentation is complete. All design decisions, specifications, and implementation guides are in place. What remains is implementation work, not architectural design.
+
+Key findings:
+
+*   **Overall Scores:** Architecture Completeness 98%, Implementation Readiness 98%, Production Readiness 75%, Security Posture 78%, Operational Readiness 60%.
+
+*   **All Previously "Blocking" Items Resolved:**
+    *   **Enforcement wiring** - Fully documented in `phase-10-enforcement-checklist.md`
+    *   **Rule tiebreaker** - Added to `002-rule-matching-strategy.md`
+    *   **Provider error types** - Fully documented in `error-handling.md`
+    *   **Encryption strategy** - pgcrypto AES-256-GCM in ADR-003
+    *   **Webhook signatures** - HMAC-SHA256 (industry standard)
+
+*   **Architectural Decisions Complete:**
+    *   Database: PostgreSQL + Redis (ADR-003)
+    *   Encryption: pgcrypto AES-256-GCM
+    *   Webhook signatures: HMAC-SHA256
+    *   Expression language: simpleeval
+    *   Rule scoring: Hybrid (vector + BM25) with priority tiebreaker
+    *   Workflow orchestration: Hatchet
+    *   Brain interface: `brain.think()` returning `BrainResult`
+
+*   **Implementation Tasks Remaining:**
+    *   Tier 1 (Core Wiring): 3-5 days
+    *   Tier 2 (Completion): 2-3 days
+    *   Tier 3 (Production Ops): 5-8 days (parallel track)
+
+*   **Estimated Effort:** 2-3 weeks to production-ready with dedicated effort.

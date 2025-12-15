@@ -11,7 +11,7 @@ from uuid import UUID
 import redis.asyncio as redis
 from pydantic import BaseModel
 
-from ruche.alignment.migration.models import ScopeFilter
+from ruche.brains.focal.migration.models import ScopeFilter
 from ruche.config.models.storage import RedisSessionConfig
 from ruche.conversation.models import Channel, Session, SessionStatus
 from ruche.conversation.store import SessionStore
