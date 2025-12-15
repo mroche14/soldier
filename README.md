@@ -1,10 +1,16 @@
-# Focal
+# Ruche
 
-![Focal](docs/pic.png)
+![Ruche](docs/pic.png)
 
-**Production-grade cognitive engine for business-aligned AI support agents**
+**Production-grade runtime platform for business-aligned conversational AI agents**
 
-Focal is purpose-built for creating AI support agents that follow business rules, not just prompts. It's an API-first, multi-tenant, fully persistent architecture where agent behavior is defined through explicit business policies—scenarios, rules, and enforcement—ensuring your AI agents consistently align with company guidelines, compliance requirements, and support workflows. No more hoping the LLM follows instructions; Focal enforces business alignment at runtime.
+Ruche is a multi-tenant runtime platform for conversational AI that separates *how agents think* (brains) from *how conversations flow* (the platform). It's an API-first, fully persistent architecture where agent behavior is defined through explicit business policies—scenarios, rules, and enforcement—ensuring your AI agents consistently align with company guidelines, compliance requirements, and support workflows.
+
+**Key distinction:**
+- **Ruche** = The platform (AgentRuntime, ACF, Stores, Providers, Toolbox)
+- **FOCAL** = One brain implementation focused on alignment (rule matching, scenario orchestration, enforcement)
+
+No more hoping the LLM follows instructions; Ruche + FOCAL enforces business alignment at runtime.
 
 ---
 
@@ -43,7 +49,7 @@ Building production-grade conversational AI agents is hard. Current frameworks f
 
 ### The Solution
 
-Focal shifts from *hoping* the LLM follows instructions to *explicitly enforcing* them at runtime:
+Ruche shifts from *hoping* the LLM follows instructions to *explicitly enforcing* them at runtime:
 
 | Principle | Implementation |
 |-----------|----------------|
@@ -151,12 +157,12 @@ ruche/
 │   ├── agent/             # AgentRuntime (lifecycle, caching, invalidation)
 │   └── agenda/            # Task scheduling (bypasses ACF for proactive tasks)
 │
-├── brains/             # CognitivePipeline implementations
-│   ├── protocol.py        # CognitivePipeline abstract interface
-│   └── ruche/             # FOCAL alignment mechanic (12-phase pipeline)
-│       ├── pipeline.py    # FocalCognitivePipeline
-│       ├── phases/        # Pipeline phases (p01-p12)
+├── brains/                # Brain implementations
+│   └── focal/             # FOCAL alignment brain (11-phase pipeline)
+│       ├── engine.py      # AlignmentEngine (main orchestrator)
+│       ├── phases/        # Processing phases (context, filtering, generation, etc.)
 │       ├── models/        # TurnContext, SituationalSnapshot, etc.
+│       ├── stores/        # AgentConfigStore interface
 │       └── migration/     # Scenario version migration
 │
 ├── infrastructure/        # Consolidated infrastructure layer
@@ -189,12 +195,12 @@ ruche/
 
 | Component | Purpose |
 |-----------|---------|
-| **FOCAL** | Alignment-focused CognitivePipeline (12-phase turn processing) |
-| **ACF** | Agent Conversation Fabric (mutex, turn accumulation, supersede) |
+| **FOCAL Brain** | Alignment-focused brain implementation (11-phase turn processing) |
+| **ACF** | Agent Conversation Fabric (mutex, turn accumulation, LogicalTurnWorkflow) |
 | **AgentRuntime** | Agent lifecycle management, configuration caching |
-| **CognitivePipeline** | Protocol interface - FOCAL implements this, future mechanics can too |
+| **Brain** | Abstract interface for thinking units - FOCAL implements this, other brains can too |
 | **Interlocutor** | The conversation participant (human, agent, system, or bot) |
-| **Toolbox** | Agent's tool execution facade with three-tier visibility |
+| **Toolbox** | Agent's tool execution facade with enforcement boundary |
 
 ---
 
@@ -209,8 +215,8 @@ ruche/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/focal.git
-cd focal
+git clone https://github.com/your-org/ruche.git
+cd ruche
 
 # Install dependencies
 uv sync
@@ -237,7 +243,7 @@ docker-compose up -d
 # Run the application
 make run
 # or
-uv run python -m focal.api
+uv run python -m ruche.api
 ```
 
 ---
@@ -258,14 +264,14 @@ uv sync --dev
 
 ```bash
 # Build the image
-docker build -t focal .
+docker build -t ruche .
 
 # Run with environment variables
 docker run -e RUCHE_ENV=production \
            -e ANTHROPIC_API_KEY=your-key \
            -e DATABASE_URL=postgresql://... \
            -p 8000:8000 \
-           focal
+           ruche
 ```
 
 ### From Source
@@ -278,7 +284,7 @@ pip install -e .
 
 ## Configuration
 
-Focal uses TOML configuration files with Pydantic validation. Configuration is loaded in layers:
+Ruche uses TOML configuration files with Pydantic validation. Configuration is loaded in layers:
 
 ```
 1. Pydantic model defaults (code)
@@ -441,7 +447,7 @@ Extracted:
 
 All data is bi-temporal:
 - `valid_from` / `valid_to`: When the fact was true
-- `recorded_at`: When Focal learned it
+- `recorded_at`: When Ruche learned it
 
 ---
 
@@ -450,7 +456,7 @@ All data is bi-temporal:
 ### Base URL
 
 ```
-https://focal.example.com/v1
+https://ruche.example.com/v1
 ```
 
 ### Authentication
@@ -484,7 +490,7 @@ JWT Claims:
 ### Chat Request
 
 ```bash
-curl -X POST https://focal.example.com/v1/chat \
+curl -X POST https://ruche.example.com/v1/chat \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -633,7 +639,7 @@ class AlignmentEngine:
 uv run pytest
 
 # With coverage
-uv run pytest --cov=focal --cov-report=html
+uv run pytest --cov=ruche --cov-report=html
 
 # Specific file
 uv run pytest tests/unit/test_rules.py -v
@@ -701,12 +707,12 @@ RUCHE_API__WORKERS=4
 
 ```yaml
 services:
-  focal:
+  ruche:
     build: .
     environment:
       - RUCHE_ENV=production
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - DATABASE_URL=postgresql://focal:password@postgres:5432/focal
+      - DATABASE_URL=postgresql://ruche:password@postgres:5432/ruche
       - REDIS_URL=redis://redis:6379/0
     ports:
       - "8000:8000"
@@ -717,9 +723,9 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: focal
+      POSTGRES_USER: ruche
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: focal
+      POSTGRES_DB: ruche
 
   redis:
     image: redis:7-alpine
@@ -770,13 +776,13 @@ GET /metrics        # Prometheus metrics
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `focal_requests_total` | Counter | Total requests by endpoint/status |
-| `focal_request_duration_seconds` | Histogram | Request latency |
-| `focal_pipeline_step_duration_seconds` | Histogram | Per-step latency |
-| `focal_llm_calls_total` | Counter | LLM provider calls |
-| `focal_llm_tokens_total` | Counter | Token consumption |
-| `focal_rules_matched` | Histogram | Rules matched per turn |
-| `focal_errors_total` | Counter | Error counts |
+| `ruche_requests_total` | Counter | Total requests by endpoint/status |
+| `ruche_request_duration_seconds` | Histogram | Request latency |
+| `ruche_brain_phase_duration_seconds` | Histogram | Per-phase latency |
+| `ruche_llm_calls_total` | Counter | LLM provider calls |
+| `ruche_llm_tokens_total` | Counter | Token consumption |
+| `ruche_rules_matched` | Histogram | Rules matched per turn |
+| `ruche_errors_total` | Counter | Error counts |
 
 ### Trace Structure
 

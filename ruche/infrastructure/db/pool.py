@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 import asyncpg
 import structlog
 
-from ruche.db.errors import ConnectionError
+from ruche.infrastructure.db.errors import ConnectionError
 
 logger = structlog.get_logger(__name__)
 

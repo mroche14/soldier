@@ -2,8 +2,8 @@
 
 from ruche.brains.focal.models import Rule
 from ruche.config.models.pipeline import EnforcementConfig
+from ruche.infrastructure.providers.llm import LLMExecutor, LLMMessage
 from ruche.observability.logging import get_logger
-from ruche.infrastructure.providers.llm import LLMExecutor
 
 logger = get_logger(__name__)
 
@@ -15,18 +15,20 @@ class SubjectiveEnforcer:
     the response complies with the rule's intent.
     """
 
-    JUDGE_PROMPT_TEMPLATE = """You are a compliance judge. Evaluate if this response follows the rule.
+    SYSTEM_PROMPT = """You are a compliance judge. Your job is to determine if a response complies with a given rule.
 
-Rule: {rule_action}
+Answer with exactly one of:
+- "PASS" if the response complies with the rule
+- "FAIL: <reason>" if the response violates the rule
+
+Be strict but fair. Only output one line."""
+
+    USER_PROMPT_TEMPLATE = """Rule: {rule_action}
 
 Response to evaluate:
 "{response}"
 
-Does the response comply with the rule? Answer with:
-- "PASS" if it complies
-- "FAIL: <reason>" if it violates
-
-Be strict but fair. Only one line."""
+Does this response comply with the rule?"""
 
     def __init__(
         self,
@@ -58,14 +60,19 @@ Be strict but fair. Only one line."""
             - (True, "") if complies
             - (False, reason) if violates
         """
-        # Build judge prompt
-        prompt = self.JUDGE_PROMPT_TEMPLATE.format(
+        # Build messages for LLM
+        user_prompt = self.USER_PROMPT_TEMPLATE.format(
             rule_action=rule.action_text,
             response=response,
         )
 
+        messages = [
+            LLMMessage(role="system", content=self.SYSTEM_PROMPT),
+            LLMMessage(role="user", content=user_prompt),
+        ]
+
         try:
-            # Call LLM with temperature=0 for deterministic judgment
+            # Check if models are configured
             models = self._config.llm_judge_models
             if not models:
                 logger.warning(
@@ -74,14 +81,14 @@ Be strict but fair. Only one line."""
                 )
                 return (True, "")  # Pass by default if no models configured
 
+            # Call LLM with temperature=0 for deterministic judgment
             result = await self._llm.generate(
-                prompt=prompt,
-                model=models[0],
+                messages=messages,
                 temperature=0.0,
                 max_tokens=100,
             )
 
-            judgment = result.text.strip()
+            judgment = result.content.strip()
 
             # Parse judgment
             if judgment.upper().startswith("PASS"):

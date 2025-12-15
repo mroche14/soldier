@@ -493,21 +493,47 @@ class GenerationConfig(OpenRouterConfigMixin):
 
 
 class EnforcementConfig(BaseModel):
-    """Enforcement step configuration."""
+    """Enforcement step configuration.
+
+    Supports two-lane enforcement:
+    - Lane 1 (Deterministic): Rules with enforcement_expression use simpleeval
+    - Lane 2 (Subjective): Rules without expression use LLM-as-Judge
+    """
 
     enabled: bool = Field(default=True, description="Enable this step")
-    self_critique_enabled: bool = Field(
-        default=False,
-        description="Enable self-critique",
-    )
     max_retries: int = Field(
-        default=2,
+        default=1,
         ge=0,
-        description="Max generation retries",
+        le=3,
+        description="Max regeneration attempts on violation",
+    )
+
+    # Lane 1: Deterministic enforcement (simpleeval)
+    deterministic_enabled: bool = Field(
+        default=True,
+        description="Enable expression-based enforcement for rules with enforcement_expression",
+    )
+
+    # Lane 2: LLM-as-Judge (subjective rules)
+    llm_judge_enabled: bool = Field(
+        default=True,
+        description="Enable LLM judgment for subjective rules without enforcement_expression",
     )
     llm_judge_models: list[str] = Field(
         default_factory=lambda: ["openrouter/anthropic/claude-3-haiku-20240307"],
         description="Models for LLM-as-Judge subjective enforcement",
+    )
+
+    # Always-enforce GLOBAL constraints
+    always_enforce_global: bool = Field(
+        default=True,
+        description="Always fetch and enforce GLOBAL hard constraints, even if not matched",
+    )
+
+    # Legacy field for backwards compatibility
+    self_critique_enabled: bool = Field(
+        default=False,
+        description="Deprecated: Use llm_judge_enabled instead",
     )
 
 

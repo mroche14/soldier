@@ -1469,14 +1469,12 @@ class AlignmentEngine:
                 enforcement_time_ms=0.0,
             )
 
-        hard_rules = [m.rule for m in matched_rules if m.rule.is_hard_constraint]
         result = await self._enforcement_validator.validate(
             response=response,
             snapshot=snapshot,
             matched_rules=matched_rules,
             tenant_id=tenant_id,
             agent_id=agent_id,
-            hard_rules=hard_rules,
         )
 
         # Apply fallback if still failing

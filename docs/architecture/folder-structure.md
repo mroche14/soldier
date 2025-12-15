@@ -24,7 +24,7 @@ ruche/
 │
 ├── ruche/                 # Main Python package
 │   ├── runtime/            # Conversation runtime infrastructure
-│   ├── mechanics/          # Brain implementations
+│   ├── brains/             # Brain implementations (FOCAL, etc.)
 │   ├── infrastructure/     # Consolidated infrastructure layer
 │   ├── domain/             # Pure domain models
 │   ├── asa/                # Agent Setter Agent (meta-agent)
@@ -92,50 +92,57 @@ class AgentRuntime:
 **Purpose**: Different cognitive mechanics (FOCAL alignment, future alternatives).
 
 ```
-mechanics/
+brains/
 ├── __init__.py
-├── protocol.py             # Brain abstract interface
 │
-└── ruche/                  # FOCAL alignment mechanic
+└── focal/                  # FOCAL alignment brain
     ├── __init__.py
-    ├── brain.py         # FocalBrain (main orchestrator)
+    ├── engine.py           # AlignmentEngine (main orchestrator)
+    ├── pipeline.py         # Pipeline orchestration
+    ├── result.py           # AlignmentResult
     │
-    ├── phases/             # 12-phase brain
-    │   ├── __init__.py
-    │   ├── p01_identification.py      # Context loading
-    │   ├── p02_situational_sensor.py  # Intent + variable extraction
-    │   ├── p03_interlocutor_data_update.py # Variable validation/update
-    │   ├── p04_retrieval.py           # Candidate retrieval
-    │   ├── p05_reranking.py           # Reranking
-    │   ├── p06_scenario_orchestration.py # Scenario state management
-    │   ├── p07_tool_execution.py      # Tool execution
-    │   ├── p08_rule_filtering.py      # LLM rule filtering
-    │   ├── p09_generation.py          # Response generation
-    │   ├── p10_enforcement.py         # Constraint validation
-    │   ├── p11_persistence.py         # State persistence
-    │   └── p12_memory_ingestion.py    # Memory updates
+    ├── phases/             # Processing phases (organized by function)
+    │   ├── context/        # Context extraction and situational sensing
+    │   ├── filtering/      # Rule and scenario filtering
+    │   ├── generation/     # Response generation
+    │   ├── enforcement/    # Two-lane enforcement (deterministic + LLM judge)
+    │   ├── orchestration/  # Scenario orchestration
+    │   ├── execution/      # Tool execution
+    │   ├── planning/       # Response planning
+    │   ├── loaders/        # Data loaders (glossary, interlocutor data)
+    │   └── interlocutor/   # Interlocutor data updates
     │
-    ├── models/             # FOCAL-specific models
+    ├── models/             # FOCAL-specific domain models
     │   ├── __init__.py
-    │   ├── turn_context.py         # TurnContext (aggregated context)
-    │   ├── turn_input.py           # TurnInput (inbound event)
-    │   ├── situational_snapshot.py # Intent + candidate variables
-    │   └── glossary.py             # GlossaryItem
+    │   ├── rule.py             # Rule, MatchedRule
+    │   ├── scenario.py         # Scenario, ScenarioStep
+    │   ├── template.py         # Template, TemplateResponseMode
+    │   ├── agent.py            # Agent, AgentSettings
+    │   ├── turn_context.py     # TurnContext (aggregated context)
+    │   ├── turn_input.py       # TurnInput (inbound event)
+    │   ├── glossary.py         # GlossaryItem
+    │   └── ...
+    │
+    ├── retrieval/          # Candidate retrieval with selection strategies
+    │   ├── __init__.py
+    │   ├── rule_retriever.py
+    │   ├── scenario_retriever.py
+    │   └── memory_retriever.py
+    │
+    ├── stores/             # FOCAL-specific store interfaces
+    │   ├── __init__.py
+    │   └── agent_config_store.py  # AgentConfigStore interface
     │
     ├── migration/          # Scenario version migration
-    │   ├── __init__.py
     │   ├── planner.py      # MigrationPlanner, MigrationDeployer
     │   ├── executor.py     # MigrationExecutor (JIT reconciliation)
     │   ├── composite.py    # CompositeMapper (multi-version gaps)
-    │   ├── gap_fill.py     # GapFillService (data retrieval)
-    │   ├── diff.py         # Content hashing, transformation computation
-    │   └── models.py       # Migration models
+    │   └── gap_fill.py     # GapFillService
     │
     └── prompts/            # Jinja2 templates
         ├── situational_sensor.jinja2
         ├── rule_filter.jinja2
-        ├── generation.jinja2
-        └── ...
+        └── generation.jinja2
 ```
 
 ---
@@ -189,6 +196,19 @@ infrastructure/
 │       ├── __init__.py
 │       ├── base.py         # VectorStore interface
 │       └── postgres.py     # PostgresVectorStore (pgvector)
+│
+├── db/                     # Database utilities
+│   ├── __init__.py
+│   ├── pool.py             # PostgresPool (asyncpg connection pool)
+│   └── errors.py           # StoreError, ConnectionError, etc.
+│
+├── jobs/                   # Background job workflows (Hatchet)
+│   ├── __init__.py
+│   ├── client.py           # HatchetClient
+│   └── workflows/          # Workflow definitions
+│       ├── profile_expiry.py
+│       ├── orphan_detection.py
+│       └── schema_extraction.py
 │
 ├── providers/              # AI capability providers
 │   ├── __init__.py
@@ -523,12 +543,15 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 | Looking for... | Location |
 |----------------|----------|
 | Turn processing orchestration | `ruche/runtime/agent/runtime.py` |
-| Main brain logic | `ruche/brains/focal/brain.py` |
+| Main brain logic (AlignmentEngine) | `ruche/brains/focal/engine.py` |
 | Brain phases | `ruche/brains/focal/phases/` |
+| Two-lane enforcement | `ruche/brains/focal/phases/enforcement/` |
+| Response generation | `ruche/brains/focal/phases/generation/` |
 | Scenario migration | `ruche/brains/focal/migration/` |
-| Rule domain models | `ruche/domain/rules/rule.py` |
-| Scenario domain models | `ruche/domain/scenarios/scenario.py` |
-| Interlocutor data models | `ruche/domain/interlocutor/` |
+| FOCAL domain models | `ruche/brains/focal/models/` |
+| Rule domain models | `ruche/domain/rules/` |
+| Scenario domain models | `ruche/domain/scenarios/` |
+| Interlocutor data models | `ruche/interlocutor_data/` |
 | Memory domain models | `ruche/domain/memory/` |
 | ConfigStore implementations | `ruche/infrastructure/stores/config/` |
 | SessionStore implementations | `ruche/infrastructure/stores/session/` |
@@ -539,13 +562,16 @@ Environment-specific overrides in `config/production.toml`, `config/development.
 | Rerank provider | `ruche/infrastructure/providers/rerank/` |
 | Tool execution | `ruche/infrastructure/toolbox/` |
 | Channel adapters | `ruche/infrastructure/channels/` |
+| Database pool/errors | `ruche/infrastructure/db/` |
+| Background jobs (Hatchet) | `ruche/infrastructure/jobs/` |
 | API endpoints | `ruche/api/routes/` |
 | MCP server | `ruche/api/mcp/` |
-| Brain configuration | `ruche/config/models/brain.py` |
+| Pipeline configuration | `ruche/config/models/pipeline.py` |
 | Logging setup | `ruche/observability/logging.py` |
 | Tracing setup | `ruche/observability/tracing.py` |
 | Metrics definitions | `ruche/observability/metrics.py` |
 | ASA validators | `ruche/asa/validator/` |
+| ACF/LogicalTurnWorkflow | `ruche/runtime/acf/workflow.py` |
 
 ---
 
@@ -597,13 +623,15 @@ tests/
 
 **Runtime Layer** (`ruche/runtime/`):
 - **AgentRuntime** — Agent lifecycle, config caching, turn routing
-- **ACF (Agent Conversation Fabric)** — Turn serialization, queueing, supersession
+- **ACF (Agent Conversation Fabric)** — LogicalTurnWorkflow (Hatchet), turn serialization, message accumulation
 - **Agenda** — Proactive task scheduling
 
-**Mechanics Layer** (`ruche/brains/`):
-- **Brain** — Abstract interface for cognitive mechanics
-- **FocalBrain** — 12-phase FOCAL alignment implementation
-- **Migration** — Scenario version migration (JIT reconciliation)
+**Brains Layer** (`ruche/brains/`):
+- **FOCAL Brain** (`brains/focal/`) — Alignment-focused brain with multi-phase pipeline
+  - **AlignmentEngine** — Main orchestrator
+  - **Phases** — Context, Filtering, Generation, Enforcement, etc.
+  - **Two-Lane Enforcement** — Deterministic (simpleeval) + Subjective (LLM-as-Judge)
+  - **Migration** — Scenario version migration (JIT reconciliation)
 
 **Infrastructure Layer** (`ruche/infrastructure/`):
 - **Stores** — ConfigStore, SessionStore, MemoryStore, AuditStore, InterlocutorDataStore, VectorStore
@@ -612,7 +640,8 @@ tests/
 - **Channels** — Channel adapters (webchat, WhatsApp, Slack)
 
 **Domain Layer** (`ruche/domain/`):
-- **Pure domain models** — Rules, Scenarios, Interlocutor data, Memory (no infrastructure dependencies)
+- **Pure domain models** — Rules, Scenarios, Memory (no infrastructure dependencies)
+- **Interlocutor data** (`ruche/interlocutor_data/`) — Variable entries, field definitions
 
 **ASA (Agent Setter Agent)** (`ruche/asa/`):
 - **Validators** — Tool, scenario, brain conformance validation

@@ -5,7 +5,6 @@ from typing import Any
 
 from ruche.conversation.models import Session
 from ruche.observability.logging import get_logger
-from ruche.profile.models import CustomerProfile
 
 logger = get_logger(__name__)
 
@@ -31,27 +30,28 @@ class VariableExtractor:
     def extract_variables(
         self,
         response: str,
-        session: Session,
-        profile: CustomerProfile | None = None,
+        session: Session | None = None,
+        profile_variables: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Extract all variables from response, session, and profile.
 
         Args:
             response: Generated response text to extract from
             session: Current session for session variables
-            profile: Customer profile for profile fields
+            profile_variables: Pre-extracted profile fields as dict
 
         Returns:
             Merged dictionary of all variables (response > session > profile priority)
         """
         variables: dict[str, Any] = {}
 
-        # 1. Extract from profile (lowest priority)
-        if profile:
-            variables.update(self._extract_from_profile(profile))
+        # 1. Add profile variables (lowest priority)
+        if profile_variables:
+            variables.update(profile_variables)
 
         # 2. Extract from session (medium priority)
-        variables.update(self._extract_from_session(session))
+        if session:
+            variables.update(self._extract_from_session(session))
 
         # 3. Extract from response text (highest priority)
         variables.update(self._extract_amounts(response))
@@ -151,32 +151,5 @@ class VariableExtractor:
         # Add session-level custom variables if they exist
         if hasattr(session, "variables") and session.variables:
             variables.update(session.variables)
-
-        return variables
-
-    def _extract_from_profile(self, profile: CustomerProfile) -> dict[str, Any]:
-        """Extract variables from customer profile.
-
-        Args:
-            profile: Customer profile
-
-        Returns:
-            Dictionary of profile fields as variables
-        """
-        variables: dict[str, Any] = {}
-
-        # Add common profile fields
-        if hasattr(profile, "tier"):
-            variables["user_tier"] = profile.tier
-            variables["is_vip"] = profile.tier in ["VIP", "PREMIUM", "GOLD"]
-
-        if hasattr(profile, "country"):
-            variables["country"] = profile.country
-
-        if hasattr(profile, "language"):
-            variables["language"] = profile.language
-
-        if hasattr(profile, "lifetime_value"):
-            variables["lifetime_value"] = profile.lifetime_value
 
         return variables

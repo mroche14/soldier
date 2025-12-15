@@ -141,8 +141,10 @@ Line 2"""
         # Get the actual prompts directory
         templates_dir = (
             Path(__file__).parent.parent.parent.parent.parent
+            / "ruche"
+            / "brains"
             / "focal"
-            / "alignment"
+            / "phases"
             / "context"
             / "prompts"
         )

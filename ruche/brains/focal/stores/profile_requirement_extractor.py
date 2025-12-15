@@ -9,7 +9,7 @@ from uuid import UUID
 
 from ruche.brains.focal.models import Rule, Scenario
 from ruche.brains.focal.stores.agent_config_store import AgentConfigStore
-from ruche.jobs.workflows.schema_extraction import ExtractSchemaInput
+from ruche.infrastructure.jobs.workflows.schema_extraction import ExtractSchemaInput
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

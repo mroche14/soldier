@@ -1132,10 +1132,13 @@ class TestEnforcementFallback:
             llm_executor=gen_executor,
             prompt_builder=prompt_builder,
         )
+        # Create LLM executor for subjective enforcement - FAIL to trigger fallback
+        judge_executor = MockLLMExecutor(["FAIL: Response contains prohibited content"])
         enforcement_validator = EnforcementValidator(
             response_generator=response_generator,
             agent_config_store=stores["config"],
-            max_retries=0,  # Don't retry, go straight to fallback
+            llm_executor=judge_executor,
+            config=EnforcementConfig(max_retries=0),  # Don't retry, go straight to fallback
         )
         fallback_handler = FallbackHandler()
 

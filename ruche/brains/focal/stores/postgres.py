@@ -20,8 +20,8 @@ from ruche.brains.focal.models import (
     Variable,
 )
 from ruche.brains.focal.stores.agent_config_store import AgentConfigStore
-from ruche.db.errors import ConnectionError
-from ruche.db.pool import PostgresPool
+from ruche.infrastructure.db.errors import ConnectionError
+from ruche.infrastructure.db.pool import PostgresPool
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

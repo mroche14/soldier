@@ -13,8 +13,8 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from ruche.conversation.models import Channel
-from ruche.db.errors import ConnectionError
-from ruche.db.pool import PostgresPool
+from ruche.infrastructure.db.errors import ConnectionError
+from ruche.infrastructure.db.pool import PostgresPool
 from ruche.observability.logging import get_logger
 from ruche.interlocutor_data.enums import (
     FallbackAction,

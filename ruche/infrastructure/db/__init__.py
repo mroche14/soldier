@@ -6,7 +6,7 @@ This module contains:
 - Alembic migrations
 """
 
-from ruche.db.errors import (
+from ruche.infrastructure.db.errors import (
     ConflictError,
     ConnectionError,
     NotFoundError,

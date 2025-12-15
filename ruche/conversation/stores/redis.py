@@ -15,7 +15,7 @@ from ruche.brains.focal.migration.models import ScopeFilter
 from ruche.config.models.storage import RedisSessionConfig
 from ruche.conversation.models import Channel, Session, SessionStatus
 from ruche.conversation.store import SessionStore
-from ruche.db.errors import ConnectionError
+from ruche.infrastructure.db.errors import ConnectionError
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

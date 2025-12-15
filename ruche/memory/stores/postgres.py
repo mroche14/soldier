@@ -7,8 +7,8 @@ vector similarity search.
 import json
 from uuid import UUID
 
-from ruche.db.errors import ConnectionError
-from ruche.db.pool import PostgresPool
+from ruche.infrastructure.db.errors import ConnectionError
+from ruche.infrastructure.db.pool import PostgresPool
 from ruche.memory.models import Entity, Episode, Relationship
 from ruche.memory.store import MemoryStore
 from ruche.observability.logging import get_logger

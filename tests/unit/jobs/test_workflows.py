@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.jobs.workflows import (
+from ruche.infrastructure.jobs.workflows import (
     DetectOrphanedItemsWorkflow,
     DetectOrphansInput,
     ExpireFieldsInput,
@@ -196,13 +196,13 @@ class TestWorkflowRetryPolicy:
         # The retry policy is configured in the register_workflow function
         # with @hatchet.step(retries=3, retry_delay="60s")
         # This is a documentation test to verify the pattern exists
-        from ruche.jobs.workflows import profile_expiry
+        from ruche.infrastructure.jobs.workflows import profile_expiry
 
         # Verify the module has the register_workflow function
         assert hasattr(profile_expiry, "register_workflow")
 
     def test_orphan_workflow_has_retry_configuration(self):
         """Test DetectOrphanedItemsWorkflow uses retries in step decorator."""
-        from ruche.jobs.workflows import orphan_detection
+        from ruche.infrastructure.jobs.workflows import orphan_detection
 
         assert hasattr(orphan_detection, "register_workflow")

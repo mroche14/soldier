@@ -9,23 +9,28 @@ Four domain-aligned stores:
 Plus supporting stores:
 - InterlocutorDataStore: Customer/user data and profiles
 - VectorStore: Embedding vectors for similarity search
+
+Note: Some stores have canonical locations in top-level modules:
+- ruche/audit/ - AuditStore
+- ruche/conversation/ - SessionStore
+- ruche/vector/ - VectorStore
 """
 
-# Config Store
+# Config Store (canonical: infrastructure/stores/config/)
 from ruche.infrastructure.stores.config import (
     ConfigStore,
     InMemoryConfigStore,
     PostgresConfigStore,
 )
 
-# Session Store
-from ruche.infrastructure.stores.session import (
+# Session Store (canonical: ruche/conversation/)
+from ruche.conversation.stores import (
     InMemorySessionStore,
     RedisSessionStore,
     SessionStore,
 )
 
-# Interlocutor Data Store
+# Interlocutor Data Store (canonical: infrastructure/stores/interlocutor/)
 from ruche.infrastructure.stores.interlocutor import (
     InterlocutorDataStoreCacheLayer,
     InMemoryInterlocutorDataStore,
@@ -33,22 +38,22 @@ from ruche.infrastructure.stores.interlocutor import (
     PostgresInterlocutorDataStore,
 )
 
-# Memory Store
+# Memory Store (canonical: infrastructure/stores/memory/)
 from ruche.infrastructure.stores.memory import (
     InMemoryMemoryStore,
     MemoryStore,
     PostgresMemoryStore,
 )
 
-# Audit Store
-from ruche.infrastructure.stores.audit import (
+# Audit Store (canonical: ruche/audit/)
+from ruche.audit.stores import (
     AuditStore,
     InMemoryAuditStore,
     PostgresAuditStore,
 )
 
-# Vector Store
-from ruche.infrastructure.stores.vector import (
+# Vector Store (canonical: ruche/vector/)
+from ruche.vector import (
     EntityType,
     InMemoryVectorStore,
     PgVectorStore,

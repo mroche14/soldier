@@ -441,7 +441,9 @@ Answer: In the folder named after X.
 
 | Looking for... | Location |
 |----------------|----------|
-| Rule matching logic | `ruche/alignment/retrieval/` |
+| FOCAL brain / alignment engine | `ruche/brains/focal/` |
+| Rule matching logic | `ruche/brains/focal/retrieval/` |
+| Enforcement (two-lane) | `ruche/brains/focal/phases/enforcement/` |
 | Memory storage | `ruche/memory/stores/` |
 | Session management | `ruche/conversation/` |
 | API endpoints | `ruche/api/routes/` |
@@ -794,7 +796,7 @@ All LLM task prompts use Jinja2 templates, not string formatting:
 
 ```python
 # Good: Jinja2 template
-from ruche.alignment.context.template_loader import TemplateLoader
+from ruche.brains.focal.phases.context.template_loader import TemplateLoader
 from pathlib import Path
 
 loader = TemplateLoader(Path(__file__).parent / "prompts")
@@ -806,7 +808,7 @@ prompt = loader.render(
 )
 ```
 
-Template location: `ruche/alignment/{module}/prompts/{task}.jinja2`
+Template location: `ruche/brains/focal/phases/{phase}/prompts/{task}.jinja2`
 
 ### InterlocutorDataStore Pattern
 
@@ -832,11 +834,11 @@ Template location: `ruche/alignment/{module}/prompts/{task}.jinja2`
 Never expose actual interlocutor data values to LLMs. Use InterlocutorSchemaMask:
 
 ```python
-from ruche.alignment.context.interlocutor_schema_mask import build_interlocutor_schema_mask
+from ruche.brains.focal.phases.context.customer_schema_mask import build_customer_schema_mask
 
 # Show LLM what fields exist, not their values
-schema_mask = build_interlocutor_schema_mask(
-    interlocutor_data=interlocutor_data_store,
+schema_mask = build_customer_schema_mask(
+    customer_data=interlocutor_data_store,
     schema=interlocutor_data_fields,
 )
 
@@ -916,14 +918,14 @@ This project uses speckit for feature implementation. When implementing features
 
 ## Version Information
 
-- **Last Updated**: 2025-01-15
-- **Based on Documentation Version**: Initial architecture
+- **Last Updated**: 2025-12-15
+- **Based on Documentation Version**: Post WP-007 refactoring (brains/focal consolidation)
 
 ---
 
 ## Scenario Migration Module
 
-The migration module (`ruche/alignment/migration/`) handles version transitions when scenarios are updated while customers are mid-conversation.
+The migration module (`ruche/brains/focal/migration/`) handles version transitions when scenarios are updated while interlocutors are mid-conversation.
 
 ### Key Components
 
@@ -964,7 +966,7 @@ The migration module (`ruche/alignment/migration/`) handles version transitions 
 
 ### Testing
 
-Tests are in `tests/unit/alignment/migration/`:
+Tests are in `tests/unit/brains/focal/migration/`:
 - `test_diff.py` - Content hashing, transformation computation
 - `test_planner.py` - Plan generation, deployment
 - `test_executor.py` - JIT migration execution
@@ -981,10 +983,10 @@ The FOCAL alignment brain processes a user message through 11 phases. Phase 1 (I
 
 | Model | Location | Purpose |
 |-------|----------|---------|
-| `TurnContext` | `ruche/alignment/models/turn_context.py` | Aggregated context for a turn |
-| `TurnInput` | `ruche/alignment/models/turn_input.py` | Inbound event format |
-| `GlossaryItem` | `ruche/alignment/models/glossary.py` | Domain terminology for LLM |
-| `InterlocutorSchemaMask` | `ruche/alignment/context/interlocutor_schema_mask.py` | Privacy-safe schema view |
+| `TurnContext` | `ruche/brains/focal/models/turn_context.py` | Aggregated context for a turn |
+| `TurnInput` | `ruche/brains/focal/models/turn_input.py` | Inbound event format |
+| `GlossaryItem` | `ruche/brains/focal/models/glossary.py` | Domain terminology for LLM |
+| `SituationSnapshot` | `ruche/brains/focal/phases/context/situation_snapshot.py` | Extracted situational context |
 
 ### Interlocutor Data Module
 
@@ -1001,8 +1003,8 @@ The `ruche/interlocutor_data/` module contains:
 
 | Loader | Location | Purpose |
 |--------|----------|---------|
-| `InterlocutorDataLoader` | `ruche/alignment/loaders/interlocutor_data_loader.py` | Loads interlocutor variables |
-| `StaticConfigLoader` | `ruche/alignment/loaders/static_config_loader.py` | Loads glossary and schema |
+| `InterlocutorDataLoader` | `ruche/brains/focal/phases/loaders/interlocutor_data_loader.py` | Loads interlocutor variables |
+| `StaticConfigLoader` | `ruche/brains/focal/phases/loaders/static_config_loader.py` | Loads glossary and schema |
 
 ### Usage in AlignmentEngine
 

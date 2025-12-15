@@ -6,17 +6,17 @@ This module contains all background job workflows:
 - ExtractSchemaRequirementsWorkflow: Extracts profile requirements from scenarios
 """
 
-from ruche.jobs.workflows.orphan_detection import (
+from ruche.infrastructure.jobs.workflows.orphan_detection import (
     DetectOrphanedItemsWorkflow,
     DetectOrphansInput,
     DetectOrphansOutput,
 )
-from ruche.jobs.workflows.profile_expiry import (
+from ruche.infrastructure.jobs.workflows.profile_expiry import (
     ExpireFieldsInput,
     ExpireFieldsOutput,
     ExpireStaleFieldsWorkflow,
 )
-from ruche.jobs.workflows.schema_extraction import (
+from ruche.infrastructure.jobs.workflows.schema_extraction import (
     ExtractSchemaInput,
     ExtractSchemaOutput,
     ExtractSchemaRequirementsWorkflow,

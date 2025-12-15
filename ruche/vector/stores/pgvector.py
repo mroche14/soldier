@@ -14,7 +14,7 @@ import json
 from typing import Any
 from uuid import UUID
 
-from ruche.db.pool import PostgresPool
+from ruche.infrastructure.db.pool import PostgresPool
 from ruche.observability.logging import get_logger
 from ruche.vector.stores.base import (
     EntityType,

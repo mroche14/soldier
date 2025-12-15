@@ -68,7 +68,7 @@ def create_vector_store(config: VectorStoreConfig) -> VectorStore:
         )
 
     elif backend == "pgvector":
-        from ruche.db.pool import PostgresPool
+        from ruche.infrastructure.db.pool import PostgresPool
 
         # PostgresPool reads from DATABASE_URL or RUCHE_DATABASE_URL env vars
         pool = PostgresPool()

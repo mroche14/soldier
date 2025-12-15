@@ -23,7 +23,7 @@ from ruche.config.settings import Settings, set_toml_config
 from ruche.conversation.store import SessionStore
 from ruche.conversation.stores.inmemory import InMemorySessionStore
 from ruche.conversation.stores.redis import RedisSessionStore
-from ruche.db.pool import PostgresPool
+from ruche.infrastructure.db.pool import PostgresPool
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.embedding import EmbeddingProvider
 from ruche.vector import VectorStore, EmbeddingManager, create_vector_store
