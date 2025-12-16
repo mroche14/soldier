@@ -9,6 +9,7 @@ from ruche.infrastructure.channels.adapters import (
     SMTPEmailAdapter,
     TwilioWhatsAppAdapter,
 )
+from ruche.infrastructure.channels.defaults import DEFAULT_CHANNEL_POLICIES
 from ruche.infrastructure.channels.gateway import ChannelGateway
 from ruche.infrastructure.channels.models import (
     ChannelBinding,
@@ -16,6 +17,7 @@ from ruche.infrastructure.channels.models import (
     ChannelType,
     InboundMessage,
     OutboundMessage,
+    SupersedeMode,
 )
 
 __all__ = [
@@ -27,6 +29,9 @@ __all__ = [
     "ChannelBinding",
     "InboundMessage",
     "OutboundMessage",
+    "SupersedeMode",
+    # Defaults
+    "DEFAULT_CHANNEL_POLICIES",
     # Adapters
     "AGUIWebchatAdapter",
     "SimpleWebchatAdapter",

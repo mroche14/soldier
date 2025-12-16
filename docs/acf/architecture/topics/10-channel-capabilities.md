@@ -703,4 +703,4 @@ supports_typing_indicator = false  # Disable typing indicator
 - [../ACF_SPEC.md](../ACF_SPEC.md) - Complete ACF specification
 - [03-adaptive-accumulation.md](03-adaptive-accumulation.md) - Uses channel timing (ACF component)
 - [07-turn-gateway.md](07-turn-gateway.md) - Ingress channel handling (ACF component)
-- [09-agenda-goals.md](09-agenda-goals.md) - Outbound channel selection (Brain)
+- [09-agenda.md](09-agenda.md) - Outbound channel selection (Brain)

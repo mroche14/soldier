@@ -371,7 +371,7 @@ A comprehensive, phased implementation plan for building the Focal cognitive eng
 ### 6.5.1 Core ACF Models
 - [ ] `LogicalTurn` model (includes `turn_group_id`, status, message list)
 - [ ] `SupersedeDecision` / `SupersedeAction` types (facts vs decisions boundary)
-- [ ] `FabricEvent` model (single event write path)
+- [ ] `ACFEvent` model (single event write path)
 
 ### 6.5.2 Concurrency + Accumulation
 - [ ] Session mutex keyed by `{tenant}:{agent}:{customer}:{channel}`

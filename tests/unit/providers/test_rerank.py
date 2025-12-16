@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ruche.infrastructure.providers.rerank import JinaRerankProvider, MockRerankProvider, RerankResponse
+from ruche.infrastructure.providers.rerank import CohereRerankProvider, JinaRerankProvider, MockRerankProvider, RerankResponse
 
 
 class TestMockRerankProvider:

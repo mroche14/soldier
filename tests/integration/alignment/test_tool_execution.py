@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.phases.execution import ToolExecutor
 from ruche.brains.focal.phases.filtering.models import MatchedRule
 from ruche.brains.focal.models import Scope

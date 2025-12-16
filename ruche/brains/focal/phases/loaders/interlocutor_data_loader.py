@@ -5,12 +5,12 @@ Loads InterlocutorDataStore snapshot from InterlocutorDataStoreInterface.
 
 from uuid import UUID
 
-from ruche.interlocutor_data import (
+from ruche.domain.interlocutor import (
     InterlocutorDataField,
     InterlocutorDataStore,
 )
 from ruche.interlocutor_data.enums import ItemStatus
-from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

@@ -17,6 +17,14 @@ class LoggingConfig(BaseModel):
         default=True,
         description="Include trace ID in logs",
     )
+    redact_pii: bool = Field(
+        default=True,
+        description="Redact PII from logs",
+    )
+    redact_patterns: list[str] = Field(
+        default_factory=list,
+        description="Additional regex patterns to redact",
+    )
 
 
 class TracingConfig(BaseModel):

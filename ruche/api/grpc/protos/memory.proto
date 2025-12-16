@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package ruche.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// MemoryService provides memory management operations
+service MemoryService {
+  // Add a new episode to memory
+  rpc AddEpisode(AddEpisodeRequest) returns (AddEpisodeResponse);
+
+  // Search memory using semantic or keyword search
+  rpc Search(SearchRequest) returns (SearchResponse);
+
+  // Get a specific entity by ID
+  rpc GetEntity(GetEntityRequest) returns (Entity);
+}
+
+// Add episode request
+message AddEpisodeRequest {
+  string tenant_id = 1;
+  string content = 2;
+  string content_type = 3;
+  string source = 4;
+  map<string, string> source_metadata = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+  repeated string entity_ids = 7;
+}
+
+// Add episode response
+message AddEpisodeResponse {
+  string episode_id = 1;
+  google.protobuf.Timestamp created_at = 2;
+}
+
+// Search request
+message SearchRequest {
+  string tenant_id = 1;
+  string query = 2;
+  int32 limit = 3;
+  string search_type = 4;  // "vector" or "text"
+  float min_score = 5;
+}
+
+// Search response
+message SearchResponse {
+  repeated SearchResult results = 1;
+  int32 total_count = 2;
+}
+
+// Search result
+message SearchResult {
+  string episode_id = 1;
+  string content = 2;
+  float score = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+}
+
+// Get entity request
+message GetEntityRequest {
+  string tenant_id = 1;
+  string entity_id = 2;
+}
+
+// Entity
+message Entity {
+  string id = 1;
+  string name = 2;
+  string entity_type = 3;
+  map<string, string> attributes = 4;
+  google.protobuf.Timestamp created_at = 5;
+}

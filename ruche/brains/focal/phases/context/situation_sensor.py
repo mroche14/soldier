@@ -21,12 +21,22 @@ from ruche.brains.focal.phases.context.situation_snapshot import (
 from ruche.brains.focal.phases.context.template_loader import TemplateLoader
 from ruche.brains.focal.models.glossary import GlossaryItem
 from ruche.config.models.pipeline import SituationSensorConfig
-from ruche.interlocutor_data.models import InterlocutorDataField, InterlocutorDataStore
+from ruche.domain.interlocutor.models import InterlocutorDataField, InterlocutorDataStore
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.llm.base import LLMMessage
 from ruche.infrastructure.providers.llm.executor import LLMExecutor
 
 logger = get_logger(__name__)
+
+# Valid ISO 639-1 language codes
+VALID_LANGUAGE_CODES = {
+    "en", "es", "fr", "de", "it", "pt", "nl", "ru", "zh", "ja", "ko",
+    "ar", "hi", "tr", "pl", "vi", "th", "id", "ms", "sv", "da", "no",
+    "fi", "cs", "hu", "ro", "uk", "he", "el", "bg", "sk", "hr", "sl",
+    "sr", "lt", "lv", "et", "ca", "gl", "eu", "is", "sq", "mk", "bs",
+    "cy", "ga", "mt", "af", "sw", "ta", "te", "bn", "pa", "mr", "gu",
+    "kn", "ml", "si", "ur", "fa", "ps", "ku", "az", "uz", "kk", "ky",
+}
 
 
 class SituationSensor:
@@ -319,6 +329,10 @@ class SituationSensor:
     def _validate_language(self, language: str, message: str) -> str:
         """Validate language code (P2.6).
 
+        Validates the language code from LLM output against ISO 639-1 codes.
+        If invalid, attempts to detect language from message content.
+        Falls back to configured default if detection fails.
+
         Args:
             language: ISO 639-1 language code from LLM
             message: Original user message (for fallback detection)
@@ -326,13 +340,82 @@ class SituationSensor:
         Returns:
             Validated language code
         """
-        # Basic validation - check if it's a 2-letter code
-        if len(language) == 2 and language.isalpha():
+        # Check if LLM language is valid
+        if language and language.lower() in VALID_LANGUAGE_CODES:
             return language.lower()
 
+        # Invalid language code - try to detect
         logger.warning(
-            "invalid_language_code",
+            "invalid_language_code_from_llm",
             language=language,
-            defaulting_to="en",
+            attempting_detection=True,
         )
-        return "en"
+
+        detected = self._detect_language(message)
+        if detected:
+            logger.info(
+                "language_detected_from_message",
+                detected_language=detected,
+                original_language=language,
+            )
+            return detected
+
+        # Fallback to configured default
+        default_language = self._config.default_language if hasattr(self._config, 'default_language') else "en"
+        logger.info(
+            "language_fallback_to_default",
+            default_language=default_language,
+            original_language=language,
+        )
+        return default_language
+
+    def _detect_language(self, text: str) -> str | None:
+        """Detect language from text using simple heuristics.
+
+        Uses character ranges to detect common non-Latin scripts.
+        Returns None if no clear pattern is detected.
+
+        Args:
+            text: Text to analyze for language detection
+
+        Returns:
+            ISO 639-1 language code if detected, None otherwise
+        """
+        if not text:
+            return None
+
+        # Check for CJK characters (Chinese/Japanese/Korean)
+        # Chinese (Hanzi)
+        if any('\u4e00' <= c <= '\u9fff' for c in text):
+            return "zh"
+
+        # Japanese (Hiragana/Katakana)
+        if any('\u3040' <= c <= '\u309f' or '\u30a0' <= c <= '\u30ff' for c in text):
+            return "ja"
+
+        # Korean (Hangul)
+        if any('\uac00' <= c <= '\ud7af' for c in text):
+            return "ko"
+
+        # Arabic script
+        if any('\u0600' <= c <= '\u06ff' for c in text):
+            return "ar"
+
+        # Cyrillic script (Russian default)
+        if any('\u0400' <= c <= '\u04ff' for c in text):
+            return "ru"
+
+        # Hebrew
+        if any('\u0590' <= c <= '\u05ff' for c in text):
+            return "he"
+
+        # Thai
+        if any('\u0e00' <= c <= '\u0e7f' for c in text):
+            return "th"
+
+        # Devanagari (Hindi default)
+        if any('\u0900' <= c <= '\u097f' for c in text):
+            return "hi"
+
+        # Could not detect - return None to trigger fallback
+        return None

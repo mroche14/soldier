@@ -1,6 +1,6 @@
 """Memory stores for episodes, entities, and relationships."""
 
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.memory.stores.inmemory import InMemoryMemoryStore
 from ruche.memory.stores.postgres import PostgresMemoryStore
 

@@ -5,7 +5,7 @@ from typing import Any
 from ruche.config.models.pipeline import SummarizationConfig
 from ruche.memory.ingestion.errors import SummarizationError
 from ruche.memory.models.episode import Episode
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.llm import LLMMessage
 

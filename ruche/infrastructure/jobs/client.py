@@ -43,16 +43,20 @@ class HatchetClient:
 
         try:
             from hatchet_sdk import Hatchet
+            from hatchet_sdk.config import ClientConfig
 
-            api_key = (
-                self._config.api_key.get_secret_value()
-                if self._config.api_key
-                else None
-            )
-            self._client = Hatchet(
-                server_url=self._config.server_url,
-                api_key=api_key,
-            )
+            # Build ClientConfig kwargs
+            # ClientConfig reads HATCHET_CLIENT_TOKEN from env if not provided
+            config_kwargs = {"server_url": self._config.server_url}
+
+            # Only set token if explicitly provided in config
+            # Otherwise, let ClientConfig read from HATCHET_CLIENT_TOKEN env var
+            if self._config.api_key:
+                config_kwargs["token"] = self._config.api_key.get_secret_value()
+
+            client_config = ClientConfig(**config_kwargs)
+
+            self._client = Hatchet(config=client_config)
             logger.info(
                 "hatchet_client_initialized",
                 server_url=self._config.server_url,

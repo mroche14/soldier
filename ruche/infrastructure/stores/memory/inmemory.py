@@ -4,7 +4,7 @@ from collections import deque
 from uuid import UUID
 
 from ruche.memory.models import Entity, Episode, Relationship
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.utils.vector import cosine_similarity
 
 

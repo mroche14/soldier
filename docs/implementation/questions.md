@@ -170,7 +170,7 @@ My take : you should check that
 | `turn_manager.py` | ✅ COMPLETE | Adaptive accumulation - message shape analysis, user cadence, channel defaults |
 | `supersede.py` | ✅ COMPLETE | SupersedeCoordinator - can_supersede, enforce_decision, handle_absorb/supersede |
 | `commit_point.py` | ✅ COMPLETE | CommitPointTracker - side effect recording, commit point detection |
-| `events.py` | ✅ COMPLETE | FabricEvent with all event types defined |
+| `events.py` | ✅ COMPLETE | ACFEvent with all event types defined |
 | `workflow.py` | ⚠️ STUB | LogicalTurnWorkflow is a placeholder - raises NotImplementedError |
 | `__init__.py` | ✅ COMPLETE | Clean exports of all components |
 
@@ -180,7 +180,7 @@ My take : you should check that
 - ✅ TurnManager with adaptive accumulation (channel-aware, user cadence)
 - ✅ SupersedeCoordinator with 4-state model (SUPERSEDE/ABSORB/QUEUE/FORCE_COMPLETE)
 - ✅ CommitPointTracker with side effect policy classification
-- ✅ FabricEvent model with all event types
+- ✅ ACFEvent model with all event types
 
 **What's NOT implemented** (workflow.py stub):
 - ❌ Hatchet workflow integration (LogicalTurnWorkflow)

@@ -2,13 +2,14 @@
 
 This module contains the foundational data models for ACF:
 - LogicalTurn: Atomic unit of user intent (beats)
-- FabricTurnContext: Aggregated context for turn processing
+- FabricTurnContext: Protocol for ACF's interface to Agent
 - Supporting enums and lifecycle models
 """
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Awaitable, Callable, Protocol
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -212,32 +213,61 @@ class LogicalTurn(BaseModel):
         self.interrupt_point = at_point
 
 
-class FabricTurnContext(BaseModel):
-    """Aggregated context for turn processing in ACF.
+class FabricTurnContext(Protocol):
+    """ACF's interface to Agent - infrastructure only.
 
-    This is the ACF's view of a turn - contains metadata, routing,
-    and references to stores. Separate from pipeline-specific context.
+    IMPORTANT: This context is NOT serializable. It contains live callbacks
+    (has_pending_messages, emit_event) that point back to ACF.
+
+    Hatchet serializes only DATA (logical_turn, session_key, IDs).
+    FabricTurnContext is REBUILT fresh at the start of each Hatchet step.
     """
 
-    # Turn identification
-    logical_turn_id: UUID = Field(..., description="LogicalTurn ID")
-    turn_number: int = Field(..., description="Turn sequence in session")
-
-    # Routing
-    tenant_id: UUID
-    agent_id: UUID
-    interlocutor_id: UUID
-    session_id: UUID
+    logical_turn: LogicalTurn
+    session_key: str
     channel: str
 
-    # Session key for mutex
-    session_key: str = Field(..., description="Composite session identifier")
+    async def has_pending_messages(self) -> bool:
+        """Query: Did any new message arrive during this turn?
 
-    # Timing
-    turn_started_at: datetime = Field(default_factory=utc_now)
+        This is a FACT query. Brain decides what to do with the answer.
+        Must be monotonic within a turn (once True, stays True).
+        """
+        ...
 
-    # Metadata
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    async def emit_event(self, event: "ACFEvent") -> None:
+        """Emit an ACFEvent for routing/persistence.
+
+        ACF will:
+        - Route to appropriate listeners
+        - Persist side effects to LogicalTurn
+        - Forward to analytics/live UIs
+        """
+        ...
+
+
+@dataclass
+class FabricTurnContextImpl:
+    """Concrete implementation of FabricTurnContext with live callbacks.
+
+    This is the actual implementation that ACF creates at the start of
+    each Hatchet workflow step. It holds references to the workflow's
+    internal state and provides the callbacks to the Brain.
+    """
+
+    logical_turn: LogicalTurn
+    session_key: str
+    channel: str
+    _check_pending: Callable[[], Awaitable[bool]]
+    _route_event: Callable[["ACFEvent"], Awaitable[None]]
+
+    async def has_pending_messages(self) -> bool:
+        """Check if new messages arrived during turn processing."""
+        return await self._check_pending()
+
+    async def emit_event(self, event: "ACFEvent") -> None:
+        """Route event to ACF event handling."""
+        await self._route_event(event)
 
 
 class AccumulationHint(BaseModel):

@@ -209,7 +209,7 @@ class TestConsent:
         consent = Consent(
             consent_type="terms_of_service",
             granted=True,
-            source_session_id=uuid4(),
+            source_session_id=str(uuid4()),
             ip_address="192.168.1.1",
         )
         assert consent.source_session_id is not None

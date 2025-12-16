@@ -5,7 +5,7 @@ from typing import Any
 
 from ruche.conversation.models.session import Session
 from ruche.interlocutor_data.enums import ItemStatus
-from ruche.interlocutor_data.models import InterlocutorDataStore
+from ruche.domain.interlocutor.models import InterlocutorDataStore
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

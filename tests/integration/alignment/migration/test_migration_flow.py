@@ -10,7 +10,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.migration.diff import compute_node_content_hash
 from ruche.brains.focal.migration.models import (
     MigrationPlanStatus,

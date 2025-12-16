@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from ruche.brains.focal.phases.enforcement import EnforcementValidator, FallbackHandler
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.phases.generation.generator import ResponseGenerator
 from ruche.brains.focal.models import Rule, Scope
 from ruche.brains.focal.stores import InMemoryAgentConfigStore
@@ -120,6 +120,8 @@ async def test_enforcement_lane1_deterministic_blocks_violation() -> None:
     assert result.enforcement is not None
     assert result.enforcement.passed is True
     assert result.enforcement.regeneration_attempted is True
+    assert result.enforcement.regeneration_attempts == 1
+    assert result.enforcement.regeneration_succeeded is True
     assert "$40" in result.response
 
 
@@ -195,6 +197,8 @@ async def test_enforcement_lane2_subjective_blocks_violation() -> None:
     assert result.enforcement is not None
     assert result.enforcement.passed is True
     assert result.enforcement.regeneration_attempted is True
+    assert result.enforcement.regeneration_attempts == 1
+    assert result.enforcement.regeneration_succeeded is True
     assert "assist" in result.response.lower()
 
 
@@ -269,4 +273,82 @@ async def test_enforcement_always_enforces_global_constraints() -> None:
     # Global rule should have been enforced despite not being in matched_rules
     assert result.enforcement is not None
     assert result.enforcement.passed is True
+    assert result.enforcement.regeneration_attempted is True
+    assert result.enforcement.regeneration_attempts == 1
+    assert result.enforcement.regeneration_succeeded is True
     assert "cannot" in result.response.lower() or "advisor" in result.response.lower()
+
+
+@pytest.mark.asyncio
+async def test_enforcement_max_retries_exceeded() -> None:
+    """Test that regeneration stops after max_retries and tracks attempts correctly."""
+    tenant_id = uuid4()
+    agent_id = uuid4()
+    session_id = uuid4()
+
+    # Rule with deterministic expression - amount must be <= 50
+    hard_rule = Rule(
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+        name="Refund limit",
+        condition_text="When processing refunds",
+        action_text="Limit refunds to $50",
+        scope=Scope.GLOBAL,
+        is_hard_constraint=True,
+        enforcement_expression="amount <= 50",  # Lane 1
+        embedding=[1.0, 0.0, 0.0],
+    )
+
+    store = InMemoryAgentConfigStore()
+    await store.save_rule(hard_rule)
+
+    extraction_resp = json.dumps({"intent": "refund", "entities": [], "sentiment": "neutral", "urgency": "normal"})
+    filter_resp = json.dumps({"evaluations": [{"rule_id": str(hard_rule.id), "applicability": "APPLIES", "confidence": 0.9, "relevance": 0.9}]})
+
+    context_executor = SequenceLLMExecutor([extraction_resp])
+    filter_executor = SequenceLLMExecutor([filter_resp])
+    # All responses violate the constraint ($75 > $50)
+    gen_executor = SequenceLLMExecutor([
+        "Your refund of $75 has been processed",  # Initial (violates)
+        "Your refund of $80 has been processed",  # Attempt 1 (still violates)
+        "Your refund of $90 has been processed",  # Attempt 2 (still violates)
+        "Your refund of $85 has been processed",  # Attempt 3 (still violates)
+    ])
+    judge_executor = SequenceLLMExecutor(["PASS"])  # Not used for Lane 1
+
+    embedding_provider = StaticEmbeddingProvider([1.0, 0.0, 0.0])
+    response_generator = ResponseGenerator(llm_executor=gen_executor)
+    enforcement_validator = EnforcementValidator(
+        response_generator=response_generator,
+        agent_config_store=store,
+        llm_executor=judge_executor,
+        config=EnforcementConfig(max_retries=3),  # Allow 3 retries
+    )
+
+    engine = AlignmentEngine(
+        config_store=store,
+        embedding_provider=embedding_provider,
+        pipeline_config=PipelineConfig(),
+        enforcement_validator=enforcement_validator,
+        fallback_handler=FallbackHandler(),
+        executors={
+            "context_extraction": context_executor,
+            "rule_filtering": filter_executor,
+            "generation": gen_executor,
+        },
+    )
+
+    result = await engine.process_turn(
+        message="I want a refund",
+        session_id=session_id,
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+    )
+
+    # All attempts should fail, enforcement should still fail after max_retries
+    assert result.enforcement is not None
+    assert result.enforcement.passed is False
+    assert result.enforcement.regeneration_attempted is True
+    assert result.enforcement.regeneration_attempts == 3  # Should have tried 3 times
+    assert result.enforcement.regeneration_succeeded is False
+    assert len(result.enforcement.violations) > 0

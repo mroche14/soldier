@@ -5,6 +5,7 @@ variables, and migration plans.
 """
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ruche.brains.focal.migration.models import MigrationPlan, MigrationPlanStatus
@@ -21,6 +22,10 @@ from ruche.brains.focal.models import (
     Variable,
 )
 from ruche.interlocutor_data import InterlocutorDataField
+
+if TYPE_CHECKING:
+    from ruche.infrastructure.channels.models import ChannelBinding, ChannelPolicy
+    from ruche.runtime.toolbox.models import ToolDefinition
 
 
 class ConfigStore(ABC):
@@ -396,5 +401,61 @@ class ConfigStore(ABC):
 
         Returns:
             True if deleted, False if not found
+        """
+        pass
+
+    # Channel binding operations
+    @abstractmethod
+    async def get_channel_bindings(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> list["ChannelBinding"]:
+        """Get channel bindings for an agent.
+
+        Args:
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
+
+        Returns:
+            List of channel bindings for the agent
+        """
+        pass
+
+    @abstractmethod
+    async def get_channel_policies(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> list["ChannelPolicy"]:
+        """Get channel policies for an agent.
+
+        Resolution order:
+        1. Start with DEFAULT_CHANNEL_POLICIES
+        2. Apply tenant-wide overrides
+        3. Apply agent-specific overrides
+
+        Args:
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
+
+        Returns:
+            List of channel policies (one per channel)
+        """
+        pass
+
+    # Tool definition operations
+    @abstractmethod
+    async def get_tool_definitions(
+        self,
+        tenant_id: UUID,
+    ) -> list["ToolDefinition"]:
+        """Get all tool definitions for a tenant.
+
+        Args:
+            tenant_id: Tenant identifier
+
+        Returns:
+            List of tool definitions
         """
         pass

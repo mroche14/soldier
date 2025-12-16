@@ -73,7 +73,7 @@ End Users
 ### Option A: Defer AG-UI Entirely
 
 - Build webchat with your own simple protocol first
-- Keep internal `FabricEvent` model (AG-UI-inspired but independent)
+- Keep internal `ACFEvent` model (AG-UI-inspired but independent)
 - Add AG-UI adapter later if/when needed
 
 **Best for**: Maximum flexibility, avoiding premature dependency.
@@ -98,21 +98,28 @@ End Users
 
 ## Internal Event Model (Recommended)
 
-Regardless of AG-UI decision, FOCAL should have its own internal event model:
+Regardless of AG-UI decision, the platform has its own internal event model:
 
 ```python
-class FabricEventType(str, Enum):
-    USER_MESSAGE = "user_message"
-    ASSISTANT_MESSAGE = "assistant_message"
-    TOOL_CALLED = "tool_called"
-    TOOL_RESULT = "tool_result"
-    CONFIRMATION_REQUESTED = "confirmation_requested"
-    CONFIRMATION_RESOLVED = "confirmation_resolved"
-    STATUS_UPDATE = "status_update"  # "searching…", "calling bank…"
+class ACFEventType(str, Enum):
+    """Event types with category prefix (format: {category}.{event_name})"""
 
-class FabricEvent(BaseModel):
-    type: FabricEventType
-    session_id: str
+    # Turn lifecycle
+    TURN_STARTED = "turn.started"
+    TURN_COMPLETED = "turn.completed"
+    TURN_FAILED = "turn.failed"
+
+    # Tool execution
+    TOOL_AUTHORIZED = "tool.authorized"
+    TOOL_EXECUTED = "tool.executed"
+    TOOL_FAILED = "tool.failed"
+
+    # ... etc
+
+class ACFEvent(BaseModel):
+    type: ACFEventType
+    logical_turn_id: UUID
+    session_key: str
     payload: dict[str, Any]
     timestamp: datetime
 ```
@@ -166,7 +173,7 @@ planned = PlannedToolExecution(
 
 The original ACF_SPEC.md section suggested:
 - "ACF maps to AG-UI UI card"
-- "ACF translates FabricEvents to AG-UI"
+- "ACF translates ACFEvents to AG-UI"
 
 **This was incorrect.** ACF should be channel-agnostic. The corrected architecture:
 
@@ -180,7 +187,7 @@ AG-UI is a channel concern, implemented in a specific adapter, not ACF infrastru
 
 ## Strategic Recommendation
 
-**For now**: Design the internal `FabricEvent` model to be AG-UI-compatible but not AG-UI-dependent. Defer the AG-UI decision until webchat is an immediate priority.
+**For now**: Design the internal `ACFEvent` model to be AG-UI-compatible but not AG-UI-dependent. Defer the AG-UI decision until webchat is an immediate priority.
 
 **When webchat ships**: Implement AG-UI as a `WebchatChannelAdapter` option, not as ACF core. Keep the option to swap it out.
 

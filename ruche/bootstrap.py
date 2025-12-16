@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig
 from ruche.conversation.models import Channel, Session, SessionStatus

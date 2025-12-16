@@ -1004,45 +1004,79 @@ ACF doesn't know AG-UI exists. It just sees `channel="webchat"`.
 
 ```python
 class ACFEventType(str, Enum):
-    # ACF lifecycle events
-    TURN_STARTED = "turn_started"
-    TURN_COMPLETED = "turn_completed"
-    TURN_SUPERSEDED = "turn_superseded"
-    MESSAGE_ABSORBED = "message_absorbed"
+    """Event types with category prefix (format: {category}.{event_name})"""
 
-    # Inbound/outbound (ACF routes)
-    INBOUND_MESSAGE = "inbound_message"
-    OUTBOUND_MESSAGE = "outbound_message"
+    # Turn lifecycle
+    TURN_STARTED = "turn.started"
+    TURN_COMPLETED = "turn.completed"
+    TURN_FAILED = "turn.failed"
+    MESSAGE_ABSORBED = "turn.message_absorbed"
+    TURN_SUPERSEDED = "turn.superseded"
 
-    # Brain status (Brain emits)
-    STATUS_UPDATE = "status_update"
-    PIPELINE_ERROR = "pipeline_error"
+    # Tool execution
+    TOOL_AUTHORIZED = "tool.authorized"
+    TOOL_EXECUTED = "tool.executed"
+    TOOL_FAILED = "tool.failed"
 
-    # Tool events (Toolbox emits)
-    TOOL_SIDE_EFFECT_STARTED = "tool_side_effect_started"
-    TOOL_SIDE_EFFECT_COMPLETED = "tool_side_effect_completed"
-    TOOL_SIDE_EFFECT_FAILED = "tool_side_effect_failed"
+    # Supersede coordination
+    SUPERSEDE_REQUESTED = "supersede.requested"
+    SUPERSEDE_DECISION = "supersede.decision"
+    SUPERSEDE_EXECUTED = "supersede.executed"
+
+    # Commit points
+    COMMIT_REACHED = "commit.reached"
+
+    # Enforcement
+    ENFORCEMENT_VIOLATION = "enforcement.violation"
+
+    # Session lifecycle
+    SESSION_CREATED = "session.created"
+    SESSION_RESUMED = "session.resumed"
+    SESSION_CLOSED = "session.closed"
 ```
 
 ### 7.2 Event Model
 
 ```python
 class ACFEvent(BaseModel):
-    """Universal event model for the platform."""
+    """
+    ACF infrastructure event.
 
-    event_id: UUID = Field(default_factory=uuid4)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    Flat model with category-based filtering. Event types use
+    format: {category}.{event_name}
 
-    # Routing keys
-    tenant_id: UUID
-    agent_id: UUID
-    session_key: str
-    logical_turn_id: UUID | None = None  # Canonical ID, not turn_id
-    channel: str | None = None
+    Previously called FabricEvent.
+    """
 
-    # Event data
     type: ACFEventType
-    payload: dict[str, Any]
+    logical_turn_id: UUID
+    session_key: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+    # Optional routing context
+    tenant_id: UUID | None = None
+    agent_id: UUID | None = None
+    interlocutor_id: UUID | None = None
+
+    @property
+    def category(self) -> str:
+        """Extract category. 'turn.started' → 'turn'"""
+        return self.type.value.split(".")[0]
+
+    @property
+    def event_name(self) -> str:
+        """Extract event name. 'turn.started' → 'started'"""
+        parts = self.type.value.split(".", 1)
+        return parts[1] if len(parts) > 1 else parts[0]
+
+    def matches_pattern(self, pattern: str) -> bool:
+        """Match against pattern: '*', 'category.*', 'category.name'"""
+        if pattern == "*":
+            return True
+        if pattern.endswith(".*"):
+            return self.category == pattern[:-2]
+        return self.type.value == pattern
 ```
 
 ### 7.3 Event Flow
@@ -1062,7 +1096,7 @@ Brain/Toolbox → emit_event() → ACF FabricTurnContext
 ```
 
 **Important**: Only ONE write path to `LogicalTurn.side_effects`:
-- Toolbox emits `TOOL_SIDE_EFFECT_*` events
+- Toolbox emits `tool.executed` events
 - ACF EventRouter listens and updates TurnManager
 - No direct Toolbox → TurnManager calls
 

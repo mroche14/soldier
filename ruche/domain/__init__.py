@@ -5,11 +5,19 @@ This layer contains all domain models used throughout Focal:
 - Rules and scenarios
 - Memory (episodes, entities, relationships)
 - Glossary and templates
+- Agenda (tasks and scheduling)
 
 These are pure Pydantic models with no external dependencies.
 Store implementations live in their respective modules (stores/).
 """
 
+from ruche.domain.agenda import (
+    ScheduledTask,
+    Task,
+    TaskPriority,
+    TaskStatus,
+    TaskType,
+)
 from ruche.domain.glossary import GlossaryItem
 from ruche.domain.interlocutor import (
     Channel,
@@ -47,6 +55,12 @@ __all__ = [
     # Base models
     "TenantScopedModel",
     "AgentScopedModel",
+    # Agenda
+    "Task",
+    "ScheduledTask",
+    "TaskType",
+    "TaskStatus",
+    "TaskPriority",
     # Interlocutor
     "InterlocutorDataStore",
     "InterlocutorDataField",

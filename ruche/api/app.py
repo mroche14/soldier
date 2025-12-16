@@ -18,6 +18,7 @@ from ruche.api.middleware.rate_limit import RateLimitMiddleware
 from ruche.api.models.errors import ErrorBody, ErrorCode, ErrorDetail, ErrorResponse
 from ruche.api.routes import register_routes
 from ruche.observability.logging import get_logger
+from ruche.observability.middleware import LoggingContextMiddleware
 
 logger = get_logger(__name__)
 
@@ -54,6 +55,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Add logging context middleware (must be before other middleware that logs)
+    app.add_middleware(LoggingContextMiddleware)
 
     # Add request context middleware
     app.add_middleware(RequestContextMiddleware)

@@ -83,7 +83,7 @@ def create_matched_rule(
 def create_template(
     template_id: str | None = None,
     name: str = "Test Template",
-    text: str = "Hello {name}, how can I help?",
+    content: str = "Hello {name}, how can I help?",
     mode: TemplateResponseMode = TemplateResponseMode.SUGGEST,
 ) -> Template:
     """Create a test template."""
@@ -93,7 +93,7 @@ def create_template(
         tenant_id=uuid4(),
         agent_id=uuid4(),
         name=name,
-        text=text,
+        content=content,
         mode=mode,
     )
 
@@ -323,7 +323,7 @@ class TestResponseGenerator:
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
-            text="This is the exact template response.",
+            content="This is the exact template response.",
             mode=TemplateResponseMode.EXCLUSIVE,
         )
 
@@ -357,7 +357,7 @@ class TestResponseGenerator:
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
-            text="Hello {customer_name}, your order {order_id} is ready.",
+            content="Hello {customer_name}, your order {order_id} is ready.",
             mode=TemplateResponseMode.EXCLUSIVE,
         )
 
@@ -384,7 +384,7 @@ class TestResponseGenerator:
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
-            text="Suggested response template.",
+            content="Suggested response template.",
             mode=TemplateResponseMode.SUGGEST,
         )
 
@@ -413,7 +413,7 @@ class TestResponseGenerator:
         template_id = str(uuid4())
         template = create_template(
             template_id=template_id,
-            text="Fallback response.",
+            content="Fallback response.",
             mode=TemplateResponseMode.FALLBACK,
         )
 
@@ -468,12 +468,12 @@ class TestResponseGenerator:
 
         template1 = create_template(
             template_id=template1_id,
-            text="First exclusive template.",
+            content="First exclusive template.",
             mode=TemplateResponseMode.EXCLUSIVE,
         )
         template2 = create_template(
             template_id=template2_id,
-            text="Second exclusive template.",
+            content="Second exclusive template.",
             mode=TemplateResponseMode.EXCLUSIVE,
         )
 
@@ -557,3 +557,159 @@ class TestTemplateResponseMode:
 
         assert mode1 == mode2
         assert mode1 != mode3
+
+
+class TestLLMSemanticCategories:
+    """Tests for LLM semantic category output (P9.4)."""
+
+    @pytest.mark.asyncio
+    async def test_generate_parses_categories_from_json_output(self) -> None:
+        """Test that LLM categories are parsed from JSON output."""
+        json_response = """
+        {
+            "response": "I don't have information about that.",
+            "categories": ["KNOWLEDGE_GAP"]
+        }
+        """
+        llm = MockLLMExecutor(response=json_response)
+        generator = ResponseGenerator(llm_executor=llm)
+
+        snapshot = SituationSnapshot(
+            message="What's the parking situation?",
+            new_intent_label="parking_inquiry",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        )
+
+        result = await generator.generate(snapshot=snapshot, matched_rules=[])
+
+        assert result.response == "I don't have information about that."
+        assert len(result.llm_categories) == 1
+        from ruche.brains.focal.models.outcome import OutcomeCategory
+        assert result.llm_categories[0] == OutcomeCategory.KNOWLEDGE_GAP
+
+    @pytest.mark.asyncio
+    async def test_generate_parses_multiple_categories(self) -> None:
+        """Test that multiple categories are parsed correctly."""
+        json_response = """
+        {
+            "response": "I'm sorry, I don't have information about parking. Also, we don't offer flight booking services.",
+            "categories": ["KNOWLEDGE_GAP", "OUT_OF_SCOPE"]
+        }
+        """
+        llm = MockLLMExecutor(response=json_response)
+        generator = ResponseGenerator(llm_executor=llm)
+
+        snapshot = SituationSnapshot(
+            message="Can you help with parking and book a flight?",
+            new_intent_label="multi_request",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        )
+
+        result = await generator.generate(snapshot=snapshot, matched_rules=[])
+
+        assert len(result.llm_categories) == 2
+        from ruche.brains.focal.models.outcome import OutcomeCategory
+        assert OutcomeCategory.KNOWLEDGE_GAP in result.llm_categories
+        assert OutcomeCategory.OUT_OF_SCOPE in result.llm_categories
+
+    @pytest.mark.asyncio
+    async def test_generate_handles_empty_categories_array(self) -> None:
+        """Test that empty categories array is handled correctly."""
+        json_response = """
+        {
+            "response": "Your order has been shipped.",
+            "categories": []
+        }
+        """
+        llm = MockLLMExecutor(response=json_response)
+        generator = ResponseGenerator(llm_executor=llm)
+
+        snapshot = SituationSnapshot(
+            message="Where is my order?",
+            new_intent_label="order_status",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        )
+
+        result = await generator.generate(snapshot=snapshot, matched_rules=[])
+
+        assert result.response == "Your order has been shipped."
+        assert len(result.llm_categories) == 0
+
+    @pytest.mark.asyncio
+    async def test_generate_falls_back_for_plain_text_response(self) -> None:
+        """Test fallback to ANSWERED when LLM returns plain text."""
+        plain_text_response = "Your order has been shipped."
+        llm = MockLLMExecutor(response=plain_text_response)
+        generator = ResponseGenerator(llm_executor=llm)
+
+        snapshot = SituationSnapshot(
+            message="Where is my order?",
+            new_intent_label="order_status",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        )
+
+        result = await generator.generate(snapshot=snapshot, matched_rules=[])
+
+        assert result.response == plain_text_response
+        # Parser should add ANSWERED category as fallback
+        from ruche.brains.focal.models.outcome import OutcomeCategory
+        assert len(result.llm_categories) == 1
+        assert result.llm_categories[0] == OutcomeCategory.ANSWERED
+
+    @pytest.mark.asyncio
+    async def test_generate_handles_capability_gap_category(self) -> None:
+        """Test CAPABILITY_GAP category for action limitations."""
+        json_response = """
+        {
+            "response": "I'm unable to process refunds directly. I can help you submit a refund request.",
+            "categories": ["CAPABILITY_GAP"]
+        }
+        """
+        llm = MockLLMExecutor(response=json_response)
+        generator = ResponseGenerator(llm_executor=llm)
+
+        snapshot = SituationSnapshot(
+            message="Can you process my refund now?",
+            new_intent_label="refund_request",
+            intent_changed=False,
+            topic_changed=False,
+            tone="urgent",
+        )
+
+        result = await generator.generate(snapshot=snapshot, matched_rules=[])
+
+        from ruche.brains.focal.models.outcome import OutcomeCategory
+        assert OutcomeCategory.CAPABILITY_GAP in result.llm_categories
+
+    @pytest.mark.asyncio
+    async def test_generate_handles_safety_refusal_category(self) -> None:
+        """Test SAFETY_REFUSAL category for policy violations."""
+        json_response = """
+        {
+            "response": "I cannot provide personal information about other users for privacy reasons.",
+            "categories": ["SAFETY_REFUSAL"]
+        }
+        """
+        llm = MockLLMExecutor(response=json_response)
+        generator = ResponseGenerator(llm_executor=llm)
+
+        snapshot = SituationSnapshot(
+            message="Can you give me John's email address?",
+            new_intent_label="privacy_violation",
+            intent_changed=False,
+            topic_changed=False,
+            tone="neutral",
+        )
+
+        result = await generator.generate(snapshot=snapshot, matched_rules=[])
+
+        from ruche.brains.focal.models.outcome import OutcomeCategory
+        assert OutcomeCategory.SAFETY_REFUSAL in result.llm_categories

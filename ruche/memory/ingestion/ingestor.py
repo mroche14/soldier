@@ -11,7 +11,7 @@ from ruche.conversation.models.turn import Turn
 from ruche.memory.ingestion.errors import IngestionError
 from ruche.memory.ingestion.queue import TaskQueue
 from ruche.memory.models.episode import Episode
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.embedding.base import EmbeddingProvider
 

@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 # Load .env file
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.models import Rule, Scenario, ScenarioStep, Template, Scope
 from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import OpenRouterProviderConfig, PipelineConfig

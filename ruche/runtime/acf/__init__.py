@@ -16,10 +16,19 @@ CognitivePipeline owns WHAT (decisions, semantics, behavior).
 """
 
 from ruche.runtime.acf.commit_point import CommitPointTracker
-from ruche.runtime.acf.events import FabricEvent, FabricEventType
+from ruche.runtime.acf.event_router import EventListener, EventRouter
+from ruche.runtime.acf.events import ACFEvent, ACFEventType
+from ruche.runtime.acf.gateway import (
+    ActiveTurnIndex,
+    RawMessage,
+    TurnAction,
+    TurnDecision,
+    TurnGateway,
+)
 from ruche.runtime.acf.models import (
     AccumulationHint,
     FabricTurnContext,
+    FabricTurnContextImpl,
     LogicalTurn,
     LogicalTurnStatus,
     MessageShape,
@@ -44,9 +53,11 @@ __all__ = [
     "LogicalTurn",
     "LogicalTurnStatus",
     "FabricTurnContext",
+    "FabricTurnContextImpl",
     "AccumulationHint",
     "MessageShape",
     "UserCadenceStats",
+    "RawMessage",
     # Supersede models
     "SupersedeAction",
     "SupersedeDecision",
@@ -55,14 +66,21 @@ __all__ = [
     "SideEffectPolicy",
     "ScenarioStepRef",
     # Events
-    "FabricEvent",
-    "FabricEventType",
+    "ACFEvent",
+    "ACFEventType",
+    "EventListener",
+    "EventRouter",
+    # Gateway models
+    "TurnAction",
+    "TurnDecision",
     # Components
     "SessionMutex",
     "TurnManager",
     "SupersedeCoordinator",
     "CommitPointTracker",
     "LogicalTurnWorkflow",
+    "TurnGateway",
+    "ActiveTurnIndex",
     # Utilities
     "build_session_key",
     "build_tool_idempotency_key",

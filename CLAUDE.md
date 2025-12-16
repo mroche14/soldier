@@ -36,41 +36,13 @@ This project provides a **production-grade runtime platform** for conversational
 
 ## Pre-Implementation Protocol
 
-### 0. Follow the Implementation Plan
-
-**CRITICAL**: Before implementing ANY feature, consult `IMPLEMENTATION_PLAN.md` at the project root.
-
-This plan defines:
-- **20 phases** of implementation in dependency order
-- **Checkboxes** for tracking progress on each task
-- **Document references** for each phase
-- **The correct order** to build components (skeleton → config → observability → models → stores → providers → brain → API)
-
-When asked to implement something:
-1. Find the relevant phase in `IMPLEMENTATION_PLAN.md`
-2. Check prerequisites are complete (earlier phases)
-3. Follow the task list for that phase
-4. **Mark checkboxes as complete when done** (change `- [ ]` to `- [x]`)
-5. Reference the linked documentation for details
-
-**Do NOT skip phases or implement out of order** - the plan is designed so each phase builds on the previous ones.
-
-### Checkbox Tracking Reminder
-
-**CRITICAL**: After completing ANY implementation task from `IMPLEMENTATION_PLAN.md`:
-1. Immediately update the corresponding checkbox(es) from `- [ ]` to `- [x]`
-2. This includes all sub-items under a task
-3. Do NOT batch checkbox updates - mark each item complete as soon as it's done
-4. This keeps the implementation plan accurate and helps track overall progress
-
 ### 1. Documentation is the Source of Truth
 
 Before writing any code, you MUST:
 
-1. **Check `IMPLEMENTATION_PLAN.md`** - Find which phase covers your task
-2. **Read `docs/doc_skeleton.md`** - This is the index of all documentation
-3. **Search relevant docs** using `mgrep` or `grep` for keywords related to your task
-4. **Read the specific design docs** that cover your feature area
+1. **Read `docs/doc_skeleton.md`** - This is the index of all documentation
+2. **Search relevant docs** using `mgrep` or `grep` for keywords related to your task
+3. **Read the specific design docs** that cover your feature area
 
 The documentation contains all architectural decisions, data models, and design rationale. Code should implement what the docs describe, not invent new patterns.
 
@@ -87,7 +59,6 @@ Before modifying existing code:
 
 | Topic | Document |
 |-------|----------|
-| **Implementation Plan** | `IMPLEMENTATION_PLAN.md` |
 | Project vision & goals | `docs/vision.md` |
 | Architecture overview | `docs/architecture/overview.md` |
 | Folder structure | `docs/architecture/folder-structure.md` |
@@ -107,7 +78,7 @@ Before modifying existing code:
 | Error handling | `docs/architecture/error-handling.md` |
 | Scenario updates | `docs/design/scenario-update-methods.md` |
 | Interlocutor data | `docs/design/interlocutor-data.md` |
-| **Implementation status** | `docs/ARCHITECTURE_READINESS_REPORT_V5.md` |
+| **Architecture status** | `docs/ARCHITECTURE_READINESS_REPORT_V6.md` |
 | Testing strategy | `docs/development/testing-strategy.md` |
 | Unit testing guide | `docs/development/unit-testing.md` |
 

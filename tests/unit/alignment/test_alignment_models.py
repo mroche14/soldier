@@ -161,7 +161,7 @@ class TestTemplate:
             tenant_id=uuid4(),
             agent_id=uuid4(),
             name="Welcome Template",
-            text="Hello {name}, how can I help you?",
+            content="Hello {name}, how can I help you?",
         )
         assert template.name == "Welcome Template"
         assert template.mode == TemplateResponseMode.SUGGEST
@@ -173,7 +173,7 @@ class TestTemplate:
                 tenant_id=uuid4(),
                 agent_id=uuid4(),
                 name="Test",
-                text="Test text",
+                content="Test text",
                 mode=mode,
             )
             assert template.mode == mode

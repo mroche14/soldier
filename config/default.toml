@@ -281,10 +281,23 @@ whatsapp_max_length = 4096
 sms_max_length = 160
 email_add_signature = true
 
+# Phase 10: Enforcement (Two-Lane Validation + Regeneration Retry)
 [pipeline.enforcement]
 enabled = true
+
+# Regeneration retry configuration
+max_retries = 2  # Max regeneration attempts on violation (0 = no retry, just fallback)
+
+# Two-lane enforcement
+deterministic_enabled = true   # Lane 1: Rules with enforcement_expression (simpleeval)
+llm_judge_enabled = true        # Lane 2: Rules without expression (LLM-as-Judge)
+llm_judge_models = ["openrouter/anthropic/claude-3-haiku-20240307"]
+
+# GLOBAL constraint enforcement
+always_enforce_global = true    # Always fetch and enforce GLOBAL hard constraints
+
+# Legacy field (deprecated, use llm_judge_enabled instead)
 self_critique_enabled = false
-max_retries = 2
 
 # =============================================================================
 # Memory Ingestion Configuration
@@ -340,9 +353,12 @@ temperature = 0.5
 level = "INFO"
 format = "json"
 include_trace_id = true
+redact_pii = true
+redact_patterns = []
 
 [observability.tracing]
 enabled = true
+otlp_endpoint = ""
 service_name = "focal"
 sample_rate = 1.0
 

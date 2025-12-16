@@ -1,6 +1,16 @@
 """Customer schema mask model.
 
 Privacy-safe view of customer data schema for LLM.
+
+NOTE: This is intentionally separate from ruche.domain.interlocutor.schema_mask.InterlocutorSchemaMask.
+While InterlocutorSchemaMask is the general-purpose domain model with full feature set
+(6 fields: name, scope, value_type, exists, verified, requires_confirmation),
+CustomerSchemaMask is a FOCAL-specific variant optimized for Phase 2 (Situational Sensor)
+LLM prompts with a minimal field set (4 fields: scope, type, exists, display_name).
+
+The simpler structure reduces token usage in LLM prompts while providing exactly
+the information needed for situation sensing. If you need the full schema mask,
+use InterlocutorSchemaMask from ruche.domain.interlocutor instead.
 """
 
 from typing import Literal

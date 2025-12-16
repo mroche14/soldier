@@ -27,7 +27,7 @@ from ruche.interlocutor_data.models import (
     InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.interlocutor_data.store import InterlocutorDataStore
+from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore
 
 logger = get_logger(__name__)
 

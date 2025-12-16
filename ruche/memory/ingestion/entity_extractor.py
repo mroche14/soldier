@@ -20,7 +20,7 @@ from ruche.memory.ingestion.models import (
 from ruche.memory.models.entity import Entity
 from ruche.memory.models.episode import Episode
 from ruche.memory.models.relationship import Relationship
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.llm import LLMMessage
 

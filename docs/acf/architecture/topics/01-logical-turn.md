@@ -428,29 +428,35 @@ async def test_cannot_absorb_after_irreversible():
 
 ---
 
-## ACF ACFEvent Stream
+## ACF Event Stream
 
 ACF emits events for observability and audit:
 
 ```python
 class ACFEventType(str, Enum):
-    TURN_STARTED = "turn_started"
-    MESSAGE_ABSORBED = "message_absorbed"
-    SUPERSEDE_REQUESTED = "supersede_requested"
-    SUPERSEDE_EXECUTED = "supersede_executed"
-    COMMIT_POINT_REACHED = "commit_point_reached"
-    TOOL_AUTHORIZED = "tool_authorized"
-    TOOL_EXECUTED = "tool_executed"
-    TURN_COMPLETED = "turn_completed"
-    TURN_FAILED = "turn_failed"
+    """Event types with category prefix (format: {category}.{event_name})"""
+    TURN_STARTED = "turn.started"
+    MESSAGE_ABSORBED = "turn.message_absorbed"
+    SUPERSEDE_REQUESTED = "supersede.requested"
+    SUPERSEDE_EXECUTED = "supersede.executed"
+    COMMIT_REACHED = "commit.reached"
+    TOOL_AUTHORIZED = "tool.authorized"
+    TOOL_EXECUTED = "tool.executed"
+    TURN_COMPLETED = "turn.completed"
+    TURN_FAILED = "turn.failed"
 
 class ACFEvent(BaseModel):
-    """Audit event emitted by ACF."""
-    type: ACFEventType  # Canonical field name (not event_type)
+    """ACF infrastructure event."""
+    type: ACFEventType
     logical_turn_id: UUID
     session_key: str
     timestamp: datetime
-    payload: dict
+    payload: dict[str, Any]
+
+    # Optional routing context
+    tenant_id: UUID | None = None
+    agent_id: UUID | None = None
+    interlocutor_id: UUID | None = None
 ```
 
 ---

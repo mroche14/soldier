@@ -26,7 +26,7 @@ focal/runtime/
 - `LogicalTurn` - Atomic unit of user intent (may contain multiple messages)
 - `FabricTurnContext` - Aggregated context for turn processing
 - `SupersedeDecision` - Pipeline's decision on handling new messages
-- `FabricEvent` - Infrastructure events for observability
+- `ACFEvent` - Infrastructure events for observability
 
 **Principles**:
 - ACF owns WHEN and HOW (timing, coordination, safety)

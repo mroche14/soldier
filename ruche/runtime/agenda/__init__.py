@@ -11,7 +11,7 @@ Key distinction from ACF:
 - Direct pipeline execution
 """
 
-from ruche.runtime.agenda.models import (
+from ruche.domain.agenda import (
     ScheduledTask,
     Task,
     TaskPriority,
@@ -19,6 +19,8 @@ from ruche.runtime.agenda.models import (
     TaskType,
 )
 from ruche.runtime.agenda.scheduler import AgendaScheduler
+from ruche.runtime.agenda.store import TaskStore
+from ruche.runtime.agenda.stores.inmemory import InMemoryTaskStore
 from ruche.runtime.agenda.workflow import TaskWorkflow
 
 __all__ = [
@@ -31,4 +33,7 @@ __all__ = [
     # Components
     "AgendaScheduler",
     "TaskWorkflow",
+    # Storage
+    "TaskStore",
+    "InMemoryTaskStore",
 ]

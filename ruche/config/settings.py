@@ -10,6 +10,7 @@ from pydantic_settings import (
 )
 
 from ruche.config.models.api import APIConfig
+from ruche.config.models.jobs import JobsConfig
 from ruche.config.models.migration import ScenarioMigrationConfig
 from ruche.config.models.observability import ObservabilityConfig
 from ruche.config.models.pipeline import PipelineConfig
@@ -91,6 +92,10 @@ class Settings(BaseSettings):
     scenario_migration: ScenarioMigrationConfig = Field(
         default_factory=ScenarioMigrationConfig,
         description="Scenario migration configuration",
+    )
+    jobs: JobsConfig = Field(
+        default_factory=JobsConfig,
+        description="Background jobs configuration",
     )
 
     @classmethod

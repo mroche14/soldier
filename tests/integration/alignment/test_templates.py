@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.models import Scope
 from ruche.brains.focal.models.enums import TemplateResponseMode
 from ruche.brains.focal.models.template import Template
@@ -68,7 +68,7 @@ async def test_exclusive_template_skips_generation() -> None:
         tenant_id=tenant_id,
         agent_id=agent_id,
         name="Exclusive template",
-        text="Exact response.",
+        content="Exact response.",
         mode=TemplateResponseMode.EXCLUSIVE,
         scope=Scope.GLOBAL,
     )

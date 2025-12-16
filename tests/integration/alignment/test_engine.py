@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.stores import InMemoryAgentConfigStore
 from ruche.config.models.pipeline import PipelineConfig
 from ruche.infrastructure.providers.embedding import EmbeddingProvider, EmbeddingResponse

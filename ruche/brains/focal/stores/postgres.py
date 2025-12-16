@@ -1315,17 +1315,107 @@ class PostgresAgentConfigStore(AgentConfigStore):
             return None
         return [float(x) for x in clean.split(",")]
 
-    # Intent operations (Phase 4)
-    # TODO: Implement with proper SQL after database migration is created
-    async def get_intent(self, tenant_id: UUID, intent_id: UUID) -> Intent | None:
-        """Get an intent by ID.
-
-        TODO: Implement with intents table query after migration.
-        """
-        raise NotImplementedError(
-            "Intent operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
+    def _row_to_intent(self, row) -> Intent:
+        """Convert database row to Intent model."""
+        return Intent(
+            id=row["id"],
+            tenant_id=row["tenant_id"],
+            agent_id=row["agent_id"],
+            name=row["label"],
+            description=row["description"],
+            example_phrases=row["examples"] if row["examples"] else [],
+            embedding=None,
+            embedding_model=None,
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            enabled=row["enabled"],
         )
+
+    def _row_to_rule_relationship(self, row):
+        """Convert database row to RuleRelationship model."""
+        from ruche.brains.focal.models import RuleRelationship, RuleRelationshipKind
+
+        return RuleRelationship(
+            id=row["id"],
+            tenant_id=row["tenant_id"],
+            agent_id=row["agent_id"],
+            source_rule_id=row["from_rule_id"],
+            target_rule_id=row["to_rule_id"],
+            kind=RuleRelationshipKind(row["relationship_type"]),
+            created_at=row["created_at"],
+            deleted_at=row["deleted_at"],
+        )
+
+    def _row_to_glossary_item(self, row):
+        """Convert database row to GlossaryItem model."""
+        from ruche.brains.focal.models import GlossaryItem
+
+        return GlossaryItem(
+            id=row["id"],
+            tenant_id=row["tenant_id"],
+            agent_id=row["agent_id"],
+            term=row["term"],
+            definition=row["definition"],
+            usage_hint=row["usage_hint"],
+            aliases=row["aliases"] if row["aliases"] else [],
+            category=row["category"],
+            priority=row["priority"],
+            enabled=row["enabled"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )
+
+    def _row_to_interlocutor_data_field(self, row):
+        """Convert database row to InterlocutorDataField model."""
+        from ruche.domain.interlocutor.models import InterlocutorDataField, ValidationMode
+
+        return InterlocutorDataField(
+            id=row["id"],
+            tenant_id=row["tenant_id"],
+            agent_id=row["agent_id"],
+            name=row["name"],
+            display_name=row["display_name"],
+            description=row["description"],
+            value_type=row["value_type"],
+            validation_regex=row["validation_regex"],
+            validation_tool_id=row["validation_tool_id"],
+            allowed_values=row["allowed_values"],
+            validation_mode=ValidationMode(row["validation_mode"]),
+            required_verification=row["required_verification"],
+            verification_methods=row["verification_methods"] if row["verification_methods"] else [],
+            collection_prompt=row["collection_prompt"],
+            extraction_examples=row["extraction_examples"] if row["extraction_examples"] else [],
+            extraction_prompt_hint=row["extraction_prompt_hint"],
+            is_pii=row["is_pii"],
+            encryption_required=row["encryption_required"],
+            retention_days=row["retention_days"],
+            freshness_seconds=row["freshness_seconds"],
+            enabled=row["enabled"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )
+
+    # Intent operations (Phase 4)
+    async def get_intent(self, tenant_id: UUID, intent_id: UUID) -> Intent | None:
+        """Get an intent by ID."""
+        try:
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """
+                    SELECT id, tenant_id, agent_id, label, description,
+                           examples, enabled, created_at, updated_at, deleted_at
+                    FROM intents
+                    WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
+                    """,
+                    intent_id,
+                    tenant_id,
+                )
+                if row:
+                    return self._row_to_intent(row)
+                return None
+        except Exception as e:
+            logger.error("postgres_get_intent_error", intent_id=str(intent_id), error=str(e))
+            raise ConnectionError(f"Failed to get intent: {e}", cause=e) from e
 
     async def get_intents(
         self,
@@ -1334,70 +1424,175 @@ class PostgresAgentConfigStore(AgentConfigStore):
         *,
         enabled_only: bool = True,
     ) -> list[Intent]:
-        """Get all intents for an agent.
+        """Get all intents for an agent."""
+        try:
+            async with self._pool.acquire() as conn:
+                query = """
+                    SELECT id, tenant_id, agent_id, label, description,
+                           examples, enabled, created_at, updated_at, deleted_at
+                    FROM intents
+                    WHERE tenant_id = $1 AND agent_id = $2 AND deleted_at IS NULL
+                """
+                if enabled_only:
+                    query += " AND enabled = true"
+                query += " ORDER BY label ASC"
 
-        TODO: Implement with intents table query after migration.
-        """
-        raise NotImplementedError(
-            "Intent operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
-        )
+                rows = await conn.fetch(query, tenant_id, agent_id)
+                return [self._row_to_intent(row) for row in rows]
+        except Exception as e:
+            logger.error("postgres_get_intents_error", agent_id=str(agent_id), error=str(e))
+            raise ConnectionError(f"Failed to get intents: {e}", cause=e) from e
 
     async def save_intent(self, intent: Intent) -> UUID:
-        """Save an intent, returning its ID.
-
-        TODO: Implement with intents table INSERT/UPDATE after migration.
-        """
-        raise NotImplementedError(
-            "Intent operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
-        )
+        """Save an intent, returning its ID."""
+        try:
+            async with self._pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO intents (
+                        id, tenant_id, agent_id, label, description,
+                        examples, enabled, created_at, updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    ON CONFLICT (id) DO UPDATE SET
+                        label = EXCLUDED.label,
+                        description = EXCLUDED.description,
+                        examples = EXCLUDED.examples,
+                        enabled = EXCLUDED.enabled,
+                        updated_at = NOW()
+                    """,
+                    intent.id,
+                    intent.tenant_id,
+                    intent.agent_id,
+                    intent.name,
+                    intent.description,
+                    intent.example_phrases,
+                    intent.enabled,
+                    intent.created_at,
+                    datetime.now(UTC),
+                )
+                logger.debug("intent_saved", intent_id=str(intent.id))
+                return intent.id
+        except Exception as e:
+            logger.error("postgres_save_intent_error", intent_id=str(intent.id), error=str(e))
+            raise ConnectionError(f"Failed to save intent: {e}", cause=e) from e
 
     async def delete_intent(self, tenant_id: UUID, intent_id: UUID) -> bool:
-        """Soft-delete an intent.
-
-        TODO: Implement with intents table UPDATE after migration.
-        """
-        raise NotImplementedError(
-            "Intent operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-04-retrieval-selection-checklist.md"
-        )
+        """Soft-delete an intent."""
+        try:
+            async with self._pool.acquire() as conn:
+                result = await conn.execute(
+                    """
+                    UPDATE intents
+                    SET deleted_at = NOW()
+                    WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
+                    """,
+                    intent_id,
+                    tenant_id,
+                )
+                deleted = result == "UPDATE 1"
+                if deleted:
+                    logger.info("intent_deleted", intent_id=str(intent_id))
+                return deleted
+        except Exception as e:
+            logger.error("postgres_delete_intent_error", intent_id=str(intent_id), error=str(e))
+            raise ConnectionError(f"Failed to delete intent: {e}", cause=e) from e
 
     # Rule relationship operations
     async def get_rule_relationships(
         self,
         tenant_id: UUID,
         agent_id: UUID,
+        *,
         rule_ids: list[UUID] | None = None,
     ) -> list:
-        """Get rule relationships, optionally filtered by rule IDs.
+        """Get rule relationships, optionally filtered by rule IDs."""
+        try:
+            async with self._pool.acquire() as conn:
+                query = """
+                    SELECT id, tenant_id, agent_id, from_rule_id, to_rule_id,
+                           relationship_type, created_at, deleted_at
+                    FROM rule_relationships
+                    WHERE tenant_id = $1 AND agent_id = $2 AND deleted_at IS NULL
+                """
+                params: list = [tenant_id, agent_id]
 
-        TODO: Implement with rule_relationships table query after migration.
-        """
-        raise NotImplementedError(
-            "Rule relationship operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-05-rule-selection-checklist.md"
-        )
+                if rule_ids:
+                    params.append(rule_ids)
+                    query += f" AND (from_rule_id = ANY(${len(params)}) OR to_rule_id = ANY(${len(params)}))"
 
-    async def save_rule_relationship(self, tenant_id: UUID, relationship) -> None:
-        """Save a rule relationship.
+                query += " ORDER BY created_at DESC"
 
-        TODO: Implement with rule_relationships table INSERT/UPDATE after migration.
-        """
-        raise NotImplementedError(
-            "Rule relationship operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-05-rule-selection-checklist.md"
-        )
+                rows = await conn.fetch(query, *params)
+                return [self._row_to_rule_relationship(row) for row in rows]
+        except Exception as e:
+            logger.error(
+                "postgres_get_rule_relationships_error",
+                agent_id=str(agent_id),
+                error=str(e),
+            )
+            raise ConnectionError(f"Failed to get rule relationships: {e}", cause=e) from e
 
-    async def delete_rule_relationship(self, tenant_id: UUID, relationship_id: UUID) -> None:
-        """Delete a rule relationship.
+    async def save_rule_relationship(self, relationship) -> UUID:
+        """Save a rule relationship, returning its ID."""
+        try:
+            async with self._pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO rule_relationships (
+                        id, tenant_id, agent_id, from_rule_id, to_rule_id,
+                        relationship_type, created_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    ON CONFLICT (id) DO UPDATE SET
+                        from_rule_id = EXCLUDED.from_rule_id,
+                        to_rule_id = EXCLUDED.to_rule_id,
+                        relationship_type = EXCLUDED.relationship_type
+                    """,
+                    relationship.id,
+                    relationship.tenant_id,
+                    relationship.agent_id,
+                    relationship.source_rule_id,
+                    relationship.target_rule_id,
+                    relationship.kind.value,
+                    relationship.created_at,
+                )
+                logger.debug("rule_relationship_saved", relationship_id=str(relationship.id))
+                return relationship.id
+        except Exception as e:
+            logger.error(
+                "postgres_save_rule_relationship_error",
+                relationship_id=str(relationship.id),
+                error=str(e),
+            )
+            raise ConnectionError(f"Failed to save rule relationship: {e}", cause=e) from e
 
-        TODO: Implement with rule_relationships table DELETE after migration.
-        """
-        raise NotImplementedError(
-            "Rule relationship operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-05-rule-selection-checklist.md"
-        )
+    async def delete_rule_relationship(
+        self,
+        tenant_id: UUID,
+        relationship_id: UUID,
+    ) -> bool:
+        """Soft-delete a rule relationship."""
+        try:
+            async with self._pool.acquire() as conn:
+                result = await conn.execute(
+                    """
+                    UPDATE rule_relationships
+                    SET deleted_at = NOW()
+                    WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
+                    """,
+                    relationship_id,
+                    tenant_id,
+                )
+                deleted = result == "UPDATE 1"
+                if deleted:
+                    logger.info("rule_relationship_deleted", relationship_id=str(relationship_id))
+                return deleted
+        except Exception as e:
+            logger.error(
+                "postgres_delete_rule_relationship_error",
+                relationship_id=str(relationship_id),
+                error=str(e),
+            )
+            raise ConnectionError(f"Failed to delete rule relationship: {e}", cause=e) from e
 
     # Glossary operations (Phase 1)
     async def get_glossary_items(
@@ -1407,28 +1602,180 @@ class PostgresAgentConfigStore(AgentConfigStore):
         *,
         enabled_only: bool = True,
     ) -> list:
-        """Get all glossary items for an agent.
+        """Get all glossary items for an agent."""
+        try:
+            async with self._pool.acquire() as conn:
+                query = """
+                    SELECT id, tenant_id, agent_id, term, definition,
+                           usage_hint, aliases, category, priority, enabled,
+                           created_at, updated_at
+                    FROM glossary_items
+                    WHERE tenant_id = $1 AND agent_id = $2
+                """
+                if enabled_only:
+                    query += " AND enabled = true"
+                query += " ORDER BY priority DESC, term ASC"
 
-        TODO: Implement with glossary_items table query after migration.
-        """
-        from ruche.brains.focal.models.glossary import GlossaryItem
-
-        raise NotImplementedError(
-            "Glossary operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
-        )
+                rows = await conn.fetch(query, tenant_id, agent_id)
+                return [self._row_to_glossary_item(row) for row in rows]
+        except Exception as e:
+            logger.error(
+                "postgres_get_glossary_items_error",
+                agent_id=str(agent_id),
+                error=str(e),
+            )
+            raise ConnectionError(f"Failed to get glossary items: {e}", cause=e) from e
 
     async def save_glossary_item(self, item) -> UUID:
-        """Save a glossary item.
+        """Save a glossary item, returning its ID."""
+        try:
+            async with self._pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO glossary_items (
+                        id, tenant_id, agent_id, term, definition,
+                        usage_hint, aliases, category, priority, enabled,
+                        created_at, updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                    ON CONFLICT (id) DO UPDATE SET
+                        term = EXCLUDED.term,
+                        definition = EXCLUDED.definition,
+                        usage_hint = EXCLUDED.usage_hint,
+                        aliases = EXCLUDED.aliases,
+                        category = EXCLUDED.category,
+                        priority = EXCLUDED.priority,
+                        enabled = EXCLUDED.enabled,
+                        updated_at = NOW()
+                    """,
+                    item.id,
+                    item.tenant_id,
+                    item.agent_id,
+                    item.term,
+                    item.definition,
+                    item.usage_hint,
+                    item.aliases,
+                    item.category,
+                    item.priority,
+                    item.enabled,
+                    item.created_at,
+                    datetime.now(UTC),
+                )
+                logger.debug("glossary_item_saved", glossary_item_id=str(item.id))
+                return item.id
+        except Exception as e:
+            logger.error(
+                "postgres_save_glossary_item_error",
+                glossary_item_id=str(item.id),
+                error=str(e),
+            )
+            raise ConnectionError(f"Failed to save glossary item: {e}", cause=e) from e
 
-        TODO: Implement with glossary_items table INSERT/UPDATE after migration.
-        """
-        raise NotImplementedError(
-            "Glossary operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
-        )
+    # Interlocutor data field operations (Phase 1)
+    async def get_interlocutor_data_fields(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        *,
+        enabled_only: bool = True,
+    ) -> list:
+        """Get all interlocutor data field definitions for an agent."""
+        try:
+            async with self._pool.acquire() as conn:
+                query = """
+                    SELECT id, tenant_id, agent_id, name, display_name, description,
+                           value_type, validation_regex, validation_tool_id,
+                           allowed_values, validation_mode, required_verification,
+                           verification_methods, collection_prompt, extraction_examples,
+                           extraction_prompt_hint, is_pii, encryption_required,
+                           retention_days, freshness_seconds, enabled,
+                           created_at, updated_at
+                    FROM profile_field_definitions
+                    WHERE tenant_id = $1 AND agent_id = $2
+                """
+                if enabled_only:
+                    query += " AND enabled = true"
+                query += " ORDER BY name ASC"
 
-    # Customer data field operations (Phase 1)
+                rows = await conn.fetch(query, tenant_id, agent_id)
+                return [self._row_to_interlocutor_data_field(row) for row in rows]
+        except Exception as e:
+            logger.error(
+                "postgres_get_interlocutor_data_fields_error",
+                agent_id=str(agent_id),
+                error=str(e),
+            )
+            raise ConnectionError(f"Failed to get interlocutor data fields: {e}", cause=e) from e
+
+    async def save_interlocutor_data_field(self, field) -> UUID:
+        """Save an interlocutor data field definition, returning its ID."""
+        try:
+            async with self._pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO profile_field_definitions (
+                        id, tenant_id, agent_id, name, display_name, description,
+                        value_type, validation_regex, validation_tool_id,
+                        allowed_values, validation_mode, required_verification,
+                        verification_methods, collection_prompt, extraction_examples,
+                        extraction_prompt_hint, is_pii, encryption_required,
+                        retention_days, freshness_seconds, enabled,
+                        created_at, updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+                    ON CONFLICT (tenant_id, agent_id, name) DO UPDATE SET
+                        display_name = EXCLUDED.display_name,
+                        description = EXCLUDED.description,
+                        value_type = EXCLUDED.value_type,
+                        validation_regex = EXCLUDED.validation_regex,
+                        validation_tool_id = EXCLUDED.validation_tool_id,
+                        allowed_values = EXCLUDED.allowed_values,
+                        validation_mode = EXCLUDED.validation_mode,
+                        required_verification = EXCLUDED.required_verification,
+                        verification_methods = EXCLUDED.verification_methods,
+                        collection_prompt = EXCLUDED.collection_prompt,
+                        extraction_examples = EXCLUDED.extraction_examples,
+                        extraction_prompt_hint = EXCLUDED.extraction_prompt_hint,
+                        is_pii = EXCLUDED.is_pii,
+                        encryption_required = EXCLUDED.encryption_required,
+                        retention_days = EXCLUDED.retention_days,
+                        freshness_seconds = EXCLUDED.freshness_seconds,
+                        enabled = EXCLUDED.enabled,
+                        updated_at = NOW()
+                    """,
+                    field.id,
+                    field.tenant_id,
+                    field.agent_id,
+                    field.name,
+                    field.display_name,
+                    field.description,
+                    field.value_type,
+                    field.validation_regex,
+                    field.validation_tool_id,
+                    field.allowed_values,
+                    field.validation_mode.value,
+                    field.required_verification,
+                    field.verification_methods,
+                    field.collection_prompt,
+                    field.extraction_examples,
+                    field.extraction_prompt_hint,
+                    field.is_pii,
+                    field.encryption_required,
+                    field.retention_days,
+                    field.freshness_seconds,
+                    field.enabled,
+                    field.created_at,
+                    datetime.now(UTC),
+                )
+                logger.debug("interlocutor_data_field_saved", field_id=str(field.id))
+                return field.id
+        except Exception as e:
+            logger.error(
+                "postgres_save_interlocutor_data_field_error",
+                field_id=str(field.id),
+                error=str(e),
+            )
+            raise ConnectionError(f"Failed to save interlocutor data field: {e}", cause=e) from e
+
+    # Legacy method name for backwards compatibility
     async def get_customer_data_fields(
         self,
         tenant_id: UUID,
@@ -1438,21 +1785,13 @@ class PostgresAgentConfigStore(AgentConfigStore):
     ) -> list:
         """Get all customer data field definitions for an agent.
 
-        TODO: Implement with customer_data_fields table query after migration.
+        DEPRECATED: Use get_interlocutor_data_fields instead.
         """
-        from ruche.interlocutor_data.models import InterlocutorDataField
-
-        raise NotImplementedError(
-            "Customer data field operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
-        )
+        return await self.get_interlocutor_data_fields(tenant_id, agent_id, enabled_only=enabled_only)
 
     async def save_customer_data_field(self, field) -> UUID:
         """Save a customer data field definition.
 
-        TODO: Implement with customer_data_fields table INSERT/UPDATE after migration.
+        DEPRECATED: Use save_interlocutor_data_field instead.
         """
-        raise NotImplementedError(
-            "Customer data field operations require database migration. "
-            "See docs/focal_turn_pipeline_implementation/phase-01-identification-context-checklist.md"
-        )
+        return await self.save_interlocutor_data_field(field)

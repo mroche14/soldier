@@ -376,7 +376,7 @@ class TestSituationSensorValidateLanguage:
         """Test validation with valid ISO 639-1 codes."""
         sensor = SituationSensor(mock_llm_executor, sensor_config)
 
-        for code in ["en", "es", "fr", "de", "it", "pt", "ja", "zh"]:
+        for code in ["en", "es", "fr", "de", "it", "pt", "ja", "zh", "ar", "ru", "hi"]:
             result = sensor._validate_language(code, "test message")
             assert result == code
 
@@ -387,21 +387,157 @@ class TestSituationSensorValidateLanguage:
         result = sensor._validate_language("EN", "test message")
         assert result == "en"
 
-    def test_validate_language_invalid_code(self, sensor_config, mock_llm_executor):
-        """Test that invalid codes default to 'en'."""
+    def test_validate_language_invalid_code_fallback(self, sensor_config, mock_llm_executor):
+        """Test that invalid codes trigger detection then fallback."""
         sensor = SituationSensor(mock_llm_executor, sensor_config)
 
-        # Too long
-        result = sensor._validate_language("english", "test message")
+        # Invalid code with Latin text - should fallback to default
+        result = sensor._validate_language("english", "Hello world")
         assert result == "en"
 
-        # Has numbers
-        result = sensor._validate_language("e1", "test message")
+        # Invalid code with empty message - should fallback
+        result = sensor._validate_language("xyz", "")
         assert result == "en"
 
-        # Empty
-        result = sensor._validate_language("", "test message")
-        assert result == "en"
+    def test_validate_language_detects_chinese(self, sensor_config, mock_llm_executor):
+        """Test detection of Chinese characters."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        # Invalid code but Chinese text
+        result = sensor._validate_language("invalid", "你好世界")
+        assert result == "zh"
+
+    def test_validate_language_detects_japanese(self, sensor_config, mock_llm_executor):
+        """Test detection of Japanese characters."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        # Hiragana
+        result = sensor._validate_language("invalid", "こんにちは")
+        assert result == "ja"
+
+        # Katakana
+        result = sensor._validate_language("invalid", "カタカナ")
+        assert result == "ja"
+
+    def test_validate_language_detects_korean(self, sensor_config, mock_llm_executor):
+        """Test detection of Korean characters."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        result = sensor._validate_language("invalid", "안녕하세요")
+        assert result == "ko"
+
+    def test_validate_language_detects_arabic(self, sensor_config, mock_llm_executor):
+        """Test detection of Arabic characters."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        result = sensor._validate_language("invalid", "مرحبا")
+        assert result == "ar"
+
+    def test_validate_language_detects_russian(self, sensor_config, mock_llm_executor):
+        """Test detection of Cyrillic/Russian characters."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        result = sensor._validate_language("invalid", "Привет мир")
+        assert result == "ru"
+
+    def test_validate_language_detects_hebrew(self, sensor_config, mock_llm_executor):
+        """Test detection of Hebrew characters."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        result = sensor._validate_language("invalid", "שלום")
+        assert result == "he"
+
+    def test_validate_language_custom_default(self, mock_llm_executor):
+        """Test custom default language in config."""
+        config = SituationSensorConfig(default_language="es")
+        sensor = SituationSensor(mock_llm_executor, config)
+
+        # Invalid code with undetectable text should use custom default
+        result = sensor._validate_language("invalid", "Hello")
+        assert result == "es"
+
+
+class TestSituationSensorDetectLanguage:
+    """Test _detect_language method."""
+
+    def test_detect_language_chinese(self, sensor_config, mock_llm_executor):
+        """Test Chinese character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("你好世界") == "zh"
+        assert sensor._detect_language("中文测试") == "zh"
+
+    def test_detect_language_japanese(self, sensor_config, mock_llm_executor):
+        """Test Japanese character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("こんにちは") == "ja"
+        assert sensor._detect_language("カタカナ") == "ja"
+        assert sensor._detect_language("ひらがな") == "ja"
+
+    def test_detect_language_korean(self, sensor_config, mock_llm_executor):
+        """Test Korean character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("안녕하세요") == "ko"
+        assert sensor._detect_language("한글") == "ko"
+
+    def test_detect_language_arabic(self, sensor_config, mock_llm_executor):
+        """Test Arabic character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("مرحبا") == "ar"
+        assert sensor._detect_language("العربية") == "ar"
+
+    def test_detect_language_cyrillic(self, sensor_config, mock_llm_executor):
+        """Test Cyrillic/Russian character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("Привет") == "ru"
+        assert sensor._detect_language("Русский") == "ru"
+
+    def test_detect_language_hebrew(self, sensor_config, mock_llm_executor):
+        """Test Hebrew character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("שלום") == "he"
+        assert sensor._detect_language("עברית") == "he"
+
+    def test_detect_language_thai(self, sensor_config, mock_llm_executor):
+        """Test Thai character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("สวัสดี") == "th"
+        assert sensor._detect_language("ภาษาไทย") == "th"
+
+    def test_detect_language_hindi(self, sensor_config, mock_llm_executor):
+        """Test Hindi/Devanagari character detection."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("नमस्ते") == "hi"
+        assert sensor._detect_language("हिन्दी") == "hi"
+
+    def test_detect_language_latin_returns_none(self, sensor_config, mock_llm_executor):
+        """Test that Latin script returns None (no detection)."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("Hello world") is None
+        assert sensor._detect_language("Bonjour") is None
+        assert sensor._detect_language("Hola") is None
+
+    def test_detect_language_empty_returns_none(self, sensor_config, mock_llm_executor):
+        """Test that empty text returns None."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        assert sensor._detect_language("") is None
+
+    def test_detect_language_mixed_scripts(self, sensor_config, mock_llm_executor):
+        """Test detection with mixed scripts (first match wins)."""
+        sensor = SituationSensor(mock_llm_executor, sensor_config)
+
+        # Chinese should be detected first
+        assert sensor._detect_language("Hello 你好") == "zh"
+        assert sensor._detect_language("Test こんにちは") == "ja"
 
 
 class TestSituationSensorExtractJson:

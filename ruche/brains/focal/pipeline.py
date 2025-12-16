@@ -33,9 +33,16 @@ from ruche.brains.focal.phases.interlocutor import InterlocutorDataUpdater
 from ruche.brains.focal.phases.enforcement import EnforcementValidator, FallbackHandler
 from ruche.brains.focal.phases.enforcement.models import EnforcementResult
 from ruche.brains.focal.phases.execution import ToolExecutor
-from ruche.brains.focal.phases.execution.models import ToolResult
-from ruche.brains.focal.phases.filtering import RuleFilter, ScenarioFilter
+from ruche.brains.focal.phases.execution.models import ToolResult, ToolExecutionResult
+from ruche.brains.focal.phases.execution.tool_execution_orchestrator import ToolExecutionOrchestrator
+from ruche.brains.focal.phases.execution.tool_binding_collector import ToolBindingCollector
+from ruche.brains.focal.phases.execution.variable_requirement_analyzer import VariableRequirementAnalyzer
+from ruche.brains.focal.phases.execution.variable_resolver import VariableResolver
+from ruche.brains.focal.phases.execution.tool_scheduler import ToolScheduler, FutureToolQueue
+from ruche.brains.focal.phases.execution.variable_merger import VariableMerger
+from ruche.brains.focal.phases.filtering import RuleFilter, ScenarioFilter, ScopePreFilter
 from ruche.brains.focal.phases.filtering.models import MatchedRule, ScenarioFilterResult
+from ruche.brains.focal.phases.filtering.relationship_expander import RelationshipExpander
 from ruche.brains.focal.phases.generation import PromptBuilder, ResponseGenerator
 from ruche.brains.focal.phases.generation.models import GenerationResult
 from ruche.brains.focal.phases.loaders.interlocutor_data_loader import InterlocutorDataLoader
@@ -68,14 +75,14 @@ from ruche.audit.store import AuditStore
 from ruche.config.models.migration import ScenarioMigrationConfig
 from ruche.config.models.pipeline import PipelineConfig
 from ruche.conversation.models import Session, StepVisit
-from ruche.conversation.models.turn import ToolCall
+from ruche.conversation.models.turn import ToolCall, Turn as ConversationTurn
 from ruche.conversation.store import SessionStore
-from ruche.interlocutor_data.models import VariableEntry
-from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+from ruche.domain.interlocutor.models import VariableEntry
+from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 from ruche.interlocutor_data.validation import InterlocutorDataFieldValidator
 from ruche.memory.retrieval import MemoryRetriever
 from ruche.memory.retrieval.reranker import MemoryReranker
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.embedding import EmbeddingProvider
 from ruche.infrastructure.providers.llm import (
@@ -87,6 +94,9 @@ from ruche.infrastructure.providers.llm import (
     set_execution_context,
 )
 from ruche.infrastructure.providers.rerank import RerankProvider
+from ruche.brains.focal.pipeline_contribution_extractor import extract_scenario_contributions
+from ruche.memory.ingestion.ingestor import MemoryIngestor
+from ruche.memory.ingestion.queue import InMemoryTaskQueue
 
 logger = get_logger(__name__)
 
@@ -112,6 +122,8 @@ class FocalCognitivePipeline:
 
     Each phase can be enabled/disabled via PipelineConfig.
     """
+
+    name: str = "focal"
 
     def __init__(
         self,
@@ -207,17 +219,33 @@ class FocalCognitivePipeline:
             embedding_provider=embedding_provider,
             selection_config=self._config.retrieval.intent_selection,
         )
+        self._scope_pre_filter = ScopePreFilter()
         self._rule_filter = RuleFilter(
             llm_executor=self._executors.get(
                 "rule_filtering",
                 create_executor("mock/default", step_name="rule_filtering"),
             ),
         )
+        self._relationship_expander = RelationshipExpander(config_store=config_store)
         self._scenario_filter = ScenarioFilter(
             config_store=config_store,
             max_loop_count=self._config.scenario_filtering.max_loop_count,
         )
         self._tool_executor = tool_executor
+
+        # Initialize tool execution orchestrator components (Phase 7)
+        self._tool_execution_orchestrator = None
+        if tool_executor:
+            self._tool_execution_orchestrator = ToolExecutionOrchestrator(
+                binding_collector=ToolBindingCollector(),
+                requirement_analyzer=VariableRequirementAnalyzer(),
+                variable_resolver=VariableResolver(),
+                scheduler=ToolScheduler(),
+                executor=tool_executor,
+                merger=VariableMerger(),
+                future_queue=FutureToolQueue(),
+            )
+
         self._enforcement_validator = enforcement_validator
         self._fallback_handler = fallback_handler
         self._memory_retriever = (
@@ -228,6 +256,20 @@ class FocalCognitivePipeline:
                 reranker=memory_reranker,
             )
             if memory_store
+            else None
+        )
+
+        # Initialize memory ingestor for Phase 11 (P11.5)
+        self._memory_ingestor = (
+            MemoryIngestor(
+                memory_store=memory_store,
+                embedding_provider=embedding_provider,
+                entity_extractor=None,  # Optional, not yet implemented
+                summarizer=None,  # Optional, not yet implemented
+                task_queue=InMemoryTaskQueue(),  # Use in-memory queue
+                config=self._config.memory_ingestion,
+            )
+            if memory_store and self._config.memory_ingestion.enabled
             else None
         )
         self._prompt_builder = PromptBuilder()
@@ -275,9 +317,69 @@ class FocalCognitivePipeline:
 
         # Phase 3 customer data updater
         self._customer_data_updater = (
-            InterlocutorDataUpdater(validator=InterlocutorDataFieldValidator())
+            InterlocutorDataUpdater(
+                validator=InterlocutorDataFieldValidator(),
+                config=self._config.customer_data_update,
+            )
             if profile_store
             else None
+        )
+
+    async def think(self, ctx: "AgentTurnContext") -> "BrainResult":
+        """Process a turn using the Brain protocol.
+
+        This is the standard Brain.think() interface that ACF calls.
+        It delegates to the existing process_turn() method and converts
+        AlignmentResult to BrainResult.
+
+        Args:
+            ctx: AgentTurnContext with fabric context and agent context
+
+        Returns:
+            BrainResult with response segments and artifacts
+        """
+        from ruche.brains.focal.models.brain_result import BrainResult, ResponseSegment
+        from ruche.runtime.agent.context import AgentTurnContext
+
+        # Extract information from context
+        turn = ctx.logical_turn
+        agent = ctx.agent_context.agent
+        channel = ctx.fabric.channel
+
+        # Combine messages from logical turn
+        # TODO: In future, retrieve actual message contents from message store
+        # For now, use a placeholder
+        combined_message = f"Turn {turn.id} with {len(turn.messages)} message(s)"
+
+        # Call existing process_turn
+        result = await self.process_turn(
+            message=combined_message,
+            tenant_id=agent.tenant_id,
+            agent_id=agent.id,
+            session_id=None,  # Will be resolved by engine
+            channel=channel,
+            channel_user_id=None,  # Will be resolved by engine
+        )
+
+        # Convert AlignmentResult to BrainResult
+        response_segments = [
+            ResponseSegment(content=result.response, segment_type="text")
+        ]
+
+        # Convert artifacts if needed
+        artifacts = []
+        if result.pipeline_timings:
+            artifacts.append(
+                {
+                    "type": "pipeline_timings",
+                    "timings": [t.model_dump() for t in result.pipeline_timings],
+                }
+            )
+
+        return BrainResult(
+            response_segments=response_segments,
+            artifacts=artifacts,
+            expects_more_input=False,  # TODO: Extract from result
         )
 
     async def process_turn(
@@ -568,10 +670,21 @@ class FocalCognitivePipeline:
             timings,
         )
 
-        # Step 3: Rule Filtering
+        # Step 3: Rule Filtering (P5.1 scope pre-filter + P5.2 LLM filter)
         matched_rules = await self._filter_rules(
             snapshot,
             [scored.rule for scored in retrieval_result.rules],
+            session,
+            active_scenario_id,
+            current_step_id,
+            timings,
+        )
+
+        # Step 3.5: Relationship Expansion (P5.3)
+        matched_rules = await self._expand_relationships(
+            tenant_id,
+            agent_id,
+            matched_rules,
             timings,
         )
 
@@ -597,9 +710,11 @@ class FocalCognitivePipeline:
 
         # Step 5: Tool Execution
         tool_results = await self._execute_tools(
-            matched_rules,
-            snapshot,
-            timings,
+            matched_rules=matched_rules,
+            snapshot=snapshot,
+            timings=timings,
+            session=session,
+            contribution_plan=None,  # TODO: Pass contribution_plan when Phase 6 is integrated
         )
 
         # Step 6: Response Planning (Phase 8)
@@ -640,6 +755,7 @@ class FocalCognitivePipeline:
             timings,
             tenant_id,
             agent_id,
+            session,
         )
 
         # Calculate total time
@@ -712,6 +828,17 @@ class FocalCognitivePipeline:
                         session=session,
                         generation_result=generation_result,
                         outcome=outcome,
+                    )
+                )
+
+            # Task 4: Memory ingestion (P11.5)
+            if self._memory_ingestor and session:
+                persistence_tasks.append(
+                    self._ingest_memory(
+                        session=session,
+                        user_message=message,
+                        agent_response=result.response,
+                        turn_id=turn_id,
                     )
                 )
 
@@ -933,7 +1060,7 @@ class FocalCognitivePipeline:
         # Extract enforcement violations
         enforcement_violations = []
         if result.enforcement and result.enforcement.violations:
-            enforcement_violations = [v.message for v in result.enforcement.violations]
+            enforcement_violations = [v.details for v in result.enforcement.violations]
 
         turn_record = TurnRecord(
             turn_id=result.turn_id,
@@ -957,7 +1084,7 @@ class FocalCognitivePipeline:
             step_transitions=step_transitions,
             tool_executions=tool_executions,
             enforcement_violations=enforcement_violations,
-            regeneration_attempts=0,  # TODO: Track this in enforcement phase
+            regeneration_attempts=result.enforcement.regeneration_attempts if result.enforcement else 0,
         )
 
         try:
@@ -973,21 +1100,98 @@ class FocalCognitivePipeline:
             PERSISTENCE_OPERATIONS.labels(operation="turn_record", status="failure").inc()
             raise
 
+    async def _ingest_memory(
+        self,
+        session: Session,
+        user_message: str,
+        agent_response: str,
+        turn_id: UUID,
+    ) -> None:
+        """Ingest turn into memory store for long-term RAG (P11.5).
+
+        Creates a Turn object and passes it to MemoryIngestor which:
+        - Creates an Episode from the turn
+        - Generates embeddings
+        - Optionally extracts entities (async)
+        - Optionally generates summaries (async)
+
+        Args:
+            session: Current session
+            user_message: User's message
+            agent_response: Agent's response
+            turn_id: Turn identifier
+        """
+        from ruche.observability.metrics import PERSISTENCE_OPERATIONS
+
+        if not self._memory_ingestor:
+            return
+
+        # Create Turn object for ingestion
+        turn = ConversationTurn(
+            turn_id=turn_id,
+            tenant_id=session.tenant_id,
+            session_id=session.session_id,
+            turn_number=session.turn_count,
+            user_message=user_message,
+            agent_response=agent_response,
+            latency_ms=0,  # Not tracked for memory ingestion
+            tokens_used=0,  # Not tracked for memory ingestion
+            timestamp=datetime.now(UTC),
+        )
+
+        try:
+            await self._memory_ingestor.ingest_turn(turn=turn, session=session)
+            PERSISTENCE_OPERATIONS.labels(operation="memory_ingestion", status="success").inc()
+            logger.debug(
+                "memory_ingested",
+                session_id=str(session.session_id),
+                turn_id=str(turn_id),
+            )
+        except Exception as e:
+            # Log error but don't fail the entire turn if memory ingestion fails
+            logger.warning(
+                "memory_ingestion_failed",
+                session_id=str(session.session_id),
+                turn_id=str(turn_id),
+                error=str(e),
+            )
+            PERSISTENCE_OPERATIONS.labels(operation="memory_ingestion", status="failure").inc()
+            # Don't raise - memory ingestion is optional
+
     async def _execute_tools(
         self,
         matched_rules: list[MatchedRule],
         snapshot: SituationSnapshot,
         timings: list[PipelineStepTiming],
+        session: Session | None = None,
+        contribution_plan: ScenarioContributionPlan | None = None,
     ) -> list[ToolResult]:
-        """Execute tools from matched rules."""
+        """Execute tools from matched rules using Phase 7 orchestration.
+
+        Implements P7.1-P7.7:
+        - P7.1: Collect tool bindings from rules/scenarios
+        - P7.2: Compute required variables
+        - P7.3: Resolve from InterlocutorDataStore/Session
+        - P7.4: Schedule tools by timing/dependencies
+        - P7.5: Execute scheduled tools
+        - P7.6: Merge results into engine variables
+        - P7.7: Queue AFTER_STEP tools for future execution
+
+        Args:
+            matched_rules: Rules from Phase 5
+            snapshot: Situation snapshot with customer_data_store
+            timings: Pipeline step timings
+            session: Session state for variable resolution
+            contribution_plan: Scenario contribution plan (optional, for Phase 6 integration)
+
+        Returns:
+            List of ToolResult from executed tools
+        """
         step_start = datetime.utcnow()
         start_time = time.perf_counter()
 
-        if (
-            not self._config.tool_execution.enabled
-            or not matched_rules
-            or self._tool_executor is None
-        ):
+        # Check if tool execution is enabled
+        if not self._config.tool_execution.enabled or self._tool_execution_orchestrator is None:
             timings.append(
                 PipelineStepTiming(
                     step="tool_execution",
@@ -995,26 +1199,102 @@ class FocalCognitivePipeline:
                     ended_at=datetime.utcnow(),
                     duration_ms=0,
                     skipped=True,
-                    skip_reason="Tool execution disabled or no executor",
+                    skip_reason="Tool execution disabled or no orchestrator",
                 )
             )
             return []
 
-        results = await self._tool_executor.execute(
-            matched_rules=matched_rules,
-            snapshot=snapshot,
-        )
-
-        elapsed_ms = (time.perf_counter() - start_time) * 1000
-        timings.append(
-            PipelineStepTiming(
-                step="tool_execution",
-                started_at=step_start,
-                ended_at=datetime.utcnow(),
-                duration_ms=elapsed_ms,
+        # If no matched rules and no contribution plan, skip
+        if not matched_rules and (not contribution_plan or not contribution_plan.contributions):
+            timings.append(
+                PipelineStepTiming(
+                    step="tool_execution",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="No matched rules or scenario contributions",
+                )
             )
-        )
-        return results
+            return []
+
+        # Use empty contribution plan if not provided (Phase 6 not yet integrated)
+        if contribution_plan is None:
+            contribution_plan = ScenarioContributionPlan(contributions=[])
+
+        # Get customer data store from snapshot
+        customer_profile = getattr(snapshot, "customer_data_store", None)
+        if customer_profile is None:
+            # Create empty store if not available
+            from ruche.domain.interlocutor import InterlocutorDataStore
+            customer_profile = InterlocutorDataStore(
+                id=uuid4(),
+                tenant_id=uuid4(),
+                fields={},
+            )
+
+        # Use empty session if not provided
+        if session is None:
+            session = Session(
+                session_id=uuid4(),
+                tenant_id=uuid4(),
+                agent_id=uuid4(),
+                interlocutor_id=uuid4(),
+                channel="api",
+                user_channel_id="unknown",
+                config_version=1,
+                variables={},
+            )
+
+        # Execute Phase 7 orchestration (currently DURING_STEP phase only)
+        try:
+            execution_result = await self._tool_execution_orchestrator.execute_phase(
+                contribution_plan=contribution_plan,
+                applied_rules=matched_rules,
+                customer_profile=customer_profile,
+                session=session,
+                snapshot=snapshot,
+                phase="DURING_STEP",
+                scenario_steps=None,  # TODO: Pass scenario steps when Phase 6 is integrated
+            )
+
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            timings.append(
+                PipelineStepTiming(
+                    step="tool_execution",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=elapsed_ms,
+                )
+            )
+
+            logger.info(
+                "tool_execution_completed",
+                tool_count=len(execution_result.tool_results),
+                engine_variables_count=len(execution_result.engine_variables),
+                missing_variables_count=len(execution_result.missing_variables),
+            )
+
+            return execution_result.tool_results
+
+        except Exception as e:
+            logger.error(
+                "tool_execution_failed",
+                error=str(e),
+                matched_rules_count=len(matched_rules),
+            )
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            timings.append(
+                PipelineStepTiming(
+                    step="tool_execution",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=elapsed_ms,
+                    skipped=True,
+                    skip_reason=f"Error: {str(e)}",
+                )
+            )
+            return []
 
     async def _sense_situation(
         self,
@@ -1053,7 +1333,7 @@ class FocalCognitivePipeline:
                     schema={},  # Schema will be loaded separately
                 )
             else:
-                from ruche.interlocutor_data import InterlocutorDataStore
+                from ruche.domain.interlocutor import InterlocutorDataStore
                 customer_data_store = InterlocutorDataStore(
                     id=interlocutor_id,
                     tenant_id=tenant_id,
@@ -1254,13 +1534,21 @@ class FocalCognitivePipeline:
         self,
         snapshot: SituationSnapshot,
         candidate_rules: list[Rule],
+        session: Session | None,
+        active_scenario_id: UUID | None,
+        current_step_id: UUID | None,
         timings: list[PipelineStepTiming],
     ) -> list[MatchedRule]:
-        """Filter rules by relevance to snapshot."""
+        """Filter rules by relevance to snapshot.
+
+        Applies two-stage filtering:
+        1. P5.1: Scope pre-filter (deterministic checks)
+        2. P5.2: LLM filter (semantic relevance)
+        """
         step_start = datetime.utcnow()
         start_time = time.perf_counter()
 
-        if not self._config.rule_filtering.enabled or not candidate_rules:
+        if not candidate_rules:
             timings.append(
                 PipelineStepTiming(
                     step="rule_filtering",
@@ -1268,20 +1556,77 @@ class FocalCognitivePipeline:
                     ended_at=datetime.utcnow(),
                     duration_ms=0,
                     skipped=True,
-                    skip_reason="Filtering disabled or no candidates",
+                    skip_reason="No candidates",
                 )
             )
-            # Return all rules as matched with default scores
-            return [
-                MatchedRule(
-                    rule=rule, match_score=1.0, relevance_score=1.0, reasoning="Filter disabled"
+            return []
+
+        # Convert rules to MatchedRule candidates for pre-filter
+        candidate_matched = [
+            MatchedRule(
+                rule=rule,
+                match_score=1.0,
+                relevance_score=1.0,
+                reasoning="Pre-filter candidate"
+            )
+            for rule in candidate_rules
+        ]
+
+        # P5.1: Scope pre-filter (deterministic)
+        active_scenario_ids = {active_scenario_id} if active_scenario_id else set()
+        active_step_ids = {current_step_id} if current_step_id else set()
+        current_turn_number = session.turn_count if session else 0
+
+        scoped_candidates = await self._scope_pre_filter.filter(
+            candidates=candidate_matched,
+            session=session if session else Session(
+                tenant_id=uuid4(),
+                agent_id=uuid4(),
+                channel="api",
+                user_channel_id="unknown",
+                config_version=1,
+            ),
+            active_scenario_ids=active_scenario_ids,
+            active_step_ids=active_step_ids,
+            current_turn_number=current_turn_number,
+        )
+
+        if not scoped_candidates:
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            timings.append(
+                PipelineStepTiming(
+                    step="rule_filtering",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=elapsed_ms,
                 )
-                for rule in candidate_rules
-            ]
+            )
+            logger.info(
+                "all_rules_filtered_by_scope",
+                initial_count=len(candidate_rules),
+            )
+            return []
+
+        # P5.2: LLM filter (if enabled)
+        if not self._config.rule_filtering.enabled:
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            timings.append(
+                PipelineStepTiming(
+                    step="rule_filtering",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=elapsed_ms,
+                )
+            )
+            logger.info(
+                "llm_filter_disabled",
+                scoped_count=len(scoped_candidates),
+            )
+            return scoped_candidates
 
         filter_result = await self._rule_filter.filter(
             snapshot=snapshot,
-            candidates=candidate_rules,
+            candidates=[c.rule for c in scoped_candidates],
             batch_size=self._config.rule_filtering.batch_size,
         )
 
@@ -1295,7 +1640,63 @@ class FocalCognitivePipeline:
             )
         )
 
+        logger.info(
+            "rule_filtering_completed",
+            initial_count=len(candidate_rules),
+            after_scope_filter=len(scoped_candidates),
+            after_llm_filter=len(filter_result.matched_rules),
+        )
+
         return filter_result.matched_rules
+
+    async def _expand_relationships(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+        matched_rules: list[MatchedRule],
+        timings: list[PipelineStepTiming],
+    ) -> list[MatchedRule]:
+        """Expand matched rules via relationship graph."""
+        step_start = datetime.utcnow()
+        start_time = time.perf_counter()
+
+        if not self._config.relationship_expansion.enabled or not matched_rules:
+            timings.append(
+                PipelineStepTiming(
+                    step="relationship_expansion",
+                    started_at=step_start,
+                    ended_at=datetime.utcnow(),
+                    duration_ms=0,
+                    skipped=True,
+                    skip_reason="Relationship expansion disabled or no rules",
+                )
+            )
+            return matched_rules
+
+        expanded_rules = await self._relationship_expander.expand(
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            matched_rules=matched_rules,
+            max_depth=self._config.relationship_expansion.max_depth,
+        )
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        timings.append(
+            PipelineStepTiming(
+                step="relationship_expansion",
+                started_at=step_start,
+                ended_at=datetime.utcnow(),
+                duration_ms=elapsed_ms,
+            )
+        )
+
+        logger.debug(
+            "relationship_expansion_complete",
+            original_count=len(matched_rules),
+            expanded_count=len(expanded_rules),
+        )
+
+        return expanded_rules
 
     async def _filter_scenarios(
         self,
@@ -1371,12 +1772,13 @@ class FocalCognitivePipeline:
             )
             return None
 
-        # Build scenario contribution plan from scenario result
-        scenario_contribution_plan = ScenarioContributionPlan(contributions=[])
-
-        # If there's a scenario result, extract contributions
-        # For now, we'll use an empty contribution plan
-        # In a full implementation, Phase 6 would build this
+        # Build scenario contribution plan from scenario result (P6.4)
+        scenario_contribution_plan = await extract_scenario_contributions(
+            scenario_result=scenario_result,
+            tenant_id=tenant_id,
+            matched_rules=matched_rules,
+            config_store=self._config_store,
+        )
 
         # Build the response plan
         response_plan = await self._response_planner.build_response_plan(
@@ -1465,8 +1867,29 @@ class FocalCognitivePipeline:
         timings: list[PipelineStepTiming],
         tenant_id: UUID,
         agent_id: UUID,
+        session: Session | None = None,
     ) -> EnforcementResult:
-        """Run enforcement validation and optional fallback."""
+        """Run enforcement validation with regeneration retry loop.
+
+        Enforcement process (P10):
+        1. Validate response against hard constraints (two-lane enforcement)
+        2. If violations detected, attempt regeneration with feedback (up to max_retries)
+        3. Re-validate after each regeneration attempt
+        4. Only fall back to template if all regeneration attempts fail
+
+        Args:
+            response: Generated response to validate
+            snapshot: Situation snapshot
+            matched_rules: Rules that matched this turn
+            templates: Available templates for fallback
+            timings: Pipeline timing collector
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
+            session: Current session (for variable extraction)
+
+        Returns:
+            EnforcementResult with validation status and final response
+        """
         step_start = datetime.utcnow()
         start_time = time.perf_counter()
 
@@ -1488,18 +1911,25 @@ class FocalCognitivePipeline:
                 enforcement_time_ms=0.0,
             )
 
-        hard_rules = [m.rule for m in matched_rules if m.rule.is_hard_constraint]
+        # Run enforcement validation with retry loop
         result = await self._enforcement_validator.validate(
             response=response,
             snapshot=snapshot,
             matched_rules=matched_rules,
             tenant_id=tenant_id,
             agent_id=agent_id,
-            hard_rules=hard_rules,
+            session=session,
         )
 
-        # Apply fallback if still failing
-        if not result.passed and self._fallback_handler:
+        # Apply fallback template only if regeneration failed and fallback is available
+        if not result.passed and not result.regeneration_succeeded and self._fallback_handler:
+            logger.info(
+                "enforcement_applying_fallback",
+                tenant_id=str(tenant_id),
+                agent_id=str(agent_id),
+                regeneration_attempted=result.regeneration_attempted,
+                regeneration_attempts=result.regeneration_attempts,
+            )
             fallback_template = self._fallback_handler.select_fallback(templates or [])
             result = self._fallback_handler.apply_fallback(fallback_template, result)
 
@@ -2005,7 +2435,7 @@ class FocalCognitivePipeline:
         Returns:
             TurnContext with all turn-scoped data
         """
-        from ruche.interlocutor_data import InterlocutorDataStore
+        from ruche.domain.interlocutor import InterlocutorDataStore
 
         # Load static config if enabled
         glossary = {}
@@ -2081,17 +2511,11 @@ class FocalCognitivePipeline:
             interlocutor_id=interlocutor_id,
             session_id=session.session_id,
             turn_number=session.turn_count + 1,
-            session=session.model_dump(),  # Convert to dict for now
-            customer_data=customer_data.model_dump(),  # Convert to dict for now
-            pipeline_config=self._config.model_dump(),  # Convert to dict for now
-            customer_data_fields={
-                name: field.model_dump() for name, field in customer_data_fields.items()
-            },
-            glossary={
-                term: item.model_dump() for term, item in glossary.items()
-            },
-            reconciliation_result=(
-                reconciliation_result.model_dump() if reconciliation_result else None
-            ),
+            session=session,
+            customer_data=customer_data,
+            pipeline_config=self._config,
+            customer_data_fields=customer_data_fields,
+            glossary=glossary,
+            reconciliation_result=reconciliation_result,
             turn_started_at=datetime.now(UTC),
         )

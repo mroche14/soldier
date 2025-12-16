@@ -1,5 +1,7 @@
 """InterlocutorDataStoreInterface abstract interface.
 
+DEPRECATED: This module is deprecated. Use ruche.infrastructure.stores.interlocutor.interface instead.
+
 Enhanced to support:
 - Status-aware queries
 - Lineage traversal

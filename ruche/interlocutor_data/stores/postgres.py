@@ -1,5 +1,7 @@
 """PostgreSQL implementation of InterlocutorDataStoreInterface.
 
+DEPRECATED: This module is deprecated. Use ruche.infrastructure.stores.interlocutor.postgres instead.
+
 Enhanced with:
 - Status-aware queries
 - Lineage traversal (recursive CTE)
@@ -25,7 +27,7 @@ from ruche.interlocutor_data.enums import (
     ValidationMode,
     VerificationLevel,
 )
-from ruche.interlocutor_data.models import (
+from ruche.domain.interlocutor.models import (
     ChannelIdentity,
     InterlocutorDataStore,
     ProfileAsset,
@@ -33,7 +35,7 @@ from ruche.interlocutor_data.models import (
     InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 

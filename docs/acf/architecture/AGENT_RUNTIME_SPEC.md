@@ -57,10 +57,10 @@ class Agent(BaseModel):
     settings: AgentSettings = Field(default_factory=AgentSettings)
 
     # Brain type (determines which Brain to use)
-    pipeline_type: str = "focal"  # "focal", "langgraph", "agno"
+    brain_type: str = "focal"  # "focal", "langgraph", "agno"
 
     # Brain-specific configuration (scenarios/rules for FOCAL, graph config for LangGraph, etc.)
-    pipeline_config: dict = Field(default_factory=dict)
+    brain_config: dict = Field(default_factory=dict)
 
     # Version for cache invalidation
     version: str = "1"
@@ -308,12 +308,12 @@ class AgentRuntime:
         self,
         config_store: ConfigStore,
         tool_gateway: ToolGateway,
-        pipeline_factory: PipelineFactory,
+        brain_factory: BrainFactory,
         max_cache_size: int = 1000,
     ):
         self._config_store = config_store
         self._tool_gateway = tool_gateway
-        self._pipeline_factory = pipeline_factory
+        self._brain_factory = brain_factory
         self._max_cache_size = max_cache_size
 
         # Cache: (tenant_id, agent_id) -> AgentContext
@@ -398,8 +398,8 @@ class AgentRuntime:
         )
 
         # Build brain based on type
-        brain = self._pipeline_factory.create(
-            pipeline_type=agent.pipeline_type,
+        brain = self._brain_factory.create(
+            brain_type=agent.brain_type,
             agent=agent,
         )
 
@@ -467,12 +467,12 @@ class AgentRuntime:
 
 ---
 
-## 5. PipelineFactory
+## 5. BrainFactory
 
 Creates Brain instances based on agent configuration:
 
 ```python
-class PipelineFactory:
+class BrainFactory:
     """
     Factory for creating Brain instances.
 
@@ -493,22 +493,22 @@ class PipelineFactory:
 
     def create(
         self,
-        pipeline_type: str,
+        brain_type: str,
         agent: Agent,
     ) -> Brain:
         """Create brain based on type."""
-        factory = self._factories.get(pipeline_type)
+        factory = self._factories.get(brain_type)
         if not factory:
-            raise ValueError(f"Unknown brain type: {pipeline_type}")
+            raise ValueError(f"Unknown brain type: {brain_type}")
         return factory(agent)
 
     def register(
         self,
-        pipeline_type: str,
+        brain_type: str,
         factory: Callable[[Agent], Brain],
     ) -> None:
         """Register custom brain factory."""
-        self._factories[pipeline_type] = factory
+        self._factories[brain_type] = factory
 ```
 
 ---
@@ -651,12 +651,12 @@ class AgentDisabledError(Exception):
         super().__init__(f"Agent {agent_id} is disabled")
 
 
-class PipelineTypeNotFoundError(Exception):
+class BrainTypeNotFoundError(Exception):
     """Unknown brain type."""
 
-    def __init__(self, pipeline_type: str):
-        self.pipeline_type = pipeline_type
-        super().__init__(f"Unknown brain type: {pipeline_type}")
+    def __init__(self, brain_type: str):
+        self.brain_type = brain_type
+        super().__init__(f"Unknown brain type: {brain_type}")
 ```
 
 ---
@@ -695,14 +695,14 @@ agent_cache_misses = Counter(
 agent_context_build_duration = Histogram(
     "agent_runtime_build_duration_seconds",
     "Time to build AgentContext",
-    ["tenant_id", "pipeline_type"],
+    ["tenant_id", "brain_type"],
 )
 
 # Brain execution metrics
-pipeline_execution_duration = Histogram(
-    "pipeline_execution_duration_seconds",
+brain_execution_duration = Histogram(
+    "brain_execution_duration_seconds",
     "Brain execution duration",
-    ["tenant_id", "agent_id", "pipeline_type"],
+    ["tenant_id", "agent_id", "brain_type"],
 )
 ```
 
@@ -713,7 +713,7 @@ logger.info(
     "agent_context_created",
     tenant_id=tenant_id,
     agent_id=agent_id,
-    pipeline_type=agent.pipeline_type,
+    brain_type=agent.brain_type,
 )
 
 logger.info(
@@ -741,7 +741,7 @@ def agent_runtime(mock_config_store):
     return AgentRuntime(
         config_store=mock_config_store,
         tool_gateway=MockToolGateway(),
-        pipeline_factory=MockPipelineFactory(),
+        brain_factory=MockBrainFactory(),
     )
 
 

@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package ruche.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ConfigService provides configuration management operations
+service ConfigService {
+  // List rules for an agent
+  rpc ListRules(ListRulesRequest) returns (ListRulesResponse);
+
+  // Create a new rule
+  rpc CreateRule(CreateRuleRequest) returns (Rule);
+
+  // List scenarios for an agent
+  rpc ListScenarios(ListScenariosRequest) returns (ListScenariosResponse);
+
+  // Create a new scenario
+  rpc CreateScenario(CreateScenarioRequest) returns (Scenario);
+}
+
+// List rules request
+message ListRulesRequest {
+  string tenant_id = 1;
+  string agent_id = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+// List rules response
+message ListRulesResponse {
+  repeated Rule rules = 1;
+  int32 total_count = 2;
+}
+
+// Rule
+message Rule {
+  string id = 1;
+  string tenant_id = 2;
+  string agent_id = 3;
+  string name = 4;
+  string condition_text = 5;
+  string action_type = 6;
+  map<string, string> action_params = 7;
+  int32 priority = 8;
+  bool enabled = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+// Create rule request
+message CreateRuleRequest {
+  string tenant_id = 1;
+  string agent_id = 2;
+  string name = 3;
+  string condition_text = 4;
+  string action_type = 5;
+  map<string, string> action_params = 6;
+  int32 priority = 7;
+}
+
+// List scenarios request
+message ListScenariosRequest {
+  string tenant_id = 1;
+  string agent_id = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+// List scenarios response
+message ListScenariosResponse {
+  repeated Scenario scenarios = 1;
+  int32 total_count = 2;
+}
+
+// Scenario
+message Scenario {
+  string id = 1;
+  string tenant_id = 2;
+  string agent_id = 3;
+  string name = 4;
+  string description = 5;
+  bool enabled = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// Create scenario request
+message CreateScenarioRequest {
+  string tenant_id = 1;
+  string agent_id = 2;
+  string name = 3;
+  string description = 4;
+}

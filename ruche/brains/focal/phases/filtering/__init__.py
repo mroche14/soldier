@@ -11,6 +11,7 @@ from ruche.brains.focal.phases.filtering.models import (
 )
 from ruche.brains.focal.phases.filtering.rule_filter import RuleFilter
 from ruche.brains.focal.phases.filtering.scenario_filter import ScenarioFilter
+from ruche.brains.focal.phases.filtering.scope_filter import ScopePreFilter
 
 __all__ = [
     "MatchedRule",
@@ -19,4 +20,5 @@ __all__ = [
     "ScenarioFilterResult",
     "RuleFilter",
     "ScenarioFilter",
+    "ScopePreFilter",
 ]

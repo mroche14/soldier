@@ -299,7 +299,7 @@ All brains (FOCAL, LangGraph, Agno, custom) must satisfy these invariants. Enfor
 | Component | Topic | Description |
 |-----------|-------|-------------|
 | **Config Hierarchy** | [08](architecture/topics/08-config-hierarchy.md) | Multi-level configuration |
-| **Agenda & Goals** | [09](architecture/topics/09-agenda-goals.md) | Proactive follow-up |
+| **Agenda System** | [09](architecture/topics/09-agenda.md) | Proactive task scheduling |
 | **Abuse Detection** | [11](architecture/topics/11-abuse-detection.md) | Pattern-based handling |
 | **ASA Validator** | [13](architecture/topics/13-asa-validator.md) | Design-time validation |
 
@@ -346,7 +346,7 @@ See [Wave Execution Guide V2](WAVE_EXECUTION_GUIDE_V2.md) for detailed implement
 ### Phase 2: Agent Layer
 6. Agent model + AgentConfig
 7. AgentContext + AgentRuntime
-8. PipelineFactory (FOCAL, LangGraph, Agno)
+8. BrainFactory (FOCAL, LangGraph, Agno)
 9. AgentTurnContext
 
 ### Phase 3: Toolbox Layer (Enforcement Boundary)

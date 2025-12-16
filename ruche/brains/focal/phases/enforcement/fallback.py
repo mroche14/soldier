@@ -55,6 +55,6 @@ class FallbackHandler:
             regeneration_succeeded=original_result.regeneration_succeeded,
             fallback_used=True,
             fallback_template_id=template.id,
-            final_response=template.text,
+            final_response=template.content,
             enforcement_time_ms=getattr(original_result, "enforcement_time_ms", 0.0),
         )

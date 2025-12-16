@@ -9,7 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from ruche.observability.logging import get_logger
-from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 

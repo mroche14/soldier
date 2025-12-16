@@ -5,7 +5,7 @@ from uuid import UUID
 from ruche.memory.ingestion.entity_extractor import EntityDeduplicator, EntityExtractor
 from ruche.memory.ingestion.summarizer import ConversationSummarizer
 from ruche.memory.models.entity import Entity
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

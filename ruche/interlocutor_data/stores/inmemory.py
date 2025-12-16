@@ -1,4 +1,7 @@
-"""In-memory implementation of InterlocutorDataStoreInterface."""
+"""In-memory implementation of InterlocutorDataStoreInterface.
+
+DEPRECATED: This module is deprecated. Use ruche.infrastructure.stores.interlocutor.inmemory instead.
+"""
 
 from datetime import UTC, datetime
 from typing import Any
@@ -7,7 +10,7 @@ from uuid import UUID
 from ruche.conversation.models import Channel
 from ruche.observability.logging import get_logger
 from ruche.interlocutor_data.enums import ItemStatus, RequiredLevel
-from ruche.interlocutor_data.models import (
+from ruche.domain.interlocutor.models import (
     ChannelIdentity,
     InterlocutorDataStore,
     ProfileAsset,
@@ -15,7 +18,7 @@ from ruche.interlocutor_data.models import (
     InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 

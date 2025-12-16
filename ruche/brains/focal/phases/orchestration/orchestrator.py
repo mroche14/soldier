@@ -31,8 +31,8 @@ from ruche.observability.metrics import (
 )
 
 if TYPE_CHECKING:
-    from ruche.interlocutor_data.models import InterlocutorDataStore
-    from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+    from ruche.domain.interlocutor.models import InterlocutorDataStore
+    from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 
@@ -489,18 +489,52 @@ class ScenarioOrchestrator:
         step,
         applied_rules: list[Rule],
     ) -> ScenarioContribution:
-        """Build contribution for a single scenario/step."""
+        """Build contribution for a single scenario/step.
+
+        Determines contribution type based on step metadata:
+        - ASK: Step collects profile fields
+        - CONFIRM: Step is a checkpoint requiring confirmation
+        - ACTION_HINT: Step has tool bindings
+        - INFORM: Step has templates
+        - NONE: No specific contribution
+
+        Args:
+            scenario: The scenario containing the step
+            step: The current step
+            applied_rules: Rules that matched this turn (for priority computation)
+
+        Returns:
+            ScenarioContribution describing how this scenario wants to participate
+        """
         # Determine contribution type based on step metadata
+        # Priority order: ASK > CONFIRM > ACTION_HINT > INFORM > NONE
         contribution_type = ContributionType.NONE
+        content = ""
 
         if step.collects_profile_fields:
             contribution_type = ContributionType.ASK
-        elif step.performs_action and step.is_required_action:
+            content = f"Collect fields: {', '.join(step.collects_profile_fields)}"
+        elif step.is_checkpoint and step.checkpoint_description:
             contribution_type = ContributionType.CONFIRM
-        elif step.tool_ids:
+            content = step.checkpoint_description
+        elif step.tool_bindings or step.tool_ids:
             contribution_type = ContributionType.ACTION_HINT
+            tool_names = [b.tool_name for b in step.tool_bindings] if step.tool_bindings else step.tool_ids
+            content = f"Execute tools: {', '.join(tool_names)}"
         elif step.template_ids:
             contribution_type = ContributionType.INFORM
+            content = f"Use template for {step.name}"
+
+        # Compute priority: higher for steps with more specific contributions
+        priority = 0
+        if contribution_type == ContributionType.ASK:
+            priority = 40  # Questions have high priority
+        elif contribution_type == ContributionType.CONFIRM:
+            priority = 50  # Confirmations have highest priority (safety)
+        elif contribution_type == ContributionType.ACTION_HINT:
+            priority = 30  # Actions have medium-high priority
+        elif contribution_type == ContributionType.INFORM:
+            priority = 20  # Information has medium priority
 
         return ScenarioContribution(
             scenario_id=scenario.id,
@@ -513,8 +547,8 @@ class ScenarioOrchestrator:
             action_to_confirm=step.checkpoint_description
             if step.is_checkpoint
             else None,
-            suggested_tools=step.tool_ids or [],
-            priority=0,  # TODO: Compute from scenario priority + step priority
+            suggested_tools=[b.tool_name for b in step.tool_bindings] if step.tool_bindings else step.tool_ids or [],
+            priority=priority,
         )
 
     def _is_already_active(

@@ -10,7 +10,7 @@ from uuid import UUID
 from ruche.infrastructure.db.errors import ConnectionError
 from ruche.infrastructure.db.pool import PostgresPool
 from ruche.memory.models import Entity, Episode, Relationship
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)

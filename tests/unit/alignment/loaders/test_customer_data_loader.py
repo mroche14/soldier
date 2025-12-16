@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 from uuid import uuid4
 
 from ruche.brains.focal.phases.loaders.interlocutor_data_loader import InterlocutorDataLoader
-from ruche.interlocutor_data import InterlocutorDataStore, InterlocutorDataField, VariableEntry
+from ruche.domain.interlocutor import InterlocutorDataStore, InterlocutorDataField, VariableEntry
 from ruche.interlocutor_data.enums import ItemStatus, VariableSource
 from ruche.interlocutor_data.stores.inmemory import InMemoryInterlocutorDataStore
 

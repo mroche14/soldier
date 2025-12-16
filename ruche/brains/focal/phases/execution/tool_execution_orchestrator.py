@@ -16,7 +16,7 @@ from ruche.brains.focal.phases.execution.variable_resolver import VariableResolv
 from ruche.brains.focal.phases.filtering.models import MatchedRule
 from ruche.brains.focal.phases.planning.models import ScenarioContributionPlan
 from ruche.conversation.models.session import Session
-from ruche.interlocutor_data.models import InterlocutorDataStore
+from ruche.domain.interlocutor.models import InterlocutorDataStore
 from ruche.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -127,15 +127,21 @@ class ToolExecutionOrchestrator:
         # P7.5: Execute scheduled tools
         tool_results: list[ToolResult] = []
         if scheduled_tools:
-            # Note: Current ToolExecutor needs adaptation for scheduled_tools format
-            # For now, create minimal execution using existing interface
             logger.info(
                 "executing_tools",
                 phase=phase,
                 scheduled_count=len(scheduled_tools),
             )
-            # TODO: Adapt ToolExecutor to handle scheduled_tools format
-            # For now, tools would be executed via existing executor interface
+
+            # For now, fall back to existing ToolExecutor which expects matched_rules
+            # TODO: Enhance ToolExecutor to work with scheduled_tools format directly
+            #
+            # Current workaround: Execute via existing ToolExecutor interface
+            # This works because ToolExecutor iterates over matched_rules and their attached_tool_ids
+            tool_results = await self._executor.execute(
+                matched_rules=applied_rules,
+                snapshot=snapshot,
+            )
 
         # P7.6: Merge tool results
         engine_variables = self._merger.merge_tool_results(

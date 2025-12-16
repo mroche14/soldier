@@ -329,7 +329,7 @@ class Toolbox:
 
         # Emit start event
         await turn_context.emit_event(ACFEvent(
-            type=ACFEventType.TOOL_SIDE_EFFECT_STARTED,
+            type=ACFEventType.TOOL_AUTHORIZED,
             tenant_id=exec_ctx.tenant_id,
             agent_id=exec_ctx.agent_id,
             session_key=turn_context.session_key,
@@ -346,7 +346,7 @@ class Toolbox:
         except Exception as e:
             # Emit failure event
             await turn_context.emit_event(ACFEvent(
-                type=ACFEventType.TOOL_SIDE_EFFECT_FAILED,
+                type=ACFEventType.TOOL_FAILED,
                 tenant_id=exec_ctx.tenant_id,
                 agent_id=exec_ctx.agent_id,
                 session_key=turn_context.session_key,
@@ -372,7 +372,7 @@ class Toolbox:
         )
 
         await turn_context.emit_event(ACFEvent(
-            type=ACFEventType.TOOL_SIDE_EFFECT_COMPLETED,
+            type=ACFEventType.TOOL_EXECUTED,
             tenant_id=exec_ctx.tenant_id,
             agent_id=exec_ctx.agent_id,
             session_key=turn_context.session_key,

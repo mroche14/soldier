@@ -8,6 +8,7 @@ from typing import Any
 
 from ruche.brains.focal.phases.context.situation_snapshot import CandidateVariableInfo
 from ruche.brains.focal.phases.interlocutor.models import InterlocutorDataUpdate
+from ruche.config.models.pipeline import InterlocutorDataUpdateConfig
 from ruche.interlocutor_data.enums import VariableSource
 from ruche.interlocutor_data.models import (
     InterlocutorDataField,
@@ -40,8 +41,13 @@ class InterlocutorDataUpdater:
     Takes candidate variables from P2 and updates InterlocutorDataStore in-memory.
     """
 
-    def __init__(self, validator: InterlocutorDataFieldValidator):
+    def __init__(
+        self,
+        validator: InterlocutorDataFieldValidator,
+        config: InterlocutorDataUpdateConfig | None = None,
+    ):
         self._validator = validator
+        self._config = config or InterlocutorDataUpdateConfig()
         self._logger = get_logger(__name__)
 
     async def update(
@@ -203,6 +209,10 @@ class InterlocutorDataUpdater:
                     "source": existing_entry.source.value if hasattr(existing_entry.source, "value") else str(existing_entry.source),
                     "confidence": existing_entry.confidence,
                 })
+
+                # Trim history if it exceeds max_history_entries
+                if self._config.max_history_entries and len(history) > self._config.max_history_entries:
+                    history = history[-self._config.max_history_entries:]
 
             entry = VariableEntry(
                 name=update.field_name,

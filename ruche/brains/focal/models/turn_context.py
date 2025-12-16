@@ -3,13 +3,19 @@
 Aggregated context for processing a turn.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-# Note: These imports will work after we rename the profile models
-# For now, we'll use forward references
+# Import types directly since Pydantic needs them at runtime
+from ruche.conversation.models.session import Session
+from ruche.domain.interlocutor.models import InterlocutorDataStore, InterlocutorDataField
+from ruche.config.models.pipeline import PipelineConfig
+from ruche.brains.focal.models.glossary import GlossaryItem
+from ruche.brains.focal.migration.models import ReconciliationResult
 
 
 class TurnContext(BaseModel):
@@ -30,24 +36,24 @@ class TurnContext(BaseModel):
     session_id: UUID = Field(..., description="Session ID")
     turn_number: int = Field(..., description="Turn number in session")
 
-    # Session state - forward reference until we have a proper SessionState model
-    session: dict = Field(..., description="Session state")
+    # Session state - proper typed model
+    session: Session = Field(..., description="Session state")
 
-    # Customer data - will be InterlocutorDataStore after rename
-    customer_data: dict = Field(..., description="Customer data snapshot")
+    # Customer data - properly typed InterlocutorDataStore
+    customer_data: InterlocutorDataStore = Field(..., description="Customer data snapshot")
 
-    # Static config
-    pipeline_config: dict = Field(..., description="Pipeline configuration")
-    customer_data_fields: dict[str, dict] = Field(
+    # Static config - properly typed PipelineConfig
+    pipeline_config: PipelineConfig = Field(..., description="Pipeline configuration")
+    customer_data_fields: dict[str, InterlocutorDataField] = Field(
         default_factory=dict,
         description="Field name -> InterlocutorDataField definition",
     )
-    glossary: dict[str, dict] = Field(
+    glossary: dict[str, GlossaryItem] = Field(
         default_factory=dict, description="Term -> GlossaryItem"
     )
 
     # Reconciliation (if happened)
-    reconciliation_result: dict | None = Field(
+    reconciliation_result: ReconciliationResult | None = Field(
         default=None, description="Scenario reconciliation result if migration occurred"
     )
 

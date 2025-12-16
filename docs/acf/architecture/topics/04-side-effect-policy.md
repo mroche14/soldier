@@ -43,7 +43,7 @@
 │  │  - Knows tool's SideEffectPolicy (from ToolDefinition)              │    │
 │  │  - Executes via ToolGateway                                         │    │
 │  │  - Creates SideEffectRecord                                         │    │
-│  │  - Emits ACFEvent(TOOL_SIDE_EFFECT_COMPLETED)                    │    │
+│  │  - Emits ACFEvent(TOOL_EXECUTED)                                  │    │
 │  └───────────────────────────────┬─────────────────────────────────────┘    │
 │                                  │                                          │
 └──────────────────────────────────┼──────────────────────────────────────────┘
@@ -427,8 +427,9 @@ effect = SideEffectRecord(
 
 # Emit to ACF
 await turn_context.emit_event(ACFEvent(
-    type=ACFEventType.TOOL_SIDE_EFFECT_COMPLETED,
-    turn_id=turn_context.logical_turn.id,
+    type=ACFEventType.TOOL_EXECUTED,
+    logical_turn_id=turn_context.logical_turn.id,
+    session_key=turn_context.session_key,
     payload=effect.model_dump(),
 ))
 ```
@@ -436,7 +437,7 @@ await turn_context.emit_event(ACFEvent(
 ```python
 # In ACF EventRouter:
 async def handle_side_effect_event(event: ACFEvent) -> None:
-    if event.type == ACFEventType.TOOL_SIDE_EFFECT_COMPLETED:
+    if event.type == ACFEventType.TOOL_EXECUTED:
         record = SideEffectRecord(**event.payload)
         await turn_manager.add_side_effect(event.turn_id, record)
 ```
@@ -563,7 +564,7 @@ async def test_toolbox_emits_side_effect_event(toolbox, mock_turn_ctx):
 
     mock_turn_ctx.emit_event.assert_called_once()
     event = mock_turn_ctx.emit_event.call_args[0][0]
-    assert event.type == ACFEventType.TOOL_SIDE_EFFECT_COMPLETED
+    assert event.type == ACFEventType.TOOL_EXECUTED
 ```
 
 ---

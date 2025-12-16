@@ -160,47 +160,88 @@ class EnforcementValidator:
                 final_response=response,
                 regeneration_attempted=False,
                 regeneration_succeeded=False,
+                regeneration_attempts=0,
                 fallback_used=False,
                 enforcement_time_ms=(time.perf_counter() - start_time) * 1000,
             )
 
-        # Attempt regeneration if configured
+        # Attempt regeneration with retry loop (P10.8)
         regenerated_response = response
         regeneration_succeeded = False
         regeneration_attempted = False
+        regeneration_attempts = 0
+        current_violations = violations
 
-        if self._config.max_retries > 0:
+        if self._config.max_retries > 0 and current_violations:
             regeneration_attempted = True
-            regenerated_response = await self._regenerate(
-                snapshot=snapshot,
-                matched_rules=matched_rules,
-                response=response,
-                violations=violations,
-            )
-            regeneration_succeeded = bool(regenerated_response)
 
-            if regeneration_succeeded:
+            # Retry loop: attempt up to max_retries times
+            for attempt in range(1, self._config.max_retries + 1):
+                regeneration_attempts = attempt
+                logger.info(
+                    "enforcement_regeneration_attempt",
+                    attempt=attempt,
+                    max_retries=self._config.max_retries,
+                    violation_count=len(current_violations),
+                )
+
+                regenerated_response = await self._regenerate(
+                    snapshot=snapshot,
+                    matched_rules=matched_rules,
+                    response=regenerated_response,  # Use last attempt's response
+                    violations=current_violations,
+                )
+
+                if not regenerated_response:
+                    # Regeneration failed, stop retrying
+                    logger.warning(
+                        "enforcement_regeneration_failed",
+                        attempt=attempt,
+                    )
+                    break
+
                 # Re-extract variables from regenerated response
                 new_variables = self._extract_variables(
                     response=regenerated_response,
                     session=session,
                     profile_variables=profile_variables,
                 )
-                # Re-run violations on regenerated output
-                violations = await self._enforce_two_lanes(
+
+                # Re-run enforcement on regenerated output
+                current_violations = await self._enforce_two_lanes(
                     response=regenerated_response,
                     lane1_rules=lane1_rules,
                     lane2_rules=lane2_rules,
                     variables=new_variables,
                 )
 
+                if not current_violations:
+                    # Success - no more violations
+                    regeneration_succeeded = True
+                    logger.info(
+                        "enforcement_regeneration_succeeded",
+                        attempt=attempt,
+                    )
+                    break
+
+                logger.info(
+                    "enforcement_regeneration_still_has_violations",
+                    attempt=attempt,
+                    violation_count=len(current_violations),
+                )
+
+        # Use regenerated response if successful, otherwise fall back to original
+        final_response = regenerated_response if regeneration_succeeded else response
+        final_violations = current_violations if regeneration_attempted else violations
+
         return EnforcementResult(
-            passed=not violations,
-            violations=violations,
+            passed=not final_violations,
+            violations=final_violations,
             regeneration_attempted=regeneration_attempted,
-            regeneration_succeeded=regeneration_succeeded and not violations,
+            regeneration_succeeded=regeneration_succeeded,
+            regeneration_attempts=regeneration_attempts,
             fallback_used=False,
-            final_response=regenerated_response if not violations else response,
+            final_response=final_response,
             enforcement_time_ms=(time.perf_counter() - start_time) * 1000,
         )
 

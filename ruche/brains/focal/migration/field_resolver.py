@@ -22,8 +22,8 @@ from ruche.infrastructure.providers.llm import LLMMessage
 
 if TYPE_CHECKING:
     from ruche.conversation.models import Session
-    from ruche.interlocutor_data.models import InterlocutorDataField
-    from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+    from ruche.domain.interlocutor.models import InterlocutorDataField
+    from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
     from ruche.interlocutor_data.validation import InterlocutorDataFieldValidator
 
 logger = get_logger(__name__)
@@ -759,7 +759,7 @@ class MissingFieldResolver:
                     interlocutor_id=str(_interlocutor_id),
                 )
                 # No profile means all fields are missing - continue with empty profile
-                from ruche.interlocutor_data.models import InterlocutorDataStore
+                from ruche.domain.interlocutor.models import InterlocutorDataStore
                 profile = InterlocutorDataStore(
                     tenant_id=_tenant_id,
                     interlocutor_id=_interlocutor_id,

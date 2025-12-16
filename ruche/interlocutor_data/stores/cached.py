@@ -1,5 +1,7 @@
 """InterlocutorDataStoreInterface cache layer wrapper with Redis caching.
 
+DEPRECATED: This module is deprecated. Use ruche.infrastructure.stores.interlocutor.cached instead.
+
 Implements write-through caching with configurable TTL.
 Falls back to backend on Redis errors when configured.
 """
@@ -19,7 +21,7 @@ from ruche.observability.metrics import (
     PROFILE_CACHE_MISSES,
 )
 from ruche.interlocutor_data.enums import ItemStatus
-from ruche.interlocutor_data.models import (
+from ruche.domain.interlocutor.models import (
     ChannelIdentity,
     InterlocutorDataStore,
     ProfileAsset,
@@ -27,7 +29,7 @@ from ruche.interlocutor_data.models import (
     InterlocutorDataField,
     ScenarioFieldRequirement,
 )
-from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 

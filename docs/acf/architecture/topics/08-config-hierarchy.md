@@ -460,4 +460,4 @@ async def test_none_doesnt_override():
 
 - [01-logical-turn.md](01-logical-turn.md) - Accumulation window is configurable
 - [04-side-effect-policy.md](04-side-effect-policy.md) - Confirmation requirements configurable
-- [09-agenda-goals.md](09-agenda-goals.md) - Enabled via feature flags
+- [09-agenda.md](09-agenda.md) - Enabled via feature flags

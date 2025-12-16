@@ -1,6 +1,7 @@
 """In-memory implementation of ConfigStore."""
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ruche.brains.focal.migration.models import MigrationPlan, MigrationPlanStatus
@@ -19,6 +20,10 @@ from ruche.brains.focal.models import (
 from ruche.infrastructure.stores.config.interface import ConfigStore
 from ruche.interlocutor_data import InterlocutorDataField
 from ruche.utils.vector import cosine_similarity
+
+if TYPE_CHECKING:
+    from ruche.infrastructure.channels.models import ChannelBinding, ChannelPolicy
+    from ruche.runtime.toolbox.models import ToolDefinition
 
 
 class InMemoryConfigStore(ConfigStore):
@@ -42,6 +47,9 @@ class InMemoryConfigStore(ConfigStore):
         self._glossary_items: dict[UUID, GlossaryItem] = {}
         self._customer_data_fields: dict[UUID, InterlocutorDataField] = {}
         self._intents: dict[UUID, Intent] = {}
+        self._channel_bindings: dict[UUID, "ChannelBinding"] = {}
+        self._channel_policies: dict[UUID, "ChannelPolicy"] = {}
+        self._tool_definitions: dict[str, "ToolDefinition"] = {}
 
     # Rule operations
     async def get_rule(self, tenant_id: UUID, rule_id: UUID) -> Rule | None:
@@ -552,3 +560,42 @@ class InMemoryConfigStore(ConfigStore):
             intent.enabled = False
             return True
         return False
+
+    # Channel binding operations
+    async def get_channel_bindings(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> list["ChannelBinding"]:
+        """Get channel bindings for an agent."""
+        results = []
+        for binding in self._channel_bindings.values():
+            if binding.tenant_id == tenant_id and binding.agent_id == agent_id:
+                if binding.enabled:
+                    results.append(binding)
+        return results
+
+    async def get_channel_policies(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> list["ChannelPolicy"]:
+        """Get channel policies for an agent.
+
+        Returns stored policies. In production, this would merge:
+        1. DEFAULT_CHANNEL_POLICIES
+        2. Tenant-wide overrides
+        3. Agent-specific overrides
+        """
+        results = []
+        for policy in self._channel_policies.values():
+            results.append(policy)
+        return results
+
+    # Tool definition operations
+    async def get_tool_definitions(
+        self,
+        tenant_id: UUID,
+    ) -> list["ToolDefinition"]:
+        """Get all tool definitions for a tenant."""
+        return list(self._tool_definitions.values())

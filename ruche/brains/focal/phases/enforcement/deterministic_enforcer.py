@@ -1,34 +1,28 @@
-"""Deterministic enforcement using expression evaluation."""
+"""Deterministic enforcement using expression evaluation.
+
+This module delegates to the domain-level ExpressionEvaluator to avoid
+code duplication. The DeterministicEnforcer is kept as a thin wrapper
+for backward compatibility with existing enforcement code.
+"""
 
 from typing import Any
 
-from simpleeval import EvalWithCompoundTypes, InvalidExpression
-
-from ruche.observability.logging import get_logger
-
-logger = get_logger(__name__)
+from ruche.domain.rules.expressions import ExpressionEvaluator
 
 
 class DeterministicEnforcer:
     """Evaluate enforcement expressions deterministically.
 
-    Uses simpleeval for safe expression evaluation without arbitrary code execution.
-    Supports mathematical comparisons, logical operators, and safe functions.
+    This is a thin wrapper around the domain-level ExpressionEvaluator
+    maintained for backward compatibility with FOCAL brain enforcement code.
     """
 
-    # Safe functions whitelist - only these functions are allowed in expressions
-    SAFE_FUNCTIONS = {
-        "len": len,
-        "abs": abs,
-        "min": min,
-        "max": max,
-        "lower": lambda s: s.lower() if isinstance(s, str) else s,
-        "upper": lambda s: s.upper() if isinstance(s, str) else s,
-        "int": int,
-        "float": float,
-        "str": str,
-        "bool": bool,
-    }
+    def __init__(self) -> None:
+        """Initialize the deterministic enforcer."""
+        self._evaluator = ExpressionEvaluator()
+
+    # Expose SAFE_FUNCTIONS for backward compatibility
+    SAFE_FUNCTIONS = ExpressionEvaluator.SAFE_FUNCTIONS
 
     def evaluate(
         self,
@@ -46,52 +40,7 @@ class DeterministicEnforcer:
             - (True, None) if expression evaluates to True
             - (False, error_msg) if expression evaluates to False or error occurs
         """
-        try:
-            evaluator = EvalWithCompoundTypes(
-                names=variables,
-                functions=self.SAFE_FUNCTIONS,
-            )
-
-            result = evaluator.eval(expression)
-
-            # Convert result to boolean
-            if not isinstance(result, bool):
-                # For numeric results, treat 0 as False, non-zero as True
-                passed = bool(result)
-            else:
-                passed = result
-
-            if passed:
-                return (True, None)
-            else:
-                return (
-                    False,
-                    f"Expression '{expression}' evaluated to False with variables: {variables}",
-                )
-
-        except InvalidExpression as e:
-            logger.warning(
-                "enforcement_expression_syntax_error",
-                expression=expression,
-                error=str(e),
-            )
-            return (False, f"Invalid expression syntax: {e}")
-
-        except KeyError as e:
-            logger.warning(
-                "enforcement_expression_undefined_variable",
-                expression=expression,
-                missing_variable=str(e),
-            )
-            return (False, f"Undefined variable in expression: {e}")
-
-        except Exception as e:  # noqa: BLE001
-            logger.error(
-                "enforcement_expression_evaluation_error",
-                expression=expression,
-                error=str(e),
-            )
-            return (False, f"Expression evaluation error: {e}")
+        return self._evaluator.evaluate(expression, variables)
 
     @staticmethod
     def validate_syntax(expression: str) -> tuple[bool, str | None]:
@@ -105,22 +54,4 @@ class DeterministicEnforcer:
             - (True, None) if syntax is valid
             - (False, error_msg) if syntax is invalid
         """
-        try:
-            # Try to parse with empty variables
-            evaluator = EvalWithCompoundTypes(
-                names={},
-                functions=DeterministicEnforcer.SAFE_FUNCTIONS,
-            )
-            # Don't actually evaluate, just parse
-            evaluator.eval(expression)
-            return (True, None)
-
-        except InvalidExpression as e:
-            return (False, f"Invalid syntax: {e}")
-
-        except KeyError:
-            # Undefined variables are OK during validation
-            return (True, None)
-
-        except Exception as e:  # noqa: BLE001
-            return (False, f"Validation error: {e}")
+        return ExpressionEvaluator.validate_syntax(expression)

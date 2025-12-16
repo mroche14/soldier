@@ -161,11 +161,10 @@ Hot Reload is **deprioritized** - it's nice to have but not blocking. Static TOM
 
 | Item | Original Status | New Status | Notes |
 |------|-----------------|------------|-------|
-| **AgendaTask** | "NOT IMPLEMENTED" | **STILL RELEVANT** | Now topic 09-agenda-goals.md |
-| **Goals** | "NOT IMPLEMENTED" | **STILL RELEVANT** | Now topic 09 |
+| **AgendaTask** | "NOT IMPLEMENTED" | **STILL RELEVANT** | Now topic 09-agenda.md |
 | **Proactive Outreach** | "NOT IMPLEMENTED" | **STILL RELEVANT** | Now topic 09 |
 | **Follow-ups** | "NOT IMPLEMENTED" | **STILL RELEVANT** | Now topic 09 |
-| **Lifecycle Stages** | "PARTIAL" | **STILL RELEVANT** | Enhanced with Goal status |
+| **Lifecycle Stages** | "PARTIAL" | **STILL RELEVANT** | Task status tracking |
 | **Job Scheduling** | "IMPLEMENTED" | **STILL RELEVANT** | Hatchet workflows |
 | **Outcome Tracking** | "IMPLEMENTED" | **STILL RELEVANT** | Unchanged |
 

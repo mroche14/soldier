@@ -19,7 +19,7 @@ class HatchetConfig(BaseModel):
     )
     api_key: SecretStr | None = Field(
         default=None,
-        description="Hatchet API key (from HATCHET_API_KEY env var)",
+        description="Hatchet API key (from HATCHET_CLIENT_TOKEN env var, not needed for self-hosted)",
     )
     worker_concurrency: int = Field(
         default=10,

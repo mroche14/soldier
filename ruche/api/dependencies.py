@@ -11,7 +11,7 @@ from typing import Annotated
 import redis.asyncio as redis
 from fastapi import Depends
 
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.stores import AgentConfigStore
 from ruche.brains.focal.stores.inmemory import InMemoryAgentConfigStore
 from ruche.brains.focal.stores.postgres import PostgresAgentConfigStore
@@ -26,6 +26,9 @@ from ruche.conversation.stores.redis import RedisSessionStore
 from ruche.infrastructure.db.pool import PostgresPool
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.embedding import EmbeddingProvider
+from ruche.infrastructure.stores.memory.interface import MemoryStore
+from ruche.infrastructure.stores.memory.inmemory import InMemoryMemoryStore
+from ruche.infrastructure.stores.memory.postgres import PostgresMemoryStore
 from ruche.vector import VectorStore, EmbeddingManager, create_vector_store
 
 logger = get_logger(__name__)
@@ -38,6 +41,7 @@ _redis_client: redis.Redis | None = None
 _config_store: AgentConfigStore | None = None
 _session_store: SessionStore | None = None
 _audit_store: AuditStore | None = None
+_memory_store: MemoryStore | None = None
 _vector_store: VectorStore | None = None
 _embedding_provider: EmbeddingProvider | None = None
 _embedding_manager: EmbeddingManager | None = None
@@ -174,6 +178,31 @@ async def get_audit_store() -> AuditStore:
     return _audit_store
 
 
+async def get_memory_store() -> MemoryStore:
+    """Get the MemoryStore instance.
+
+    Uses PostgresMemoryStore with shared connection pool.
+    Falls back to InMemoryMemoryStore if database unavailable.
+
+    Returns:
+        MemoryStore for episodes, entities, and relationships
+    """
+    global _memory_store
+    if _memory_store is None:
+        try:
+            pool = await get_postgres_pool()
+            _memory_store = PostgresMemoryStore(pool)
+            logger.info("memory_store_initialized", store_type="postgres")
+        except Exception as e:
+            logger.warning(
+                "memory_store_postgres_failed_using_inmemory",
+                error=str(e),
+            )
+            _memory_store = InMemoryMemoryStore()
+            logger.info("memory_store_initialized", store_type="inmemory")
+    return _memory_store
+
+
 def get_vector_store(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> VectorStore:
@@ -306,6 +335,7 @@ SettingsDep = Annotated[Settings, Depends(get_settings)]
 AgentConfigStoreDep = Annotated[AgentConfigStore, Depends(get_config_store)]
 SessionStoreDep = Annotated[SessionStore, Depends(get_session_store)]
 AuditStoreDep = Annotated[AuditStore, Depends(get_audit_store)]
+MemoryStoreDep = Annotated[MemoryStore, Depends(get_memory_store)]
 VectorStoreDep = Annotated[VectorStore, Depends(get_vector_store)]
 EmbeddingProviderDep = Annotated[EmbeddingProvider, Depends(get_embedding_provider)]
 EmbeddingManagerDep = Annotated[EmbeddingManager, Depends(get_embedding_manager)]
@@ -318,7 +348,7 @@ async def reset_dependencies() -> None:
     Used for testing to ensure fresh instances.
     Closes connections before resetting.
     """
-    global _config_store, _session_store, _audit_store, _alignment_engine
+    global _config_store, _session_store, _audit_store, _memory_store, _alignment_engine
     global _vector_store, _embedding_provider, _embedding_manager
     global _postgres_pool, _redis_client
 
@@ -334,6 +364,7 @@ async def reset_dependencies() -> None:
     _config_store = None
     _session_store = None
     _audit_store = None
+    _memory_store = None
     _vector_store = None
     _embedding_provider = None
     _embedding_manager = None

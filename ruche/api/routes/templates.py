@@ -38,12 +38,12 @@ def _map_template_to_response(template: Template) -> TemplateResponse:
     return TemplateResponse(
         id=template.id,
         name=template.name,
-        text=template.text,
+        text=template.content,
         mode=template.mode,
         scope=template.scope,
         scope_id=template.scope_id,
         conditions=template.conditions,
-        variables_used=_extract_variables(template.text),
+        variables_used=_extract_variables(template.content),
         created_at=template.created_at,
         updated_at=template.updated_at,
     )
@@ -130,7 +130,7 @@ async def create_template(
         tenant_id=tenant_context.tenant_id,
         agent_id=agent_id,
         name=request.name,
-        text=request.text,
+        content=request.text,
         mode=request.mode,
         scope=request.scope,
         scope_id=request.scope_id,
@@ -189,7 +189,7 @@ async def update_template(
     if request.name is not None:
         template.name = request.name
     if request.text is not None:
-        template.text = request.text
+        template.content = request.text
     if request.mode is not None:
         template.mode = request.mode
     if request.scope is not None:
@@ -249,7 +249,7 @@ async def preview_template(
         raise TemplateNotFoundError(f"Template {template_id} not found")
 
     # Substitute variables
-    rendered = template.text
+    rendered = template.content
     for name, value in request.variables.items():
         rendered = rendered.replace(f"{{{name}}}", value)
 

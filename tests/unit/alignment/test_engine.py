@@ -7,7 +7,7 @@ import pytest
 
 from ruche.brains.focal.phases.context.models import Turn
 from ruche.brains.focal.phases.context.situation_snapshot import SituationSnapshot
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.models import Rule
 from ruche.brains.focal.result import AlignmentResult, PipelineStepTiming
 from ruche.brains.focal.stores import AgentConfigStore

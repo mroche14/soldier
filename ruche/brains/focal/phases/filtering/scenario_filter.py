@@ -15,8 +15,8 @@ from ruche.interlocutor_data.enums import RequiredLevel
 from ruche.observability.logging import get_logger
 
 if TYPE_CHECKING:
-    from ruche.interlocutor_data.models import InterlocutorDataStore
-    from ruche.interlocutor_data.store import InterlocutorDataStoreInterface
+    from ruche.domain.interlocutor.models import InterlocutorDataStore
+    from ruche.infrastructure.stores.interlocutor.interface import InterlocutorDataStore as InterlocutorDataStoreInterface
 
 logger = get_logger(__name__)
 

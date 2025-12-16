@@ -4,7 +4,7 @@ The AgentRuntime manages:
 1. Loading agent configuration from ConfigStore
 2. Caching AgentContext instances
 3. Cache invalidation on config changes
-4. Providing execution contexts to pipeline
+4. Providing execution contexts to pipelines
 """
 
 import hashlib
@@ -13,12 +13,11 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ruche.runtime.agent.context import AgentContext
-from ruche.runtime.agent.models import AgentCapabilities, AgentMetadata
 
 if TYPE_CHECKING:
     from ruche.config.stores.base import ConfigStore
-    from ruche.interlocutor_data.stores.base import ProfileStore
-    from ruche.memory.stores.base import MemoryStore
+    from ruche.runtime.brain.factory import BrainFactory
+    from ruche.runtime.toolbox.gateway import ToolGateway
 
 
 class AgentRuntime:
@@ -37,38 +36,41 @@ class AgentRuntime:
     def __init__(
         self,
         config_store: "ConfigStore",
-        memory_store: "MemoryStore",
-        profile_store: "ProfileStore",
-        cache_ttl_seconds: int = 300,  # 5 minutes default
+        tool_gateway: "ToolGateway",
+        brain_factory: "BrainFactory",
+        max_cache_size: int = 1000,
     ):
         """Initialize agent runtime.
 
         Args:
             config_store: Configuration store for agent data
-            memory_store: Memory store for conversations
-            profile_store: Customer profile store
-            cache_ttl_seconds: How long to cache agent contexts
+            tool_gateway: Gateway for tool execution
+            brain_factory: Factory for creating Brain instances
+            max_cache_size: Maximum number of agents to cache
         """
         self._config_store = config_store
-        self._memory_store = memory_store
-        self._profile_store = profile_store
-        self._cache_ttl_seconds = cache_ttl_seconds
+        self._tool_gateway = tool_gateway
+        self._brain_factory = brain_factory
+        self._max_cache_size = max_cache_size
 
-        # Cache: agent_id -> AgentContext
-        self._context_cache: dict[UUID, AgentContext] = {}
+        # Cache: (tenant_id, agent_id) -> AgentContext
+        self._cache: dict[tuple[UUID, UUID], AgentContext] = {}
 
-        # Cache: agent_id -> config_hash
-        self._config_hashes: dict[UUID, str] = {}
+        # Version tracking for invalidation
+        self._cache_versions: dict[tuple[UUID, UUID], str] = {}
 
-    async def get_context(
-        self, tenant_id: UUID, agent_id: UUID, force_reload: bool = False
+    async def get_or_create(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
     ) -> AgentContext:
-        """Get execution context for an agent.
+        """Get cached AgentContext or create fresh one.
+
+        Thread-safe with version-based invalidation to detect config changes.
 
         Args:
             tenant_id: Tenant identifier
             agent_id: Agent identifier
-            force_reload: Force reload from store (skip cache)
 
         Returns:
             AgentContext ready for pipeline execution
@@ -76,38 +78,76 @@ class AgentRuntime:
         Raises:
             ValueError: If agent not found or disabled
         """
-        # Check cache if not forcing reload
-        if not force_reload and agent_id in self._context_cache:
-            context = self._context_cache[agent_id]
+        key = (tenant_id, agent_id)
 
-            # Verify config hasn't changed
-            if await self._is_config_current(tenant_id, agent_id):
-                return context
+        # Fast path: valid cache hit
+        if key in self._cache:
+            current_version = await self._get_agent_version(tenant_id, agent_id)
+            if self._cache_versions.get(key) == current_version:
+                return self._cache[key]
 
-        # Load fresh context
-        context = await self._load_context(tenant_id, agent_id)
+        # Build fresh AgentContext
+        context = await self._build_agent_context(tenant_id, agent_id)
 
-        # Cache it
-        self._context_cache[agent_id] = context
+        # Cache with version (respect max size)
+        if len(self._cache) >= self._max_cache_size:
+            self._evict_oldest()
+
+        self._cache[key] = context
+        self._cache_versions[key] = context.agent.current_version
 
         return context
 
-    async def invalidate(self, agent_id: UUID) -> None:
-        """Invalidate cached context for an agent.
+    async def _get_agent_version(self, tenant_id: UUID, agent_id: UUID) -> str:
+        """Get current agent version for cache invalidation.
 
         Args:
-            agent_id: Agent to invalidate
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
+
+        Returns:
+            Version string
         """
-        self._context_cache.pop(agent_id, None)
-        self._config_hashes.pop(agent_id, None)
+        agent = await self._config_store.get_agent(tenant_id, agent_id)
+        if not agent:
+            return "0"
+        return str(agent.current_version)
 
-    async def invalidate_all(self) -> None:
-        """Invalidate all cached contexts."""
-        self._context_cache.clear()
-        self._config_hashes.clear()
+    async def invalidate(self, tenant_id: UUID, agent_id: UUID) -> None:
+        """Invalidate cached agent.
 
-    async def _load_context(self, tenant_id: UUID, agent_id: UUID) -> AgentContext:
-        """Load agent context from stores.
+        Called when agent config changes (webhook from admin API).
+
+        Args:
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
+        """
+        key = (tenant_id, agent_id)
+        self._cache.pop(key, None)
+        self._cache_versions.pop(key, None)
+
+    async def invalidate_tenant(self, tenant_id: UUID) -> None:
+        """Invalidate all agents for a tenant.
+
+        Args:
+            tenant_id: Tenant identifier
+        """
+        keys_to_remove = [k for k in self._cache if k[0] == tenant_id]
+        for key in keys_to_remove:
+            self._cache.pop(key, None)
+            self._cache_versions.pop(key, None)
+
+    def _evict_oldest(self) -> None:
+        """Evict oldest entry when cache is full (simple LRU)."""
+        if self._cache:
+            oldest_key = next(iter(self._cache))
+            self._cache.pop(oldest_key, None)
+            self._cache_versions.pop(oldest_key, None)
+
+    async def _build_agent_context(
+        self, tenant_id: UUID, agent_id: UUID
+    ) -> AgentContext:
+        """Build fresh AgentContext from ConfigStore data.
 
         Args:
             tenant_id: Tenant identifier
@@ -119,85 +159,82 @@ class AgentRuntime:
         Raises:
             ValueError: If agent not found
         """
-        # Load agent from ConfigStore
-        # Note: This assumes ConfigStore has a get_agent method
-        # Actual implementation depends on ConfigStore interface
+        # Load agent configuration
         agent = await self._config_store.get_agent(tenant_id, agent_id)
-
-        if agent is None:
+        if not agent:
             raise ValueError(f"Agent {agent_id} not found for tenant {tenant_id}")
 
-        # Build metadata
-        metadata = AgentMetadata(
-            agent_id=agent.id,
-            tenant_id=agent.tenant_id,
-            name=agent.name,
-            version=agent.current_version,
-            enabled=agent.enabled,
-            default_model=agent.settings.model,
-            default_temperature=agent.settings.temperature,
-            default_max_tokens=agent.settings.max_tokens,
+        # Load tool definitions and activations
+        tool_defs = await self._config_store.get_tool_definitions(tenant_id)
+        tool_activations = await self._config_store.get_tool_activations(
+            tenant_id, agent_id
         )
 
-        # Build capabilities
-        # Note: In future, this would be loaded from agent configuration
-        # For now, use sensible defaults
-        capabilities = AgentCapabilities()
+        # Build toolbox
+        from ruche.runtime.toolbox.toolbox import Toolbox
 
-        # Compute config hash for cache invalidation
-        config_hash = self._compute_config_hash(agent)
-        metadata.config_hash = config_hash
-        self._config_hashes[agent_id] = config_hash
-
-        # Build context
-        context = AgentContext(
-            metadata=metadata,
-            capabilities=capabilities,
-            config_store=self._config_store,
-            memory_store=self._memory_store,
-            profile_store=self._profile_store,
+        toolbox = Toolbox(
+            agent_id=agent_id,
+            tool_definitions=tool_defs,
+            tool_activations=tool_activations,
+            gateway=self._tool_gateway,
         )
 
-        return context
+        # Build brain based on type
+        # Default to "focal" if not specified
+        brain_type = getattr(agent, "brain_type", "focal")
+        brain = self._brain_factory.create(
+            brain_type=brain_type,
+            agent=agent,
+        )
 
-    async def _is_config_current(self, tenant_id: UUID, agent_id: UUID) -> bool:
-        """Check if cached config is still current.
+        # Load channel bindings
+        channel_bindings = await self._load_channel_bindings(tenant_id, agent_id)
+
+        # Load channel policies (single source of truth)
+        channel_policies = await self._load_channel_policies(tenant_id, agent_id)
+
+        return AgentContext(
+            agent=agent,
+            brain=brain,
+            toolbox=toolbox,
+            channel_bindings=channel_bindings,
+            channel_policies=channel_policies,
+        )
+
+    async def _load_channel_bindings(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> dict[str, "ChannelBinding"]:
+        """Load channel bindings for agent from ConfigStore.
 
         Args:
             tenant_id: Tenant identifier
             agent_id: Agent identifier
 
         Returns:
-            True if cached config matches current config
+            Channel bindings keyed by channel name
         """
-        # Get current config hash
-        agent = await self._config_store.get_agent(tenant_id, agent_id)
-        if agent is None:
-            return False
+        bindings = await self._config_store.get_channel_bindings(tenant_id, agent_id)
+        return {b.channel: b for b in bindings}
 
-        current_hash = self._compute_config_hash(agent)
+    async def _load_channel_policies(
+        self,
+        tenant_id: UUID,
+        agent_id: UUID,
+    ) -> dict[str, "ChannelPolicy"]:
+        """Load channel policies for agent from ConfigStore.
 
-        # Compare with cached hash
-        cached_hash = self._config_hashes.get(agent_id)
-        return current_hash == cached_hash
-
-    def _compute_config_hash(self, agent: "Agent") -> str:
-        """Compute hash of agent configuration.
+        These policies are the single source of truth for channel behavior,
+        used by ACF (accumulation), Agent (brain), and ChannelGateway (formatting).
 
         Args:
-            agent: Agent model
+            tenant_id: Tenant identifier
+            agent_id: Agent identifier
 
         Returns:
-            SHA256 hash of configuration
+            Channel policies keyed by channel name
         """
-        # Create deterministic representation
-        config_data = {
-            "id": str(agent.id),
-            "version": agent.current_version,
-            "settings": agent.settings.model_dump(),
-            "system_prompt": agent.system_prompt,
-        }
-
-        # Serialize and hash
-        config_json = json.dumps(config_data, sort_keys=True)
-        return hashlib.sha256(config_json.encode()).hexdigest()
+        policies = await self._config_store.get_channel_policies(tenant_id, agent_id)
+        return {p.channel: p for p in policies}

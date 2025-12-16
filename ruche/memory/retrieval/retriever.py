@@ -10,7 +10,7 @@ from ruche.brains.focal.retrieval.selection import ScoredItem, create_selection_
 from ruche.config.models.pipeline import HybridRetrievalConfig
 from ruche.config.models.selection import SelectionConfig
 from ruche.memory.retrieval.reranker import MemoryReranker
-from ruche.memory.store import MemoryStore
+from ruche.infrastructure.stores.memory.interface import MemoryStore
 from ruche.observability.logging import get_logger
 from ruche.infrastructure.providers.embedding import EmbeddingProvider
 from ruche.utils.hybrid import HybridScorer

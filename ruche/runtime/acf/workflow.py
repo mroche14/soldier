@@ -84,7 +84,7 @@ class LogicalTurnWorkflow:
     def __init__(
         self,
         redis: Redis,
-        alignment_engine: Any,
+        agent_runtime: "AgentRuntime",
         session_store: Any,
         message_store: Any,
         audit_store: Any,
@@ -96,7 +96,7 @@ class LogicalTurnWorkflow:
 
         Args:
             redis: Redis client for mutex and state
-            alignment_engine: AlignmentEngine for Brain execution
+            agent_runtime: AgentRuntime for Agent execution
             session_store: Session state persistence
             message_store: Message retrieval
             audit_store: Turn record persistence
@@ -105,7 +105,7 @@ class LogicalTurnWorkflow:
             mutex_blocking_timeout: How long to wait for lock acquisition
         """
         self._redis = redis
-        self._alignment_engine = alignment_engine
+        self._agent_runtime = agent_runtime
         self._session_store = session_store
         self._message_store = message_store
         self._audit_store = audit_store
@@ -256,6 +256,22 @@ class LogicalTurnWorkflow:
                 # Absorb into current turn
                 turn.absorb_message(UUID(new_message_id), timestamp)
 
+                # Emit MESSAGE_ABSORBED event
+                from ruche.runtime.acf.events import ACFEvent, ACFEventType
+
+                await self._route_event(
+                    ACFEvent(
+                        type=ACFEventType.MESSAGE_ABSORBED,
+                        logical_turn_id=turn.id,
+                        session_key=turn.session_key,
+                        payload={
+                            "message_id": new_message_id,
+                            "message_count": len(turn.messages),
+                            "channel": channel,
+                        },
+                    )
+                )
+
                 # Recalculate wait time
                 wait_ms = self._turn_manager.suggest_wait_ms(
                     message_content=new_content,
@@ -297,7 +313,7 @@ class LogicalTurnWorkflow:
     ) -> dict[str, Any]:
         """Step 3: Execute the Agent's Brain.
 
-        Runs the alignment pipeline with interrupt checking.
+        Runs the Brain via AgentRuntime with interrupt checking.
 
         Args:
             turn_data: Serialized LogicalTurn from accumulate step
@@ -310,57 +326,115 @@ class LogicalTurnWorkflow:
         Returns:
             Step result with pipeline output
         """
+        from ruche.runtime.acf.events import ACFEvent, ACFEventType
+        from ruche.runtime.acf.models import FabricTurnContextImpl
+        from ruche.runtime.agent.context import AgentTurnContext
+
         turn = LogicalTurn(**turn_data)
 
         logger.info(
-            "pipeline_starting",
+            "brain_starting",
             turn_id=str(turn.id),
             message_count=len(turn.messages),
             tenant_id=tenant_id,
             agent_id=agent_id,
         )
 
-        try:
-            # Get message contents for processing
-            message_contents = []
-            for msg_id in turn.messages:
-                msg = await self._message_store.get(msg_id)
-                if msg:
-                    message_contents.append(msg.content if hasattr(msg, "content") else str(msg))
-
-            combined_message = " ".join(message_contents) if message_contents else ""
-
-            # Run alignment engine
-            result = await self._alignment_engine.process_turn(
-                message=combined_message,
+        # Emit TURN_STARTED event
+        await self._route_event(
+            ACFEvent(
+                type=ACFEventType.TURN_STARTED,
+                logical_turn_id=turn.id,
+                session_key=turn.session_key,
                 tenant_id=UUID(tenant_id),
                 agent_id=UUID(agent_id),
-                session_id=None,  # Will be resolved by engine
-                channel=channel,
-                channel_user_id=interlocutor_id,
+                interlocutor_id=UUID(interlocutor_id),
+                payload={
+                    "message_count": len(turn.messages),
+                    "channel": channel,
+                },
             )
+        )
+
+        try:
+            # Get AgentContext (cached or fresh)
+            agent_ctx = await self._agent_runtime.get_or_create(
+                UUID(tenant_id), UUID(agent_id)
+            )
+
+            # Build FabricTurnContextImpl with live callbacks
+            fabric_ctx = FabricTurnContextImpl(
+                logical_turn=turn,
+                session_key=turn.session_key,
+                channel=channel,
+                _check_pending=check_pending or (lambda: False),
+                _route_event=self._route_event,
+            )
+
+            # Build AgentTurnContext
+            turn_ctx = AgentTurnContext(
+                fabric=fabric_ctx,
+                agent_context=agent_ctx,
+            )
+
+            # Run Brain
+            result = await agent_ctx.brain.think(turn_ctx)
 
             turn.mark_complete()
 
             logger.info(
-                "pipeline_complete",
+                "brain_complete",
                 turn_id=str(turn.id),
-                response_length=len(result.response) if result.response else 0,
+                response_length=len(result.response),
+            )
+
+            # Emit TURN_COMPLETED event
+            await self._route_event(
+                ACFEvent(
+                    type=ACFEventType.TURN_COMPLETED,
+                    logical_turn_id=turn.id,
+                    session_key=turn.session_key,
+                    tenant_id=UUID(tenant_id),
+                    agent_id=UUID(agent_id),
+                    interlocutor_id=UUID(interlocutor_id),
+                    payload={
+                        "status": "complete",
+                        "response_length": len(result.response),
+                        "response_segments_count": len(result.response_segments),
+                    },
+                )
             )
 
             return {
                 "status": "complete",
                 "turn": turn.model_dump(mode="json"),
                 "response": result.response,
-                "response_segments": [s.model_dump(mode="json") for s in result.response_segments] if result.response_segments else [],
+                "response_segments": [s.model_dump(mode="json") for s in result.response_segments],
             }
 
         except Exception as e:
             logger.error(
-                "pipeline_failed",
+                "brain_failed",
                 turn_id=str(turn.id),
                 error=str(e),
             )
+
+            # Emit TURN_FAILED event
+            await self._route_event(
+                ACFEvent(
+                    type=ACFEventType.TURN_FAILED,
+                    logical_turn_id=turn.id,
+                    session_key=turn.session_key,
+                    tenant_id=UUID(tenant_id),
+                    agent_id=UUID(agent_id),
+                    interlocutor_id=UUID(interlocutor_id),
+                    payload={
+                        "error": str(e),
+                        "error_type": type(e).__name__,
+                    },
+                )
+            )
+
             return {
                 "status": "failed",
                 "turn": turn.model_dump(mode="json"),
@@ -438,6 +512,42 @@ class LogicalTurnWorkflow:
                 session_key=session_key,
                 error=str(e),
             )
+
+    async def _route_event(self, event: Any) -> None:
+        """Route ACF events from Brain/Toolbox.
+
+        This callback is passed to Brain via FabricTurnContext.
+        Brain and Toolbox emit events; ACF routes to listeners.
+
+        Args:
+            event: ACFEvent to route
+        """
+        from ruche.runtime.acf.events import ACFEvent
+
+        if not isinstance(event, ACFEvent):
+            logger.warning(
+                "invalid_event_type",
+                event_type=type(event).__name__,
+            )
+            return
+
+        # Log the event with structured data
+        logger.info(
+            "acf_event_emitted",
+            event_type=event.type,
+            turn_id=str(event.logical_turn_id),
+            session_key=event.session_key,
+            tenant_id=str(event.tenant_id) if event.tenant_id else None,
+            agent_id=str(event.agent_id) if event.agent_id else None,
+            payload_keys=list(event.payload.keys()) if event.payload else [],
+        )
+
+        # TODO: Future enhancements:
+        # - Store events in AuditStore for turn history
+        # - Route to analytics/observability systems
+        # - Forward to live UIs via WebSocket/SSE
+        # - Trigger external webhooks for specific event types
+        # - Update LogicalTurn.side_effects for TOOL_* events
 
     async def on_failure(
         self,

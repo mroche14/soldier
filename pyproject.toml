@@ -49,7 +49,12 @@ dependencies = [
     "rank-bm25>=0.2.2",
     "simpleeval>=1.0.3",
     "nest-asyncio>=1.6.0",
+    "grpcio>=1.76.0",
+    "grpcio-tools>=1.76.0",
 ]
+
+[project.scripts]
+ruche-worker = "ruche.runtime.acf.worker:main"
 
 [project.optional-dependencies]
 dev = [
@@ -167,3 +172,28 @@ warn_unused_ignores = true
 module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+
+[tool.coverage.run]
+source = ["ruche"]
+branch = true
+omit = [
+    "ruche/__main__.py",
+    "ruche/api/grpc/protos/*",
+    "*/tests/*",
+]
+
+[tool.coverage.report]
+fail_under = 85
+precision = 1
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+    "def __repr__",
+    "class.*\\bProtocol\\):",
+]
+show_missing = true
+
+[tool.coverage.html]
+directory = "htmlcov"

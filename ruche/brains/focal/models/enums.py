@@ -7,12 +7,16 @@ class Scope(str, Enum):
     """Rule and Template scoping levels.
 
     Determines when a rule or template is active:
-    - GLOBAL: Always evaluated for the agent
+    - GLOBAL: Always evaluated across all tenants
+    - TENANT: Specific to a tenant
+    - AGENT: Specific to an agent
     - SCENARIO: Only when the specified scenario is active
     - STEP: Only when in the specific step
     """
 
     GLOBAL = "GLOBAL"
+    TENANT = "TENANT"
+    AGENT = "AGENT"
     SCENARIO = "SCENARIO"
     STEP = "STEP"
 

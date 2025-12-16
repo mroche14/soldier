@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package ruche.v1;
+
+// ChatService provides conversational message processing
+service ChatService {
+  // Unary: single message in, single response out
+  rpc SendMessage(ChatRequest) returns (ChatResponse);
+
+  // Server streaming: single message in, streamed response
+  rpc SendMessageStream(ChatRequest) returns (stream ChatChunk);
+}
+
+// Chat request message
+message ChatRequest {
+  string tenant_id = 1;
+  string agent_id = 2;
+  string channel = 3;
+  string user_channel_id = 4;
+  string message = 5;
+  string session_id = 6;  // Optional
+  map<string, string> metadata = 7;  // Optional
+}
+
+// Chat response message
+message ChatResponse {
+  string response = 1;
+  string session_id = 2;
+  string turn_id = 3;
+  ScenarioState scenario = 4;
+  repeated string matched_rules = 5;
+  repeated string tools_called = 6;
+  int32 tokens_used = 7;
+  int32 latency_ms = 8;
+}
+
+// Current scenario and step state
+message ScenarioState {
+  string id = 1;
+  string step = 2;
+}
+
+// Streaming chunk - either a token or done event
+message ChatChunk {
+  oneof chunk {
+    string token = 1;
+    ChatResponse done = 2;
+    ErrorEvent error = 3;
+  }
+}
+
+// Error event
+message ErrorEvent {
+  string code = 1;
+  string message = 2;
+}

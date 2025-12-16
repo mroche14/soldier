@@ -103,6 +103,9 @@ class Session(BaseModel):
     customer_profile_id: UUID | None = Field(
         default=None, description="Linked profile"
     )
+    interlocutor_id: UUID | None = Field(
+        default=None, description="Linked interlocutor (logical entity across profiles)"
+    )
     config_version: int = Field(..., description="Agent version in use")
 
     # Multi-scenario support (Phase 6)

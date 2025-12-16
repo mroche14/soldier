@@ -357,3 +357,193 @@ async def test_validator_handles_two_lane_partition(tenant_id, agent_id, snapsho
 
     assert result.passed is True
     assert len(result.violations) == 0
+
+
+@pytest.mark.asyncio
+async def test_validator_retries_multiple_times(tenant_id, agent_id, snapshot) -> None:
+    """Validator retries up to max_retries times on violation."""
+    hard_rule = Rule(
+        id=uuid4(),
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+        name="Amount limit",
+        condition_text="When processing refunds",
+        action_text="Limit refunds to $50",
+        scope=Scope.GLOBAL,
+        is_hard_constraint=True,
+        enforcement_expression="amount <= 50",
+    )
+    matched = MatchedRule(rule=hard_rule, match_score=1.0, relevance_score=1.0, reasoning="")
+
+    # Generator returns compliant response on second retry
+    class RetryGenerator(MockGenerator):
+        def __init__(self):
+            super().__init__("")
+            self.call_count = 0
+
+        async def generate(self, *args, **kwargs):
+            self.call_count += 1
+            # First regeneration: still violates
+            if self.call_count == 1:
+                response = "Your refund of $65 has been processed"
+            # Second regeneration: compliant
+            else:
+                response = "Your refund of $40 has been processed"
+
+            class DummyResult:
+                def __init__(self, content: str):
+                    self.response = content
+
+            return DummyResult(response)
+
+    generator = RetryGenerator()
+    validator = EnforcementValidator(
+        response_generator=generator,
+        agent_config_store=MockConfigStore(global_rules=[hard_rule]),
+        llm_executor=MockLLMExecutor(),
+        config=EnforcementConfig(max_retries=2),
+    )
+
+    result = await validator.validate(
+        response="I can offer you a refund of $75",  # Violates amount <= 50
+        snapshot=snapshot,
+        matched_rules=[matched],
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+    )
+
+    assert result.regeneration_attempted is True
+    assert result.regeneration_succeeded is True
+    assert result.regeneration_attempts == 2
+    assert "$40" in result.final_response
+    assert generator.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_validator_stops_after_max_retries(tenant_id, agent_id, snapshot) -> None:
+    """Validator stops retrying after max_retries exhausted."""
+    hard_rule = Rule(
+        id=uuid4(),
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+        name="Amount limit",
+        condition_text="When processing refunds",
+        action_text="Limit refunds to $50",
+        scope=Scope.GLOBAL,
+        is_hard_constraint=True,
+        enforcement_expression="amount <= 50",
+    )
+    matched = MatchedRule(rule=hard_rule, match_score=1.0, relevance_score=1.0, reasoning="")
+
+    # Generator always returns violating response
+    class FailingGenerator(MockGenerator):
+        def __init__(self):
+            super().__init__("")
+            self.call_count = 0
+
+        async def generate(self, *args, **kwargs):
+            self.call_count += 1
+            # Always violates
+            class DummyResult:
+                def __init__(self, content: str):
+                    self.response = content
+
+            return DummyResult("Your refund of $100 has been processed")
+
+    generator = FailingGenerator()
+    validator = EnforcementValidator(
+        response_generator=generator,
+        agent_config_store=MockConfigStore(global_rules=[hard_rule]),
+        llm_executor=MockLLMExecutor(),
+        config=EnforcementConfig(max_retries=2),
+    )
+
+    result = await validator.validate(
+        response="I can offer you a refund of $75",  # Violates amount <= 50
+        snapshot=snapshot,
+        matched_rules=[matched],
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+    )
+
+    assert result.regeneration_attempted is True
+    assert result.regeneration_succeeded is False
+    assert result.regeneration_attempts == 2
+    assert result.passed is False
+    assert len(result.violations) > 0
+    assert generator.call_count == 2  # Only retried max_retries times
+
+
+@pytest.mark.asyncio
+async def test_validator_tracks_regeneration_attempts(tenant_id, agent_id, snapshot) -> None:
+    """Validator correctly tracks regeneration_attempts counter."""
+    hard_rule = Rule(
+        id=uuid4(),
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+        name="Amount limit",
+        condition_text="When processing refunds",
+        action_text="Limit refunds to $50",
+        scope=Scope.GLOBAL,
+        is_hard_constraint=True,
+        enforcement_expression="amount <= 50",
+    )
+    matched = MatchedRule(rule=hard_rule, match_score=1.0, relevance_score=1.0, reasoning="")
+
+    # Generator returns compliant response on first retry
+    validator = EnforcementValidator(
+        response_generator=MockGenerator("Your refund of $45 has been processed"),
+        agent_config_store=MockConfigStore(global_rules=[hard_rule]),
+        llm_executor=MockLLMExecutor(),
+        config=EnforcementConfig(max_retries=3),
+    )
+
+    result = await validator.validate(
+        response="I can offer you a refund of $75",  # Violates amount <= 50
+        snapshot=snapshot,
+        matched_rules=[matched],
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+    )
+
+    assert result.regeneration_attempted is True
+    assert result.regeneration_succeeded is True
+    assert result.regeneration_attempts == 1  # Succeeded on first attempt
+
+
+@pytest.mark.asyncio
+async def test_validator_no_retry_when_max_retries_zero(tenant_id, agent_id, snapshot) -> None:
+    """Validator skips regeneration when max_retries is 0."""
+    hard_rule = Rule(
+        id=uuid4(),
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+        name="Amount limit",
+        condition_text="When processing refunds",
+        action_text="Limit refunds to $50",
+        scope=Scope.GLOBAL,
+        is_hard_constraint=True,
+        enforcement_expression="amount <= 50",
+    )
+    matched = MatchedRule(rule=hard_rule, match_score=1.0, relevance_score=1.0, reasoning="")
+
+    validator = EnforcementValidator(
+        response_generator=MockGenerator("Your refund of $45 has been processed"),
+        agent_config_store=MockConfigStore(global_rules=[hard_rule]),
+        llm_executor=MockLLMExecutor(),
+        config=EnforcementConfig(max_retries=0),
+    )
+
+    result = await validator.validate(
+        response="I can offer you a refund of $75",  # Violates amount <= 50
+        snapshot=snapshot,
+        matched_rules=[matched],
+        tenant_id=tenant_id,
+        agent_id=agent_id,
+    )
+
+    assert result.regeneration_attempted is False
+    assert result.regeneration_succeeded is False
+    assert result.regeneration_attempts == 0
+    assert result.passed is False
+    assert "$75" in result.final_response  # Original response, not regenerated

@@ -284,7 +284,7 @@ class TestTemplateOperations:
             tenant_id=tenant_id,
             agent_id=agent_id,
             name="Welcome Template",
-            text="Hello {name}!",
+            content="Hello {name}!",
         )
         template_id = await store.save_template(template)
         retrieved = await store.get_template(tenant_id, template_id)

@@ -775,13 +775,13 @@ ACF receives `TOOL_SIDE_EFFECT_*` events from Toolbox and stores them in `Logica
 ```python
 # Toolbox emits event after tool execution
 await turn_context.emit_event(ACFEvent(
-    type=ACFEventType.TOOL_SIDE_EFFECT_COMPLETED,
+    type=ACFEventType.TOOL_EXECUTED,
     payload=side_effect_record.model_dump(),
 ))
 
 # ACF EventRouter listens and stores
 async def handle_side_effect_event(event: ACFEvent) -> None:
-    if event.type == ACFEventType.TOOL_SIDE_EFFECT_COMPLETED:
+    if event.type == ACFEventType.TOOL_EXECUTED:
         await turn_manager.add_side_effect(
             turn_id=event.turn_id,
             record=SideEffectRecord(**event.payload),
@@ -1121,45 +1121,75 @@ class FabricErrorPolicy(BaseModel):
 
 ```python
 class ACFEventType(str, Enum):
+    """Event types with category prefix (format: {category}.{event_name})"""
+
     # Turn lifecycle
-    TURN_STARTED = "turn_started"
-    TURN_COMPLETED = "turn_completed"
-    TURN_SUPERSEDED = "turn_superseded"
+    TURN_STARTED = "turn.started"
+    TURN_COMPLETED = "turn.completed"
+    TURN_FAILED = "turn.failed"
+    MESSAGE_ABSORBED = "turn.message_absorbed"
+    TURN_SUPERSEDED = "turn.superseded"
 
-    # Message handling
-    MESSAGE_RECEIVED = "message_received"
-    MESSAGE_ABSORBED = "message_absorbed"
-    AGGREGATION_COMPLETE = "aggregation_complete"
+    # Tool execution
+    TOOL_AUTHORIZED = "tool.authorized"
+    TOOL_EXECUTED = "tool.executed"
+    TOOL_FAILED = "tool.failed"
 
-    # Brain
-    PIPELINE_STARTED = "pipeline_started"
-    PIPELINE_COMPLETED = "pipeline_completed"
+    # Supersede coordination
+    SUPERSEDE_REQUESTED = "supersede.requested"
+    SUPERSEDE_DECISION = "supersede.decision"
+    SUPERSEDE_EXECUTED = "supersede.executed"
 
-    # Supersede
-    SUPERSEDE_DECISION = "supersede_decision"
+    # Commit points
+    COMMIT_REACHED = "commit.reached"
 
-    # Tool side effects (emitted by Toolbox, routed by ACF)
-    TOOL_SIDE_EFFECT_STARTED = "tool_side_effect_started"
-    TOOL_SIDE_EFFECT_COMPLETED = "tool_side_effect_completed"
-    TOOL_SIDE_EFFECT_FAILED = "tool_side_effect_failed"
+    # Enforcement
+    ENFORCEMENT_VIOLATION = "enforcement.violation"
 
-    # Commit
-    COMMIT_APPROVED = "commit_approved"
-
-    # Errors
-    ERROR_OCCURRED = "error_occurred"
+    # Session lifecycle
+    SESSION_CREATED = "session.created"
+    SESSION_RESUMED = "session.resumed"
+    SESSION_CLOSED = "session.closed"
 
 class ACFEvent(BaseModel):
-    """Canonical event envelope. All events use this structure."""
+    """
+    ACF infrastructure event.
 
-    type: ACFEventType  # NOT event_type
-    tenant_id: UUID
-    agent_id: UUID
-    session_key: str
+    Flat model with category-based filtering. Event types use
+    format: {category}.{event_name}
+
+    Previously called FabricEvent.
+    """
+
+    type: ACFEventType
     logical_turn_id: UUID
-    trace_id: str  # Required for end-to-end tracing
+    session_key: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    payload: dict = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+    # Optional routing context
+    tenant_id: UUID | None = None
+    agent_id: UUID | None = None
+    interlocutor_id: UUID | None = None
+
+    @property
+    def category(self) -> str:
+        """Extract category. 'turn.started' → 'turn'"""
+        return self.type.value.split(".")[0]
+
+    @property
+    def event_name(self) -> str:
+        """Extract event name. 'turn.started' → 'started'"""
+        parts = self.type.value.split(".", 1)
+        return parts[1] if len(parts) > 1 else parts[0]
+
+    def matches_pattern(self, pattern: str) -> bool:
+        """Match against pattern: '*', 'category.*', 'category.name'"""
+        if pattern == "*":
+            return True
+        if pattern.endswith(".*"):
+            return self.category == pattern[:-2]
+        return self.type.value == pattern
 ```
 
 ---

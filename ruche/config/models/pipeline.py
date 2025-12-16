@@ -189,6 +189,10 @@ class SituationSensorConfig(OpenRouterConfigMixin):
         default=True,
         description="Include customer data schema mask in prompt",
     )
+    default_language: str = Field(
+        default="en",
+        description="Default language code for fallback when detection fails (ISO 639-1)",
+    )
 
 
 class HybridRetrievalConfig(BaseModel):

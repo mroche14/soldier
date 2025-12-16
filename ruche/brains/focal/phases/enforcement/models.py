@@ -27,6 +27,11 @@ class EnforcementResult(BaseModel):
     # Remediation
     regeneration_attempted: bool = False
     regeneration_succeeded: bool = False
+    regeneration_attempts: int = Field(
+        default=0,
+        ge=0,
+        description="Number of regeneration attempts made (0 if no regeneration)"
+    )
     fallback_used: bool = False
     fallback_template_id: UUID | None = None
 

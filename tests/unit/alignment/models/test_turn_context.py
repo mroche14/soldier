@@ -5,6 +5,9 @@ from datetime import datetime, UTC
 from uuid import uuid4
 
 from ruche.brains.focal.models.turn_context import TurnContext
+from ruche.conversation.models import Session, Channel, SessionStatus
+from ruche.domain.interlocutor.models import InterlocutorDataStore
+from ruche.config.models.pipeline import PipelineConfig
 
 
 class TestTurnContext:
@@ -18,15 +21,33 @@ class TestTurnContext:
         session_id = uuid4()
         now = datetime.now(UTC)
 
+        session = Session(
+            session_id=session_id,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user123",
+            config_version=1,
+            turn_count=0,
+        )
+
+        customer_data = InterlocutorDataStore(
+            id=interlocutor_id,
+            tenant_id=tenant_id,
+            interlocutor_id=interlocutor_id,
+        )
+
+        pipeline_config = PipelineConfig()
+
         turn_context = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
             interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=1,
-            session={"session_id": str(session_id), "turn_count": 0},
-            customer_data={"interlocutor_id": str(interlocutor_id), "fields": {}},
-            pipeline_config={"generation": {"enabled": True}},
+            session=session,
+            customer_data=customer_data,
+            pipeline_config=pipeline_config,
             customer_data_fields={},
             glossary={},
             reconciliation_result=None,
@@ -42,31 +63,58 @@ class TestTurnContext:
 
     def test_create_with_optional_fields(self):
         """Test that TurnContext can be created with optional fields populated."""
+        from ruche.brains.focal.models.glossary import GlossaryItem
+        from ruche.brains.focal.migration.models import ReconciliationResult, ReconciliationAction
+
         tenant_id = uuid4()
         agent_id = uuid4()
         interlocutor_id = uuid4()
         session_id = uuid4()
         now = datetime.now(UTC)
 
+        session = Session(
+            session_id=session_id,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user123",
+            config_version=1,
+            turn_count=4,
+        )
+
+        customer_data = InterlocutorDataStore(
+            id=interlocutor_id,
+            tenant_id=tenant_id,
+            interlocutor_id=interlocutor_id,
+        )
+
+        pipeline_config = PipelineConfig()
+
         glossary = {
-            "CSAT": {
-                "term": "CSAT",
-                "definition": "Customer Satisfaction Score",
-            }
+            "CSAT": GlossaryItem(
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                term="CSAT",
+                definition="Customer Satisfaction Score",
+            )
         }
 
+        from ruche.domain.interlocutor.models import InterlocutorDataField
         customer_data_fields = {
-            "email": {
-                "name": "email",
-                "value_type": "string",
-                "scope": "IDENTITY",
-            }
+            "email": InterlocutorDataField(
+                tenant_id=tenant_id,
+                agent_id=agent_id,
+                name="email",
+                display_name="Email",
+                value_type="string",
+                scope="IDENTITY",
+            )
         }
 
-        reconciliation = {
-            "action": "GRAFT",
-            "applied": True,
-        }
+        reconciliation = ReconciliationResult(
+            action=ReconciliationAction.TELEPORT,
+            applied=True,
+        )
 
         turn_context = TurnContext(
             tenant_id=tenant_id,
@@ -74,9 +122,9 @@ class TestTurnContext:
             interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=5,
-            session={"session_id": str(session_id), "turn_count": 4},
-            customer_data={"interlocutor_id": str(interlocutor_id), "fields": {"email": "test@example.com"}},
-            pipeline_config={"generation": {"enabled": True}},
+            session=session,
+            customer_data=customer_data,
+            pipeline_config=pipeline_config,
             customer_data_fields=customer_data_fields,
             glossary=glossary,
             reconciliation_result=reconciliation,
@@ -86,7 +134,7 @@ class TestTurnContext:
         assert len(turn_context.glossary) == 1
         assert len(turn_context.customer_data_fields) == 1
         assert turn_context.reconciliation_result is not None
-        assert turn_context.reconciliation_result["action"] == "GRAFT"
+        assert turn_context.reconciliation_result.action == ReconciliationAction.TELEPORT
 
     def test_empty_optional_fields_default_to_empty_dicts(self):
         """Test that optional dict fields default to empty dicts."""
@@ -96,15 +144,32 @@ class TestTurnContext:
         session_id = uuid4()
         now = datetime.now(UTC)
 
+        session = Session(
+            session_id=session_id,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user123",
+            config_version=1,
+        )
+
+        customer_data = InterlocutorDataStore(
+            id=interlocutor_id,
+            tenant_id=tenant_id,
+            interlocutor_id=interlocutor_id,
+        )
+
+        pipeline_config = PipelineConfig()
+
         turn_context = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
             interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=1,
-            session={"session_id": str(session_id)},
-            customer_data={"interlocutor_id": str(interlocutor_id)},
-            pipeline_config={},
+            session=session,
+            customer_data=customer_data,
+            pipeline_config=pipeline_config,
             turn_started_at=now,
         )
 
@@ -120,15 +185,32 @@ class TestTurnContext:
         session_id = uuid4()
         now = datetime.now(UTC)
 
+        session = Session(
+            session_id=session_id,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user123",
+            config_version=1,
+        )
+
+        customer_data = InterlocutorDataStore(
+            id=interlocutor_id,
+            tenant_id=tenant_id,
+            interlocutor_id=interlocutor_id,
+        )
+
+        pipeline_config = PipelineConfig()
+
         original = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
             interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=1,
-            session={"session_id": str(session_id)},
-            customer_data={"interlocutor_id": str(interlocutor_id)},
-            pipeline_config={},
+            session=session,
+            customer_data=customer_data,
+            pipeline_config=pipeline_config,
             turn_started_at=now,
         )
 
@@ -153,15 +235,33 @@ class TestTurnContext:
         session_id = uuid4()
         now = datetime.now(UTC)
 
+        session = Session(
+            session_id=session_id,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            channel=Channel.WEBCHAT,
+            user_channel_id="user123",
+            config_version=1,
+            turn_count=2,
+        )
+
+        customer_data = InterlocutorDataStore(
+            id=interlocutor_id,
+            tenant_id=tenant_id,
+            interlocutor_id=interlocutor_id,
+        )
+
+        pipeline_config = PipelineConfig()
+
         turn_context = TurnContext(
             tenant_id=tenant_id,
             agent_id=agent_id,
             interlocutor_id=interlocutor_id,
             session_id=session_id,
             turn_number=3,
-            session={},
-            customer_data={},
-            pipeline_config={},
+            session=session,
+            customer_data=customer_data,
+            pipeline_config=pipeline_config,
             turn_started_at=now,
         )
 

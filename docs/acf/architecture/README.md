@@ -110,7 +110,7 @@ acquire_mutex → accumulate → run_pipeline → commit_and_respond
 | # | Topic | Owner | Description |
 |---|-------|-------|-------------|
 | 08 | [Config Hierarchy](topics/08-config-hierarchy.md) | ConfigStore | Multi-level config |
-| 09 | [Agenda & Goals](topics/09-agenda-goals.md) | Brain | Proactive follow-up |
+| 09 | [Agenda System](topics/09-agenda.md) | Brain | Proactive task scheduling |
 | 11 | [Abuse Detection](topics/11-abuse-detection.md) | Brain | Pattern-based handling |
 | 13 | [ASA Validator](topics/13-asa-validator.md) | Admin | Design-time validation |
 
@@ -138,7 +138,7 @@ acquire_mutex → accumulate → run_pipeline → commit_and_respond
 
 6. **[AGENT_RUNTIME_SPEC.md](AGENT_RUNTIME_SPEC.md)** - AgentRuntime, AgentContext
 7. **AgentTurnContext** - Wraps FabricTurnContext
-8. **PipelineFactory** - FOCAL, LangGraph, Agno
+8. **BrainFactory** - FOCAL, LangGraph, Agno
 
 ### For Implementation (Phase 3: Toolbox)
 

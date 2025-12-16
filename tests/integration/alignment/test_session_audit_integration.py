@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 
 from ruche.brains.focal.phases.context.models import Turn
-from ruche.brains.focal.engine import AlignmentEngine
+from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 from ruche.brains.focal.phases.filtering.models import ScenarioAction, ScenarioFilterResult
 from ruche.brains.focal.stores import InMemoryAgentConfigStore
 from ruche.audit.models import TurnRecord
@@ -569,7 +569,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_start(self, stores) -> None:
         """Scenario start updates session state."""
-        from ruche.brains.focal.engine import AlignmentEngine
+        from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -610,7 +610,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_exit(self, stores) -> None:
         """Scenario exit clears session state."""
-        from ruche.brains.focal.engine import AlignmentEngine
+        from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],
@@ -647,7 +647,7 @@ class TestScenarioStateUpdates:
     @pytest.mark.asyncio
     async def test_apply_scenario_relocalize_increments_count(self, stores) -> None:
         """Relocalization increments the counter."""
-        from ruche.brains.focal.engine import AlignmentEngine
+        from ruche.brains.focal.pipeline import FocalCognitivePipeline as AlignmentEngine
 
         engine = AlignmentEngine(
             config_store=stores["config"],

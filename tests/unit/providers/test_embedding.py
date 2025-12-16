@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ruche.infrastructure.providers.embedding import EmbeddingResponse, JinaEmbeddingProvider, MockEmbeddingProvider
+from ruche.infrastructure.providers.embedding import EmbeddingResponse, JinaEmbeddingProvider, MockEmbeddingProvider, OpenAIEmbeddingProvider
 
 
 class TestMockEmbeddingProvider:
@@ -233,3 +233,124 @@ class TestJinaEmbeddingProvider:
         with patch.dict("os.environ", {}, clear=True):
             with pytest.raises(ValueError, match="JINA_API_KEY"):
                 JinaEmbeddingProvider()
+
+
+class TestOpenAIEmbeddingProvider:
+    """Tests for OpenAIEmbeddingProvider."""
+
+    @pytest.fixture
+    def mock_response(self):
+        """Create a mock API response."""
+        mock_obj = MagicMock()
+        mock_obj.data = [
+            MagicMock(embedding=[0.1] * 1536),
+            MagicMock(embedding=[0.2] * 1536),
+        ]
+        mock_obj.usage = MagicMock(total_tokens=10, prompt_tokens=10)
+        return mock_obj
+
+    @pytest.fixture
+    def provider(self):
+        """Create an OpenAI provider with mocked API key."""
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            return OpenAIEmbeddingProvider(model="text-embedding-3-small")
+
+    @pytest.mark.asyncio
+    async def test_provider_name(self, provider):
+        """Should return provider name."""
+        assert provider.provider_name == "openai"
+
+    @pytest.mark.asyncio
+    async def test_dimensions_property(self, provider):
+        """Should return configured dimensions."""
+        assert provider.dimensions == 1536
+
+    @pytest.mark.asyncio
+    async def test_embed_texts(self, provider, mock_response):
+        """Should embed multiple texts via API."""
+        provider._client.embeddings.create = AsyncMock(return_value=mock_response)
+
+        response = await provider.embed(["Hello", "World"])
+
+        assert isinstance(response, EmbeddingResponse)
+        assert len(response.embeddings) == 2
+        assert response.model == "text-embedding-3-small"
+        assert response.dimensions == 1536
+
+    @pytest.mark.asyncio
+    async def test_embed_with_custom_model(self, provider, mock_response):
+        """Should use custom model when specified."""
+        provider._client.embeddings.create = AsyncMock(return_value=mock_response)
+
+        await provider.embed(["Test"], model="text-embedding-3-large")
+
+        call_args = provider._client.embeddings.create.call_args
+        assert call_args.kwargs["model"] == "text-embedding-3-large"
+
+    @pytest.mark.asyncio
+    async def test_embed_with_custom_dimensions(self, provider, mock_response):
+        """Should use custom dimensions for text-embedding-3-* models."""
+        provider._client.embeddings.create = AsyncMock(return_value=mock_response)
+
+        await provider.embed(["Test"], dimensions=512)
+
+        call_args = provider._client.embeddings.create.call_args
+        assert call_args.kwargs["dimensions"] == 512
+
+    @pytest.mark.asyncio
+    async def test_embed_single(self, provider, mock_response):
+        """Should embed single text."""
+        mock_response.data = [MagicMock(embedding=[0.1] * 1536)]
+        provider._client.embeddings.create = AsyncMock(return_value=mock_response)
+
+        embedding = await provider.embed_single("Test")
+
+        assert isinstance(embedding, list)
+        assert len(embedding) == 1536
+
+    @pytest.mark.asyncio
+    async def test_api_error_raises_exception(self, provider):
+        """Should raise exception on API error."""
+        provider._client.embeddings.create = AsyncMock(
+            side_effect=Exception("API Error")
+        )
+
+        with pytest.raises(RuntimeError, match="OpenAI API error"):
+            await provider.embed(["Test"])
+
+    @pytest.mark.asyncio
+    async def test_usage_tracking(self, provider, mock_response):
+        """Should include usage stats in response."""
+        provider._client.embeddings.create = AsyncMock(return_value=mock_response)
+
+        response = await provider.embed(["Test", "Test2"])
+
+        assert response.usage is not None
+        assert response.usage["total_tokens"] == 10
+
+    @pytest.mark.asyncio
+    async def test_default_dimensions_text_embedding_3_small(self):
+        """Should use 1536 dimensions for text-embedding-3-small."""
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            provider = OpenAIEmbeddingProvider(model="text-embedding-3-small")
+            assert provider.dimensions == 1536
+
+    @pytest.mark.asyncio
+    async def test_default_dimensions_text_embedding_3_large(self):
+        """Should use 3072 dimensions for text-embedding-3-large."""
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            provider = OpenAIEmbeddingProvider(model="text-embedding-3-large")
+            assert provider.dimensions == 3072
+
+    @pytest.mark.asyncio
+    async def test_default_dimensions_ada_002(self):
+        """Should use 1536 dimensions for text-embedding-ada-002."""
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            provider = OpenAIEmbeddingProvider(model="text-embedding-ada-002")
+            assert provider.dimensions == 1536
+
+    def test_missing_api_key_raises_error(self):
+        """Should raise error if API key not provided."""
+        with patch.dict("os.environ", {}, clear=True):
+            with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+                OpenAIEmbeddingProvider()

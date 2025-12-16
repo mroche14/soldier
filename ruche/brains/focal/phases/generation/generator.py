@@ -143,7 +143,8 @@ class ResponseGenerator:
             elapsed_ms=elapsed_ms,
             model=llm_response.model,
             response_type=response_plan.global_response_type.value if response_plan else None,
-            categories=len(llm_categories),
+            categories_count=len(llm_categories),
+            categories=[c.value for c in llm_categories] if llm_categories else [],
             channel=channel,
         )
 
@@ -216,7 +217,7 @@ class ResponseGenerator:
         variables: dict[str, str],
     ) -> str:
         """Resolve template placeholders with variables."""
-        content = template.text
+        content = template.content
 
         # Find all placeholders like {variable_name}
         placeholders = re.findall(r"\{(\w+)\}", content)
@@ -243,6 +244,6 @@ class ResponseGenerator:
         ]
 
         for template in templates:
-            suggestions.append(f"- {template.name}: {template.text[:200]}...")
+            suggestions.append(f"- {template.name}: {template.content[:200]}...")
 
         return system_prompt + "\n".join(suggestions)

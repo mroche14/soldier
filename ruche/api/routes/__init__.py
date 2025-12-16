@@ -28,6 +28,7 @@ def create_v1_router() -> APIRouter:
 
     # CRUD routes for agent configuration management
     from ruche.api.routes.agents import router as agents_router
+    from ruche.api.routes.memory import router as memory_router
     from ruche.api.routes.migrations import router as migrations_router
     from ruche.api.routes.publish import router as publish_router
     from ruche.api.routes.rules import router as rules_router
@@ -42,8 +43,14 @@ def create_v1_router() -> APIRouter:
     router.include_router(templates_router, tags=["Templates"])
     router.include_router(variables_router, tags=["Variables"])
     router.include_router(tools_router, tags=["Tools"])
+    router.include_router(memory_router, tags=["Memory"])
     router.include_router(publish_router, tags=["Publishing"])
     router.include_router(migrations_router, tags=["Migrations"])
+
+    # Webhook routes
+    from ruche.api.webhooks import router as webhooks_router
+
+    router.include_router(webhooks_router, tags=["Webhooks"])
 
     # MCP routes for tool discovery
     from ruche.api.mcp import router as mcp_router
@@ -61,8 +68,10 @@ def create_v1_router() -> APIRouter:
             "templates",
             "variables",
             "tools",
+            "memory",
             "publish",
             "migrations",
+            "webhooks",
             "mcp",
         ],
     )
